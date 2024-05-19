@@ -10,7 +10,7 @@ class ListPalet extends Component
     public $search;
     public function render()
     {
-        $palets = [];
+        $palets = null;
         if($this->search){
             $palets= DB::table('pallets')->select(['pallet_name','pallet_barcode'])->where('pallet_barcode','=',$this->search)->get();
         } 
