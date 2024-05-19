@@ -3,7 +3,6 @@
 ])
 @php
     $menu = [
-        ['url' => route('dashboard'), 'label' => 'Dashboard'],
         ['url' => route('inventory.index'), 'label' => 'Scan Palet & Produk'],
     ];
 
