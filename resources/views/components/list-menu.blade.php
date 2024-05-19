@@ -4,8 +4,7 @@
 @php
     $menu = [
         ['url' => route('dashboard'), 'label' => 'Dashboard'],
-        ['url' => route('inventory.index'), 'label' => 'Barang Masuk'],
-        ['url' => 3, 'label' => 'Yellow'],
+        ['url' => route('inventory.index'), 'label' => 'Scan Palet & Produk'],
     ];
 
 @endphp
