@@ -9,17 +9,26 @@ use Livewire\WithPagination;
 class ListProduct extends Component
 {
     use WithPagination;
-    public $products,$search;
+    public $products, $search, $productScanned, $dataProducts;
     public function render()
     {
-        $palets = null;
-        if($this->search){
-            // $palets= DB::table('products')->select(['product_name'])->where('product_barcode','=',$this->search)->get();
-            DB::table('products')->where('product_barcode','=',$this->search)->update(['status' => '1']);
+        
+        if ($this->search) {
+            DB::table('products')->where('product_barcode', '=', $this->search)->update(['status' => '1']);
             $this->search = null;
-        } 
-        // dd($palets);
-        $dataProducts = DB::table('products')->where('pallet_barcode','=',$this->products)->get();
-        return view('livewire.list-product',compact('dataProducts','palets'));
+        }
+
+        // PRODUK BELUM DISCAN
+        $this->dataProducts = DB::table('products')
+            ->where('pallet_barcode', '=', $this->products)
+            ->where('status', '0')->get();
+
+        // PRODUK telah DI SCAN
+        $this->productScanned = DB::table('products')
+            ->where('pallet_barcode', '=', $this->products)
+            ->where('status', '1')->get();
+
+
+        return view('livewire.list-product', ['product' => $this->dataProducts, 'productScanned' => $this->productScanned]);
     }
 }
