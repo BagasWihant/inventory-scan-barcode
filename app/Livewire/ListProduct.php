@@ -4,38 +4,44 @@ namespace App\Livewire;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class ListProduct extends Component
 {
     use WithPagination;
-    public $products, $search,$changes=false;
+    public $products, $produkBarcode, $paletBarcode, $changes = false;
 
-    public function mount($products){
-        $this->products = $products;
-    }
     public function render()
     {
-        
+
         $this->changes = false;
-        if ($this->search) {
-            DB::table('products')->where('product_barcode', '=', $this->search)->update(['status' => '1','updated_at'=>Carbon::now()]);
-            $this->search = null;
+        if ($this->paletBarcode) {
+            $paletUpdate = DB::table('pallets')->where('pallet_barcode',  $this->paletBarcode);
+
+            if (($paletUpdate->count()) > 0) {
+                $paletUpdate->update([
+                    'scanned_by' => auth()->user()->id
+                ]);
+            }
+            $this->dispatch('produkFocus');
+
             $this->changes = true;
         }
 
         // PRODUK BELUM DISCAN
-        $dataProducts = DB::table('products')
-            ->where('pallet_barcode', '=', $this->products)
-            ->where('status', '0')->paginate(5, pageName: 'product');
+        $productsInPalet = DB::table('products')->select(DB::raw('pallet_barcode,material_no, count(material_no) as pax'))
+            ->where('pallet_barcode', $this->paletBarcode)
+            ->groupBy('pallet_barcode', 'material_no')
+            ->paginate(5, pageName: 'product');
 
         // PRODUK telah DI SCAN
-        $productScanned = DB::table('products')
-            ->where('pallet_barcode', '=', $this->products)
-            ->where('status', '1')->orderByDesc('updated_at')->paginate(5,pageName: 'productScanned');
+        // $productScanned = DB::table('products')
+        //     ->where('pallet_barcode', $this->products)
+        //     ->where('status', '1')->orderByDesc('updated_at')->paginate(5, pageName: 'productScanned');
 
 
-        return view('livewire.list-product', ['dataproducts' => $dataProducts, 'productScanned' => $productScanned,'changes'=>$this->changes]);
+        return view('livewire.list-product', ['productsInPalet' => $productsInPalet,  'changes' => $this->changes]);
     }
 }
