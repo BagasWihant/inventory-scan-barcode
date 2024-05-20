@@ -15,7 +15,6 @@ Route::middleware('auth')->group(function () {
 
     Route::controller(InventoryInController::class)->group(function () {
         Route::get('inventory', 'index')->name('inventory.index');
-        Route::get('inventory/{products}/list', 'detail')->name('list.product')->middleware(['signed']);
     });
 });
 

@@ -12,15 +12,16 @@ class InventoryInController extends Controller
      */
     public function index()
     {
-       return view('pages.scan-pallet');
+        return view('pages.list-product');
+        
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function detail($products)
+    public function detail()
     {
-        return view('pages.list-product',compact('products'));
+        return view('pages.list-product');
     }
 
 }
