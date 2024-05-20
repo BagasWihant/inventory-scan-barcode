@@ -1,3 +1,37 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+.animasi-warna {
+    -webkit-animation: animasi-warna 0.7s;
+    animation: animasi-warna 0.7s;
+}
+
+@-webkit-keyframes animasi-warna {
+    0% {
+        background-color: rgba(0, 0, 0, 0);
+    }
+
+    50% {
+        background-color: paleturquoise;
+    }
+
+    100% {
+        background-color: rgba(0, 0, 0, 0);
+    }
+}
+
+@keyframes animasi-warna {
+    0% {
+        background-color: rgba(0, 0, 0, 0);
+    }
+
+    50% {
+        background-color: paleturquoise;
+    }
+
+    100% {
+        background-color: rgba(0, 0, 0, 0);
+    }
+}
