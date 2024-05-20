@@ -9,8 +9,8 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable= ['pallet_barcode','product_name','stock'];
-
+    protected $fillable= ['pallet_barcode','material_no','qty','is_scanned'];
+    
     public function getRouteKeyName()
     {
         return 'pallet_barcode';
