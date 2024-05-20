@@ -9,7 +9,11 @@ use Livewire\WithPagination;
 class ListProduct extends Component
 {
     use WithPagination;
-    public $products, $search, $productScanned, $dataProducts;
+    public $products, $search;
+
+    public function mount($products){
+        $this->products = $products;
+    }
     public function render()
     {
         
@@ -19,16 +23,16 @@ class ListProduct extends Component
         }
 
         // PRODUK BELUM DISCAN
-        $this->dataProducts = DB::table('products')
+        $dataProducts = DB::table('products')
             ->where('pallet_barcode', '=', $this->products)
-            ->where('status', '0')->get();
+            ->where('status', '0')->paginate(5, pageName: 'product');
 
         // PRODUK telah DI SCAN
-        $this->productScanned = DB::table('products')
+        $productScanned = DB::table('products')
             ->where('pallet_barcode', '=', $this->products)
-            ->where('status', '1')->get();
+            ->where('status', '1')->paginate(5,pageName: 'productScanned');
 
 
-        return view('livewire.list-product', ['product' => $this->dataProducts, 'productScanned' => $this->productScanned]);
+        return view('livewire.list-product', ['dataproducts' => $dataProducts, 'productScanned' => $productScanned]);
     }
 }

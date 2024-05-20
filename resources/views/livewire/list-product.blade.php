@@ -27,7 +27,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($product as $product)
+                    @foreach ($dataproducts as $product)
                         <tr
                             class=" border rounded @if ($product->status == 1) bg-green-300 border-green-600 @else bg-white  dark:bg-gray-800 @endif dark:border-gray-700">
                             <th scope="row"
@@ -42,6 +42,9 @@
                         </tr>
                     @endforeach
                 </tbody>
+                {{
+                    $dataproducts->links()
+                }}
             </table>
         </div>
         <div class="w-full">
@@ -81,6 +84,7 @@
                         </tr>
                     @endforeach
                 </tbody>
+                {{$productScanned->links()}}
             </table>
         </div>
     </div>
