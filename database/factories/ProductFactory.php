@@ -19,11 +19,11 @@ class ProductFactory extends Factory
      */
     public function definition(): array
     {
+        $random = ['04860518','22170286','56399264','47304253','34838662','76899737','982742','203948','029375','12987'];
         return [
             'pallet_barcode' => $this->faker->randomElement(Pallet::all())['pallet_barcode'],
-            'product_barcode' => $this->faker->ean13(),
-            'product_name' => $this->faker->word,
-            'stock' => $this->faker->numberBetween(0, 138),
+            'material_no' => $this->faker->randomElement($random),
+            'qty' => $this->faker->numberBetween(0, 1092),
         ];
     }
 }

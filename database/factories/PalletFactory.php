@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use App\Models\Pallet;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,8 +21,10 @@ class PalletFactory extends Factory
     {
         return [
             'pallet_barcode' => $this->faker->ean8(),
-            'pallet_name' => $this->faker->word(),
-            'pallet_status' => $this->faker->boolean(),
+            'line' => 'CNC',
+            'pallet_serial' => $this->faker->ean8() . ' CNC',
+            'trucking_id' => $this->faker->numerify('#######'),
+            'scanned_by' => $this->faker->randomElement(User::all())['id']
         ];
     }
 }
