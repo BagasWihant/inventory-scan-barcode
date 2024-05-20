@@ -1,3 +1,3 @@
 <x-app-layout>
-    @livewire('list-product',['products' => $products])
+    @livewire('list-product')
 </x-app-layout>
