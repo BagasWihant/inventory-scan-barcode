@@ -28,7 +28,6 @@ class ListProduct extends Component
             DB::table('temp_counters')->where('userID', $this->userId)->delete();
 
             $paletUpdate = DB::table('pallets')->where('pallet_barcode',  $this->paletBarcode);
-
             if (($paletUpdate->count()) > 0) {
                 $paletUpdate->update([
                     'scanned_by' => $this->userId
@@ -44,9 +43,14 @@ class ListProduct extends Component
     public function productBarcodeScan()
     {
         if (strlen($this->produkBarcode) > 2) {
-            $tempCount = DB::table('temp_counters')->where('material', $this->produkBarcode)->where('userID', $this->userId);
+            $tempCount = DB::table('temp_counters')->where('material', $this->produkBarcode)->where('userID', $this->userId)->where('palet', $this->paletBarcode);
+            $data = $tempCount->first();
             if ($tempCount->count() > 0) {
-
+                if ($data->total == $data->counter && $data->sisa == 0) {
+                    $this->dispatch('cannotScan');
+                    $this->produkBarcode = null;
+                    return;
+                }
                 $productDetail = DB::table('products')->where('material_no', $this->produkBarcode)->where('pallet_barcode', $this->paletBarcode)->first();
                 $get = $tempCount->first();
                 $counter = $get->counter + $productDetail->qty;
