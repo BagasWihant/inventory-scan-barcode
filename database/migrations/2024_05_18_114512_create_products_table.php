@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('pallet_barcode',32);
             $table->string('material_no',32);
-            $table->string('qty',50);
+            $table->integer('qty');
             $table->char('is_scanned',1)->default(0);
             $table->timestamps();
 
