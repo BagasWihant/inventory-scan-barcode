@@ -2,12 +2,14 @@
 
 namespace App\Livewire;
 
-use App\Models\tempCounter;
+use App\Models\itemIn;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\On;
 use Livewire\Component;
+use App\Models\tempCounter;
+use Livewire\Attributes\On;
 use Livewire\WithPagination;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ListProduct extends Component
 {
@@ -26,7 +28,7 @@ class ListProduct extends Component
         $this->changes = false;
         if (strlen($this->paletBarcode) > 2  && $this->paletBarcode !== $this->previousPaletBarcode) {
             DB::table('temp_counters')->where('userID', $this->userId)->delete();
-         
+
             $this->dispatch('produkFocus');
 
             $this->changes = true;
@@ -57,11 +59,12 @@ class ListProduct extends Component
 
     public function render()
     {
-
-        $productsQuery = DB::table('products')
-            ->selectRaw('pallet_no, material_no, count(material_no) as pax, sum(picking_qty) as picking_qty')
-            ->where('pallet_no', $this->paletBarcode)
-            ->groupBy('pallet_no', 'material_no');
+        $getScanned = DB::table('item_ins')->where('pallet_no', $this->paletBarcode)->select('material_no')->groupBy('material_no')->pluck('material_no')->all();
+        $productsQuery = DB::table('products as p')
+            ->selectRaw('p.pallet_no, p.material_no, count(p.material_no) as pax, sum(p.picking_qty) as picking_qty')
+            ->where('p.pallet_no', $this->paletBarcode)
+            ->whereNotIn('material_no',$getScanned)
+            ->groupBy('p.pallet_no', 'p.material_no');
 
         $getall = $productsQuery->get();
         $productsInPalet = $productsQuery->paginate(5, ['*'], 'product');
@@ -74,7 +77,7 @@ class ListProduct extends Component
             ->all();
 
         foreach ($getall as $value) {
-            
+
             $counterExists = in_array($value->material_no, $existingCounters);
             if (!$counterExists) {
                 try {
@@ -103,5 +106,31 @@ class ListProduct extends Component
             'scanned' => $scannedCounter,
             'changes' => $this->changes
         ]);
+    }
+
+    public function resetPage(){
+        $this->paletBarcode = null;
+        $this->produkBarcode = null;
+        DB::table('temp_counters')->where('userID', $this->userId)->delete();
+    }
+
+    public function confirm()
+    {
+        $fixProduct = DB::table('temp_counters')
+            ->where('palet', $this->paletBarcode)->where('sisa', 0)->whereRaw('total = counter')
+            ->pluck('material')
+            ->all();
+
+        DB::table('products')->select('material_no', 'picking_qty')->where('pallet_no', $this->paletBarcode)->whereIn('material_no', $fixProduct)->orderBy('id')->chunk(10, function (Collection $data) {
+            foreach ($data as $value) {
+                itemIn::create([
+                    'pallet_no' => $this->paletBarcode,
+                    'material_no' => $value->material_no,
+                    'picking_qty' => $value->picking_qty
+                ]);
+            }
+        });
+
+        $this->resetPage();
     }
 }
