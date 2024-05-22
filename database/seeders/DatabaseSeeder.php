@@ -23,12 +23,10 @@ class DatabaseSeeder extends Seeder
         ]);
         
         DB::table('pallets')->insertOrIgnore([
-            'pallet_barcode' => 'Y-01-00003',
-            'line' => 'CNC',
+            'pallet_no' => 'Y-01-00003',
+            'line_c' => 'CNC',
             'pallet_serial' => 'asda',
             'trucking_id' => 987,
-            'scanned_by' => 1,
-            'is_scanned' => 0,
         ]);
         $csvFile = public_path('data.csv');
 
@@ -41,10 +39,9 @@ class DatabaseSeeder extends Seeder
             
             while (($data = fgetcsv($handle, 1000, ',')) !== false) {
                 DB::table('products')->insert([
-                    'pallet_barcode' => $data[2],
+                    'pallet_no' => $data[2],
                     'material_no' => $data[0],
                     'qty' => $data[1],
-                    'is_scanned' => 0,
                 ]);
             }
 

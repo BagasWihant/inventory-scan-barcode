@@ -17,8 +17,6 @@ return new class extends Migration
             $table->string('line_c',32);
             $table->string('pallet_serial',32)->comment('id + line');
             $table->string('trucking_id',20);
-            $table->boolean('is_scanned')->default(0);
-            $table->string('scanned_by',20);
         });
     }
 

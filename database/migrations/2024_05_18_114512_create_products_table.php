@@ -19,7 +19,7 @@ return new class extends Migration
             // $table->char('is_scanned',1)->default(0);
             $table->timestamps();
 
-            $table->foreign('pallet_barcode')->references('pallet_barcode')->on('pallets')->onDelete('cascade');
+            $table->foreign('pallet_no')->references('pallet_no')->on('pallets')->onDelete('cascade');
         });
     }
 
