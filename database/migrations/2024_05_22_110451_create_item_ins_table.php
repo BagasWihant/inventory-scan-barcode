@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('item_ins', function (Blueprint $table) {
+        Schema::create('material_in_stock', function (Blueprint $table) {
             $table->id();
             $table->string('pallet_no',32)->index();
             $table->string('material_no',32)->index();

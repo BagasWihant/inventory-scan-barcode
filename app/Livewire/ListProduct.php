@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\itemIn;
+use App\Models\itemSisa;
 use Carbon\Carbon;
 use Livewire\Component;
 use App\Models\tempCounter;
@@ -59,12 +60,12 @@ class ListProduct extends Component
 
     public function render()
     {
-        $getScanned = DB::table('item_ins')->where('pallet_no', $this->paletBarcode)->select('material_no')->groupBy('material_no')->pluck('material_no')->all();
+        $getScanned = DB::table('material_in_stock')->where('pallet_no', $this->paletBarcode)->select('material_no')->groupBy('material_no')->pluck('material_no')->all();
         $productsQuery = DB::table('products as p')
             ->selectRaw('p.pallet_no, p.material_no, count(p.material_no) as pax, sum(p.picking_qty) as picking_qty')
             ->where('p.pallet_no', $this->paletBarcode)
-            ->whereNotIn('material_no',$getScanned)
-            ->groupBy('p.pallet_no', 'p.material_no');
+            ->whereNotIn('material_no', $getScanned)
+            ->groupBy('p.pallet_no', 'p.material_no')->orderByDesc('material_no');
 
         $getall = $productsQuery->get();
         $productsInPalet = $productsQuery->paginate(5, ['*'], 'product');
@@ -98,7 +99,7 @@ class ListProduct extends Component
         }
 
 
-        $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)->where('userID', $this->userId)
+        $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)->where('userID', $this->userId)->orderByDesc('material')
             ->paginate(5, ['*'], 'count');
 
         return view('livewire.list-product', [
@@ -108,7 +109,8 @@ class ListProduct extends Component
         ]);
     }
 
-    public function resetPage(){
+    public function resetPage()
+    {
         $this->paletBarcode = null;
         $this->produkBarcode = null;
         DB::table('temp_counters')->where('userID', $this->userId)->delete();
@@ -116,21 +118,47 @@ class ListProduct extends Component
 
     public function confirm()
     {
-        $fixProduct = DB::table('temp_counters')
-            ->where('palet', $this->paletBarcode)->where('sisa', 0)->whereRaw('total = counter')
-            ->pluck('material')
-            ->all();
+        $fixProduct = DB::table('temp_counters')->where('palet', $this->paletBarcode);
+        $b = $fixProduct->get();
+        $collectCounter = collect($b);
 
-        DB::table('products')->select('material_no', 'picking_qty')->where('pallet_no', $this->paletBarcode)->whereIn('material_no', $fixProduct)->orderBy('id')->chunk(10, function (Collection $data) {
-            foreach ($data as $value) {
-                itemIn::create([
-                    'pallet_no' => $this->paletBarcode,
-                    'material_no' => $value->material_no,
-                    'picking_qty' => $value->picking_qty
-                ]);
+        // DB::table('products')->select('material_no', 'picking_qty')->where('pallet_no', $this->paletBarcode)->orderBy('id')->chunk(10, function (Collection $data) {
+        //     foreach ($data as $value) {
+        //     }
+        // });
+        foreach ($collectCounter as $data) {
+            if ($data->total == $data->counter && $data->sisa == 0) {
+                $pax = $data->pax;
+                $qty = $data->total / $pax;
+                for ($i = 1; $i <= $pax; $i++) {
+                    itemIn::create([
+                        'pallet_no' => $this->paletBarcode,
+                        'material_no' => $data->material,
+                        'picking_qty' => $qty
+                    ]);
+                }
+            }elseif ($data->counter > 0 && $data->sisa !== 0) {
+                $qty = $data->total / $data->pax;
+                $jmlIn = $data->counter / $qty;
+                for ($i=0; $i < $jmlIn; $i++) { 
+                    itemIn::create([
+                        'pallet_no' => $this->paletBarcode,
+                        'material_no' => $data->material,
+                        'picking_qty' => $qty
+                    ]);
+                } 
+
+                $jmlSisa = ($data->total / $qty) - $jmlIn;
+                for ($i=0; $i < $jmlSisa; $i++) { 
+                    itemSisa::create([
+                        'pallet_no' => $this->paletBarcode,
+                        'material_no' => $data->material,
+                        'picking_qty' => $qty
+                    ]);
+                }
+                
             }
-        });
-
+        }
         $this->resetPage();
     }
 }
