@@ -26,13 +26,7 @@ class ListProduct extends Component
         $this->changes = false;
         if (strlen($this->paletBarcode) > 2  && $this->paletBarcode !== $this->previousPaletBarcode) {
             DB::table('temp_counters')->where('userID', $this->userId)->delete();
-
-            $paletUpdate = DB::table('pallets')->where('pallet_barcode',  $this->paletBarcode);
-            if (($paletUpdate->count()) > 0) {
-                $paletUpdate->update([
-                    'scanned_by' => $this->userId
-                ]);
-            }
+         
             $this->dispatch('produkFocus');
 
             $this->changes = true;
@@ -51,10 +45,10 @@ class ListProduct extends Component
                     $this->produkBarcode = null;
                     return;
                 }
-                $productDetail = DB::table('products')->where('material_no', $this->produkBarcode)->where('pallet_barcode', $this->paletBarcode)->first();
+                $productDetail = DB::table('products')->where('material_no', $this->produkBarcode)->where('pallet_no', $this->paletBarcode)->first();
                 $get = $tempCount->first();
-                $counter = $get->counter + $productDetail->qty;
-                $sisa = $get->sisa - $productDetail->qty;
+                $counter = $get->counter + $productDetail->picking_qty;
+                $sisa = $get->sisa - $productDetail->picking_qty;
                 $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
             }
         }
@@ -65,32 +59,44 @@ class ListProduct extends Component
     {
 
         $productsQuery = DB::table('products')
-            ->selectRaw('pallet_barcode, material_no, count(material_no) as pax, sum(qty) as qty')
-            ->where('pallet_barcode', $this->paletBarcode)
-            ->groupBy('pallet_barcode', 'material_no');
-        // dd($productsQuery);
+            ->selectRaw('pallet_no, material_no, count(material_no) as pax, sum(picking_qty) as picking_qty')
+            ->where('pallet_no', $this->paletBarcode)
+            ->groupBy('pallet_no', 'material_no');
+
         $getall = $productsQuery->get();
         $productsInPalet = $productsQuery->paginate(5, ['*'], 'product');
 
+        $materialNos = $getall->pluck('material_no')->all();
+        $existingCounters = DB::table('temp_counters')
+            ->where('palet', $this->paletBarcode)
+            ->whereIn('material', $materialNos)
+            ->pluck('material')
+            ->all();
+
         foreach ($getall as $value) {
-            $counterExists = DB::table('temp_counters')->where('material', $value->material_no)->where('palet', $this->paletBarcode)->exists();
+            
+            $counterExists = in_array($value->material_no, $existingCounters);
             if (!$counterExists) {
-                tempCounter::create([
-                    'material' => $value->material_no,
-                    'palet' => $this->paletBarcode,
-                    'userID' => $this->userId,
-                    'sisa' => $value->qty,
-                    'total' => $value->qty,
-                    'pax' => $value->pax,
-                ]);
+                try {
+                    DB::beginTransaction();
+                    tempCounter::create([
+                        'material' => $value->material_no,
+                        'palet' => $this->paletBarcode,
+                        'userID' => $this->userId,
+                        'sisa' => $value->picking_qty,
+                        'total' => $value->picking_qty,
+                        'pax' => $value->pax,
+                    ]);
+                    DB::commit();
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                }
             }
         }
 
 
         $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)->where('userID', $this->userId)
-            // ->toRawSql();
             ->paginate(5, ['*'], 'count');
-        // dd($scannedCounter);
 
         return view('livewire.list-product', [
             'productsInPalet' => $productsInPalet,
