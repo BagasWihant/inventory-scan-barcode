@@ -41,7 +41,7 @@ class DatabaseSeeder extends Seeder
                 DB::table('products')->insert([
                     'pallet_no' => $data[2],
                     'material_no' => $data[0],
-                    'qty' => $data[1],
+                    'picking_qty' => $data[1],
                 ]);
             }
 
