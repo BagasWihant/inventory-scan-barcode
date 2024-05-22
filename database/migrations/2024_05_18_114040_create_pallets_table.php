@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('pallets', function (Blueprint $table) {
             $table->id();
-            $table->string('pallet_barcode',32)->unique();
-            $table->string('line',32);
+            $table->string('pallet_no',32)->unique();
+            $table->string('line_c',32);
             $table->string('pallet_serial',32)->comment('id + line');
             $table->string('trucking_id',20);
             $table->boolean('is_scanned')->default(0);

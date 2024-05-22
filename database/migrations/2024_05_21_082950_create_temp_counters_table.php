@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('temp_counters', function (Blueprint $table) {
-            $table->id();
             $table->string('material',32)->index();
             $table->string('palet',32)->index();
             $table->bigInteger('userID')->index();
@@ -20,6 +19,7 @@ return new class extends Migration
             $table->integer('counter')->default(0);
             $table->integer('sisa');
             $table->integer('pax');
+            $table->unique(['material','palet']);
         });
     }
 
