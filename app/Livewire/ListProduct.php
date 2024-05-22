@@ -68,7 +68,7 @@ class ListProduct extends Component
             ->groupBy('p.pallet_no', 'p.material_no')->orderByDesc('material_no');
 
         $getall = $productsQuery->get();
-        $productsInPalet = $productsQuery->paginate(5, ['*'], 'product');
+        
 
         $materialNos = $getall->pluck('material_no')->all();
         $existingCounters = DB::table('temp_counters')
@@ -99,11 +99,11 @@ class ListProduct extends Component
         }
 
 
-        $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)->where('userID', $this->userId)->orderByDesc('material')
-            ->paginate(5, ['*'], 'count');
+        $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)->where('userID', $this->userId)->orderByDesc('material')->get();
+        // $productsInPalet =
 
         return view('livewire.list-product', [
-            'productsInPalet' => $productsInPalet,
+            'productsInPalet' => $getall,
             'scanned' => $scannedCounter,
             'changes' => $this->changes
         ]);

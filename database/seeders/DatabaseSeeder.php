@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'bagas@mail.com',
         ]);
         
-        DB::table('pallets')->insertOrIgnore([
+        DB::table('pallets')->insert([
             'pallet_no' => 'Y-01-00003',
             'line_c' => 'CNC',
             'pallet_serial' => 'asda',

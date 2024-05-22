@@ -1,18 +1,21 @@
 <div>
-    <div class="mb-5">
-        <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Palet BARCODE
-        </label>
-        <input autofocus wire:model="paletBarcode" wire:keydown.debounce.150ms="paletBarcodeScan" type="text"
-            id="paletBarcode"
-            class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+    <div class="flex gap-4">
+        <div class="w-full">
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Palet BARCODE
+            </label>
+            <input autofocus wire:model="paletBarcode" wire:keydown.debounce.150ms="paletBarcodeScan" type="text"
+                id="paletBarcode"
+                class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+        </div>
+        <div class="w-full">
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PRODUK BARCODE
+            </label>
+            <input wire:model="produkBarcode" wire:keydown.debounce.150ms="productBarcodeScan" type="text"
+                id="produkBarcode"
+                class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+        </div>
     </div>
-    <div class="mb-5">
-        <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PRODUK BARCODE
-        </label>
-        <input wire:model="produkBarcode" wire:keydown.debounce.150ms="productBarcodeScan" type="text"
-            id="produkBarcode"
-            class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-    </div>
+
     <div class="flex gap-4 overflow-x-auto shadow-lg sm:rounded-lg p-3 ">
         <div class="w-full">
 
@@ -60,7 +63,7 @@
                         @endforeach
                     </tbody>
                 </table>
-                {{ $productsInPalet->links() }}
+                {{-- {{ $productsInPalet->links() }} --}}
             @endif
 
         </div>
@@ -84,6 +87,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {{-- {{dd($scanned)}} --}}
                         @foreach ($scanned as $v)
                             <tr
                                 class=" border rounded @if ($v->total == $v->counter) bg-green-300 dark:bg-green-500 @else bg-red-300 dark:bg-red-500 @endif  dark:border-gray-700">
@@ -100,10 +104,11 @@
                         @endforeach
                     </tbody>
                 </table>
-                {{ $scanned->links() }}
+                {{-- {{ $scanned->links() }} --}}
             @endif
         </div>
     </div>
+
     <div class="flex justify-end pt-3">
         <button type="button" wire:click="resetPage"
             class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Reset</button>
