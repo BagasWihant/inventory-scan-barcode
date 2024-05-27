@@ -153,6 +153,9 @@
         $wire.on('produkFocus', (event) => {
             $("#produkBarcode").focus()
         });
+        $wire.on('paletFocus', (event) => {
+            $("#paletBarcode").focus()
+        });
         $wire.on('cannotScan', (event) => {
             alert('gak bisa scan')
             console.log('ass');

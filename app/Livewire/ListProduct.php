@@ -68,7 +68,7 @@ class ListProduct extends Component
             ->groupBy('p.pallet_no', 'p.material_no')->orderByDesc('material_no');
 
         $getall = $productsQuery->get();
-        
+
 
         $materialNos = $getall->pluck('material_no')->all();
         $existingCounters = DB::table('temp_counters')
@@ -114,6 +114,7 @@ class ListProduct extends Component
         $this->paletBarcode = null;
         $this->produkBarcode = null;
         DB::table('temp_counters')->where('userID', $this->userId)->delete();
+        $this->dispatch('paletFocus');
     }
 
     public function confirm()
@@ -137,26 +138,25 @@ class ListProduct extends Component
                         'picking_qty' => $qty
                     ]);
                 }
-            }elseif ($data->counter > 0 && $data->sisa !== 0) {
+            } elseif ($data->counter > 0 && $data->sisa !== 0) {
                 $qty = $data->total / $data->pax;
                 $jmlIn = $data->counter / $qty;
-                for ($i=0; $i < $jmlIn; $i++) { 
+                for ($i = 0; $i < $jmlIn; $i++) {
                     itemIn::create([
                         'pallet_no' => $this->paletBarcode,
                         'material_no' => $data->material,
                         'picking_qty' => $qty
                     ]);
-                } 
+                }
 
                 $jmlSisa = ($data->total / $qty) - $jmlIn;
-                for ($i=0; $i < $jmlSisa; $i++) { 
+                for ($i = 0; $i < $jmlSisa; $i++) {
                     itemSisa::create([
                         'pallet_no' => $this->paletBarcode,
                         'material_no' => $data->material,
                         'picking_qty' => $qty
                     ]);
                 }
-                
             }
         }
         $this->resetPage();
