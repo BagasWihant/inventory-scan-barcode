@@ -40,8 +40,17 @@ class ListProduct extends Component
 
     public function productBarcodeScan()
     {
+        // $tes = "P104101G0B0-L290324ES07008-Q1500 // 1H030C.GX-BX290324ES07008-[0] //10036|AVSS 0.3 G-B|1500|13E290324ES07008";
+        $produakBarcode = explode('|',$this->produkBarcode);
+
+        $titik = explode(".",$produkBarcode[1]);
+        $kurang = explode("-",$titik[1]);
+        $spasi = explode(" ",$kurang[0]);
+        $text = "$titik[0]$spasi[0]0$spasi[1]-$kurang[1]";
+        $this->produkBarcode = str_replace(" ",'',$text);
+        
         if (strlen($this->produkBarcode) > 2) {
-            $tempCount = DB::table('temp_counters')->where('material', $this->produkBarcode)->where('userID', $this->userId)->where('palet', $this->paletBarcode);
+            $tempCount = DB::table('temp_counters')->where('material_fix', $this->produkBarcode)->where('userID', $this->userId)->where('palet', $this->paletBarcode);
             $data = $tempCount->first();
             if ($tempCount->count() > 0) {
                 if ($data->total == $data->counter && $data->sisa == 0) {
@@ -49,8 +58,8 @@ class ListProduct extends Component
                     $this->produkBarcode = null;
                     return;
                 }
-                $productDetail = DB::table('products')->where('material_no', $this->produkBarcode)->where('pallet_no', $this->paletBarcode)->first();
                 $get = $tempCount->first();
+                $productDetail = DB::table('products')->where('material_no', $get->material)->where('pallet_no', $this->paletBarcode)->first();
                 $counter = $get->counter + $productDetail->picking_qty;
                 $sisa = $get->sisa - $productDetail->picking_qty;
                 $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
@@ -63,29 +72,29 @@ class ListProduct extends Component
     {
         $getScanned = DB::table('material_in_stock')->where('pallet_no', $this->paletBarcode)->select('material_no')->groupBy('material_no')->pluck('material_no')->all();
         $productsQuery = DB::table('products as p')
-            ->selectRaw('p.pallet_no, p.material_no, count(p.material_no) as pax, sum(p.picking_qty) as picking_qty')
+            ->selectRaw('p.pallet_no, p.material_no, count(p.material_no) as pax, sum(p.picking_qty) as picking_qty,replace(material_no," ","") as fix_material_no')
             ->where('p.pallet_no', $this->paletBarcode)
             ->whereNotIn('material_no', $getScanned)
             ->groupBy('p.pallet_no', 'p.material_no')->orderByDesc('material_no');
 
         $getall = $productsQuery->get();
-
-
+        
         $materialNos = $getall->pluck('material_no')->all();
         $existingCounters = DB::table('temp_counters')
-            ->where('palet', $this->paletBarcode)
-            ->whereIn('material', $materialNos)
-            ->pluck('material')
-            ->all();
-
+        ->where('palet', $this->paletBarcode)
+        ->whereIn('material', $materialNos)
+        ->pluck('material')
+        ->all();
+        
         foreach ($getall as $value) {
-
+            
             $counterExists = in_array($value->material_no, $existingCounters);
             if (!$counterExists) {
                 try {
                     DB::beginTransaction();
                     tempCounter::create([
                         'material' => $value->material_no,
+                        'material_fix' => $value->fix_material_no,
                         'palet' => $this->paletBarcode,
                         'userID' => $this->userId,
                         'sisa' => $value->picking_qty,
@@ -95,6 +104,7 @@ class ListProduct extends Component
                     DB::commit();
                 } catch (\Throwable $th) {
                     DB::rollBack();
+
                 }
             }
         }
