@@ -26,6 +26,7 @@ class ListProduct extends Component
 
     public function paletBarcodeScan()
     {
+        $this->paletBarcode = substr($this->paletBarcode,0,10);
         $this->changes = false;
         if (strlen($this->paletBarcode) > 2  && $this->paletBarcode !== $this->previousPaletBarcode) {
             DB::table('temp_counters')->where('userID', $this->userId)->delete();
