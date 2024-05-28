@@ -21,13 +21,24 @@ class DatabaseSeeder extends Seeder
             'name' => 'bagas',
             'email' => 'bagas@mail.com',
         ]);
-        
-        DB::table('pallets')->insert([
-            'pallet_no' => 'Y-01-00003',
-            'line_c' => 'CNC',
-            'pallet_serial' => 'asda',
-            'trucking_id' => 987,
-        ]);
+
+        DB::table('pallets')->insert(
+            [
+                'pallet_no' => 'Y-01-00003',
+                'line_c' => 'CNC',
+                'pallet_serial' => 'asda',
+                'trucking_id' => 987,
+            ]
+        );
+        DB::table('pallets')->insert(
+
+            [
+                'pallet_no' => 'Y-01-00007',
+                'line_c' => 'CNC',
+                'pallet_serial' => 'agdfg',
+                'trucking_id' => 9328,
+            ]
+        );
         $csvFile = public_path('data.csv');
 
         if (!file_exists($csvFile) || !is_readable($csvFile)) {
@@ -36,7 +47,7 @@ class DatabaseSeeder extends Seeder
         }
 
         if (($handle = fopen($csvFile, 'r')) !== false) {
-            
+
             while (($data = fgetcsv($handle, 1000, ',')) !== false) {
                 DB::table('products')->insert([
                     'pallet_no' => $data[2],
