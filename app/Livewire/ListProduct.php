@@ -26,7 +26,7 @@ class ListProduct extends Component
 
     public function paletBarcodeScan()
     {
-        $this->paletBarcode = substr($this->paletBarcode,0,10);
+        $this->paletBarcode = substr($this->paletBarcode, 0, 10);
         $this->changes = false;
         if (strlen($this->paletBarcode) > 2  && $this->paletBarcode !== $this->previousPaletBarcode) {
             DB::table('temp_counters')->where('userID', $this->userId)->delete();
@@ -41,28 +41,30 @@ class ListProduct extends Component
     public function productBarcodeScan()
     {
         // $tes = "P104101G0B0-L290324ES07008-Q1500 // 1H030C.GX-BX290324ES07008-[0] //10036|AVSS 0.3 G-B|1500|13E290324ES07008";
-        $produakBarcode = explode('|',$this->produkBarcode);
+        $produkBarcode = explode('|', $this->produkBarcode);
+        if (isset($produkBarcode[1])) {
 
-        $titik = explode(".",$produkBarcode[1]);
-        $kurang = explode("-",$titik[1]);
-        $spasi = explode(" ",$kurang[0]);
-        $text = "$titik[0]$spasi[0]0$spasi[1]-$kurang[1]";
-        $this->produkBarcode = str_replace(" ",'',$text);
-        
-        if (strlen($this->produkBarcode) > 2) {
-            $tempCount = DB::table('temp_counters')->where('material_fix', $this->produkBarcode)->where('userID', $this->userId)->where('palet', $this->paletBarcode);
-            $data = $tempCount->first();
-            if ($tempCount->count() > 0) {
-                if ($data->total == $data->counter && $data->sisa == 0) {
-                    $this->dispatch('cannotScan');
-                    $this->produkBarcode = null;
-                    return;
+            $titik = explode(".", $produkBarcode[1]);
+            $kurang = explode("-", $titik[1]);
+            $spasi = explode(" ", $kurang[0]);
+            $text = "$titik[0]$spasi[0]0$spasi[1]-$kurang[1]";
+            $this->produkBarcode = str_replace(" ", '', $text);
+
+            if (strlen($this->produkBarcode) > 2) {
+                $tempCount = DB::table('temp_counters')->where('material_fix', $this->produkBarcode)->where('userID', $this->userId)->where('palet', $this->paletBarcode);
+                $data = $tempCount->first();
+                if ($tempCount->count() > 0) {
+                    if ($data->total == $data->counter && $data->sisa == 0) {
+                        $this->dispatch('cannotScan');
+                        $this->produkBarcode = null;
+                        return;
+                    }
+                    $get = $tempCount->first();
+                    $productDetail = DB::table('products')->where('material_no', $get->material)->where('pallet_no', $this->paletBarcode)->first();
+                    $counter = $get->counter + $productDetail->picking_qty;
+                    $sisa = $get->sisa - $productDetail->picking_qty;
+                    $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
                 }
-                $get = $tempCount->first();
-                $productDetail = DB::table('products')->where('material_no', $get->material)->where('pallet_no', $this->paletBarcode)->first();
-                $counter = $get->counter + $productDetail->picking_qty;
-                $sisa = $get->sisa - $productDetail->picking_qty;
-                $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
             }
         }
         $this->produkBarcode = null;
@@ -78,16 +80,16 @@ class ListProduct extends Component
             ->groupBy('p.pallet_no', 'p.material_no')->orderByDesc('material_no');
 
         $getall = $productsQuery->get();
-        
+
         $materialNos = $getall->pluck('material_no')->all();
         $existingCounters = DB::table('temp_counters')
-        ->where('palet', $this->paletBarcode)
-        ->whereIn('material', $materialNos)
-        ->pluck('material')
-        ->all();
-        
+            ->where('palet', $this->paletBarcode)
+            ->whereIn('material', $materialNos)
+            ->pluck('material')
+            ->all();
+
         foreach ($getall as $value) {
-            
+
             $counterExists = in_array($value->material_no, $existingCounters);
             if (!$counterExists) {
                 try {
@@ -104,7 +106,6 @@ class ListProduct extends Component
                     DB::commit();
                 } catch (\Throwable $th) {
                     DB::rollBack();
-
                 }
             }
         }
