@@ -41,13 +41,20 @@ class ListProduct extends Component
     public function productBarcodeScan()
     {
         // $tes = "P104101G0B0-L290324ES07008-Q1500 // 1H030C.GX-BX290324ES07008-[0] //10036|AVSS 0.3 G-B|1500|13E290324ES07008";
+        // $tes = "P104101G0B0-L290324ES07008-Q1500 // 1H030C.GX-BX290324ES07008-[0] //10036|AVSS 0.3 L|1500|13E290324ES07008";
+        // $tes = "P104101G0B0-L290324ES07008-Q1500 // 1H030C.GX-BX290324ES07008-[0] //10036|AVSS 0.85 G|1500|13E290324ES07008";
         $produkBarcode = explode('|', $this->produkBarcode);
         if (isset($produkBarcode[1])) {
 
             $titik = explode(".", $produkBarcode[1]);
             $kurang = explode("-", $titik[1]);
             $spasi = explode(" ", $kurang[0]);
-            $text = "$titik[0]$spasi[0]0$spasi[1]-$kurang[1]";
+            if(strlen($spasi[0]) >1) $spasi[0] = $spasi[0];
+            if(strlen($spasi[0]) ==1) $spasi[0] = "$spasi[0]0";
+
+            if(count($kurang) >1) $text = "$titik[0]$spasi[0]$spasi[1]-$kurang[1]";
+            else $text = "$titik[0]$spasi[0]$spasi[1]";
+            
             $this->produkBarcode = str_replace(" ", '', $text);
 
             if (strlen($this->produkBarcode) > 2) {
