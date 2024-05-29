@@ -1,52 +1,56 @@
 <x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
-        @csrf
 
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-        </div>
+    <div class="flex h-screen w-full items-center justify-center bg-gray-900 bg-cover bg-no-repeat"
+        style="background-image:url('{{ asset('assets/bg.jpg') }}')">
+        <div class="rounded-xl bg-gray-800 bg-opacity-50 px-16 py-10 shadow-lg backdrop-blur-md max-sm:px-8">
+            <div class="text-white">
+                <div class="mb-8 flex flex-col items-center">
+                    {{-- <img src="https://www.logo.wine/a/logo/Instagram/Instagram-Glyph-Color-Logo.wine.svg" width="150" alt="" srcset="" /> --}}
+                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
 
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+                    <h1 class="mb-2 text-2xl">Inventory Scan Barcode</h1>
+                    <span class="text-gray-300">Enter Login Details</span>
+                </div>
+                <form method="POST" action="{{ route('register') }}">
+                    @csrf
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+                    <div class="mb-4 text-lg">
+                        <input
+                            class="rounded-3xl border-none bg-blue-400 bg-opacity-50 px-6 py-2 text-center text-inherit placeholder-slate-200 shadow-lg outline-none backdrop-blur-md"
+                            type="text" name="name" value="{{ old('name') }}" placeholder="Name" />
+                        <x-input-error :messages="$errors->get('name')" class="mt-2" />
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
+                    </div>
+                    <div class="mb-4 text-lg">
+                        <input
+                            class="rounded-3xl border-none bg-blue-400 bg-opacity-50 px-6 py-2 text-center text-inherit placeholder-slate-200 shadow-lg outline-none backdrop-blur-md"
+                            type="email" name="email" value="{{ old('email') }}" placeholder="Email" />
+                        <x-input-error :messages="$errors->get('email')" class="mt-2" />
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+                    </div>
 
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('login') }}">
+                    <div class="mb-4 text-lg">
+                        <input
+                            class="rounded-3xl border-none bg-blue-400 bg-opacity-50 px-6 py-2 text-center text-inherit placeholder-slate-200 shadow-lg outline-none backdrop-blur-md"
+                            type="Password" name="password" placeholder="Password" />
+                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                    </div>
+                    <div class="mb-4 text-lg">
+                        <input
+                            class="rounded-3xl border-none bg-blue-400 bg-opacity-50 px-6 py-2 text-center text-inherit placeholder-slate-200 shadow-lg outline-none backdrop-blur-md"
+                            type="Password" name="password_confirmation" placeholder="Password Confirmation" />
+                        <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+                    </div>
+                    <div class="mt-8 flex justify-center text-lg text-black">
+                        <button type="submit"
+                            class="rounded-3xl bg-blue-400 bg-opacity-50 px-10 py-2 text-white shadow-xl backdrop-blur-md transition-colors duration-300 hover:bg-yellow-600">Register</button>
+                    </div>
+                    <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+                href="{{ route('login') }}">
                 {{ __('Already registered?') }}
             </a>
-
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
+                </form>
+            </div>
         </div>
-    </form>
+    </div>
 </x-guest-layout>
