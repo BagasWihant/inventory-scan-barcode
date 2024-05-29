@@ -32,6 +32,17 @@
 
                     </div>
 
+                    <div class="mb-4 text-lg text-center">
+                        <select id="section" name="section" value="{{ old('section') }}" class="rounded-3xl border-none bg-blue-400 bg-opacity-50 px-6 py-2 text-center text-inherit placeholder-slate-200 shadow-lg outline-none backdrop-blur-md">
+                            <option>Section</option>
+                          @php
+                            DB::table('section')->select('id', 'section')->where('active', 1)->get()->map(function ($item) {
+                              echo '<option value="' . $item->id . '">' . $item->section . '</option>';
+                            })->implode('')
+                          @endphp
+                        </select>
+                      </div>
+                      
                     <div class="mb-4 text-lg">
                         <input
                             class="rounded-3xl border-none bg-blue-400 bg-opacity-50 px-6 py-2 text-center text-inherit placeholder-slate-200 shadow-lg outline-none backdrop-blur-md"
