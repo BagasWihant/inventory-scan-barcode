@@ -15,6 +15,10 @@ class InventoryInController extends Controller
         return view('pages.list-product');
         
     }
+    
+    public function excess() {
+        return view('pages.excess-item');
+    }
 
     /**
      * Show the form for creating a new resource.

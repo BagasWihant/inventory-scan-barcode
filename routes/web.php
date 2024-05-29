@@ -15,6 +15,7 @@ Route::middleware('auth')->group(function () {
 
     Route::controller(InventoryInController::class)->group(function () {
         Route::get('inventory', 'index')->name('inventory.index');
+        Route::get('excess', 'excess')->name('excess');
     });
 });
 
