@@ -11,13 +11,18 @@ use Maatwebsite\Excel\Facades\Excel;
 class ExcessMaterial extends Component
 {
     use WithFileUploads;
-    public $fileExcel;
+    public $fileExcel,$searchKey,$dataCetak;
     public function render()
     {
-        $data = DB::table('material_kelebihans')
+        $query = DB::table('material_kelebihans')
         ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax')
-        ->groupBy(['material_no','pallet_no'])
-        ->get();
+        ->groupBy(['material_no','pallet_no']);
+       
+        if($this->searchKey) $query->where('pallet_no','like',"%$this->searchKey%");
+        $data= $query->get();
+        
+        
+        $this->dataCetak = $data;
         return view('livewire.excess-material',compact('data'));
     }
 
