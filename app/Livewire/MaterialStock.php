@@ -31,7 +31,7 @@ class MaterialStock extends Component
     }
     
     public function exportExcel()  {
-        return Excel::download(new InStockExportExcel($this->dataCetak), 'invoices.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        return Excel::download(new InStockExport($this->dataCetak), 'invoices.xlsx', \Maatwebsite\Excel\Excel::XLSX);
         
     }
 }

@@ -17,7 +17,7 @@
     </div>
 
     <div class="flex justify-center">
-        <div wire:loading wire:target="confirm,productBarcodeScan" aria-label="Loading..." role="status">
+        <div wire:loading wire:target="confirm,productBarcodeScan,paletBarcodeScan" aria-label="Loading..." role="status">
             <svg class="h-20 w-20 animate-spin stroke-gray-500" viewBox="0 0 256 256">
                 <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
                     stroke-linejoin="round" stroke-width="24"></line>
