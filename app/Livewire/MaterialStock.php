@@ -2,12 +2,15 @@
 
 namespace App\Livewire;
 
-use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use App\Exports\InStockExport;
+use Illuminate\Support\Facades\DB;
+use App\Exports\InStockExportExcel;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MaterialStock extends Component
 {
-    public $searchKey;
+    public $searchKey,$dataCetak;
 
     public function render()
     {
@@ -17,6 +20,18 @@ class MaterialStock extends Component
         if($this->searchKey) $query->where('pallet_no','like',"%$this->searchKey%");
         $data= $query->get();
 
+        $this->dataCetak = $data;
         return view('livewire.material-stock',compact('data'));
+    }
+
+    public function exportPdf()  {
+        sleep(30);
+        return Excel::download(new InStockExport($this->dataCetak), 'invoices.pdf', \Maatwebsite\Excel\Excel::MPDF);
+        
+    }
+    
+    public function exportExcel()  {
+        return Excel::download(new InStockExportExcel($this->dataCetak), 'invoices.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        
     }
 }
