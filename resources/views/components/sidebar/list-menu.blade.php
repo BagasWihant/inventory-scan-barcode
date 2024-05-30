@@ -4,7 +4,9 @@
 @php
     $menu = [
         ['url' => route('inventory.index'), 'label' => 'Scan Palet & Item'],
-        ['url' => route('excess'), 'label' => 'Kelebihan Item'],
+        ['url' => route('instock'), 'label' => 'Material Stock'],
+        ['url' => route('lack'), 'label' => 'Kekurangan Material'],
+        ['url' => route('excess'), 'label' => 'Kelebihan Material'],
     ];
 
 @endphp

@@ -1,6 +1,6 @@
 <div>
-
-    <div class="text-xl font-extrabold py-3">Kelebihan Item</div>
+    
+    <div class="text-2xl text-center font-extrabold py-6">Stock Material</div>
 
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -49,16 +49,16 @@
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                         <th scope="row"
                             class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            {{$d->pallet_no}}
+                            {{ $d->pallet_no }}
                         </th>
                         <td class="px-6 py-4">
-                            {{$d->material_no}}
+                            {{ $d->material_no }}
                         </td>
                         <td class="px-6 py-4">
-                            {{$d->pax}}
+                            {{ $d->pax }}
                         </td>
                         <td class="px-6 py-4">
-                            {{$d->qty}}
+                            {{ $d->qty }}
                         </td>
                         <td class="px-6 py-4 text-right">
                             <a href="#"

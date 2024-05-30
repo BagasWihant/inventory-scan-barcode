@@ -75,6 +75,7 @@ class ListProduct extends Component
         $getall = $productsQuery->get();
 
         $materialNos = $getall->pluck('material_no')->all();
+
         $existingCounters = DB::table('temp_counters')
             ->where('palet', $this->paletBarcode)
             ->whereIn('material', $materialNos)
@@ -102,10 +103,32 @@ class ListProduct extends Component
             }
         }
 
+        // KURANG
+        $kurang = DB::table('material_kurang')
+            ->selectRaw('pallet_no, material_no, count(material_no) as pax, sum(picking_qty) as picking_qty')
+            ->where('pallet_no', $this->paletBarcode)
+            ->groupBy('pallet_no', 'material_no')->orderByDesc('material_no')->get();
+
+        foreach ($kurang as $value) {
+            $getall->push($value);
+            try {
+                DB::beginTransaction();
+                tempCounter::create([
+                    'material' => $value->material_no,
+                    'palet' => $this->paletBarcode,
+                    'userID' => $this->userId,
+                    'sisa' => $value->picking_qty,
+                    'total' => $value->picking_qty,
+                    'pax' => $value->pax,
+                ]);
+                DB::commit();
+            } catch (\Throwable $th) {
+                DB::rollBack();
+            }
+        }
 
         $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)->where('userID', $this->userId)->orderByDesc('material')->get();
-        // $productsInPalet =
-
+        
         return view('livewire.list-product', [
             'productsInPalet' => $getall,
             'scanned' => $scannedCounter,

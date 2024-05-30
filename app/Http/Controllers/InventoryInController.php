@@ -16,8 +16,14 @@ class InventoryInController extends Controller
         
     }
     
+    public function lack() {
+        return view('pages.lack-item');
+    }
     public function excess() {
-        return view('pages.excess-item');
+        return view('pages.excess-material');
+    }
+    public function instock() {
+        return view('pages.material-instock');
     }
 
     /**
