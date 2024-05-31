@@ -10,24 +10,28 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class LackItem extends Component
 {
-    public $d;
+    public $dataCetak,$searchKey;
     public function render()
     {
-        $data = DB::table('material_kurang')
+        $query = DB::table('material_kurang')
         ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax')
-        ->groupBy(['material_no','pallet_no'])
-        ->get();
-        $this->d = $data;
+        ->groupBy(['material_no','pallet_no']);
+
+        if($this->searchKey) $query->where('pallet_no','like',"%$this->searchKey%");
+        $data= $query->get();
+        
+        
+        $this->dataCetak = $data;
         return view('livewire.lack-item',compact('data'));
     }
 
     public function exportPdf()  {
-        return Excel::download(new InStockExport($this->d), 'invoices.pdf', \Maatwebsite\Excel\Excel::MPDF);
+        return Excel::download(new InStockExport($this->dataCetak), 'invoices.pdf', \Maatwebsite\Excel\Excel::MPDF);
         
     }
     
     public function exportExcel()  {
-        return Excel::download(new InStockExportExcel($this->d), 'invoices.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        return Excel::download(new InStockExportExcel($this->dataCetak), 'invoices.xlsx', \Maatwebsite\Excel\Excel::XLSX);
         
     }
 }

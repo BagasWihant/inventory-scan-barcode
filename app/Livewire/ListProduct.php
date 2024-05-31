@@ -149,10 +149,6 @@ class ListProduct extends Component
         $fixProduct = DB::table('temp_counters')->where('palet', $this->paletBarcode);
         $b = $fixProduct->get();
 
-        // DB::table('products')->select('material_no', 'picking_qty')->where('pallet_no', $this->paletBarcode)->orderBy('id')->chunk(10, function (Collection $data) {
-        //     foreach ($data as $value) {
-        //     }
-        // });
         foreach ($b as $data) {
             if ($data->total == $data->counter && $data->sisa == 0) {
                 $pax = $data->pax;
@@ -164,6 +160,7 @@ class ListProduct extends Component
                         'picking_qty' => $qty
                     ]);
                 }
+                
             } elseif ($data->counter > 0 && $data->sisa !== 0) {
                 $qty = $data->total / $data->pax;
                 $jmlIn = $data->counter / $qty;
