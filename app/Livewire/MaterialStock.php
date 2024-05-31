@@ -25,7 +25,7 @@ class MaterialStock extends Component
     }
 
     public function exportPdf()  {
-        sleep(30);
+        // sleep(30);
         return Excel::download(new InStockExport($this->dataCetak), 'invoices.pdf', \Maatwebsite\Excel\Excel::MPDF);
         
     }
