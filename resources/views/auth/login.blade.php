@@ -26,8 +26,8 @@
                     <div class="mb-4 text-lg">
                         <input
                             class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
-                            type="text" name="username" placeholder="Username" />
-                        <x-input-error :messages="$errors->get('user')" class="mt-2" />
+                            type="text" name="nik" placeholder="NIK" />
+                        <x-input-error :messages="$errors->get('nik')" class="mt-2" />
 
                     </div>
 
