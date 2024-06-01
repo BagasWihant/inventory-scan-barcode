@@ -17,21 +17,28 @@ class LackItem extends Component
         ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax')
         ->groupBy(['material_no','pallet_no']);
 
-        if($this->searchKey) $query->where('pallet_no','like',"%$this->searchKey%");
+        $query->where('pallet_no','like',"%$this->searchKey%");
         $data= $query->get();
         
+        if($this->searchKey) $this->dispatch('searchFocus');
         
         $this->dataCetak = $data;
         return view('livewire.lack-item',compact('data'));
     }
 
     public function exportPdf()  {
-        return Excel::download(new InStockExport($this->dataCetak), 'invoices.pdf', \Maatwebsite\Excel\Excel::MPDF);
+        if($this->searchKey) $name = "Kurang_".$this->searchKey."-".date('Ymd').".pdf";
+        else $name = "InStock-".date('Ymd').".pdf";
+
+        return Excel::download(new InStockExport($this->dataCetak), $name, \Maatwebsite\Excel\Excel::MPDF);
         
     }
     
     public function exportExcel()  {
-        return Excel::download(new InStockExportExcel($this->dataCetak), 'invoices.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        if($this->searchKey) $name = "Kurang_".$this->searchKey."-".date('Ymd').".xlsx";
+        else $name = "InStock-".date('Ymd').".xlsx";
+
+        return Excel::download(new InStockExportExcel($this->dataCetak), $name, \Maatwebsite\Excel\Excel::XLSX);
         
     }
 }
