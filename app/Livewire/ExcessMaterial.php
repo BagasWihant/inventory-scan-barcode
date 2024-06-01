@@ -2,11 +2,13 @@
 
 namespace App\Livewire;
 
+use Livewire\Component;
+use Livewire\Attributes\On;
+use Livewire\WithFileUploads;
 use App\Imports\KelebihanImport;
 use Illuminate\Support\Facades\DB;
-use Livewire\Component;
-use Livewire\WithFileUploads;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 
 class ExcessMaterial extends Component
 {
@@ -18,21 +20,35 @@ class ExcessMaterial extends Component
         ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax')
         ->groupBy(['material_no','pallet_no']);
        
-        if($this->searchKey) $query->where('pallet_no','like',"%$this->searchKey%");
+        $query->where('pallet_no','like',"%$this->searchKey%");
+
+        if($this->searchKey) $this->dispatch('searchFocus');
         $data= $query->get();
         
         
         $this->dataCetak = $data;
         return view('livewire.excess-material',compact('data'));
     }
-
+    // #[On('import')] 
     public function import() {
+        sleep(2);
         $this->validate([
             'fileExcel' => 'required|mimes:xlsx,xls',
         ],[
-            'fileExcel.mimes' => 'File Excel Harus Berformat Excel',
+            'fileExcel.mimes' => 'File Excel Harus Berformat Excel (.xlsx   )',
         ]);
-
+        
         Excel::import(new KelebihanImport, $this->fileExcel);
+        $this->fileExcel = null;
+        $this->dispatch('modalHide');
+    }
+
+    public function sampleDownload() {
+        $this->dispatch('modalHide');
+
+        return Storage::download('Sample.xlsx');
+    }
+    public function upload() {
+        dd($this->fileExcel);
     }
 }
