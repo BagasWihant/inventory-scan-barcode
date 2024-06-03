@@ -14,7 +14,7 @@ use Maatwebsite\Excel\Concerns\WithDrawings;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
-class InStockExport implements WithEvents, WithCustomStartCell, WithDrawings,FromCollection,WithColumnWidths
+class InStockExport implements WithEvents, WithCustomStartCell, WithDrawings,FromCollection,WithColumnWidths,WithHeadings
 {
     public $data;
     public function __construct($dt)
@@ -30,10 +30,10 @@ class InStockExport implements WithEvents, WithCustomStartCell, WithDrawings,Fro
     public function columnWidths(): array
     {
         return [
-            'A' => 55,
-            'B' => 45,            
-            'C' => 45,            
-            'D' => 45,            
+            'A' => 15,
+            'B' => 25,            
+            'C' => 10,            
+            'D' => 10,            
         ];
     }
 
@@ -44,6 +44,15 @@ class InStockExport implements WithEvents, WithCustomStartCell, WithDrawings,Fro
 
     public function collection(){
         return $this->data;
+    }
+
+    public function headings(): array{
+        return [
+            'Pallet No',
+            'Material No',
+            'Pax',
+            'Picking Qty',
+        ];
     }
 
     public function drawings()

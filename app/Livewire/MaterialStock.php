@@ -18,21 +18,30 @@ class MaterialStock extends Component
         ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax')
         ->where('is_more',0)
         ->groupBy(['material_no','pallet_no']);
-        if($this->searchKey) $query->where('pallet_no','like',"%$this->searchKey%");
+        $query->where('pallet_no','like',"%$this->searchKey%");
         $data= $query->get();
+        
+        if($this->searchKey) $this->dispatch('searchFocus');
 
         $this->dataCetak = $data;
         return view('livewire.material-stock',compact('data'));
     }
+    
 
     public function exportPdf()  {
-        // sleep(30);
-        return Excel::download(new InStockExport($this->dataCetak), 'invoices.pdf', \Maatwebsite\Excel\Excel::MPDF);
+        if($this->searchKey) $name = "InStock_".$this->searchKey."-".date('Ymd').".pdf";
+        else $name = "InStock-".date('Ymd').".pdf";
+        
+        return Excel::download(new InStockExport($this->dataCetak), $name, \Maatwebsite\Excel\Excel::MPDF);
         
     }
     
     public function exportExcel()  {
-        return Excel::download(new InStockExport($this->dataCetak), 'invoices.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        if($this->searchKey) $name = "InStock_".$this->searchKey."-".date('Ymd').".xlsx";
+        else $name = "InStock-".date('Ymd').".xlsx";
+        // dd($this->searchKey);
+
+        return Excel::download(new InStockExport($this->dataCetak), $name, \Maatwebsite\Excel\Excel::XLSX);
         
     }
 }
