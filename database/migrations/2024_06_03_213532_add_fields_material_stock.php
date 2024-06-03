@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('material_in_stock', function (Blueprint $table) {
-            $table->char('is_more',1)->default(0)->after('picking_qty');
+            $table->char('stat',1)->default(0)->after('picking_qty')->comment('1 = lebih, N = item baru tidak ada di db, 0 = normal')->index();
         });
     }
     
@@ -22,7 +22,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('material_in_stock', function (Blueprint $table) {
-            $table->dropColumn('is_more');
+            $table->dropIndex('material_in_stock_stat_index');
+            $table->dropColumn('stat');
         });
     }
 };
