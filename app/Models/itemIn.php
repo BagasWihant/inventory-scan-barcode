@@ -10,7 +10,7 @@ class itemIn extends Model
     use HasFactory;
     
     protected $table = 'material_in_stock';
-    protected $fillable= ['pallet_no','material_no','picking_qty'];
+    protected $fillable= ['pallet_no','material_no','picking_qty','stat'];
 
 
 }

@@ -122,7 +122,7 @@
                         {{-- {{dd($scanned)}} --}}
                         @foreach ($scanned as $v)
                             <tr
-                                class=" border rounded @if ($v->total == $v->counter) bg-green-300 dark:bg-green-500 @else bg-red-300 dark:bg-red-500 @endif  dark:border-gray-700">
+                                class=" border rounded @if ($v->total == $v->counter) bg-green-300 dark:bg-green-500 @elseif ($v->counter > $v->total) bg-amber-400 @else bg-red-300 dark:bg-red-500  @endif  dark:border-gray-700">
                                 <th scope="row"
                                     class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->material }}</th>
@@ -136,6 +136,8 @@
                                     class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     @if ($v->total == $v->counter)
                                         OK CONFIRM
+                                    @elseif ($v->counter > $v->total)
+                                        KELEBIHAN
                                     @else
                                         OUTSTANDING / NOT CLOSE
                                     @endif

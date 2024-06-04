@@ -46,16 +46,18 @@ class ListProduct extends Component
                 $tempCount = DB::table('temp_counters')->where('material', $supplierCode->sws_code)->where('userID', $this->userId)->where('palet', $this->paletBarcode);
                 $data = $tempCount->first();
                 if ($tempCount->count() > 0) {
-                    if ($data->total == $data->counter && $data->sisa == 0) {
-                        $this->dispatch('cannotScan');
-                        $this->produkBarcode = null;
+                    $productDetail = DB::table('material_setup_mst_CNC_KIAS2')->select('picking_qty')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode)->first();
+                    $counter = $data->counter + $productDetail->picking_qty;
+                    $sisa = $data->sisa - $productDetail->picking_qty;
+                    if ($data->total < $data->counter || $data->sisa <= 0) {
+                        // $this->dispatch('cannotScan');
+                        // $this->produkBarcode = null;
+                        $more = $data->qty_more + 1;
+                        $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more]);
                         return;
                     }
 
 
-                    $productDetail = DB::table('material_setup_mst_CNC_KIAS2')->select('picking_qty')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode)->first();
-                    $counter = $data->counter + $productDetail->picking_qty;
-                    $sisa = $data->sisa - $productDetail->picking_qty;
                     $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
                 }
             }
@@ -150,7 +152,7 @@ class ListProduct extends Component
         $b = $fixProduct->get();
 
         foreach ($b as $data) {
-            if ($data->total == $data->counter && $data->sisa == 0) {
+            if ($data->total < $data->counter) {
                 $pax = $data->pax;
                 $qty = $data->total / $pax;
                 for ($i = 1; $i <= $pax; $i++) {
@@ -158,6 +160,15 @@ class ListProduct extends Component
                         'pallet_no' => $this->paletBarcode,
                         'material_no' => $data->material,
                         'picking_qty' => $qty
+                    ]);
+                }
+                $kelebihan = $data->qty_more;
+                for ($i = 1; $i <= $kelebihan; $i++) {
+                    itemIn::create([
+                        'pallet_no' => $this->paletBarcode,
+                        'material_no' => $data->material,
+                        'picking_qty' => $qty,
+                        'stat'=>1
                     ]);
                 }
                 

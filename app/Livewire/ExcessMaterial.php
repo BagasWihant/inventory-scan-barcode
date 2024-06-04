@@ -16,8 +16,9 @@ class ExcessMaterial extends Component
     public $fileExcel,$searchKey,$dataCetak;
     public function render()
     {
-        $query = DB::table('material_kelebihans')
+        $query = DB::table('material_in_stock')
         ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax')
+        ->where('stat','1')
         ->groupBy(['material_no','pallet_no']);
        
         $query->where('pallet_no','like',"%$this->searchKey%");
