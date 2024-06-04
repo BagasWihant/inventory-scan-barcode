@@ -49,7 +49,7 @@ class ListProduct extends Component
                     $productDetail = DB::table('material_setup_mst_CNC_KIAS2')->select('picking_qty')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode)->first();
                     $counter = $data->counter + $productDetail->picking_qty;
                     $sisa = $data->sisa - $productDetail->picking_qty;
-                    if ($data->total == $data->counter && $data->sisa == 0) {
+                    if ($data->total < $data->counter || $data->sisa <= 0) {
                         // $this->dispatch('cannotScan');
                         // $this->produkBarcode = null;
                         // return;
@@ -168,7 +168,7 @@ class ListProduct extends Component
                         'pallet_no' => $this->paletBarcode,
                         'material_no' => $data->material,
                         'picking_qty' => $qty,
-                        'is_more'=>1
+                        'stat'=>1
                     ]);
                 }
                 
