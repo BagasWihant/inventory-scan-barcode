@@ -52,9 +52,9 @@ class ListProduct extends Component
                     if ($data->total < $data->counter || $data->sisa <= 0) {
                         // $this->dispatch('cannotScan');
                         // $this->produkBarcode = null;
-                        // return;
                         $more = $data->qty_more + 1;
                         $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more]);
+                        return;
                     }
 
 
