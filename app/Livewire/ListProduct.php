@@ -16,13 +16,29 @@ use Illuminate\Support\Facades\DB;
 class ListProduct extends Component
 {
     use WithPagination;
-    public $userId, $products, $produkBarcode, $paletBarcode, $changes = false, $previousPaletBarcode;
+    public $userId, $products, $produkBarcode, $paletBarcode, $changes = false, $previousPaletBarcode, $modal,$qtyPerPax;
 
     public $scannedCounter = [];
 
     public function mount()
     {
         $this->userId = auth()->user()->id;
+    }
+
+    #[On('insertNew')]
+    public function insertNew($qty=0)
+    {
+         tempCounter::create([
+            'material' => $this->produkBarcode,
+            'palet' => $this->paletBarcode,
+            'userID' => $this->userId,
+            'sisa' => 0,
+            'total' => $qty,
+            'counter' => 1,
+            'pax' => 1,
+        ]);
+        $this->produkBarcode = null;
+
     }
 
     public function paletBarcodeScan()
@@ -47,19 +63,33 @@ class ListProduct extends Component
                 $tempCount = DB::table('temp_counters')->where('material', $supplierCode->sws_code)->where('userID', $this->userId)->where('palet', $this->paletBarcode);
                 $data = $tempCount->first();
                 if ($tempCount->count() > 0) {
+
                     $productDetail = DB::table('material_setup_mst_CNC_KIAS2')->select('picking_qty')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode)->first();
                     $counter = $data->counter + $productDetail->picking_qty;
                     $sisa = $data->sisa - $productDetail->picking_qty;
+
                     if ($data->total < $data->counter || $data->sisa <= 0) {
-                        // $this->dispatch('cannotScan');
+
                         $this->produkBarcode = null;
                         $more = $data->qty_more + 1;
                         $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more]);
                         return;
                     }
 
-
                     $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
+                } else {
+                    // insert barcode tidak terecord
+                    $tempCount = DB::table('temp_counters')->where('material', $this->produkBarcode)->where('userID', $this->userId)->where('palet', $this->paletBarcode);
+                    if ($tempCount->count()  === 0) {
+                        $this->modal = true;
+                        $this->dispatch('newItem');
+                        return;
+
+                    } else {
+
+                        $counter = $tempCount->first()->pax + 1;
+                        $tempCount->update(['counter' => $counter, 'pax' => $counter]);
+                    }
                 }
             }
         }
@@ -68,7 +98,9 @@ class ListProduct extends Component
 
     public function render()
     {
+        $this->paletBarcode = 'Y-01-00003';
         $getScanned = DB::table('material_in_stock')->where('pallet_no', $this->paletBarcode)->select('material_no')->groupBy('material_no')->pluck('material_no')->all();
+
         $productsQuery = DB::table('material_setup_mst_CNC_KIAS2')
             ->selectRaw('pallet_no, material_no, count(material_no) as pax, sum(picking_qty) as picking_qty')
             ->where('pallet_no', $this->paletBarcode)
@@ -132,7 +164,7 @@ class ListProduct extends Component
         }
 
         $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)->where('userID', $this->userId)->orderByDesc('material')->get();
-        
+
         return view('livewire.list-product', [
             'productsInPalet' => $getall,
             'scanned' => $scannedCounter,
@@ -172,7 +204,6 @@ class ListProduct extends Component
                         'picking_qty' => $qty,
                     ]);
                 }
-                
             } elseif ($data->counter > 0 && $data->sisa !== 0) {
                 $qty = $data->total / $data->pax;
                 $jmlIn = $data->counter / $qty;

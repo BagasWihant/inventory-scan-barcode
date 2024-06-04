@@ -17,7 +17,8 @@
     </div>
 
     <div class="flex justify-center">
-        <div wire:loading wire:target="confirm,productBarcodeScan,paletBarcodeScan" aria-label="Loading..." role="status">
+        <div wire:loading wire:target="confirm,productBarcodeScan,paletBarcodeScan" aria-label="Loading..."
+            role="status">
             <svg class="h-20 w-20 animate-spin stroke-gray-500" viewBox="0 0 256 256">
                 <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
                     stroke-linejoin="round" stroke-width="24"></line>
@@ -122,7 +123,7 @@
                         {{-- {{dd($scanned)}} --}}
                         @foreach ($scanned as $v)
                             <tr
-                                class=" border rounded @if ($v->total == $v->counter) bg-green-300 dark:bg-green-500 @elseif ($v->counter > $v->total) bg-amber-400 @else bg-red-300 dark:bg-red-500  @endif  dark:border-gray-700">
+                                class=" border rounded @if ($v->total == $v->counter) bg-green-300 dark:bg-green-500 @elseif ($v->counter > $v->total) bg-amber-400 @else bg-red-300 dark:bg-red-500 @endif  dark:border-gray-700">
                                 <th scope="row"
                                     class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->material }}</th>
@@ -158,8 +159,6 @@
     </div>
 
 
-
-
 </div>
 @script
     <script>
@@ -169,9 +168,23 @@
         $wire.on('paletFocus', (event) => {
             $("#paletBarcode").focus()
         });
-        $wire.on('cannotScan', (event) => {
-            alert('gak bisa scan')
-            console.log('ass');
+        $wire.on('newItem', async (event)  => {
+            const {
+                value: qty
+            } = await Swal.fire({
+                title: "Qty Per Pax",
+                input: "text",
+                inputLabel: "Qty per Pax",
+                inputPlaceholder: "qty"
+            });
+            console.log('aaa');
+            if (qty) {
+                Swal.fire(`Entered qty: ${qty}`);
+                $wire.dispatch('insertNew', {
+                    qty: qty
+                })
+            }
+
         });
     </script>
 @endscript
