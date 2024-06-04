@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\itemIn;
 use App\Models\itemSisa;
+use App\Models\MaterialKelebihan;
 use Carbon\Carbon;
 use Livewire\Component;
 use App\Models\tempCounter;
@@ -51,7 +52,7 @@ class ListProduct extends Component
                     $sisa = $data->sisa - $productDetail->picking_qty;
                     if ($data->total < $data->counter || $data->sisa <= 0) {
                         // $this->dispatch('cannotScan');
-                        // $this->produkBarcode = null;
+                        $this->produkBarcode = null;
                         $more = $data->qty_more + 1;
                         $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more]);
                         return;
@@ -122,6 +123,7 @@ class ListProduct extends Component
                     'sisa' => $value->picking_qty,
                     'total' => $value->picking_qty,
                     'pax' => $value->pax,
+                    'qty_more' => 0
                 ]);
                 DB::commit();
             } catch (\Throwable $th) {
@@ -164,11 +166,10 @@ class ListProduct extends Component
                 }
                 $kelebihan = $data->qty_more;
                 for ($i = 1; $i <= $kelebihan; $i++) {
-                    itemIn::create([
+                    MaterialKelebihan::create([
                         'pallet_no' => $this->paletBarcode,
                         'material_no' => $data->material,
                         'picking_qty' => $qty,
-                        'stat'=>1
                     ]);
                 }
                 

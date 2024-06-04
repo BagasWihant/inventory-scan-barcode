@@ -16,9 +16,8 @@ class ExcessMaterial extends Component
     public $fileExcel,$searchKey,$dataCetak;
     public function render()
     {
-        $query = DB::table('material_in_stock')
+        $query = DB::table('material_kelebihans')
         ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax')
-        ->where('stat','1')
         ->groupBy(['material_no','pallet_no']);
        
         $query->where('pallet_no','like',"%$this->searchKey%");
@@ -30,20 +29,7 @@ class ExcessMaterial extends Component
         $this->dataCetak = $data;
         return view('livewire.excess-material',compact('data'));
     }
-    // #[On('import')] 
-    public function import() {
-        sleep(2);
-        $this->validate([
-            'fileExcel' => 'required|mimes:xlsx,xls',
-        ],[
-            'fileExcel.mimes' => 'File Excel Harus Berformat Excel (.xlsx   )',
-        ]);
-        
-        Excel::import(new KelebihanImport, $this->fileExcel);
-        $this->fileExcel = null;
-        $this->dispatch('modalHide');
-    }
-
+    
     public function sampleDownload() {
         $this->dispatch('modalHide');
 
