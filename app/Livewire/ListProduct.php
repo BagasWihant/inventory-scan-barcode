@@ -3,7 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\itemIn;
-use App\Models\itemSisa;
+use App\Models\itemKurang;
 use App\Models\MaterialKelebihan;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -16,13 +16,31 @@ use Illuminate\Support\Facades\DB;
 class ListProduct extends Component
 {
     use WithPagination;
-    public $userId, $products, $produkBarcode, $paletBarcode, $changes = false, $previousPaletBarcode;
+    public $userId, $products, $produkBarcode, $paletBarcode, $changes = false, $previousPaletBarcode, $sws_code, $qtyPerPax;
 
     public $scannedCounter = [];
 
     public function mount()
     {
         $this->userId = auth()->user()->id;
+    }
+
+    #[On('insertNew')]
+    public function insertNew($qty = 0, $save = true)
+    {
+        if ($save) {
+            tempCounter::create([
+                'material' => $this->sws_code,
+                'palet' => $this->paletBarcode,
+                'userID' => $this->userId,
+                'sisa' => 0,
+                'total' => $qty,
+                'counter' => 1,
+                'pax' => 1,
+                'qty_more' => 1,
+            ]);
+        }
+        $this->produkBarcode = null;
     }
 
     public function paletBarcodeScan()
@@ -44,22 +62,40 @@ class ListProduct extends Component
         if (strlen($this->produkBarcode) > 2) {
             $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->produkBarcode)->select('sws_code')->first();
             if ($supplierCode) {
-                $tempCount = DB::table('temp_counters')->where('material', $supplierCode->sws_code)->where('userID', $this->userId)->where('palet', $this->paletBarcode);
+                $this->sws_code = $supplierCode->sws_code;
+
+                $tempCount = DB::table('temp_counters')
+                    ->where('material', $supplierCode->sws_code)
+                    ->where('userID', $this->userId)
+                    ->where('palet', $this->paletBarcode);
                 $data = $tempCount->first();
+
                 if ($tempCount->count() > 0) {
-                    $productDetail = DB::table('material_setup_mst_CNC_KIAS2')->select('picking_qty')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode)->first();
-                    $counter = $data->counter + $productDetail->picking_qty;
-                    $sisa = $data->sisa - $productDetail->picking_qty;
-                    if ($data->total < $data->counter || $data->sisa <= 0) {
-                        // $this->dispatch('cannotScan');
-                        $this->produkBarcode = null;
-                        $more = $data->qty_more + 1;
-                        $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more]);
-                        return;
+
+                    $qry = DB::table('material_setup_mst_CNC_KIAS2')->select('picking_qty')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode);
+                    if ($qry->count() > 0) {
+
+                        $productDetail = $qry->first();
+                        $counter = $data->counter + $productDetail->picking_qty;
+                        $sisa = $data->sisa - $productDetail->picking_qty;
+
+                        if ($data->total < $data->counter || $data->sisa <= 0) {
+
+                            $this->produkBarcode = null;
+                            $more = $data->qty_more + 1;
+                            $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more]);
+                            return;
+                        }
+
+                        $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
+                    } else {
+
+                        $counter = $tempCount->first()->qty_more + 1;
+                        $tempCount->update(['counter' => $counter, 'qty_more' => $counter]);
                     }
-
-
-                    $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
+                } else {
+                    // insert barcode tidak terecord
+                    $this->dispatch('newItem');
                 }
             }
         }
@@ -68,15 +104,20 @@ class ListProduct extends Component
 
     public function render()
     {
-        $getScanned = DB::table('material_in_stock')->where('pallet_no', $this->paletBarcode)->select('material_no')->groupBy('material_no')->pluck('material_no')->all();
+        // $this->paletBarcode = 'Y-01-00003';
+        $stok = DB::table('material_in_stock')->where('pallet_no', $this->paletBarcode)->select('material_no')->groupBy('material_no')->pluck('material_no')->all();
+        $lebih = DB::table('material_kelebihans')->where('pallet_no', $this->paletBarcode)->select('material_no')->groupBy('material_no')->pluck('material_no')->all();
+        $kurang = DB::table('material_kurang')->where('pallet_no', $this->paletBarcode)->select('material_no')->groupBy('material_no')->pluck('material_no')->all();
+        $getScanned = collect($stok)->merge($lebih)->merge($kurang)->all();
+        
         $productsQuery = DB::table('material_setup_mst_CNC_KIAS2')
-            ->selectRaw('pallet_no, material_no, count(material_no) as pax, sum(picking_qty) as picking_qty')
-            ->where('pallet_no', $this->paletBarcode)
-            ->whereNotIn('material_no', $getScanned)
-            ->groupBy('pallet_no', 'material_no')->orderByDesc('material_no');
-
+        ->selectRaw('pallet_no, material_no, count(material_no) as pax, sum(picking_qty) as picking_qty')
+        ->where('pallet_no', $this->paletBarcode)
+        ->whereNotIn('material_no', $getScanned)
+        ->groupBy('pallet_no', 'material_no')->orderByDesc('material_no');
+        
         $getall = $productsQuery->get();
-
+        
         $materialNos = $getall->pluck('material_no')->all();
 
         $existingCounters = DB::table('temp_counters')
@@ -84,7 +125,7 @@ class ListProduct extends Component
             ->whereIn('material', $materialNos)
             ->pluck('material')
             ->all();
-
+            
         foreach ($getall as $value) {
 
             $counterExists = in_array($value->material_no, $existingCounters);
@@ -106,33 +147,9 @@ class ListProduct extends Component
             }
         }
 
-        // KURANG
-        $kurang = DB::table('material_kurang')
-            ->selectRaw('pallet_no, material_no, count(material_no) as pax, sum(picking_qty) as picking_qty')
-            ->where('pallet_no', $this->paletBarcode)
-            ->groupBy('pallet_no', 'material_no')->orderByDesc('material_no')->get();
-
-        foreach ($kurang as $value) {
-            $getall->push($value);
-            try {
-                DB::beginTransaction();
-                tempCounter::create([
-                    'material' => $value->material_no,
-                    'palet' => $this->paletBarcode,
-                    'userID' => $this->userId,
-                    'sisa' => $value->picking_qty,
-                    'total' => $value->picking_qty,
-                    'pax' => $value->pax,
-                    'qty_more' => 0
-                ]);
-                DB::commit();
-            } catch (\Throwable $th) {
-                DB::rollBack();
-            }
-        }
 
         $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)->where('userID', $this->userId)->orderByDesc('material')->get();
-        
+
         return view('livewire.list-product', [
             'productsInPalet' => $getall,
             'scanned' => $scannedCounter,
@@ -150,32 +167,30 @@ class ListProduct extends Component
 
     public function confirm()
     {
-        $fixProduct = DB::table('temp_counters')->where('palet', $this->paletBarcode);
+        $fixProduct = DB::table('temp_counters')
+            ->where('userID', $this->userId)
+            ->where('palet', $this->paletBarcode);
         $b = $fixProduct->get();
 
         foreach ($b as $data) {
-            if ($data->total < $data->counter) {
-                $pax = $data->pax;
-                $qty = $data->total / $pax;
-                for ($i = 1; $i <= $pax; $i++) {
-                    itemIn::create([
-                        'pallet_no' => $this->paletBarcode,
-                        'material_no' => $data->material,
-                        'picking_qty' => $qty
-                    ]);
+            $pax = $data->pax;
+            $qty = $data->total / $pax;
+            $kelebihan = $data->qty_more;
+            if ($data->counter > 0) {
+                // insrt kelebihan
+                if ($kelebihan > 0) {
+
+                    for ($i = 1; $i <= $kelebihan; $i++) {
+                        MaterialKelebihan::create([
+                            'pallet_no' => $this->paletBarcode,
+                            'material_no' => $data->material,
+                            'picking_qty' => $qty,
+                        ]);
+                    }
                 }
-                $kelebihan = $data->qty_more;
-                for ($i = 1; $i <= $kelebihan; $i++) {
-                    MaterialKelebihan::create([
-                        'pallet_no' => $this->paletBarcode,
-                        'material_no' => $data->material,
-                        'picking_qty' => $qty,
-                    ]);
-                }
-                
-            } elseif ($data->counter > 0 && $data->sisa !== 0) {
-                $qty = $data->total / $data->pax;
+
                 $jmlIn = $data->counter / $qty;
+                $jmlIn = $jmlIn - $kelebihan;
                 for ($i = 0; $i < $jmlIn; $i++) {
                     itemIn::create([
                         'pallet_no' => $this->paletBarcode,
@@ -183,10 +198,21 @@ class ListProduct extends Component
                         'picking_qty' => $qty
                     ]);
                 }
+                if($kelebihan == 0){
 
-                $jmlSisa = ($data->total / $qty) - $jmlIn;
-                for ($i = 0; $i < $jmlSisa; $i++) {
-                    itemSisa::create([
+                    $jmlSisa = $data->pax - $jmlIn;
+                    for ($i = 0; $i < $jmlSisa; $i++) {
+                        itemKurang::create([
+                            'pallet_no' => $this->paletBarcode,
+                            'material_no' => $data->material,
+                            'picking_qty' => $qty
+                        ]);
+                    }
+                    
+                }
+            }else{
+                for ($i = 0; $i < $pax; $i++) {
+                    itemKurang::create([
                         'pallet_no' => $this->paletBarcode,
                         'material_no' => $data->material,
                         'picking_qty' => $qty
