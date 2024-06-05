@@ -44,8 +44,8 @@
         </div>
     </div>
 
-    <div class="flex gap-4 overflow-x-auto sm:rounded-lg p-3 ">
-        @if (count($productsInPalet) > 0)
+    @if (count($productsInPalet) > 0 && count($scanned) > 0)
+        <div class="flex gap-4 overflow-x-auto sm:rounded-lg p-3 ">
             <div class="w-full">
 
                 <h2 class="p-3 text-xl text-center font-extrabold dark:text-white">List Barang </h2>
@@ -94,8 +94,7 @@
                 {{-- {{ $productsInPalet->links() }} --}}
 
             </div>
-        @endif
-        @if (count($scanned) > 0)
+
             <div class="w-full">
                 <h2 class="p-3 text-xl text-center font-extrabold dark:text-white">Berhasil di Scan</h2>
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -149,14 +148,20 @@
                 </table>
                 {{-- {{ $scanned->links() }} --}}
             </div>
-        @endif
-    </div>
-    <div class="flex justify-end pt-3">
-        <button type="button" wire:click="resetPage"
-            class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Reset</button>
-        <button type="button" wire:click="confirm"
-            class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Konfimasi</button>
-    </div>
+
+        </div>
+        <div class="flex justify-end pt-3">
+            <button type="button" wire:click="resetPage"
+                class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Reset</button>
+            <button type="button" wire:click="confirm"
+                class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Konfimasi</button>
+        </div>
+    @else
+        <div class="w-full">
+            <h2 class="p-5 text-2xl text-center font-extrabold dark:text-white">No Data</h2>
+        </div>
+    @endif
+
 
 
 </div>
@@ -168,21 +173,46 @@
         $wire.on('paletFocus', (event) => {
             $("#paletBarcode").focus()
         });
-        $wire.on('newItem', async (event)  => {
+        $wire.on('newItem', async (event) => {
             const {
                 value: qty
             } = await Swal.fire({
-                title: "Qty Per Pax",
-                input: "text",
-                inputLabel: "Qty per Pax",
-                inputPlaceholder: "qty"
-            });
+                title: "New Item Detected",
+                input: "number",
+                inputLabel: "Qty per pax",
+                inputPlaceholder: "qty",
+                showDenyButton: true,
+                denyButtonText: `Don't save`
+            }).then((result) => {
+                /* Read more about isConfirmed, isDenied below */
+                if (result.isConfirmed) {
+                    $wire.dispatch('insertNew', {
+                        qty: result.value,
+                    })
+                    Swal.fire({
+                        timer: 1000,
+                        title: "Saved",
+                        icon: "success",
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
+                } else if (result.isDenied) {
+                    $wire.dispatch('insertNew', {
+                        save: false
+                    })
+                    Swal.fire({
+                        timer: 1000,
+                        title: "Changes are not saved",
+                        icon: "info",
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
+                }
+            });;
             console.log('aaa');
             if (qty) {
                 Swal.fire(`Entered qty: ${qty}`);
-                $wire.dispatch('insertNew', {
-                    qty: qty
-                })
+
             }
 
         });

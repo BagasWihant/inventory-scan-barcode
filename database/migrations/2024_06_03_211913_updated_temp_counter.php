@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('temp_counters', function (Blueprint $table) {
-            $table->integer('qty_more')->nullable();
+            $table->integer('qty_more')->default(0);
         });
     }
     
