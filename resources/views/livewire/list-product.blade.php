@@ -74,7 +74,7 @@
                     </thead>
                     <tbody>
                         @foreach ($productsInPalet as $product)
-                            <tr class=" border rounded dark:border-gray-700">
+                            <tr class=" border rounded dark:border-gray-700 @if ($product->serial_no == '00000') bg-blue-400 @endif ">
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->pallet_no }}</th>
@@ -165,7 +165,7 @@
                 class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Konfimasi</button>
         </div>
     @else
-        <div class="w-full">
+        <div class="w-full" wire:loading.remove>
             <h2 class="p-5 text-2xl text-center font-extrabold dark:text-white">No Data</h2>
         </div>
     @endif

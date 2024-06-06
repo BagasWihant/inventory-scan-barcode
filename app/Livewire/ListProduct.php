@@ -39,6 +39,16 @@ class ListProduct extends Component
                 'pax' => 1,
                 'qty_more' => 1,
             ]);
+
+            DB::table('material_setup_mst_cnc_kias2')->insert([
+                'pallet_no' => $this->paletBarcode,
+                'serial_no' => '00000',
+                "material_no" => $this->sws_code,
+                'picking_qty' => $qty,
+                'line_c'=>'NewItem',
+                'setup_by'=>'dev',
+                'setup_date' => Carbon::now(),
+            ]);
         }
         $this->produkBarcode = null;
     }
@@ -117,10 +127,10 @@ class ListProduct extends Component
         $getScanned = collect($stok)->merge($lebih)->merge($kurang)->all();
 
         $productsQuery = DB::table('material_setup_mst_CNC_KIAS2')
-            ->selectRaw('pallet_no, material_no, count(material_no) as pax, sum(picking_qty) as picking_qty')
+            ->selectRaw('pallet_no, material_no, count(material_no) as pax, sum(picking_qty) as picking_qty, min(serial_no) as serial_no')
             ->where('pallet_no', $this->paletBarcode)
             ->whereNotIn('material_no', $getScanned)
-            ->groupBy('pallet_no', 'material_no')->orderByDesc('material_no');
+            ->groupBy('pallet_no', 'material_no')->orderByDesc('picking_qty');
 
         $getall = $productsQuery->get();
         $this->products = $getall;
@@ -154,7 +164,7 @@ class ListProduct extends Component
         }
 
 
-        $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)->where('userID', $this->userId)->orderByDesc('material')->get();
+        $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)->where('userID', $this->userId)->orderByDesc('total')->get();
 
         return view('livewire.list-product', [
             'productsInPalet' => $getall,
@@ -165,9 +175,15 @@ class ListProduct extends Component
 
     public function resetPage()
     {
+        DB::table('temp_counters')->where('userID', $this->userId)->delete();
+        
+        DB::table('material_setup_mst_cnc_kias2')
+        ->where('serial_no', '00000')
+        ->where('pallet_no', $this->paletBarcode)
+        ->where('line_c', 'NewItem')->delete();
+        
         $this->paletBarcode = null;
         $this->produkBarcode = null;
-        DB::table('temp_counters')->where('userID', $this->userId)->delete();
         $this->dispatch('paletFocus');
     }
 
