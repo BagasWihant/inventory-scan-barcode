@@ -35,7 +35,7 @@ class ListProduct extends Component
                 'userID' => $this->userId,
                 'sisa' => 0,
                 'total' => $qty,
-                'counter' => 1,
+                'counter' => 0,
                 'pax' => 1,
                 'qty_more' => 1,
             ]);
@@ -88,7 +88,7 @@ class ListProduct extends Component
 
                 if ($tempCount->count() > 0) {
 
-                    $qry = DB::table('material_setup_mst_CNC_KIAS2')->select('picking_qty')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode);
+                    $qry = DB::table('material_setup_mst_CNC_KIAS2')->select('picking_qty', 'serial_no')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode);
                     if ($qry->count() > 0) {
 
                         $productDetail = $qry->first();
@@ -129,6 +129,7 @@ class ListProduct extends Component
         $productsQuery = DB::table('material_setup_mst_CNC_KIAS2')
             ->selectRaw('pallet_no, material_no, count(material_no) as pax, sum(picking_qty) as picking_qty, min(serial_no) as serial_no')
             ->where('pallet_no', $this->paletBarcode)
+            // ->where('serial_no', '!=','00000')
             ->whereNotIn('material_no', $getScanned)
             ->groupBy('pallet_no', 'material_no')->orderByDesc('picking_qty');
 
