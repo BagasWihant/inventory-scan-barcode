@@ -45,7 +45,7 @@
     </div>
 
     @if (count($productsInPalet) > 0 && count($scanned) > 0)
-        <div class="flex gap-4 overflow-x-auto sm:rounded-lg p-3 ">
+        <div class="grid grid-cols-2 row gap-4 overflow-x-auto sm:rounded-lg p-3 ">
             <div class="w-full">
 
                 <h2 class="p-3 text-xl text-center font-extrabold dark:text-white">List Barang </h2>
@@ -76,16 +76,16 @@
                         @foreach ($productsInPalet as $product)
                             <tr class=" border rounded dark:border-gray-700">
                                 <th scope="row"
-                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->pallet_no }}</th>
                                 <th scope="row"
-                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->material_no }}</th>
                                 <th scope="row"
-                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->pax }}</th>
                                 <th scope="row"
-                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->picking_qty }}</th>
                             </tr>
                         @endforeach
@@ -121,26 +121,34 @@
                     <tbody>
                         {{-- {{dd($scanned)}} --}}
                         @foreach ($scanned as $v)
-                            <tr
-                                class=" border rounded @if ($v->total == $v->counter) bg-green-300 dark:bg-green-500 @elseif ($v->counter > $v->total) bg-amber-400 @else bg-red-300 dark:bg-red-500 @endif  dark:border-gray-700">
+                            @php
+                                if ($v->total == $v->counter) {
+                                    $ket = 'OK CONFIRM';
+                                    $class = ' bg-green-300 dark:bg-green-500';
+                                } elseif ($v->counter > $v->total) {
+                                    $ket = 'KELEBIHAN';
+                                    $class = ' bg-amber-400';
+                                } elseif ($v->sisa == 0 && $v->qty_more > 0) {
+                                    $ket = 'NEW ITEM';
+                                    $class = ' bg-blue-400';
+                                } else {
+                                    $ket = 'OUTSTANDING / NOT CLOSE';
+                                    $class = ' bg-red-300 dark:bg-red-500';
+                                }
+                            @endphp
+                            <tr class=" border rounded {{ $class }} dark:border-gray-700">
                                 <th scope="row"
-                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->material }}</th>
                                 <th scope="row"
-                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->sisa }} </th>
                                 <th scope="row"
-                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->counter }} </th>
                                 <th scope="row"
-                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    @if ($v->total == $v->counter)
-                                        OK CONFIRM
-                                    @elseif ($v->counter > $v->total)
-                                        KELEBIHAN
-                                    @else
-                                        OUTSTANDING / NOT CLOSE
-                                    @endif
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {{ $ket }}
                                 </th>
                             </tr>
                         @endforeach
