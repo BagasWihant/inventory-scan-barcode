@@ -5,8 +5,10 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Livewire\WithFileUploads;
+use App\Exports\InStockExport;
 use App\Imports\KelebihanImport;
 use Illuminate\Support\Facades\DB;
+use App\Exports\InStockExportExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 
@@ -30,12 +32,20 @@ class ExcessMaterial extends Component
         return view('livewire.excess-material',compact('data'));
     }
     
-    public function sampleDownload() {
-        $this->dispatch('modalHide');
+    
+    public function exportPdf()  {
+        if($this->searchKey) $name = "Kelebihan_".$this->searchKey."-".date('Ymd').".pdf";
+        else $name = "Kelebihan-".date('Ymd').".pdf";
 
-        return Storage::download('Sample.xlsx');
+        return Excel::download(new InStockExport($this->dataCetak), $name, \Maatwebsite\Excel\Excel::MPDF);
+        
     }
-    public function upload() {
-        dd($this->fileExcel);
+    
+    public function exportExcel()  {
+        if($this->searchKey) $name = "Kelebihan_".$this->searchKey."-".date('Ymd').".xlsx";
+        else $name = "Kelebihan-".date('Ymd').".xlsx";
+
+        return Excel::download(new InStockExportExcel($this->dataCetak), $name, \Maatwebsite\Excel\Excel::XLSX);
+        
     }
 }

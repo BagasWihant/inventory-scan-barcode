@@ -28,7 +28,7 @@ class LackItem extends Component
 
     public function exportPdf()  {
         if($this->searchKey) $name = "Kurang_".$this->searchKey."-".date('Ymd').".pdf";
-        else $name = "InStock-".date('Ymd').".pdf";
+        else $name = "Kurang-".date('Ymd').".pdf";
 
         return Excel::download(new InStockExport($this->dataCetak), $name, \Maatwebsite\Excel\Excel::MPDF);
         
@@ -36,7 +36,7 @@ class LackItem extends Component
     
     public function exportExcel()  {
         if($this->searchKey) $name = "Kurang_".$this->searchKey."-".date('Ymd').".xlsx";
-        else $name = "InStock-".date('Ymd').".xlsx";
+        else $name = "Kurang-".date('Ymd').".xlsx";
 
         return Excel::download(new InStockExportExcel($this->dataCetak), $name, \Maatwebsite\Excel\Excel::XLSX);
         

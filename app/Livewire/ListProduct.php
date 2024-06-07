@@ -33,9 +33,9 @@ class ListProduct extends Component
                 'material' => $this->sws_code,
                 'palet' => $this->paletBarcode,
                 'userID' => $this->userId,
-                'sisa' => 0,
+                'sisa' => "-$qty",
                 'total' => $qty,
-                'counter' => 1,
+                'counter' => $qty,
                 'pax' => 1,
                 'qty_more' => 1,
             ]);
@@ -71,7 +71,6 @@ class ListProduct extends Component
     {
         if ($this->products->count() == 0) {
             $this->produkBarcode = null;
-            // dump($this->products->count());
             return;
         } 
         
@@ -88,7 +87,7 @@ class ListProduct extends Component
 
                 if ($tempCount->count() > 0) {
 
-                    $qry = DB::table('material_setup_mst_CNC_KIAS2')->select('picking_qty')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode);
+                    $qry = DB::table('material_setup_mst_CNC_KIAS2')->select('picking_qty', 'serial_no')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode);
                     if ($qry->count() > 0) {
 
                         $productDetail = $qry->first();
@@ -104,10 +103,6 @@ class ListProduct extends Component
                         }
 
                         $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
-                    } else {
-
-                        $counter = $tempCount->first()->qty_more + 1;
-                        $tempCount->update(['counter' => $counter, 'qty_more' => $counter]);
                     }
                 } else {
                     // insert barcode tidak terecord
@@ -121,16 +116,20 @@ class ListProduct extends Component
     public function render()
     {
         // $this->paletBarcode = 'Y-01-00003';
-        $stok = DB::table('material_in_stock')->where('pallet_no', $this->paletBarcode)->select('material_no')->groupBy('material_no')->pluck('material_no')->all();
-        $lebih = DB::table('material_kelebihans')->where('pallet_no', $this->paletBarcode)->select('material_no')->groupBy('material_no')->pluck('material_no')->all();
-        $kurang = DB::table('material_kurang')->where('pallet_no', $this->paletBarcode)->select('material_no')->groupBy('material_no')->pluck('material_no')->all();
-        $getScanned = collect($stok)->merge($lebih)->merge($kurang)->all();
+        $getScanned = DB::table('material_in_stock')->select('material_no')
+            ->where('pallet_no', $this->paletBarcode)
+            ->union(DB::table('material_kelebihans')->select('material_no')->where('pallet_no', $this->paletBarcode))
+            ->union(DB::table('material_kurang')->select('material_no')->where('pallet_no', $this->paletBarcode))
+            ->pluck('material_no')
+            ->all();
 
         $productsQuery = DB::table('material_setup_mst_CNC_KIAS2')
             ->selectRaw('pallet_no, material_no, count(material_no) as pax, sum(picking_qty) as picking_qty, min(serial_no) as serial_no')
             ->where('pallet_no', $this->paletBarcode)
             ->whereNotIn('material_no', $getScanned)
-            ->groupBy('pallet_no', 'material_no')->orderByDesc('picking_qty');
+            ->groupBy('pallet_no', 'material_no')
+            ->orderByDesc('picking_qty')
+            ->orderByDesc('material_no');
 
         $getall = $productsQuery->get();
         $this->products = $getall;
@@ -164,7 +163,10 @@ class ListProduct extends Component
         }
 
 
-        $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)->where('userID', $this->userId)->orderByDesc('total')->get();
+        $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)
+        ->where('userID', $this->userId)
+        ->orderByDesc('total')
+        ->orderByDesc('material')->get();
 
         return view('livewire.list-product', [
             'productsInPalet' => $getall,

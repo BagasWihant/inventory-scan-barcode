@@ -74,7 +74,8 @@
                     </thead>
                     <tbody>
                         @foreach ($productsInPalet as $product)
-                            <tr class=" border rounded dark:border-gray-700 @if ($product->serial_no == '00000') bg-blue-400 @endif ">
+                            <tr
+                                class=" border rounded dark:border-gray-700 @if ($product->serial_no == '00000') bg-blue-400 @endif ">
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->pallet_no }}</th>
@@ -83,10 +84,20 @@
                                     {{ $product->material_no }}</th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $product->pax }}</th>
+                                    @if ($product->serial_no == '00000')
+                                        0
+                                    @else
+                                        {{ $product->pax }}
+                                    @endif
+                                </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $product->picking_qty }}</th>
+                                    @if ($product->serial_no == '00000')
+                                        0
+                                    @else
+                                        {{ $product->picking_qty }}
+                                    @endif
+                                </th>
                             </tr>
                         @endforeach
                     </tbody>
@@ -122,15 +133,15 @@
                         {{-- {{dd($scanned)}} --}}
                         @foreach ($scanned as $v)
                             @php
-                                if ($v->total == $v->counter) {
+                                if ($v->total == $v->counter && $v->qty_more == 0) {
                                     $ket = 'OK CONFIRM';
                                     $class = ' bg-green-300 dark:bg-green-500';
-                                } elseif ($v->counter > $v->total) {
+                                // } elseif ($v->sisa == 0 && $v->qty_more > 0) {
+                                //     $ket = 'NEW ITEM';
+                                //     $class = ' bg-blue-400';
+                                } elseif ($v->counter > $v->total || $v->qty_more > 0) {
                                     $ket = 'KELEBIHAN';
                                     $class = ' bg-amber-400';
-                                } elseif ($v->sisa == 0 && $v->qty_more > 0) {
-                                    $ket = 'NEW ITEM';
-                                    $class = ' bg-blue-400';
                                 } else {
                                     $ket = 'OUTSTANDING / NOT CLOSE';
                                     $class = ' bg-red-300 dark:bg-red-500';
