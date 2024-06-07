@@ -1,7 +1,7 @@
 <div>
 
 
-    <div class="text-2xl font-extrabold py-6 text-center">Kelebihan Item</div>
+    <div class="text-2xl font-extrabold py-6 text-center">Excess Item</div>
 
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
         <div class="flex justify-between">
