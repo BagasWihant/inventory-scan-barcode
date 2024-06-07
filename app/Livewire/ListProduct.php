@@ -128,7 +128,7 @@ class ListProduct extends Component
             ->where('pallet_no', $this->paletBarcode)
             ->whereNotIn('material_no', $getScanned)
             ->groupBy('pallet_no', 'material_no')
-            ->orderByDesc('picking_qty')
+            ->orderByDesc('pax')
             ->orderByDesc('material_no');
 
         $getall = $productsQuery->get();
@@ -165,7 +165,7 @@ class ListProduct extends Component
 
         $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)
         ->where('userID', $this->userId)
-        ->orderByDesc('total')
+        ->orderByDesc('pax')
         ->orderByDesc('material')->get();
 
         return view('livewire.list-product', [

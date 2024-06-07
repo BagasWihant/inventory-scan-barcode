@@ -75,7 +75,7 @@
                     <tbody>
                         @foreach ($productsInPalet as $product)
                             <tr
-                                class=" border rounded dark:border-gray-700 @if ($product->serial_no == '00000') bg-blue-400 @endif ">
+                                class=" border rounded dark:border-gray-700 ">
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->pallet_no }}</th>
@@ -140,7 +140,7 @@
                                 //     $ket = 'NEW ITEM';
                                 //     $class = ' bg-blue-400';
                                 } elseif ($v->counter > $v->total || $v->qty_more > 0) {
-                                    $ket = 'KELEBIHAN';
+                                    $ket = 'EXCESS';
                                     $class = ' bg-amber-400';
                                 } else {
                                     $ket = 'OUTSTANDING / NOT CLOSE';
