@@ -136,12 +136,12 @@
                                 if ($v->total == $v->counter && $v->qty_more == 0) {
                                     $ket = 'OK CONFIRM';
                                     $class = ' bg-green-300 dark:bg-green-500';
+                                // } elseif ($v->sisa == 0 && $v->qty_more > 0) {
+                                //     $ket = 'NEW ITEM';
+                                //     $class = ' bg-blue-400';
                                 } elseif ($v->counter > $v->total || $v->qty_more > 0) {
                                     $ket = 'KELEBIHAN';
                                     $class = ' bg-amber-400';
-                                } elseif ($v->sisa == 0 && $v->qty_more > 0) {
-                                    $ket = 'NEW ITEM';
-                                    $class = ' bg-blue-400';
                                 } else {
                                     $ket = 'OUTSTANDING / NOT CLOSE';
                                     $class = ' bg-red-300 dark:bg-red-500';
