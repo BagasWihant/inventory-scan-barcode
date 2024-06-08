@@ -101,7 +101,7 @@ class ListProduct extends Component
                         }
 
                         $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
-                    } 
+                    }
                 } else {
 
                     $cek = DB::table('material_setup_mst_CNC_KIAS2')
@@ -109,7 +109,7 @@ class ListProduct extends Component
                         ->where('material_no', $supplierCode->sws_code);
                     if ($cek->count() > 0) {
                         $data = $cek->first();
-                        if($data->jml > 1) {
+                        if ($data->jml > 1) {
                             $this->dispatch('newItem', $data->qty);
                             return;
                         }
@@ -207,8 +207,12 @@ class ListProduct extends Component
     public function confirm()
     {
         $fixProduct = DB::table('temp_counters')
+            ->leftJoin('delivery_mst as d', 'temp_counters.palet', '=', 'd.pallet_no')
+            ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
+            ->select('temp_counters.*', 'd.trucking_id', 'm.location_cd')
             ->where('userID', $this->userId)
             ->where('palet', $this->paletBarcode);
+
         $b = $fixProduct->get();
 
         foreach ($b as $data) {
@@ -224,6 +228,8 @@ class ListProduct extends Component
                             'pallet_no' => $this->paletBarcode,
                             'material_no' => $data->material,
                             'picking_qty' => $qty,
+                            'locate' => $data->location_cd,
+                            'trucking_id' => $data->trucking_id
                         ]);
                     }
                 }
@@ -234,7 +240,9 @@ class ListProduct extends Component
                     itemIn::create([
                         'pallet_no' => $this->paletBarcode,
                         'material_no' => $data->material,
-                        'picking_qty' => $qty
+                        'picking_qty' => $qty,
+                        'locate' => $data->location_cd,
+                        'trucking_id' => $data->trucking_id
                     ]);
                 }
                 if ($kelebihan == 0) {
@@ -244,7 +252,9 @@ class ListProduct extends Component
                         itemKurang::create([
                             'pallet_no' => $this->paletBarcode,
                             'material_no' => $data->material,
-                            'picking_qty' => $qty
+                            'picking_qty' => $qty,
+                            'locate' => $data->location_cd,
+                            'trucking_id' => $data->trucking_id
                         ]);
                     }
                 }
@@ -253,7 +263,9 @@ class ListProduct extends Component
                     itemKurang::create([
                         'pallet_no' => $this->paletBarcode,
                         'material_no' => $data->material,
-                        'picking_qty' => $qty
+                        'picking_qty' => $qty,
+                        'locate' => $data->location_cd,
+                        'trucking_id' => $data->trucking_id
                     ]);
                 }
             }

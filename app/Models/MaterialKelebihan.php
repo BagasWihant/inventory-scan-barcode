@@ -9,6 +9,6 @@ class MaterialKelebihan extends Model
 {
     use HasFactory;
 
-    protected $fillable= ['pallet_no','material_no','picking_qty'];
+    protected $fillable= ['pallet_no','material_no','picking_qty','locate','trucking_id'];
 
 }
