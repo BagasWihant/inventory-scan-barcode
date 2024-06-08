@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 class ListProduct extends Component
 {
     use WithPagination;
-    public $userId, $products, $produkBarcode, $paletBarcode, $previousPaletBarcode, $sws_code, $qtyPerPax, $trucking_id;
+    public $userId, $products, $produkBarcode, $paletBarcode, $previousPaletBarcode, $sws_code, $qtyPerPax, $trucking_id, $paletInput = false;
 
     public $scannedCounter = [];
 
@@ -56,15 +56,22 @@ class ListProduct extends Component
     public function paletBarcodeScan()
     {
         $this->paletBarcode = substr($this->paletBarcode, 0, 10);
+        // dump($this->paletBarcode !== $this->previousPaletBarcode);
         if (strlen($this->paletBarcode) > 2  && $this->paletBarcode !== $this->previousPaletBarcode) {
             DB::table('temp_counters')->where('userID', $this->userId)->delete();
             $truk = DB::table('delivery_mst')->where('pallet_no', $this->paletBarcode)->select('trucking_id')->first();
-
-            $this->dispatch('produkFocus');
-
-            $this->trucking_id = $truk->trucking_id;
-            // dd($this->trucking_id);
-            $this->previousPaletBarcode = $this->paletBarcode;
+            if($truk){
+                $this->dispatch('produkFocus');
+                
+                $this->trucking_id = $truk->trucking_id;
+                $this->paletInput = true;
+                $this->previousPaletBarcode = $this->paletBarcode;
+            }else{
+                $this->paletBarcode = null;
+            }
+        }else{
+            // $this->paletInput = true;
+            $this->dispatch('paletFocus');
         }
     }
 
@@ -182,11 +189,13 @@ class ListProduct extends Component
             ->select('a.*', 'b.location_cd')
             ->where('userID', $this->userId)
             ->orderByDesc('pax')
-            ->orderByDesc('material')->get();
+            // ->orderBy('no','asc')
+            ->orderByDesc('material')
+            ->get();
 
-        $props = 'No Data';
+        $props = [0,'No Data'];
         if ($getall->count() == 0 && count($getScanned) > 0) {
-            $props = 'Scan Confirmed';
+            $props = [1,'Scan Confirmed'];
         }
         return view('livewire.list-product', [
             'productsInPalet' => $getall,
@@ -206,6 +215,8 @@ class ListProduct extends Component
 
         $this->paletBarcode = null;
         $this->produkBarcode = null;
+        $this->paletInput = false;
+
         $this->dispatch('paletFocus');
     }
 
@@ -275,6 +286,7 @@ class ListProduct extends Component
                 }
             }
         }
+        $this->paletInput = false;
         $this->resetPage();
     }
 }
