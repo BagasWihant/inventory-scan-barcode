@@ -45,8 +45,8 @@ class ListProduct extends Component
                 'serial_no' => '00000',
                 "material_no" => $this->sws_code,
                 'picking_qty' => $qty,
-                'line_c'=>'NewItem',
-                'setup_by'=>'dev',
+                'line_c' => 'NewItem',
+                'setup_by' => 'dev',
                 'setup_date' => Carbon::now(),
             ]);
         }
@@ -70,8 +70,8 @@ class ListProduct extends Component
         if ($this->products->count() == 0) {
             $this->produkBarcode = null;
             return;
-        } 
-        
+        }
+
         if (strlen($this->produkBarcode) > 2) {
             $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->produkBarcode)->select('sws_code')->first();
             if ($supplierCode) {
@@ -101,8 +101,21 @@ class ListProduct extends Component
                         }
 
                         $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
-                    }
+                    } 
                 } else {
+
+                    $cek = DB::table('material_setup_mst_CNC_KIAS2')
+                        ->selectRaw('COUNT(DISTINCT picking_qty) as jml, max(picking_qty) as qty')
+                        ->where('material_no', $supplierCode->sws_code);
+                    if ($cek->count() > 0) {
+                        $data = $cek->first();
+                        if($data->jml > 1) {
+                            $this->dispatch('newItem', $data->qty);
+                            return;
+                        }
+                        $this->insertNew($data->qty);
+                        return;
+                    }
                     // insert barcode tidak terecord
                     $this->dispatch('newItem');
                 }
@@ -162,12 +175,12 @@ class ListProduct extends Component
 
 
         $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)
-        ->where('userID', $this->userId)
-        ->orderByDesc('pax')
-        ->orderByDesc('material')->get();
+            ->where('userID', $this->userId)
+            ->orderByDesc('pax')
+            ->orderByDesc('material')->get();
 
-        $props= 'No Data';
-        if($getall->count() == 0 && count($getScanned) > 0){
+        $props = 'No Data';
+        if ($getall->count() == 0 && count($getScanned) > 0) {
             $props = 'Scan Confirmed';
         }
         return view('livewire.list-product', [
@@ -180,12 +193,12 @@ class ListProduct extends Component
     public function resetPage()
     {
         DB::table('temp_counters')->where('userID', $this->userId)->delete();
-        
+
         DB::table('material_setup_mst_cnc_kias2')
-        ->where('serial_no', '00000')
-        ->where('pallet_no', $this->paletBarcode)
-        ->where('line_c', 'NewItem')->delete();
-        
+            ->where('serial_no', '00000')
+            ->where('pallet_no', $this->paletBarcode)
+            ->where('line_c', 'NewItem')->delete();
+
         $this->paletBarcode = null;
         $this->produkBarcode = null;
         $this->dispatch('paletFocus');

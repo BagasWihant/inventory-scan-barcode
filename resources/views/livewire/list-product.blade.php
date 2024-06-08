@@ -74,8 +74,7 @@
                     </thead>
                     <tbody>
                         @foreach ($productsInPalet as $product)
-                            <tr
-                                class=" border rounded dark:border-gray-700 ">
+                            <tr class=" border rounded dark:border-gray-700 ">
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->pallet_no }}</th>
@@ -136,9 +135,9 @@
                                 if ($v->total == $v->counter && $v->qty_more == 0) {
                                     $ket = 'OK CONFIRM';
                                     $class = ' bg-green-300 dark:bg-green-500';
-                                // } elseif ($v->sisa == 0 && $v->qty_more > 0) {
-                                //     $ket = 'NEW ITEM';
-                                //     $class = ' bg-blue-400';
+                                    // } elseif ($v->sisa == 0 && $v->qty_more > 0) {
+                                    //     $ket = 'NEW ITEM';
+                                    //     $class = ' bg-blue-400';
                                 } elseif ($v->counter > $v->total || $v->qty_more > 0) {
                                     $ket = 'EXCESS';
                                     $class = ' bg-amber-400';
@@ -177,7 +176,7 @@
         </div>
     @else
         <div class="w-full" wire:loading.remove>
-            <h2 class="p-5 text-2xl text-center font-extrabold dark:text-white">{{$props}} </h2>
+            <h2 class="p-5 text-2xl text-center font-extrabold dark:text-white">{{ $props }} </h2>
         </div>
     @endif
 
@@ -193,11 +192,13 @@
             $("#paletBarcode").focus()
         });
         $wire.on('newItem', async (event) => {
+            console.log(event);
             const {
                 value: qty
             } = await Swal.fire({
                 title: "New Item Detected",
                 input: "number",
+                inputValue: event[0] ?? 0,
                 inputLabel: "Qty per pax",
                 inputPlaceholder: "qty",
                 showDenyButton: true,
