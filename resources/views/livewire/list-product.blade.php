@@ -177,7 +177,7 @@
         </div>
     @else
         <div class="w-full" wire:loading.remove>
-            <h2 class="p-5 text-2xl text-center font-extrabold dark:text-white">No Data</h2>
+            <h2 class="p-5 text-2xl text-center font-extrabold dark:text-white">{{$props}} </h2>
         </div>
     @endif
 

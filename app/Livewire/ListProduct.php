@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 class ListProduct extends Component
 {
     use WithPagination;
-    public $userId, $products, $produkBarcode, $paletBarcode, $changes = false, $previousPaletBarcode, $sws_code, $qtyPerPax;
+    public $userId, $products, $produkBarcode, $paletBarcode, $previousPaletBarcode, $sws_code, $qtyPerPax;
 
     public $scannedCounter = [];
 
@@ -56,13 +56,11 @@ class ListProduct extends Component
     public function paletBarcodeScan()
     {
         $this->paletBarcode = substr($this->paletBarcode, 0, 10);
-        $this->changes = false;
         if (strlen($this->paletBarcode) > 2  && $this->paletBarcode !== $this->previousPaletBarcode) {
             DB::table('temp_counters')->where('userID', $this->userId)->delete();
 
             $this->dispatch('produkFocus');
 
-            $this->changes = true;
             $this->previousPaletBarcode = $this->paletBarcode;
         }
     }
@@ -168,10 +166,14 @@ class ListProduct extends Component
         ->orderByDesc('pax')
         ->orderByDesc('material')->get();
 
+        $props= 'No Data';
+        if($getall->count() == 0 && count($getScanned) > 0){
+            $props = 'Scan Confirmed';
+        }
         return view('livewire.list-product', [
             'productsInPalet' => $getall,
             'scanned' => $scannedCounter,
-            'changes' => $this->changes
+            'props' => $props
         ]);
     }
 
