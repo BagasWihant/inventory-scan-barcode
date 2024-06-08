@@ -8,6 +8,13 @@
                 class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
         </div>
         <div class="w-full">
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">TRUCKING ID
+            </label>
+            <input wire:model="trucking_id" type="text"
+                class="block w-full p-4 text-gray-600 border border-gray-300 rounded-lg bg-gray-100 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" readonly>
+        </div>
+
+        <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PRODUK BARCODE
             </label>
             <input wire:model="produkBarcode" wire:keydown.debounce.150ms="productBarcodeScan" type="text"
@@ -109,12 +116,12 @@
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" class="px-6 py-3">
+                            <th scope="col" >
                                 Material No
                             </th>
-                            <th scope="col" class="px-6 py-3">
+                            {{-- <th scope="col" class="px-6 py-3">
                                 outstanding
-                            </th>
+                            </th> --}}
                             <th scope="col" class="px-6 py-3">
                                 <div class="flex items-center">
                                     Qty received
@@ -125,10 +132,14 @@
                                     keterangan
                                 </div>
                             </th>
+                            <th scope="col" class="px-6 py-3">
+                                <div class="flex items-center">
+                                    Location
+                                </div>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
-                        {{-- {{dd($scanned)}} --}}
                         @foreach ($scanned as $v)
                             @php
                                 if ($v->total == $v->counter && $v->qty_more == 0) {
@@ -149,15 +160,19 @@
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->material }}</th>
-                                <th scope="row"
+                                {{-- <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->sisa }} </th>
+                                    {{ $v->sisa }} </th> --}}
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->counter }} </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $ket }}
+                                </th>
+                                <th scope="row"
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {{ $v->location_cd }}
                                 </th>
                             </tr>
                         @endforeach

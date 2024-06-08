@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 class ListProduct extends Component
 {
     use WithPagination;
-    public $userId, $products, $produkBarcode, $paletBarcode, $previousPaletBarcode, $sws_code, $qtyPerPax;
+    public $userId, $products, $produkBarcode, $paletBarcode, $previousPaletBarcode, $sws_code, $qtyPerPax, $trucking_id;
 
     public $scannedCounter = [];
 
@@ -58,9 +58,12 @@ class ListProduct extends Component
         $this->paletBarcode = substr($this->paletBarcode, 0, 10);
         if (strlen($this->paletBarcode) > 2  && $this->paletBarcode !== $this->previousPaletBarcode) {
             DB::table('temp_counters')->where('userID', $this->userId)->delete();
+            $truk = DB::table('delivery_mst')->where('pallet_no', $this->paletBarcode)->select('trucking_id')->first();
 
             $this->dispatch('produkFocus');
 
+            $this->trucking_id = $truk->trucking_id;
+            // dd($this->trucking_id);
             $this->previousPaletBarcode = $this->paletBarcode;
         }
     }
@@ -126,7 +129,6 @@ class ListProduct extends Component
 
     public function render()
     {
-        // $this->paletBarcode = 'Y-01-00003';
         $getScanned = DB::table('material_in_stock')->select('material_no')
             ->where('pallet_no', $this->paletBarcode)
             ->union(DB::table('material_kelebihans')->select('material_no')->where('pallet_no', $this->paletBarcode))
@@ -174,7 +176,10 @@ class ListProduct extends Component
         }
 
 
-        $scannedCounter = DB::table('temp_counters')->where('palet', $this->paletBarcode)
+        $scannedCounter = DB::table('temp_counters as a')
+            ->leftJoin('matloc_temp_CNCKIAS2 as b', 'a.material', '=', 'b.material_no')
+            ->where('palet', $this->paletBarcode)
+            ->select('a.*', 'b.location_cd')
             ->where('userID', $this->userId)
             ->orderByDesc('pax')
             ->orderByDesc('material')->get();
