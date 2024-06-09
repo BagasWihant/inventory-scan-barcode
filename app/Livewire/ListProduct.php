@@ -245,7 +245,8 @@ class ListProduct extends Component
                             'material_no' => $data->material,
                             'picking_qty' => $qty,
                             'locate' => $data->location_cd,
-                            'trucking_id' => $data->trucking_id
+                            'trucking_id' => $data->trucking_id,
+                            'user_id' => $this->userId
                         ]);
                     }
                 }
@@ -258,7 +259,8 @@ class ListProduct extends Component
                         'material_no' => $data->material,
                         'picking_qty' => $qty,
                         'locate' => $data->location_cd,
-                        'trucking_id' => $data->trucking_id
+                        'trucking_id' => $data->trucking_id,
+                        'user_id' => $this->userId
                     ]);
                 }
                 if ($kelebihan == 0) {
@@ -270,7 +272,8 @@ class ListProduct extends Component
                             'material_no' => $data->material,
                             'picking_qty' => $qty,
                             'locate' => $data->location_cd,
-                            'trucking_id' => $data->trucking_id
+                            'trucking_id' => $data->trucking_id,
+                            'user_id' => $this->userId
                         ]);
                     }
                 }
@@ -281,7 +284,8 @@ class ListProduct extends Component
                         'material_no' => $data->material,
                         'picking_qty' => $qty,
                         'locate' => $data->location_cd,
-                        'trucking_id' => $data->trucking_id
+                        'trucking_id' => $data->trucking_id,
+                        'user_id' => $this->userId
                     ]);
                 }
             }

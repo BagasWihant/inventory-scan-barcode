@@ -11,6 +11,6 @@ class itemKurang extends Model
     protected $table = 'material_kurang';
 
 
-    protected $fillable= ['pallet_no','material_no','picking_qty','locate','trucking_id'];
+    protected $fillable= ['pallet_no','material_no','picking_qty','locate','trucking_id','user_id'];
 
 }
