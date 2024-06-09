@@ -1,12 +1,26 @@
 <div>
     <div class="flex gap-4">
-        <div class="w-full">
+        <div class="flex flex-col w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Palet BARCODE
             </label>
-            <input autofocus wire:model="paletBarcode" wire:keydown.debounce.150ms="paletBarcodeScan" type="text"
-                id="paletBarcode"
-                class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+
+            <span
+                class="@if (!$paletInput) hidden @endif font-medium text-gray-900 dark:text-white border border-gray-300 p-4 rounded-md bg-gray-200">
+                {{ $paletBarcode }} </span>
+
+            <input focus wire:model="paletBarcode" wire:keydown.debounce.150ms="paletBarcodeScan" type="text"
+                id="paletBarcode" @if ($paletInput) hidden @endif
+                class=" w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+
         </div>
+        <div class="w-full">
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">TRUCKING ID
+            </label>
+            <input wire:model="trucking_id" type="text"
+                class="block w-full p-4 text-gray-700 border border-gray-300 rounded-lg bg-gray-200 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                readonly>
+        </div>
+
         <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PRODUK BARCODE
             </label>
@@ -52,9 +66,6 @@
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
                             <th scope="col" class="px-6 py-3">
-                                Pallet No
-                            </th>
-                            <th scope="col" class="px-6 py-3">
                                 <div class="flex items-center">
                                     Material No
                                 </div>
@@ -74,9 +85,9 @@
                     <tbody>
                         @foreach ($productsInPalet as $product)
                             <tr class=" border rounded dark:border-gray-700 ">
-                                <th scope="row"
+                                {{-- <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $product->pallet_no }}</th>
+                                    {{ $product->pallet_no }}</th> --}}
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->material_no }}</th>
@@ -109,12 +120,12 @@
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" class="px-6 py-3">
+                            <th scope="col">
                                 Material No
                             </th>
-                            <th scope="col" class="px-6 py-3">
+                            {{-- <th scope="col" class="px-6 py-3">
                                 outstanding
-                            </th>
+                            </th> --}}
                             <th scope="col" class="px-6 py-3">
                                 <div class="flex items-center">
                                     Qty received
@@ -125,10 +136,14 @@
                                     keterangan
                                 </div>
                             </th>
+                            <th scope="col" class="px-6 py-3">
+                                <div class="flex items-center">
+                                    Location
+                                </div>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
-                        {{-- {{dd($scanned)}} --}}
                         @foreach ($scanned as $v)
                             @php
                                 if ($v->total == $v->counter && $v->qty_more == 0) {
@@ -149,15 +164,19 @@
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->material }}</th>
-                                <th scope="row"
+                                {{-- <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->sisa }} </th>
+                                    {{ $v->sisa }} </th> --}}
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->counter }} </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $ket }}
+                                </th>
+                                <th scope="row"
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {{ $v->location_cd }}
                                 </th>
                             </tr>
                         @endforeach
@@ -175,7 +194,14 @@
         </div>
     @else
         <div class="w-full" wire:loading.remove>
-            <h2 class="p-5 text-2xl text-center font-extrabold dark:text-white">{{ $props }} </h2>
+            <h2 class="p-5 text-2xl text-center font-extrabold dark:text-white">{{ $props[1] }} </h2>
+            @if ($props[0] == 1)
+                <div class="text-center">
+
+                    <button type="button" wire:click="resetPage"
+                        class=" text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Rescan</button>
+                </div>
+            @endif
         </div>
     @endif
 
@@ -188,7 +214,9 @@
             $("#produkBarcode").focus()
         });
         $wire.on('paletFocus', (event) => {
-            $("#paletBarcode").focus()
+            setTimeout(function() {
+                $("#paletBarcode").focus()
+            }, 50);
         });
         $wire.on('newItem', async (event) => {
             console.log(event);
