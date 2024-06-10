@@ -189,7 +189,6 @@ class ListProduct extends Component
             ->select('a.*', 'b.location_cd')
             ->where('userID', $this->userId)
             ->orderByDesc('pax')
-            // ->orderBy('no','asc')
             ->orderByDesc('material')
             ->get();
 
@@ -197,6 +196,8 @@ class ListProduct extends Component
         if ($getall->count() == 0 && count($getScanned) > 0) {
             $props = [1,'Scan Confirmed'];
         }
+        $this->dispatch('paletFocus');
+
         return view('livewire.list-product', [
             'productsInPalet' => $getall,
             'scanned' => $scannedCounter,
