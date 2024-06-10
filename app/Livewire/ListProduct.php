@@ -120,10 +120,10 @@ class ListProduct extends Component
                     if ($cek->count() > 0) {
                         $data = $cek->first();
                         if ($data->jml > 1) {
-                            $this->dispatch('newItem', $data->qty);
+                            $this->dispatch('newItem', 0);
                             return;
                         }
-                        $this->insertNew($data->qty);
+                        $this->dispatch('newItem', $data->qty);
                         return;
                     }
                     // insert barcode tidak terecord
