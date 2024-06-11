@@ -143,13 +143,14 @@ class ListProduct extends Component
             ->pluck('material_no')
             ->all();
 
-        $productsQuery = DB::table('material_setup_mst_CNC_KIAS2')
-            ->selectRaw('pallet_no, material_no, count(material_no) as pax, sum(picking_qty) as picking_qty, min(serial_no) as serial_no')
+        $productsQuery = DB::table('material_setup_mst_CNC_KIAS2 as a')
+            ->selectRaw('pallet_no, a.material_no,count(a.material_no) as pax, sum(picking_qty) as picking_qty, min(serial_no) as serial_no,location_cd')
+            ->leftJoin('matloc_temp_CNCKIAS2 as b', 'a.material_no', '=', 'b.material_no')
             ->where('pallet_no', $this->paletBarcode)
-            ->whereNotIn('material_no', $getScanned)
-            ->groupBy('pallet_no', 'material_no')
+            ->whereNotIn('a.material_no', $getScanned)
+            ->groupBy('pallet_no', 'a.material_no','location_cd')
             ->orderByDesc('pax')
-            ->orderByDesc('material_no');
+            ->orderByDesc('a.material_no');
 
         $getall = $productsQuery->get();
         $this->products = $getall;
