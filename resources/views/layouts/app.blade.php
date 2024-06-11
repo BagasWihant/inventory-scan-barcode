@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'Warehouse') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -26,7 +26,7 @@
             <div class="px-3 py-3 lg:px-5 lg:pl-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center justify-start rtl:justify-end">
-                        <button  @click="sidebarOpen = !sidebarOpen" type="button"
+                        <button @click="sidebarOpen = !sidebarOpen" type="button"
                             class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg  hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
                             <span class="sr-only">Open sidebar</span>
                             <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
@@ -39,8 +39,10 @@
                         </button>
                         <a href="#" class="flex ms-2 md:me-24">
                             <span
-                                class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Inventory
-                                Barcode</span>
+                                class="self-center text-lg font-semibold sm:text-xl whitespace-nowrap dark:text-white">
+                                Warehouse System 
+                                <span class="dark:text-gray-400 text-gray-500 text-base"> > <x-sidebar.list-menu :menuList="false" /> </span>
+                            </span>
                         </a>
                     </div>
                     <div class="flex items-center">
@@ -74,11 +76,11 @@
                                 id="dropdown-user">
                                 <div class="px-7 py-3" role="none">
                                     <p class="text-sm text-gray-900 dark:text-white" role="none">
-                                        {{strtoupper(auth()->user()->username)}}
+                                        {{ strtoupper(auth()->user()->username) }}
                                     </p>
                                     <p class="text-sm font-medium text-gray-900 truncate dark:text-gray-300"
                                         role="none">
-                                        {{auth()->user()->email}}
+                                        {{ auth()->user()->email }}
                                     </p>
                                 </div>
                                 <ul class="py-1" role="none">
@@ -102,10 +104,10 @@
             <aside :class="sidebarOpen ? 'left-0 w-72' : '-left-72 w-0'"
                 class="relative h-screen transition-all mt-16 duration-300 flex flex-col text-md font-semibold top-0 z-40 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700"
                 aria-label="Sidebar">
-                
-                <div :class="sidebarOpen ? 'px-3' : '' " class="h-full py-4 overflow-y-auto bg-white dark:bg-gray-800">
+
+                <div :class="sidebarOpen ? 'px-3' : ''" class="h-full py-4 overflow-y-auto bg-white dark:bg-gray-800">
                     <ul class="space-y-2 font-medium text-sm">
-                        <x-sidebar.list-menu :menu="[]" />
+                        <x-sidebar.list-menu :menuList="true" />
                     </ul>
                 </div>
             </aside>
