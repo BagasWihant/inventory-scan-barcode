@@ -8,6 +8,12 @@
             'child' => [
                 ['url' => route('inventory.index'), 'label' => 'Receiving Material CNC'],
                 ['url' => route('instock'), 'label' => 'Material Stock'],
+                ['url' => route('checking'), 'label' => 'Check Stock'],
+            ],
+        ],
+        [
+            'label' => 'Abnormal Material',
+            'child' => [
                 ['url' => route('lack'), 'label' => 'Kekurangan Material'],
                 ['url' => route('excess'), 'label' => 'Kelebihan Material'],
             ],
@@ -21,7 +27,7 @@
             @if (isset($m['child']))
                 <button type="button"
                     class="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-300 dark:text-white dark:hover:bg-gray-700"
-                    aria-controls="dropdown-example" data-collapse-toggle="dropdown-example">
+                    aria-controls="dropdown-example{{$loop->iteration}}" data-collapse-toggle="dropdown-example{{$loop->iteration}}">
                     <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
                         aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 21">
                         <path
@@ -34,7 +40,7 @@
                             d="m1 1 4 4 4-4" />
                     </svg>
                 </button>
-                <ul id="dropdown-example" class="hidden py-2 space-y-2 pl-2 text-sm">
+                <ul id="dropdown-example{{$loop->iteration}}" class="hidden py-2 space-y-2 pl-2 text-sm">
                     @foreach ($m['child'] as $ch)
                         <li>
                             <a href="{{ $ch['url'] }}"
