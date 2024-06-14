@@ -13,8 +13,9 @@ class LackItem extends Component
     public $dataCetak,$searchKey;
     public function render()
     {
-        $query = DB::table('material_kurang')
+        $query = DB::table('abnormal_materials')
         ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax')
+        ->where('status',0)
         ->groupBy(['material_no','pallet_no']);
 
         $query->where('pallet_no','like',"%$this->searchKey%");

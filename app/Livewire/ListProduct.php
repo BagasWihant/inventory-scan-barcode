@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\abnormalMaterial;
 use App\Models\itemIn;
 use App\Models\itemKurang;
 use App\Models\MaterialKelebihan;
@@ -60,16 +61,16 @@ class ListProduct extends Component
         if (strlen($this->paletBarcode) > 2  && $this->paletBarcode !== $this->previousPaletBarcode) {
             DB::table('temp_counters')->where('userID', $this->userId)->delete();
             $truk = DB::table('delivery_mst')->where('pallet_no', $this->paletBarcode)->select('trucking_id')->first();
-            if($truk){
+            if ($truk) {
                 $this->dispatch('produkFocus');
-                
+
                 $this->trucking_id = $truk->trucking_id;
                 $this->paletInput = true;
                 $this->previousPaletBarcode = $this->paletBarcode;
-            }else{
+            } else {
                 $this->paletBarcode = null;
             }
-        }else{
+        } else {
             // $this->paletInput = true;
             $this->dispatch('paletFocus');
         }
@@ -138,8 +139,7 @@ class ListProduct extends Component
     {
         $getScanned = DB::table('material_in_stock')->select('material_no')
             ->where('pallet_no', $this->paletBarcode)
-            ->union(DB::table('material_kelebihans')->select('material_no')->where('pallet_no', $this->paletBarcode))
-            ->union(DB::table('material_kurang')->select('material_no')->where('pallet_no', $this->paletBarcode))
+            ->union(DB::table('abnormal_materials')->select('material_no')->where('pallet_no', $this->paletBarcode))
             ->pluck('material_no')
             ->all();
 
@@ -148,7 +148,7 @@ class ListProduct extends Component
             ->leftJoin('matloc_temp_CNCKIAS2 as b', 'a.material_no', '=', 'b.material_no')
             ->where('pallet_no', $this->paletBarcode)
             ->whereNotIn('a.material_no', $getScanned)
-            ->groupBy('pallet_no', 'a.material_no','location_cd')
+            ->groupBy('pallet_no', 'a.material_no', 'location_cd')
             ->orderByDesc('pax')
             ->orderByDesc('a.material_no');
 
@@ -193,9 +193,9 @@ class ListProduct extends Component
             ->orderByDesc('material')
             ->get();
 
-        $props = [0,'No Data'];
+        $props = [0, 'No Data'];
         if ($getall->count() == 0 && count($getScanned) > 0) {
-            $props = [1,'Scan Confirmed'];
+            $props = [1, 'Scan Confirmed'];
         }
         $this->dispatch('paletFocus');
 
@@ -242,13 +242,22 @@ class ListProduct extends Component
                 if ($kelebihan > 0) {
 
                     for ($i = 1; $i <= $kelebihan; $i++) {
-                        MaterialKelebihan::create([
+                        // MaterialKelebihan::create([
+                        //     'pallet_no' => $this->paletBarcode,
+                        //     'material_no' => $data->material,
+                        //     'picking_qty' => $qty,
+                        //     'locate' => $data->location_cd,
+                        //     'trucking_id' => $data->trucking_id,
+                        //     'user_id' => $this->userId
+                        // ]);
+                        abnormalMaterial::create([
                             'pallet_no' => $this->paletBarcode,
                             'material_no' => $data->material,
                             'picking_qty' => $qty,
                             'locate' => $data->location_cd,
                             'trucking_id' => $data->trucking_id,
-                            'user_id' => $this->userId
+                            'user_id' => $this->userId,
+                            'status' => 1
                         ]);
                     }
                 }
@@ -269,25 +278,43 @@ class ListProduct extends Component
 
                     $jmlSisa = $data->pax - $jmlIn;
                     for ($i = 0; $i < $jmlSisa; $i++) {
-                        itemKurang::create([
+                        // itemKurang::create([
+                        //     'pallet_no' => $this->paletBarcode,
+                        //     'material_no' => $data->material,
+                        //     'picking_qty' => $qty,
+                        //     'locate' => $data->location_cd,
+                        //     'trucking_id' => $data->trucking_id,
+                        //     'user_id' => $this->userId
+                        //     ]);
+                        abnormalMaterial::create([
                             'pallet_no' => $this->paletBarcode,
                             'material_no' => $data->material,
                             'picking_qty' => $qty,
                             'locate' => $data->location_cd,
                             'trucking_id' => $data->trucking_id,
-                            'user_id' => $this->userId
+                            'user_id' => $this->userId,
+                            'status' => 0
                         ]);
                     }
                 }
             } else {
                 for ($i = 0; $i < $pax; $i++) {
-                    itemKurang::create([
+                    // itemKurang::create([
+                    //     'pallet_no' => $this->paletBarcode,
+                    //     'material_no' => $data->material,
+                    //     'picking_qty' => $qty,
+                    //     'locate' => $data->location_cd,
+                    //     'trucking_id' => $data->trucking_id,
+                    //     'user_id' => $this->userId
+                    // ]);
+                    abnormalMaterial::create([
                         'pallet_no' => $this->paletBarcode,
                         'material_no' => $data->material,
                         'picking_qty' => $qty,
                         'locate' => $data->location_cd,
                         'trucking_id' => $data->trucking_id,
-                        'user_id' => $this->userId
+                        'user_id' => $this->userId,
+                        'status' => 0
                     ]);
                 }
             }

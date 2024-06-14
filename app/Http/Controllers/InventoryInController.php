@@ -25,10 +25,9 @@ class InventoryInController extends Controller
     public function instock() {
         return view('pages.material-instock');
     }
-
-    /**
-     * Show the form for creating a new resource.
-     */
+    public function checking() {
+        return view('pages.checking-stock');
+    }
     public function detail()
     {
         return view('pages.list-product');
