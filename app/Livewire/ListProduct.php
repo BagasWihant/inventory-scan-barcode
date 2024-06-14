@@ -2,17 +2,20 @@
 
 namespace App\Livewire;
 
-use App\Models\abnormalMaterial;
-use App\Models\itemIn;
-use App\Models\itemKurang;
-use App\Models\MaterialKelebihan;
 use Carbon\Carbon;
+use App\Models\itemIn;
 use Livewire\Component;
+use App\Models\itemKurang;
 use App\Models\tempCounter;
 use Livewire\Attributes\On;
 use Livewire\WithPagination;
+use App\Exports\InStockExport;
+use App\Exports\ScannedExport;
+use App\Models\abnormalMaterial;
+use App\Models\MaterialKelebihan;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ListProduct extends Component
 {
@@ -224,6 +227,7 @@ class ListProduct extends Component
 
     public function confirm()
     {
+
         $fixProduct = DB::table('temp_counters')
             ->leftJoin('delivery_mst as d', 'temp_counters.palet', '=', 'd.pallet_no')
             ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
@@ -232,7 +236,6 @@ class ListProduct extends Component
             ->where('palet', $this->paletBarcode);
 
         $b = $fixProduct->get();
-
         foreach ($b as $data) {
             $pax = $data->pax;
             $qty = $data->total / $pax;
@@ -321,5 +324,9 @@ class ListProduct extends Component
         }
         $this->paletInput = false;
         $this->resetPage();
+        
+        return Excel::download(new ScannedExport($b), "Scanned Items_".$this->paletBarcode."_".date('YmdHis').".pdf", \Maatwebsite\Excel\Excel::MPDF);
+
+        
     }
 }

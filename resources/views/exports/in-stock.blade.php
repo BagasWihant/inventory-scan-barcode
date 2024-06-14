@@ -1,6 +1,6 @@
-<table>
+<table style="border: 2px;width: 100%">
     <thead>
-    <tr style="border: 1px;width: 100%">
+    <tr>
         <th width="160px">Palet No</th>
         <th width="200px">Material No</th>
         <th width="120px">Pax</th>

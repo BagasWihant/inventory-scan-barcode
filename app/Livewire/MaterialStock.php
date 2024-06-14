@@ -16,7 +16,6 @@ class MaterialStock extends Component
     {
         $query = DB::table('material_in_stock')
         ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax')
-        ->where('stat',0)
         ->groupBy(['material_no','pallet_no']);
         $query->where('pallet_no','like',"%$this->searchKey%");
         $data= $query->get();
