@@ -61,7 +61,7 @@ class InStockExport implements WithEvents, WithCustomStartCell, WithDrawings,Fro
         $drawing = new Drawing();
         $drawing->setName('Logo');
         $drawing->setDescription('This is my logo');
-        $drawing->setPath(public_path('/assets/bg.jpg'));
+        $drawing->setPath(public_path('/assets/logo.jpg'));
         $drawing->setHeight(50);
         $drawing->setCoordinates('A1');
         return $drawing;
