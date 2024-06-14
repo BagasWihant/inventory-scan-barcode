@@ -18,6 +18,7 @@ Route::middleware('auth')->group(function () {
         Route::get('excess', 'excess')->name('excess');
         Route::get('lack', 'lack')->name('lack');
         Route::get('instock', 'instock')->name('instock');
+        Route::get('checking', 'checking')->name('checking');
     });
 });
 
