@@ -9,7 +9,7 @@
                 ['url' => route('inventory.index'), 'label' => 'Receiving Material CNC'],
                 ['url' => route('instock'), 'label' => 'Material Stock'],
                 ['url' => route('checking'), 'label' => 'Check Stock'],
-                ['url' => route('lack'), 'label' => 'Abnormal Material'],
+                ['url' => route('abnormal'), 'label' => 'Abnormal Material'],
             ],
         ],
     ];

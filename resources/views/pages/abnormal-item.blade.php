@@ -1,3 +1,3 @@
 <x-app-layout>
-    @livewire('lack-item')
+    @livewire('abnormal-item')
 </x-app-layout>

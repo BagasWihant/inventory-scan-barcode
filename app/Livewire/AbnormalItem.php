@@ -8,7 +8,7 @@ use App\Exports\InStockExportExcel;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
-class LackItem extends Component
+class AbnormalItem extends Component
 {
     public $dataCetak,$searchKey;
     public function render()
@@ -24,7 +24,7 @@ class LackItem extends Component
         if($this->searchKey) $this->dispatch('searchFocus');
         
         $this->dataCetak = $data;
-        return view('livewire.lack-item',compact('data'));
+        return view('livewire.abnormal-item',compact('data'));
     }
 
     public function exportPdf()  {
