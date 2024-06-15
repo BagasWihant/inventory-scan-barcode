@@ -36,11 +36,11 @@ class ScannedExport implements WithEvents, WithCustomStartCell,FromCollection,Wi
         return [
             'A' => 3,
             'B' => 15,
-            'C' => 20,            
+            'C' => 22,            
             'D' => 7,            
-            'E' => 10,            
+            'E' => 15,            
             'F' => 15,            
-            'G' => 10,            
+            'G' => 20,            
         ];
     }
 
