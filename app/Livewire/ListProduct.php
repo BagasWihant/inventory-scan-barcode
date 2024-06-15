@@ -323,10 +323,11 @@ class ListProduct extends Component
             }
         }
         $this->paletInput = false;
+        $paletBarcode = $this->paletBarcode;
+        
         $this->resetPage();
         
-        return Excel::download(new ScannedExport($b), "Scanned Items_".$this->paletBarcode."_".date('YmdHis').".pdf", \Maatwebsite\Excel\Excel::MPDF);
-
+        return Excel::download(new ScannedExport($b), "Scanned Items_".$paletBarcode."_".date('YmdHis').".pdf", \Maatwebsite\Excel\Excel::MPDF);
         
     }
 }

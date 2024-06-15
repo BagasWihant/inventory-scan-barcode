@@ -15,6 +15,7 @@ use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 use Maatwebsite\Excel\Concerns\WithDefaultStyles;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Style;
 
 class ScannedExport implements WithEvents, WithCustomStartCell,FromCollection,WithColumnWidths,WithHeadings,WithMapping
@@ -72,8 +73,8 @@ class ScannedExport implements WithEvents, WithCustomStartCell,FromCollection,Wi
 
     public function headings(): array{
         return [
-            '□',
             'Pallet No',
+            ' ',
             'Material No',
             'Pax',
             'Picking Qty',
@@ -102,10 +103,14 @@ class ScannedExport implements WithEvents, WithCustomStartCell,FromCollection,Wi
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet;
+                $spreadset = new Spreadsheet;
 
-                $sheet->mergeCells('A1:G2');
+                $sheet->mergeCells('A1:G3');
                 $sheet->setCellValue('A1', "Scanned List");
-                $sheet->getDelegate()->getStyle('A1')->getFont()->setBold(true);
+                $sheet->mergeCells('A4:C4');
+                $sheet->setCellValue('A4', "  ");
+                $sheet->getDelegate()->getStyle('A1:G2')->getFont()->setSize(20);
+                $sheet->getDelegate()->getStyle('A1:G5')->getFont()->setBold(true);
 
                 $styleArray = [
                     'alignment' => [
@@ -113,12 +118,11 @@ class ScannedExport implements WithEvents, WithCustomStartCell,FromCollection,Wi
                         'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                     ],
                 ];
-
-                $cellRange = 'A1:G5'; // All headers
+                
+                $sheet->mergeCells('A5:B5');
+                $cellRange = 'A1:G3'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->applyFromArray($styleArray);
-                $event->sheet->getDelegate()->getStyle("A5:B".$this->count+5)->applyFromArray($styleArray);
-                $event->sheet->getDelegate()->getStyle("D5:D".$this->count+5)->applyFromArray($styleArray);
-                $event->sheet->getDelegate()->getStyle("F5:G".$this->count+5)->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle("A5:G".$this->count+5)->applyFromArray($styleArray);
 
                 $border = [
                     'borders' => [
