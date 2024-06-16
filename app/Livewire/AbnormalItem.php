@@ -68,6 +68,23 @@ class AbnormalItem extends Component
         $this->dispatch('modalConfirm', $res);
     }
 
+    #[On('kembalikan')]
+    public function kembalikan($req)
+    {
+        $split = explode("|", $req);
+                
+        DB::table('abnormal_materials')
+            ->where('pallet_no', $split[0])
+            ->where('material_no', $split[1])
+            ->where('user_id', $this->userid)
+            ->delete();
+
+        return $this->dispatch('notif', [
+            'icon' => 'success',
+            'title' => 'Deleted from Abnormal Material',
+        ]);
+    }
+
     #[On('savingToStock')]
     public function savingToStock($req)
     {
@@ -110,6 +127,7 @@ class AbnormalItem extends Component
 
         // dump($data, $req);
     }
+
 
     public function exportPdf()
     {
