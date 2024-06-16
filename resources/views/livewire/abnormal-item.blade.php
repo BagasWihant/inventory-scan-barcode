@@ -26,12 +26,12 @@
                 </select>
 
             </div>
-            <div class="">
+            {{-- <div class="">
                 <button type="button" wire:click="exportExcel"
                     class="text-white bg-green-600 hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Excel</button>
                 <button type="button" wire:click="exportPdf"
                     class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">PDF</button>
-            </div>
+            </div> --}}
         </div>
 
         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -107,10 +107,11 @@
                             @endif
                         </td>
                         <td class="px-6 py-4">
-                            <button type="button" wire:click="konfirmasi(`{{ $d->pallet_no.'|'.$d->material_no }}`)"
-                                class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 shadow-lg shadow-green-500/50 dark:shadow-lg dark:shadow-green-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Konfirmasi</button>
                             <button type="button"
-                                class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Kembalikan</button>
+                                wire:click="konfirmasi(`{{ $d->pallet_no . '|' . $d->material_no }}`)"
+                                class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Konfirmasi</button>
+                            <button type="button"
+                                class="text-white bg-gradient-to-r from-red-500  to-red-600 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Kembalikan</button>
 
                         </td>
                     </tr>
@@ -126,39 +127,65 @@
         $wire.on('searchFocus', (event) => {
             $("#search").focus()
         });
+        $wire.on('notif', (event) => {
+            Swal.fire({
+                timer: 1000,
+                title: event[0].title,
+                icon: event[0].icon,
+                showConfirmButton: false,
+                timerProgressBar: true,
+            });
+        });
         $wire.on('modalConfirm', async (event) => {
-            const {
-                value: qty
-            } = await Swal.fire({
+            await Swal.fire({
                 title: "Save to Warehouse",
-                input: "number",
-                inputValue: event[0] ?? 0,
-                inputLabel: "Qty per pax",
-                inputPlaceholder: "qty",
+                html: `
+                <b>Total ${event[0].pax} pax</b><br>
+                <div class="flex flex-col">
+                    <label for="qty" class=" text-left text-gray-900">Total Qty</label>
+                    <input type="number" id="qty" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="qty">
+                </div>
+                `,
+                // inputValue: event[0].qty ?? 0,
+                // inputLabel: "Qty per pax",
+                // inputPlaceholder: "qty",
                 showDenyButton: true,
-                denyButtonText: `Don't save`
+                denyButtonText: `Don 't save`,
+                didOpen: function() {
+                    $('#qty').val(event[0].qty)
+                },
+                preConfirm: () => {
+                    return [
+                        document.getElementById("qty").value,
+                    ];
+                }
             }).then((result) => {
-                if(result.value > event[0]){
+                qty = parseInt(result.value[0])
+
+
+                if (qty > event[0].qty) {
                     return Swal.fire({
-                        timer: 1000,
-                        title: "Qty Tidak sesuai",
+                        timer: 2200,
+                        html: `
+                        Max Qty is <b> ${event[0].qty} </b> your input is <b> ${qty} </b>`,
+                        title: "Invalid Input",
                         icon: "error",
                         showConfirmButton: false,
                         timerProgressBar: true,
                     });
                 }
-                /* Read more about isConfirmed, isDenied below */
+
                 if (result.isConfirmed) {
-                    $wire.dispatch('konfirmasi', {
-                        qty: result.value,
+
+                    data = {
+                        pax: event[0].pax,
+                        qty: qty,
+                        pallet_no: event[0].pallet_no,
+                        material_no: event[0].material_no
+                    }
+                    $wire.dispatch('savingToStock', {
+                        req: data
                     })
-                    Swal.fire({
-                        timer: 1000,
-                        title: "Saved",
-                        icon: "success",
-                        showConfirmButton: false,
-                        timerProgressBar: true,
-                    });
                 } else if (result.isDenied) {
                     // $wire.dispatch('insertNew', {
                     //     save: false
