@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('master_sto', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('user_id');
+            $table->json('user_id');
             $table->char('status',1)->nullable();
             $table->timestamp('date_start')->default(now());
             $table->timestamp('date_end')->nullable();

@@ -11,9 +11,10 @@ class MenuOptions extends Model
     protected $table = 'master_sto';
     public $timestamps = false;
     protected $fillable = [
-        'code',
+        'user_id',
         'status',
-        'date_start'
+        'date_start',
+        'date_end'
     ];
 
 }
