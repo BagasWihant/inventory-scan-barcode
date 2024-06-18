@@ -223,6 +223,7 @@
         });
         $wire.on('paletFocus', (event) => {
             setTimeout(function() {
+                $("#paletBarcode").val("")
                 $("#paletBarcode").focus()
             }, 50);
         });
@@ -263,7 +264,7 @@
                         timerProgressBar: true,
                     });
                 }
-            });;
+            });
             console.log('aaa');
             if (qty) {
                 Swal.fire(`Entered qty: ${qty}`);

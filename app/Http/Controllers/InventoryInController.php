@@ -31,5 +31,9 @@ class InventoryInController extends Controller
     {
         return view('pages.list-product');
     }
+    public function prepareStockTaking()
+    {
+        return view('pages.prepare-taking');
+    }
 
 }

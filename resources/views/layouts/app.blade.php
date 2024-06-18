@@ -11,8 +11,10 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link href="{{ asset('assets/select2.min.css') }}" rel="stylesheet" />
     <!-- Scripts -->
     <script src="{{ asset('assets/jquery.js') }}"></script>
+    <script src="{{ asset('assets/select2.min.js') }}"></script>
     {{-- <script defer src="{{ asset('assets/cdn.min.js') }}"></script> --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>

@@ -36,11 +36,16 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()->min(4)],
         ]);
+
+        $admin = $request->section == 99 ? 1 : 0;
         
         $user = User::create([
             'section' => $request->section,
             'nik' => $request->nik,
             'username' => $request->name,
+            'Role_ID' => $request->section,
+            'section_id' => $request->section,
+            'Admin' => $admin,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
