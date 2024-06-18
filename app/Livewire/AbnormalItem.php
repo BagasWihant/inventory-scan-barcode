@@ -23,9 +23,8 @@ class AbnormalItem extends Component
         $query = DB::table('abnormal_materials')
             ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax,trucking_id,locate,status')
             ->where('user_id', $this->userid)
+            ->where('status', $this->status)
             ->groupBy(['material_no', 'pallet_no', 'trucking_id', 'locate', 'status']);
-
-        if ($this->status !== null && $this->status !== '-') $query->where('status', $this->status);
 
         $query->where(function ($query) {
             $query->where('pallet_no', 'like', "%$this->searchKey%")->orWhere('material_no', 'like', "%$this->searchKey%");
