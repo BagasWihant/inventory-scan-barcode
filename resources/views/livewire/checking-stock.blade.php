@@ -2,17 +2,12 @@
     <div class="text-2xl font-extrabold py-6 text-center">Checking Stock</div>
     <div class="grid md:grid-cols-8 gap-3 w-full">
 
-        <div class="col-span-2">
+        <div class="col-span-2" wire:ignore>
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Palet Code
             </label>
-            {{-- <input focus wire:model="paletBarcode" wire:keydown.debounce.250ms="paletBarcodeScan" type="text"
-                id="paletBarcode"
-                class=" w-full p-2.5 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-
-            <label for="countries" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select
-                Pallet</label> --}}
-            <select id="countries" wire:model="paletBarcode" wire:change="paletChange"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+            <select id="paletselect" 
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                >
                 <option selected>Choose Pallet</option>
                 @foreach ($listPalet as $p)
                     <option value="{{ $p }}">{{ $p }}</option>
@@ -95,22 +90,17 @@
                 <tbody>
                     @foreach ($inStock as $v)
                         <tr class=" border rounded dark:border-gray-700">
-                            <th scope="row"
-                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {{ $v->pallet_no }}</th>
-                            <th scope="row"
-                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {{ $v->material_no }} </th>
-                            <th scope="row"
-                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {{ $v->picking_qty }} - [ {{$v->pax}} ]
+                            <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {{ $v->picking_qty }} - [ {{ $v->pax }} ]
                             </th>
-                            <th scope="row"
-                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {{ $v->locate }}
                             </th>
-                            <th scope="row"
-                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {{ $v->status }}
                             </th>
                         </tr>
@@ -149,22 +139,17 @@
                 <tbody>
                     @foreach ($shipped as $v)
                         <tr class=" border rounded dark:border-gray-700">
-                            <th scope="row"
-                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {{ $v->pallet_no }}</th>
-                            <th scope="row"
-                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {{ $v->material_no }} </th>
-                            <th scope="row"
-                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {{ $v->picking_qty }} - [ {{$v->pax}} ]
+                            <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {{ $v->picking_qty }} - [ {{ $v->pax }} ]
                             </th>
-                            <th scope="row"
-                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {{ $v->location_cd }}
                             </th>
-                            <th scope="row"
-                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {{ $v->date }}
                             </th>
                         </tr>
@@ -174,3 +159,15 @@
         </div>
     </div>
 </div>
+@script
+    <script>
+        $(document).ready(function() {
+            $('#paletselect').select2();
+            $('#paletselect').on('change', function(e) {
+                @this.paletBarcode = e.target.value
+                $wire.dispatch('paletChange')
+            });
+
+        });
+    </script>
+@endscript

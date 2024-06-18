@@ -12,6 +12,13 @@
                 ['url' => route('abnormal'), 'label' => 'Abnormal Material'],
             ],
         ],
+        [
+            'url' => '#',
+            'label' => 'Stock Taking',
+            'child' => [
+                ['url' => route('prepare.stock.taking'), 'label' => 'Prepare Stock Taking'],
+            ],
+        ],
     ];
 @endphp
 

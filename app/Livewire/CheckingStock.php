@@ -11,6 +11,7 @@ class CheckingStock extends Component
     public $paletBarcode, $materialCode, $dateStart, $dateEnd;
     public $shipped = [], $inStock = [], $listMaterial = [];
 
+    #[On('paletChange')]
     public function paletChange()
     {
         $this->paletBarcode = substr($this->paletBarcode, 0, 10);
@@ -28,7 +29,7 @@ class CheckingStock extends Component
 
         // ITEM YANG DIKIRIM
         $queryShippedRaw = DB::table('material_setup_mst_CNC_KIAS2 as a')
-            ->selectRaw('pallet_no, a.material_no,count(a.material_no) as pax, sum(picking_qty) as picking_qty, min(serial_no) as serial_no,location_cd,DATE_FORMAT(setup_date,"%d-%m-%Y") as date')
+            ->selectRaw("pallet_no, a.material_no,count(a.material_no) as pax, sum(picking_qty) as picking_qty, min(serial_no) as serial_no,location_cd, FORMAT(setup_date,'dd-MM-yyyy') as date")
             ->leftJoin('matloc_temp_CNCKIAS2 as b', 'a.material_no', '=', 'b.material_no');
 
         if ($this->paletBarcode) {
@@ -44,11 +45,11 @@ class CheckingStock extends Component
         }
 
         if ($this->dateStart && $this->dateEnd) {
-            $queryShippedRaw->whereRaw('DATE_FORMAT(setup_date,"%Y-%m-%d") >= ?', $this->dateStart);
-            $queryShippedRaw->whereRaw('DATE_FORMAT(setup_date,"%Y-%m-%d") <= ?', $this->dateEnd);
-        } 
+            $queryShippedRaw->whereRaw('FORMAT(setup_date,"yyyy-MM-dd") >= ?', $this->dateStart);
+            $queryShippedRaw->whereRaw('FORMAT(setup_date,"yyyy-MM-dd") <= ?', $this->dateEnd);
+        }
 
-        $productsQuery = $queryShippedRaw->groupBy('pallet_no', 'a.material_no', 'location_cd', 'date')
+        $productsQuery = $queryShippedRaw->groupBy('pallet_no', 'a.material_no', 'location_cd', 'setup_date')
             ->orderByDesc('pax')
             ->orderByDesc('a.material_no');
         $tempList = $productsQuery->pluck('material_no')->all();
@@ -73,8 +74,8 @@ class CheckingStock extends Component
 
 
         $getScanned = $queryStockRaw
-            ->groupBy('a.pallet_no', 'a.material_no', 'locate', 'b.status')->get();
-
+            ->groupBy('a.pallet_no', 'a.material_no', 'a.locate', 'b.status')->get();
+        // dd($productsQuery->toRawSql(), $getScanned);
         $this->inStock = $getScanned;
     }
 
