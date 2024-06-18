@@ -8,4 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class MenuOptions extends Model
 {
     use HasFactory;
+    public $timestamps = false;
+    protected $fillable = [
+        'code',
+        'status',
+        'date_start'
+    ];
+
 }
