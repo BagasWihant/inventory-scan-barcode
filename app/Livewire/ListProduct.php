@@ -221,7 +221,7 @@ class ListProduct extends Component
         $this->paletBarcode = null;
         $this->produkBarcode = null;
         $this->paletInput = false;
-
+        
         $this->dispatch('paletFocus');
     }
 
