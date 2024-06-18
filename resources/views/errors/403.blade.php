@@ -1,8 +1,8 @@
 <x-app-layout>
-    <div class="py-12">
+    <div class="py-12 dark:text-white">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200 text-xl text-center font-bold">
+            <div class=" overflow-hidden shadow rounded-2xl">
+                <div class="p-6 bg-red-500/30  text-xl text-center font-bold">
                     Sorry, this menu is disable for now. Please try again later. 
                 </div>
             </div>

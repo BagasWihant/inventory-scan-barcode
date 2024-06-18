@@ -72,7 +72,7 @@
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 <div class="flex items-center">
-                                    Lokasi
+                                    Pax
                                 </div>
                             </th>
                             <th scope="col" class="px-6 py-3">
@@ -96,7 +96,7 @@
                                     @if ($product->serial_no == '00000')
                                         0
                                     @else
-                                        {{ $product->location_cd }}
+                                        {{ $product->pax }}
                                     @endif
                                 </th>
                                 <th scope="row"

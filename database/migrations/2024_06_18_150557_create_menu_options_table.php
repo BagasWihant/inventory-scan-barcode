@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('menu_options', function (Blueprint $table) {
+        Schema::create('master_sto', function (Blueprint $table) {
             $table->id();
-            $table->char('code',2);
-            $table->string('name',50);
+            $table->bigInteger('user_id');
             $table->char('status',1)->nullable();
             $table->timestamp('date_start')->default(now());
             $table->timestamp('date_end')->nullable();
+
 
         });
     }
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('menu_options');
+        Schema::dropIfExists('master_sto');
     }
 };
