@@ -15,7 +15,10 @@
         [
             'url' => '#',
             'label' => 'Stock Taking',
-            'child' => [['url' => route('prepare.stock.taking'), 'label' => 'Prepare Stock Taking', 'admin' => '']],
+            'child' => [
+                ['url' => route('prepare.stock.taking'), 'label' => 'Prepare Stock Taking', 'admin' => ''],
+                ['url' => route('print.stock.taking'), 'label' => 'Print Stock Taking']
+            ],
         ],
     ];
 @endphp

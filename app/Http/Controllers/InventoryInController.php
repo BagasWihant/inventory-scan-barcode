@@ -36,4 +36,9 @@ class InventoryInController extends Controller
         return view('pages.prepare-taking');
     }
 
+    public function printStockTaking()
+    {
+        return view('pages.print-taking');
+    }
+
 }
