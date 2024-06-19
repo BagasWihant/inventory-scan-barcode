@@ -29,19 +29,12 @@ class PrepareTaking extends Component
     }
     public function lock()
     {
-        // $collect = collect($this->userSelected);
-        // $userID = $collect->implode(',');
-        
         $this->date = $this->date ?? now();
         MenuOptions::create([
             'status' => 1,
             'user_id' => $this->user_id,            
             'date_start' => date('Y-m-d H:i:s', strtotime($this->date))
         ]);
-        // $data->update([
-        //     'status' => $this->statusActive ? 1 : 0,
-        //     'date_start' => date('d-m-Y H:i:s', strtotime($this->date))
-        // ]);
     }
 
     public function render()
