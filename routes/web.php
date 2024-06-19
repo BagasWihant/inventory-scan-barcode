@@ -18,7 +18,7 @@ Route::middleware('auth')->group(function () {
         Route::get('abnormal', 'abnormal')->name('abnormal');
         Route::get('instock', 'instock')->name('instock');
         Route::get('checking', 'checking')->name('checking');
-        Route::get('preparestocktaking', 'prepareStockTaking')->name('prepare.stock.taking')->withoutMiddleware('isPrepareStockTaking');
+        Route::get('preparestocktaking', 'prepareStockTaking')->name('prepare.stock.taking')->withoutMiddleware('isPrepareStockTaking')->middleware('isMC');
     });
 });
 

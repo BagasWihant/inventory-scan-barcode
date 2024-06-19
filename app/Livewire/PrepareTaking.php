@@ -3,33 +3,57 @@
 namespace App\Livewire;
 
 use App\Models\MenuOptions;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class PrepareTaking extends Component
 {
-    public $statusActive,$date,$id;
+    public $statusActive, $date, $id,$canOpen,$user_id, $data;
 
-    public function mount()
+    
+   
+    public function changeStatusActive()
     {
-        $data = MenuOptions::where('code','1')->first();
-        $this->statusActive = $data->status == 1 ? true : false;
-        $this->id = $data->id;
     }
 
-    public function changeStatusActive() {
-    }
-
-    public function savedata(){
-        $data = MenuOptions::find($this->id);
+    public function open()
+    {
+        $data = MenuOptions::find($this->data->id);
+        $this->date = $this->date ?? now();
         $data->update([
-            'status' => $this->statusActive ? 1 : 0,
-            'date_start' => date('d-m-Y H:i:s', strtotime($this->date))
+            'status' => 0,
+            'date_end' => date('Y-m-d H:i:s', strtotime($this->date))
         ]);
+
+    }
+    public function lock()
+    {
+        // $collect = collect($this->userSelected);
+        // $userID = $collect->implode(',');
+        
+        $this->date = $this->date ?? now();
+        MenuOptions::create([
+            'status' => 1,
+            'user_id' => $this->user_id,            
+            'date_start' => date('Y-m-d H:i:s', strtotime($this->date))
+        ]);
+        // $data->update([
+        //     'status' => $this->statusActive ? 1 : 0,
+        //     'date_start' => date('d-m-Y H:i:s', strtotime($this->date))
+        // ]);
     }
 
     public function render()
     {
-
+        $this->user_id = auth()->user()->id;
+        $data = MenuOptions::where('status', 1);
+        $this->canOpen =$data->exists();
+        
+        if ($this->canOpen) {
+            $this->data = $data->first();
+        }
+        
         return view('livewire.prepare-taking');
     }
 }

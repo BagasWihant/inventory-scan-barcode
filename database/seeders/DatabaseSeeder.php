@@ -16,12 +16,5 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('menu_options')->insert(
-            [
-                'code' => '1',
-                'name' => 'DISABLE ALL MENU, PREPARE STOCK TAKING',
-                'status' => '1',
-            ]
-        );
     }
 }
