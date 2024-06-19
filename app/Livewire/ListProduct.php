@@ -30,7 +30,7 @@ class ListProduct extends Component
     }
 
     #[On('insertNew')]
-    public function insertNew($qty = 0, $save = true)
+    public function insertNew($qty = 0, $save = true, $update = false)
     {
         if ($save) {
             tempCounter::create([
@@ -53,6 +53,19 @@ class ListProduct extends Component
                 'setup_by' => 'dev',
                 'setup_date' => Carbon::now(),
             ]);
+        }
+        if ($update) {
+            $tempCount = DB::table('temp_counters')
+                ->where('material', $this->sws_code)
+                ->where('userID', $this->userId)
+                ->where('palet', $this->paletBarcode);
+                $data = $tempCount->first();
+                $counter = $data->counter + $qty;
+                $tempCount->update([
+                    'counter'=>$counter,
+                    'sisa' => $data->sisa - $qty
+                ]);
+
         }
         $this->produkBarcode = null;
     }
@@ -100,9 +113,9 @@ class ListProduct extends Component
                 if ($tempCount->count() > 0) {
 
                     $qry = DB::table('material_setup_mst_CNC_KIAS2')->select('picking_qty', 'serial_no')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode);
-                    if ($qry->count() > 0) {
+                    $productDetail = $qry->first();
+                    if ($qry->count() == 1) {
 
-                        $productDetail = $qry->first();
                         $counter = $data->counter + $productDetail->picking_qty;
                         $sisa = $data->sisa - $productDetail->picking_qty;
 
@@ -115,6 +128,8 @@ class ListProduct extends Component
                         }
 
                         $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
+                    } elseif ($qry->count() > 1) {
+                        $this->dispatch('newItem', ['qty' => $productDetail->picking_qty, 'title' => 'Item Duplicate', 'update' => true]);
                     }
                 } else {
 
@@ -124,14 +139,14 @@ class ListProduct extends Component
                     if ($cek->count() > 0) {
                         $data = $cek->first();
                         if ($data->jml > 1) {
-                            $this->dispatch('newItem', 0);
+                            $this->dispatch('newItem', ['qty' => 0, 'title' => 'Item Duplicate']);
                             return;
                         }
-                        $this->dispatch('newItem', $data->qty);
+                        $this->dispatch('newItem', ['qty' => $data->qty, 'title' => 'New Item but in Database']);
                         return;
                     }
                     // insert barcode tidak terecord
-                    $this->dispatch('newItem');
+                    $this->dispatch('newItem', ['title' => 'New Item']);
                 }
             }
         }
@@ -221,7 +236,7 @@ class ListProduct extends Component
         $this->paletBarcode = null;
         $this->produkBarcode = null;
         $this->paletInput = false;
-        
+
         $this->dispatch('paletFocus');
     }
 
@@ -324,10 +339,9 @@ class ListProduct extends Component
         }
         $this->paletInput = false;
         $paletBarcode = $this->paletBarcode;
-        
+
         $this->resetPage();
-        
-        return Excel::download(new ScannedExport($b), "Scanned Items_".$paletBarcode."_".date('YmdHis').".pdf", \Maatwebsite\Excel\Excel::MPDF);
-        
+
+        return Excel::download(new ScannedExport($b), "Scanned Items_" . $paletBarcode . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 }
