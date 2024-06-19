@@ -5,8 +5,6 @@ namespace App\Exports;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use Maatwebsite\Excel\Concerns\WithDrawings;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
@@ -14,9 +12,9 @@ use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
-class ExportStockTaking implements WithEvents, WithCustomStartCell, WithDrawings,FromCollection,WithColumnWidths,WithHeadings,WithMapping
+class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollection, WithColumnWidths, WithMapping
 {
-    public $data,$count;
+    public $data, $count;
     public function __construct($dt)
     {
         $this->data = $dt;
@@ -25,23 +23,24 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, WithDrawings
 
     public function startCell(): string
     {
-        return 'A5';
+        return 'A6';
     }
 
     public function columnWidths(): array
     {
         return [
             'A' => 3,
-            'B' => 15,
-            'C' => 20,            
-            'D' => 20,            
-            'E' => 20,            
-            'F' => 20,            
-            'G' => 20,            
-            'H' => 20,            
+            'B' => 23,
+            'C' => 20,
+            'D' => 20,
+            'E' => 20,
+            'F' => 20,
+            'G' => 20,
+            'H' => 20,
         ];
     }
-    public function map($row): array{
+    public function map($row): array
+    {
         $char = " ";
         $no = 1;
         return [
@@ -49,30 +48,34 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, WithDrawings
             $row->material_no,
             $char,
             $char,
+
             $char,
             $char,
+            
             $char,
             $char,
         ];
     }
 
-    public function collection(){
+    public function collection()
+    {
         return $this->data;
     }
 
-    public function headings(): array{
+    public function headings(): array
+    {
         return [
-            'No',
-            'Material No',
             ' ',
             ' ',
-            ' ',
-            ' ',
-            ' ',
-            ' ',
+            'LOC',
+            'QTY',
+            'LOC',
+            'QTY',
+            'LOC',
+            'QTY'
         ];
     }
-   
+
     public function drawings()
     {
 
@@ -93,25 +96,51 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, WithDrawings
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet;
+                $baris = 50;
                 $spreadset = new Spreadsheet;
 
-                $sheet->mergeCells('A1:G3');
+                $sheet->mergeCells('A1:H2');
                 $sheet->setCellValue('A1', "PRINT STOCK TAKING");
-                $sheet->mergeCells('A4:C4');
-                $sheet->setCellValue('A4', "  ");
-                $sheet->getDelegate()->getStyle('A1:G2')->getFont()->setSize(20);
-                $sheet->getDelegate()->getStyle('A1:G5')->getFont()->setBold(true);
+                
+                $sheet->mergeCells('A4:A5');
+                $sheet->setCellValue('A4', "NO");
 
+                $sheet->mergeCells('B4:B5');
+                $sheet->setCellValue('B4', "MATERIAL NO");
+                
+                $sheet->mergeCells('C4:D4');
+                $sheet->setCellValue('C4', "HITUNG 1");
+                $sheet->setCellValue('C5', "LOC");
+                $sheet->setCellValue('D5', "QTY");
+                
+                $sheet->mergeCells('E4:F4');
+                $sheet->setCellValue('E4', "HITUNG 2");
+                $sheet->setCellValue('E5', "LOC");
+                $sheet->setCellValue('F5', "QTY");
+                
+                $sheet->mergeCells('G4:H4');
+                $sheet->setCellValue('G4', "HITUNG 3");
+                $sheet->setCellValue('G5', "LOC");
+                $sheet->setCellValue('H5', "QTY");
+                
+                
+                // $sheet->setCellValue('A3', "  ");
+                $sheet->getDelegate()->getStyle('A1:H2')->getFont()->setSize(20);
+                $sheet->getDelegate()->getStyle('A1:H5')->getFont()->setBold(true);
+                
                 $styleArray = [
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
                         'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                     ],
                 ];
-                
+                $event->sheet->getDelegate()->getStyle('G4:H4')->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle('E4:F4')->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle('C4:D4')->applyFromArray($styleArray);
+
                 $cellRange = 'A1:G3'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->applyFromArray($styleArray);
-                $event->sheet->getDelegate()->getStyle("A5:G".$this->count+30)->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle("A5:H" . $this->count + $baris + 5)->applyFromArray($styleArray);
 
                 $border = [
                     'borders' => [
@@ -121,7 +150,11 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, WithDrawings
                         ],
                     ],
                 ];
-                $event->sheet->getDelegate()->getStyle("A5:G".$this->count+30)->applyFromArray($border);
+                $event->sheet->getDelegate()->getStyle("A4:H" . $this->count + $baris + 5)->applyFromArray($border);
+
+                for ($i = 1; $i <= $this->count + $baris; $i++) {
+                    $sheet->setCellValue('A' . 5 + $i, $i);
+                }
             }
         ];
     }
