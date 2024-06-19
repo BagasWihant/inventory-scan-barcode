@@ -19,8 +19,7 @@ class isMC
         if ($user->Role_ID != '3' && $user->Admin != '1') {
 
                 return response()->view('errors.403', [
-                    'message' => 'This menu only for Admin',
-                    'dev' => $user
+                    'message' => 'This menu only for Admin'
                 ], 403);
             }
         

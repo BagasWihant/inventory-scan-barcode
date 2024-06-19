@@ -17,7 +17,7 @@ class IsPrepareStockTaking
     public function handle(Request $request, Closure $next): Response
     {
         $menu = MenuOptions::where('status', '1')->first();
-        if ($menu->status == 1) {
+        if ($menu && $menu->status == 1) {
             return response()->view('errors.403', [
                 'message' => 'Sorry, this menu is disable for now. Please try again later. ',
             ], 403);
