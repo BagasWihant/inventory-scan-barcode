@@ -21,7 +21,7 @@
                 required />
         </div>
 
-        <div class="mb-4" wire:ignore>
+        {{-- <div class="mb-4" wire:ignore>
 
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">User
             </label>
@@ -31,53 +31,54 @@
                     <option value="{{ $p->id }}">{{ $p->username }}</option>
                 @endforeach
             </select>
-        </div>
+        </div> --}}
 
         <div class="grid grid-cols-2 gap-2">
 
-            <button type="button" wire:click="lock"
-                class="text-white block bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm w-full px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">Lock</button>
-            <button type="button" wire:click="open"
-                class="text-white block bg-amber-700 hover:bg-amber-800 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-sm w-full px-5 py-2.5 text-center dark:bg-amber-600 dark:hover:bg-amber-700 dark:focus:ring-amber-800">Open</button>
+            <button type="button" wire:click="lock" @if ($canOpen) disabled @endif
+                class="@if ($canOpen) disabled:opacity-50 @endif text-white block bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm w-full px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">Lock</button>
+
+            <button type="button" wire:click="open" @if (!$canOpen) disabled @endif
+                class="@if (!$canOpen) disabled:opacity-50 @endif text-white block bg-amber-700 hover:bg-amber-800 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-sm w-full px-5 py-2.5 text-center dark:bg-amber-600 dark:hover:bg-amber-700 dark:focus:ring-amber-800">Open</button>
         </div>
     </div>
     {{-- {{ $listUser }} --}}
 </div>
 
 <script>
-    const addSelectAll = matches => {
-        if (matches.length > 0) {
-            return [{
-                    id: 'selectAll',
-                    text: 'Select all user',
-                    matchIds: matches.map(match => match.id)
-                },
-                ...matches
-            ];
-        }
-    };
-    const handleSelection = event => {
-        if (event.params.data.id === 'selectAll') {
-            $('#listUser').val(event.params.data.matchIds);
-            $('#listUser').trigger('change');
-            @this.userSelected = event.params.data.matchIds
+    // const addSelectAll = matches => {
+    //     if (matches.length > 0) {
+    //         return [{
+    //                 id: 'selectAll',
+    //                 text: 'Select all user',
+    //                 matchIds: matches.map(match => match.id)
+    //             },
+    //             ...matches
+    //         ];
+    //     }
+    // };
+    // const handleSelection = event => {
+    //     if (event.params.data.id === 'selectAll') {
+    //         $('#listUser').val(event.params.data.matchIds);
+    //         $('#listUser').trigger('change');
+    //         @this.userSelected = event.params.data.matchIds
 
-        };
-        // if (event.params.data.id === 'selectAll') {
-        //     console.log(event.params.data.matchIds);
-        //     curSelIds = $('#listUser').val() || [];
-        //     $('#listUser').val([...curSelIds, ...event.params.data.matchIds]);
-        //     $('#listUser').trigger('change');
-        // }
+    //     };
+    //     // if (event.params.data.id === 'selectAll') {
+    //     //     console.log(event.params.data.matchIds);
+    //     //     curSelIds = $('#listUser').val() || [];
+    //     //     $('#listUser').val([...curSelIds, ...event.params.data.matchIds]);
+    //     //     $('#listUser').trigger('change');
+    //     // }
 
-    };
-    $("#listUser").select2({
-        placeholder: "Select User",
-        multiple: true,
-        allowClear: true,
-        sorter: addSelectAll,
-        width: 'resolve',
-    })
+    // };
+    // $("#listUser").select2({
+    //     placeholder: "Select User",
+    //     multiple: true,
+    //     allowClear: true,
+    //     sorter: addSelectAll,
+    //     width: 'resolve',
+    // })
 
-    $('#listUser').on('select2:select', handleSelection);
+    // $('#listUser').on('select2:select', handleSelection);
 </script>

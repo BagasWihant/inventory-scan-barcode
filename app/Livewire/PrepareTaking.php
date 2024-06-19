@@ -9,46 +9,35 @@ use Livewire\Component;
 
 class PrepareTaking extends Component
 {
-    public $statusActive, $date, $id,$listUser,$userSelected;
+    public $statusActive, $date, $id,$canOpen,$user_id, $data;
 
-    public function mount()
-    {
-        $this->listUser = DB::table('users')->select('id','username')
-        ->where('Role_ID','!=','3')
-        ->where('Admin','!=','1')
-        ->get();
-        
-        $data = MenuOptions::first();
-        if ($data) {
-
-            $this->statusActive = $data->status == 1 ? true : false;
-            $this->id = $data->id;
-        }
-    }
-
+    
+   
     public function changeStatusActive()
     {
     }
 
     public function open()
     {
-        // $data = MenuOptions::find($this->id);
-        // $data->update([
-        //     'status' => $this->statusActive ? 1 : 0,
-        //     'date_start' => date('d-m-Y H:i:s', strtotime($this->date))
-        // ]);
+        $data = MenuOptions::find($this->data->id);
+        $this->date = $this->date ?? now();
+        $data->update([
+            'status' => 0,
+            'date_end' => date('Y-m-d H:i:s', strtotime($this->date))
+        ]);
+
     }
     public function lock()
     {
-        $collect = collect($this->userSelected);
-        $userID = $collect->implode(',');
-
+        // $collect = collect($this->userSelected);
+        // $userID = $collect->implode(',');
+        
+        $this->date = $this->date ?? now();
         MenuOptions::create([
-            'status' => 0,
-            'user_id' => "$userID",            
-            'date_start' => date('Y-m-d', strtotime($this->date))
+            'status' => 1,
+            'user_id' => $this->user_id,            
+            'date_start' => date('Y-m-d H:i:s', strtotime($this->date))
         ]);
-        $this->userSelected = null;
         // $data->update([
         //     'status' => $this->statusActive ? 1 : 0,
         //     'date_start' => date('d-m-Y H:i:s', strtotime($this->date))
@@ -57,7 +46,14 @@ class PrepareTaking extends Component
 
     public function render()
     {
-
+        $this->user_id = auth()->user()->id;
+        $data = MenuOptions::where('status', 1);
+        $this->canOpen =$data->exists();
+        
+        if ($this->canOpen) {
+            $this->data = $data->first();
+        }
+        
         return view('livewire.prepare-taking');
     }
 }
