@@ -1,4 +1,4 @@
-<div>
+<div class="dark:text-white max-w-7xl mx-auto">
 
     <div class="text-2xl text-center font-extrabold py-6">Stock Material</div>
 
