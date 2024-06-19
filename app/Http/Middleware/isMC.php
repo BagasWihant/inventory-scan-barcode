@@ -2,12 +2,11 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\MenuOptions;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class IsPrepareStockTaking
+class isMC
 {
     /**
      * Handle an incoming request.
@@ -16,12 +15,15 @@ class IsPrepareStockTaking
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $menu = MenuOptions::where('status', '1')->first();
-        if ($menu->status == 1) {
-            return response()->view('errors.403', [
-                'message' => 'Sorry, this menu is disable for now. Please try again later. ',
-            ], 403);
-        }
+        $user = auth()->user();
+        if ($user->Role_ID != '3' && $user->Admin != '1') {
+
+                return response()->view('errors.403', [
+                    'message' => 'This menu only for Admin',
+                    'dev' => $user
+                ], 403);
+            }
+        
         return $next($request);
     }
 }

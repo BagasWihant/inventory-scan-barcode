@@ -13,12 +13,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::controller(InventoryInController::class)->group(function () {
+    Route::middleware('isPrepareStockTaking')->controller(InventoryInController::class)->group(function () {
         Route::get('inventory', 'index')->name('inventory.index');
         Route::get('abnormal', 'abnormal')->name('abnormal');
         Route::get('instock', 'instock')->name('instock');
         Route::get('checking', 'checking')->name('checking');
-        Route::get('preparestocktaking', 'prepareStockTaking')->name('prepare.stock.taking');
+        Route::get('preparestocktaking', 'prepareStockTaking')->name('prepare.stock.taking')->withoutMiddleware('isPrepareStockTaking')->middleware('isMC');
     });
 });
 

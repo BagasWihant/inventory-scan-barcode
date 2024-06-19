@@ -3,7 +3,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class=" overflow-hidden shadow rounded-2xl">
                 <div class="p-6 bg-red-500/30  text-xl text-center font-bold">
-                    Sorry, this menu is disable for now. Please try again later. 
+                    {{$message}}
                 </div>
             </div>
         </div>
