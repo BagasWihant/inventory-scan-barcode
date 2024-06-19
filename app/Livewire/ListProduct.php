@@ -112,9 +112,9 @@ class ListProduct extends Component
 
                 if ($tempCount->count() > 0) {
 
-                    $qry = DB::table('material_setup_mst_CNC_KIAS2')->select('picking_qty', 'serial_no')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode);
+                    $qry = DB::table('material_setup_mst_CNC_KIAS2')->selectRaw('picking_qty,count(distinct(picking_qty)) as count')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode)->groupBy('picking_qty');
                     $productDetail = $qry->first();
-                    if ($qry->count() == 1) {
+                    if ($productDetail->count == 1) {
 
                         $counter = $data->counter + $productDetail->picking_qty;
                         $sisa = $data->sisa - $productDetail->picking_qty;
