@@ -10,7 +10,16 @@ class tempCounter extends Model
     use HasFactory;
     public $timestamps = false;
     public $keyType = 'string';
-    protected $fillable= ['material','userID','total','counter','sisa','palet','pax','qty_more'];
-
-    
+    protected $fillable = [
+        'material',
+        'userID',
+        'total',
+        'counter',
+        'sisa',
+        'palet',
+        'pax',
+        'qty_more',
+        'prop_ori',
+        'prop_scan'
+    ];
 }

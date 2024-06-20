@@ -59,13 +59,12 @@ class ListProduct extends Component
                 ->where('material', $this->sws_code)
                 ->where('userID', $this->userId)
                 ->where('palet', $this->paletBarcode);
-                $data = $tempCount->first();
-                $counter = $data->counter + $qty;
-                $tempCount->update([
-                    'counter'=>$counter,
-                    'sisa' => $data->sisa - $qty
-                ]);
-
+            $data = $tempCount->first();
+            $counter = $data->counter + $qty;
+            $tempCount->update([
+                'counter' => $counter,
+                'sisa' => $data->sisa - $qty
+            ]);
         }
         $this->produkBarcode = null;
     }
@@ -74,7 +73,7 @@ class ListProduct extends Component
     {
         $this->paletBarcode = substr($this->paletBarcode, 0, 10);
         // dump($this->paletBarcode !== $this->previousPaletBarcode);
-        if (strlen($this->paletBarcode) > 2  && $this->paletBarcode !== $this->previousPaletBarcode) {
+        if (strlen($this->paletBarcode) > 2 ) {
             DB::table('temp_counters')->where('userID', $this->userId)->delete();
             $truk = DB::table('delivery_mst')->where('pallet_no', $this->paletBarcode)->select('trucking_id')->first();
             if ($truk) {
@@ -112,9 +111,14 @@ class ListProduct extends Component
 
                 if ($tempCount->count() > 0) {
 
-                    $qry = DB::table('material_setup_mst_CNC_KIAS2')->selectRaw('picking_qty,count(distinct(picking_qty)) as count')->where('material_no', $supplierCode->sws_code)->where('pallet_no', $this->paletBarcode)->groupBy('picking_qty');
-                    $productDetail = $qry->first();
-                    if ($productDetail->count == 1) {
+                    if (!isset($data->prop_ori) || $data->prop_ori == null) {
+
+                        $qry = DB::table('material_setup_mst_CNC_KIAS2')
+                            ->selectRaw('picking_qty')
+                            ->where('material_no', $supplierCode->sws_code)
+                            ->where('pallet_no', $this->paletBarcode)
+                            ->groupBy('picking_qty');
+                        $productDetail = $qry->first();
 
                         $counter = $data->counter + $productDetail->picking_qty;
                         $sisa = $data->sisa - $productDetail->picking_qty;
@@ -128,9 +132,38 @@ class ListProduct extends Component
                         }
 
                         $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
-                    } elseif ($qry->count() > 1) {
-                        $this->dispatch('newItem', ['qty' => $productDetail->picking_qty, 'title' => 'Item Duplicate', 'update' => true]);
+
+                    } elseif ($data->prop_ori !== null) {
+                        // check prop if not null, data is different qty
+                        $prop_scan = json_decode($data->prop_scan, true);
+                        $loop = 0;
+                        foreach ($prop_scan as $s) {
+                            if ($prop_scan[$loop]['jml_pick'] > 0) {
+                                $picking_qty = $prop_scan[$loop]['picking_qty'];
+                                $prop_scan[$loop]['jml_pick'] = $prop_scan[$loop]['jml_pick'] - 1;
+
+                                $counter = $data->counter + $picking_qty;
+                                $sisa = $data->sisa - $picking_qty;
+
+                                if ($data->total < $data->counter || $data->sisa <= 0) {
+                                    $this->produkBarcode = null;
+                                    $more = $data->qty_more + 1;
+                                    $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more, 'prop_scan' => json_encode($prop_scan)]);
+                                    return;
+                                }
+        
+                                $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'prop_scan' => json_encode($prop_scan)]);
+                                break;
+                                return;
+                            }
+                            $loop++;
+                        }
+
+                        // qty berbeda kelebihan
+                        return $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material Kelebihan tapi Qty berbeda']);
+
                     }
+
                 } else {
 
                     $cek = DB::table('material_setup_mst_CNC_KIAS2')
@@ -170,6 +203,12 @@ class ListProduct extends Component
             ->orderByDesc('pax')
             ->orderByDesc('a.material_no');
 
+        $picking = DB::table('material_setup_mst_CNC_KIAS2')
+            ->selectRaw('picking_qty,material_no,count(picking_qty) as jml_pick')
+            ->where('pallet_no', $this->paletBarcode)
+            ->groupBy('picking_qty', 'material_no');
+        $collection = $picking->get();
+
         $getall = $productsQuery->get();
         $this->products = $getall;
         $materialNos = $getall->pluck('material_no')->all();
@@ -180,20 +219,34 @@ class ListProduct extends Component
             ->pluck('material')
             ->all();
 
-        foreach ($getall as $value) {
+        // grouping and remove material no
+        $group = $collection->groupBy('material_no');
+        $group->map(function ($item) {
+            foreach ($item as $i) {
+                unset($i->material_no);
+            }
+        });
 
+        foreach ($getall as $value) {
             $counterExists = in_array($value->material_no, $existingCounters);
             if (!$counterExists) {
                 try {
                     DB::beginTransaction();
-                    tempCounter::create([
+                    $insert = [
                         'material' => $value->material_no,
                         'palet' => $this->paletBarcode,
                         'userID' => $this->userId,
                         'sisa' => $value->picking_qty,
                         'total' => $value->picking_qty,
                         'pax' => $value->pax,
-                    ]);
+                    ];
+
+                    if (count($group[$value->material_no]) > 1) {
+                        $insert['prop_ori'] = json_encode($group[$value->material_no]);
+                        $insert['prop_scan'] = json_encode($group[$value->material_no]);
+                    }
+
+                    tempCounter::create($insert);
                     DB::commit();
                 } catch (\Throwable $th) {
                     DB::rollBack();
