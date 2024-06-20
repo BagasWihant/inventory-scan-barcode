@@ -313,14 +313,6 @@ class ListProduct extends Component
                 if ($kelebihan > 0) {
 
                     for ($i = 1; $i <= $kelebihan; $i++) {
-                        // MaterialKelebihan::create([
-                        //     'pallet_no' => $this->paletBarcode,
-                        //     'material_no' => $data->material,
-                        //     'picking_qty' => $qty,
-                        //     'locate' => $data->location_cd,
-                        //     'trucking_id' => $data->trucking_id,
-                        //     'user_id' => $this->userId
-                        // ]);
                         abnormalMaterial::create([
                             'pallet_no' => $this->paletBarcode,
                             'material_no' => $data->material,
@@ -349,14 +341,6 @@ class ListProduct extends Component
 
                     $jmlSisa = $data->pax - $jmlIn;
                     for ($i = 0; $i < $jmlSisa; $i++) {
-                        // itemKurang::create([
-                        //     'pallet_no' => $this->paletBarcode,
-                        //     'material_no' => $data->material,
-                        //     'picking_qty' => $qty,
-                        //     'locate' => $data->location_cd,
-                        //     'trucking_id' => $data->trucking_id,
-                        //     'user_id' => $this->userId
-                        //     ]);
                         abnormalMaterial::create([
                             'pallet_no' => $this->paletBarcode,
                             'material_no' => $data->material,
@@ -370,14 +354,6 @@ class ListProduct extends Component
                 }
             } else {
                 for ($i = 0; $i < $pax; $i++) {
-                    // itemKurang::create([
-                    //     'pallet_no' => $this->paletBarcode,
-                    //     'material_no' => $data->material,
-                    //     'picking_qty' => $qty,
-                    //     'locate' => $data->location_cd,
-                    //     'trucking_id' => $data->trucking_id,
-                    //     'user_id' => $this->userId
-                    // ]);
                     abnormalMaterial::create([
                         'pallet_no' => $this->paletBarcode,
                         'material_no' => $data->material,

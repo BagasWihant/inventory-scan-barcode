@@ -48,10 +48,10 @@ class PrepareTaking extends Component
 
     public function exportPdf()
     {
-        // $update = DB::table('material_in_stock')
-        //     ->whereIn('material_no', $this->pluckStock)
-        //     ->whereRaw('updated_at =created_at')
-        //     ->update(['updated_at' => now()]);
+        $update = DB::table('material_in_stock')
+            ->whereIn('material_no', $this->pluckStock)
+            ->whereRaw('updated_at =created_at')
+            ->update(['updated_at' => now()]);
         
         $name = auth()->user()->username . date('d-m-Y H:i');
         return Excel::download(new ExportStockTaking($this->dataStock), "Stock Taking - $name.pdf", \Maatwebsite\Excel\Excel::MPDF);
