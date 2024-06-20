@@ -31,15 +31,15 @@
         </div>
     </div>
 
-    <div class="">
-        <div class="flex justify-end">
-            <button type="button" wire:click="exportPdf"
-                class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
-                Cetak
-            </button>
-        </div>
 
-        @if ($canOpen)
+    @if ($canOpen)
+        <div class="">
+            <div class="flex justify-end">
+                <button type="button" wire:click="exportPdf"
+                    class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
+                    Cetak
+                </button>
+            </div>
             <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                 <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -68,9 +68,9 @@
                     </tbody>
                 </table>
             </div>
-        @endif
 
-    </div>
+        </div>
+    @endif
 </div>
 
 <script>

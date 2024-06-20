@@ -32,7 +32,6 @@ class PrepareTaking extends Component
     public function lock()
     {
         $qry = DB::table('material_in_stock')
-            ->where('user_id', auth()->user()->id)
             ->whereRaw('updated_at =created_at')
             ->selectRaw('material_no, sum(picking_qty) as qty')->groupBy('material_no');
         $this->dataStock = $qry->get();
@@ -49,11 +48,10 @@ class PrepareTaking extends Component
 
     public function exportPdf()
     {
-        $update = DB::table('material_in_stock')
-            ->whereIn('material_no', $this->pluckStock)
-            ->where('user_id', auth()->user()->id)
-            ->whereRaw('updated_at =created_at')
-            ->update(['updated_at' => now()]);
+        // $update = DB::table('material_in_stock')
+        //     ->whereIn('material_no', $this->pluckStock)
+        //     ->whereRaw('updated_at =created_at')
+        //     ->update(['updated_at' => now()]);
         
         $name = auth()->user()->username . date('d-m-Y H:i');
         return Excel::download(new ExportStockTaking($this->dataStock), "Stock Taking - $name.pdf", \Maatwebsite\Excel\Excel::MPDF);
@@ -70,6 +68,11 @@ class PrepareTaking extends Component
             $this->dataStatus = $data->first();
         }
 
+        $qry = DB::table('material_in_stock')
+            ->whereRaw('updated_at =created_at')
+            ->selectRaw('material_no, sum(picking_qty) as qty')->groupBy('material_no');
+        $this->dataStock = $qry->get();
+        $this->pluckStock = $qry->pluck('material_no');
 
         return view('livewire.prepare-taking');
     }
