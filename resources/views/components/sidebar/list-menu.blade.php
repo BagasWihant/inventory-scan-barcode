@@ -18,6 +18,7 @@
             'child' => [
                 ['url' => route('prepare.stock.taking'), 'label' => 'Prepare Stock Taking', 'admin' => ''],
                 ['url' => route('input.stock.taking'), 'label' => 'Input Stock Taking'],
+                ['url' => route('result.stock.taking'), 'label' => 'Stock Taking Result'],
                 
             ],
         ],
