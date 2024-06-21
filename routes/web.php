@@ -19,7 +19,7 @@ Route::middleware('auth')->group(function () {
         Route::get('instock', 'instock')->name('instock');
         Route::get('checking', 'checking')->name('checking');
         Route::get('preparetaking', 'prepareStockTaking')->name('prepare.stock.taking')->withoutMiddleware('isPrepareStockTaking')->middleware('isMC');
-        Route::get('inputtaking', 'inputStockTaking')->name('input.stock.taking')->withoutMiddleware('isPrepareStockTaking');
+        Route::get('inputtaking', 'inputStockTaking')->name('input.stock.taking')->withoutMiddleware('isPrepareStockTaking')->middleware('inputStockTaking');
     });
 });
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\InputStockTakingMiddleware;
 use App\Http\Middleware\isMC;
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\IsPrepareStockTaking;
@@ -15,7 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'isPrepareStockTaking' => IsPrepareStockTaking::class,
-            'isMC' =>isMC::class
+            'isMC' =>isMC::class,
+            'inputStockTaking' => InputStockTakingMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
