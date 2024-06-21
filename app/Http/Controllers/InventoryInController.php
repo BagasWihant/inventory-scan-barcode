@@ -39,6 +39,9 @@ class InventoryInController extends Controller
     public function inputStockTaking(){
         return view('pages.input-taking');
     }
+    public function resultStockTaking(){
+        return view('pages.result-taking');
+    }
     
 
 }
