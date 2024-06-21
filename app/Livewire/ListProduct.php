@@ -73,7 +73,7 @@ class ListProduct extends Component
     {
         $this->paletBarcode = substr($this->paletBarcode, 0, 10);
         // dump($this->paletBarcode !== $this->previousPaletBarcode);
-        if (strlen($this->paletBarcode) > 2 ) {
+        if (strlen($this->paletBarcode) > 2) {
             DB::table('temp_counters')->where('userID', $this->userId)->delete();
             $truk = DB::table('delivery_mst')->where('pallet_no', $this->paletBarcode)->select('trucking_id')->first();
             if ($truk) {
@@ -132,38 +132,64 @@ class ListProduct extends Component
                         }
 
                         $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
-
                     } elseif ($data->prop_ori !== null) {
                         // check prop if not null, data is different qty
+                        $prop_ori = json_decode($data->prop_ori, true);
                         $prop_scan = json_decode($data->prop_scan, true);
                         $loop = 0;
-                        foreach ($prop_scan as $s) {
-                            if ($prop_scan[$loop]['jml_pick'] > 0) {
-                                $picking_qty = $prop_scan[$loop]['picking_qty'];
-                                $prop_scan[$loop]['jml_pick'] = $prop_scan[$loop]['jml_pick'] - 1;
 
-                                $counter = $data->counter + $picking_qty;
-                                $sisa = $data->sisa - $picking_qty;
+                        if ($data->total < $data->counter || $data->sisa <= 0) {
+                            // dd('lebih');
+                            // $this->produkBarcode = null;
+                            // $more = $data->qty_more + 1;
+                            // $tempCount->update([
+                            //     'counter' => $counter,
+                            //     'sisa' => $sisa,
+                            //     'qty_more' => $more,
+                            //     'prop_scan' => json_encode($prop_scan),
+                            //     'prop_ori' => json_encode($prop_ori)
+                            // ]);
+                            // break;
+                            // return;
+                        } else {
 
-                                if ($data->total < $data->counter || $data->sisa <= 0) {
-                                    $this->produkBarcode = null;
-                                    $more = $data->qty_more + 1;
-                                    $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more, 'prop_scan' => json_encode($prop_scan)]);
+                            foreach ($prop_scan as $s) {
+                                if ($prop_scan[$loop]['jml_pick'] > 0) {
+                                    $picking_qty = $prop_scan[$loop]['picking_qty'];
+                                    $prop_scan[$loop]['jml_pick'] = $prop_scan[$loop]['jml_pick'] - 1;
+                                    $prop_ori['pax'] = $prop_ori['pax'] - 1;
+
+
+                                    $counter = $data->counter + $picking_qty;
+                                    $sisa = $data->sisa - $picking_qty;
+
+                                    if ($data->total < $data->counter || $data->sisa <= 0) {
+                                        $this->produkBarcode = null;
+                                        $more = $data->qty_more + 1;
+                                        $tempCount->update([
+                                            'counter' => $counter,
+                                            'sisa' => $sisa,
+                                            'qty_more' => $more,
+                                            'prop_scan' => json_encode($prop_scan),
+                                            'prop_ori' => json_encode($prop_ori)
+                                        ]);
+                                        break;
+                                        return;
+                                    }
+
+                                    $tempCount->update([
+                                        'counter' => $counter,
+                                        'sisa' => $sisa,
+                                        'prop_scan' => json_encode($prop_scan),
+                                        'prop_ori' => json_encode($prop_ori)
+                                    ]);
+                                    break;
                                     return;
                                 }
-        
-                                $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'prop_scan' => json_encode($prop_scan)]);
-                                break;
-                                return;
+                                $loop++;
                             }
-                            $loop++;
                         }
-
-                        // qty berbeda kelebihan
-                        return $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material Kelebihan tapi Qty berbeda']);
-
                     }
-
                 } else {
 
                     $cek = DB::table('material_setup_mst_CNC_KIAS2')
@@ -242,7 +268,7 @@ class ListProduct extends Component
                     ];
 
                     if (count($group[$value->material_no]) > 1) {
-                        $insert['prop_ori'] = json_encode($group[$value->material_no]);
+                        $insert['prop_ori'] = json_encode(['pax' => $value->pax]);
                         $insert['prop_scan'] = json_encode($group[$value->material_no]);
                     }
 
