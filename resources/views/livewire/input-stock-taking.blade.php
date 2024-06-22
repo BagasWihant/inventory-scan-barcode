@@ -13,7 +13,7 @@
 
     </div>
 
-    <div id="tambahForm" style="display: none">
+    <div id="tambahForm" style="display: none" wire:ignore>
         <div class="grid grid-cols-2 gap-5">
             <div class="w-full " wire:ignore>
                 <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hitung ke
