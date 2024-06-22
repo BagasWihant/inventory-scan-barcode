@@ -7,12 +7,14 @@ use Illuminate\Support\Facades\DB;
 
 class ResultStockTaking extends Component
 {
+    public $searchKey;
     public function render()
     {
         $query = DB::table('stock_takings')
             ->selectRaw('material_no,loc,sum(qty) as qty,hitung')
             ->where('user_id', auth()->user()->id)
             ->groupBy(['material_no', 'hitung', 'loc']);
+        if($this->searchKey) $query->where('material_no', 'like', "%$this->searchKey%");
         $data = $query->get();
 
         $listMat = $data->pluck('material_no')->unique()->all();

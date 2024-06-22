@@ -15,9 +15,9 @@ class MaterialStock extends Component
     public function render()
     {
         $query = DB::table('material_in_stock')
-        ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax')
-        ->groupBy(['material_no','pallet_no']);
-        $query->where('pallet_no','like',"%$this->searchKey%");
+        ->selectRaw('material_no,sum(picking_qty) as qty, locate')
+        ->groupBy(['material_no','locate']);
+        $query->where('material_no','like',"%$this->searchKey%");
         $data= $query->get();
         
         if($this->searchKey) $this->dispatch('searchFocus');
