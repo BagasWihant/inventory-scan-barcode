@@ -1,7 +1,7 @@
 <div class="dark:text-white max-w-7xl mx-auto">
     <div class="text-2xl font-extrabold py-6 text-center">Input Stock Taking</div>
 
-    <div class="flex justify-end">
+    <div class="flex justify-end" wire:ignore>
         <button type="button" id="hideForm" style="display: none" 
             class="text-white bg-gradient-to-r from-red-500 to-pink-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
             Hide Input
@@ -13,7 +13,7 @@
 
     </div>
 
-    <div id="tambahForm" style="display: none" wire:ignore>
+    <div id="tambahForm" style="display: none" wire:ignore.self>
         <div class="grid grid-cols-2 gap-5">
             <div class="w-full " wire:ignore>
                 <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hitung ke
