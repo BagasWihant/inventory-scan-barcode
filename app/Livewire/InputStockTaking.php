@@ -32,8 +32,8 @@ class InputStockTaking extends Component
     public function materialChange()
     {
         if ($this->materialCode) {
-            $query = DB::table('material_in_stock')
-                ->where('material_no', $this->materialCode);
+            $query = DB::table('material_in_stock')->selectRaw('sum(picking_qty) as picking_qty, locate')
+                ->where('material_no', $this->materialCode)->groupBy('locate');
             $dataSelected = $query->first();
             $this->location = $dataSelected->locate;
             $this->qty = $dataSelected->picking_qty;
@@ -51,12 +51,6 @@ class InputStockTaking extends Component
                 'hitung' => $this->hitung,
                 'loc' => $this->location,
                 'qty' => $this->qty
-            ]);
-            $up = DB::table('material_mst')
-                ->where('matl_no', $this->materialCode);
-
-            $up->update([
-                'qty_IN' => $this->qty
             ]);
 
             $this->cancel();
