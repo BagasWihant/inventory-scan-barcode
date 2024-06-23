@@ -134,7 +134,7 @@ class ListProduct extends Component
                         $tempCount->update(['counter' => $counter, 'sisa' => $sisa]);
                     } elseif ($data->prop_ori !== null) {
                         // check prop if not null, data is different qty
-                        $prop_ori = json_decode($data->prop_ori, true);
+                        $scan_count = $data->scan_count;
                         $prop_scan = json_decode($data->prop_scan, true);
                         $loop = 0;
 
@@ -157,7 +157,7 @@ class ListProduct extends Component
                                 if ($prop_scan[$loop]['jml_pick'] > 0) {
                                     $picking_qty = $prop_scan[$loop]['picking_qty'];
                                     $prop_scan[$loop]['jml_pick'] = $prop_scan[$loop]['jml_pick'] - 1;
-                                    $prop_ori['pax'] = $prop_ori['pax'] - 1;
+                                    $scan_count = $scan_count - 1;
 
 
                                     $counter = $data->counter + $picking_qty;
@@ -171,7 +171,7 @@ class ListProduct extends Component
                                             'sisa' => $sisa,
                                             'qty_more' => $more,
                                             'prop_scan' => json_encode($prop_scan),
-                                            'prop_ori' => json_encode($prop_ori)
+                                            'scan_count' => $scan_count
                                         ]);
                                         break;
                                         return;
@@ -181,7 +181,7 @@ class ListProduct extends Component
                                         'counter' => $counter,
                                         'sisa' => $sisa,
                                         'prop_scan' => json_encode($prop_scan),
-                                        'prop_ori' => json_encode($prop_ori)
+                                        'scan_count' => $scan_count
                                     ]);
                                     break;
                                     return;
@@ -268,7 +268,8 @@ class ListProduct extends Component
                     ];
 
                     if (count($group[$value->material_no]) > 1) {
-                        $insert['prop_ori'] = json_encode(['pax' => $value->pax]);
+                        $insert['scan_count'] = $value->pax;
+                        $insert['prop_ori'] = json_encode($group[$value->material_no]);
                         $insert['prop_scan'] = json_encode($group[$value->material_no]);
                     }
 
@@ -334,39 +335,53 @@ class ListProduct extends Component
             $pax = $data->pax;
             $qty = $data->total / $pax;
             $kelebihan = $data->qty_more;
-            if ($data->counter > 0) {
-                // insrt kelebihan
-                if ($kelebihan > 0) {
+            if ($data->prop_scan == null) {
+                if ($data->counter > 0) {
+                    // insrt kelebihan
+                    if ($kelebihan > 0) {
 
-                    for ($i = 1; $i <= $kelebihan; $i++) {
-                        abnormalMaterial::create([
+                        for ($i = 1; $i <= $kelebihan; $i++) {
+                            abnormalMaterial::create([
+                                'pallet_no' => $this->paletBarcode,
+                                'material_no' => $data->material,
+                                'picking_qty' => $qty,
+                                'locate' => $data->location_cd,
+                                'trucking_id' => $data->trucking_id,
+                                'user_id' => $this->userId,
+                                'status' => 1
+                            ]);
+                        }
+                    }
+
+                    $jmlIn = $data->counter / $qty;
+                    $jmlIn = $jmlIn - $kelebihan;
+                    for ($i = 0; $i < $jmlIn; $i++) {
+                        itemIn::create([
                             'pallet_no' => $this->paletBarcode,
                             'material_no' => $data->material,
                             'picking_qty' => $qty,
                             'locate' => $data->location_cd,
                             'trucking_id' => $data->trucking_id,
-                            'user_id' => $this->userId,
-                            'status' => 1
+                            'user_id' => $this->userId
                         ]);
                     }
-                }
+                    if ($kelebihan == 0) {
 
-                $jmlIn = $data->counter / $qty;
-                $jmlIn = $jmlIn - $kelebihan;
-                for ($i = 0; $i < $jmlIn; $i++) {
-                    itemIn::create([
-                        'pallet_no' => $this->paletBarcode,
-                        'material_no' => $data->material,
-                        'picking_qty' => $qty,
-                        'locate' => $data->location_cd,
-                        'trucking_id' => $data->trucking_id,
-                        'user_id' => $this->userId
-                    ]);
-                }
-                if ($kelebihan == 0) {
-
-                    $jmlSisa = $data->pax - $jmlIn;
-                    for ($i = 0; $i < $jmlSisa; $i++) {
+                        $jmlSisa = $data->pax - $jmlIn;
+                        for ($i = 0; $i < $jmlSisa; $i++) {
+                            abnormalMaterial::create([
+                                'pallet_no' => $this->paletBarcode,
+                                'material_no' => $data->material,
+                                'picking_qty' => $qty,
+                                'locate' => $data->location_cd,
+                                'trucking_id' => $data->trucking_id,
+                                'user_id' => $this->userId,
+                                'status' => 0
+                            ]);
+                        }
+                    }
+                } else {
+                    for ($i = 0; $i < $pax; $i++) {
                         abnormalMaterial::create([
                             'pallet_no' => $this->paletBarcode,
                             'material_no' => $data->material,
@@ -379,16 +394,87 @@ class ListProduct extends Component
                     }
                 }
             } else {
-                for ($i = 0; $i < $pax; $i++) {
-                    abnormalMaterial::create([
-                        'pallet_no' => $this->paletBarcode,
-                        'material_no' => $data->material,
-                        'picking_qty' => $qty,
-                        'locate' => $data->location_cd,
-                        'trucking_id' => $data->trucking_id,
-                        'user_id' => $this->userId,
-                        'status' => 0
-                    ]);
+
+                $prop_ori = json_decode($data->prop_ori, true);
+                if ($data->scan_count == 0) {
+                    // insrt kelebihan
+                    // if ($kelebihan > 0) {
+
+                    //     for ($i = 1; $i <= $kelebihan; $i++) {
+                    //         abnormalMaterial::create([
+                    //             'pallet_no' => $this->paletBarcode,
+                    //             'material_no' => $data->material,
+                    //             'picking_qty' => $qty,
+                    //             'locate' => $data->location_cd,
+                    //             'trucking_id' => $data->trucking_id,
+                    //             'user_id' => $this->userId,
+                    //             'status' => 1
+                    //         ]);
+                    //     }
+                    // }
+                    // $count = $data->scan_count;
+                    foreach ($prop_ori as $value) {
+                        for ($i = 0; $i < $value['jml_pick']; $i++) {
+                            itemIn::create([
+                                'pallet_no' => $this->paletBarcode,
+                                'material_no' => $data->material,
+                                'picking_qty' => $value['picking_qty'],
+                                'locate' => $data->location_cd,
+                                'trucking_id' => $data->trucking_id,
+                                'user_id' => $this->userId
+                            ]);
+                        }
+                    }
+
+                    if ($kelebihan == 0) {
+
+                        // for ($i = 0; $i < $jmlSisa; $i++) {
+                        //     abnormalMaterial::create([
+                        //         'pallet_no' => $this->paletBarcode,
+                        //         'material_no' => $data->material,
+                        //         'picking_qty' => $qty,
+                        //         'locate' => $data->location_cd,
+                        //         'trucking_id' => $data->trucking_id,
+                        //         'user_id' => $this->userId,
+                        //         'status' => 0
+                        //     ]);
+                        // }
+                    }
+                } else {
+                    $prop_scan = json_decode($data->prop_scan, true);
+                    foreach ($prop_scan as $scanned) {
+                        foreach ($prop_ori as $ori) {
+                            
+                            if ($scanned['picking_qty'] == $ori['picking_qty']) {
+                                $sisa = $ori['jml_pick'] - $scanned['jml_pick'];
+
+                                for ($i = 0; $i < $sisa; $i++) {
+                                    itemIn::create([
+                                        'pallet_no' => $this->paletBarcode,
+                                        'material_no' => $data->material,
+                                        'picking_qty' => $ori['picking_qty'],
+                                        'locate' => $data->location_cd,
+                                        'trucking_id' => $data->trucking_id,
+                                        'user_id' => $this->userId
+                                    ]);
+                                }
+
+                                for ($i = 0; $i < $scanned['jml_pick']; $i++) {
+                                    abnormalMaterial::create([
+                                        'pallet_no' => $this->paletBarcode,
+                                        'material_no' => $data->material,
+                                        'picking_qty' => $scanned['picking_qty'],
+                                        'locate' => $data->location_cd,
+                                        'trucking_id' => $data->trucking_id,
+                                        'user_id' => $this->userId,
+                                        'status' => 0
+                                    ]);
+                                }
+
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
