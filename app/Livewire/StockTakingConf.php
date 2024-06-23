@@ -11,12 +11,19 @@ use Spatie\LaravelIgnition\Recorders\DumpRecorder\Dump;
 
 class StockTakingConf extends Component
 {
-    public $data, $queryStock, $stoID;
+    public $data, $queryStock, $stoID, $confirm;
 
     public function mount()
     {
-        $this->stoID = MenuOptions::where('status', '1')
-            ->where('user_id', auth()->user()->id)->first()->id;
+        $sto = MenuOptions::where('status', '1')
+            ->where('user_id', auth()->user()->id)->first();
+        if ($sto) {
+            $this->stoID = $sto->id;
+            $this->confirm = true;
+        } else {
+            $this->confirm = false;
+            $this->stoID = "-";
+        }
     }
     public function confirm()
     {
@@ -35,11 +42,14 @@ class StockTakingConf extends Component
                 ]);
         }
 
-        return Excel::download(new StockTakingConfirm($export), "Confirmation Stock_$this->stoID _".date('YmdHis').".pdf", \Maatwebsite\Excel\Excel::MPDF);
+        return Excel::download(new StockTakingConfirm($export), "Confirmation Stock_$this->stoID _" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
-
+    
     public function export()
     {
+        $export = $this->data;
+
+        return Excel::download(new StockTakingConfirm($export), "Confirmation Stock_$this->stoID _" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
     public function render()
     {
