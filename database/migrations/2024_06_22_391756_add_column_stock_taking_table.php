@@ -17,6 +17,9 @@ return new class extends Migration
         Schema::table('temp_counters', function (Blueprint $table) {
             $table->integer('scan_count')->default(0);
         });
+        Schema::table('material_in_stock', function (Blueprint $table) {
+            $table->char('is_taking',1)->default(0)->comment('0=not taking,1=taking');
+        });
         
         //
     }
@@ -31,6 +34,9 @@ return new class extends Migration
         });
         Schema::table('stock_takings', function (Blueprint $table) {
             $table->dropIndex('unique_stock_taking');
+        });
+        Schema::table('material_in_stock', function (Blueprint $table) {
+            $table->dropColumn('is_taking');
         });
         //
     }

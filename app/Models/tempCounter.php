@@ -20,6 +20,7 @@ class tempCounter extends Model
         'pax',
         'qty_more',
         'prop_ori',
-        'prop_scan'
+        'prop_scan',
+        'scan_count'
     ];
 }

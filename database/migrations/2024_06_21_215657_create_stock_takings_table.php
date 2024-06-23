@@ -19,6 +19,7 @@ return new class extends Migration
             $table->char('hitung',1);
             $table->string('loc',50);
             $table->integer('qty');
+            $table->char('is_taking',1)->default(0)->comment('0=awal,1=confirm');
             $table->timestamps();
 
             $table->foreign('sto_id')->references('id')->on('master_sto')->onDelete('cascade');

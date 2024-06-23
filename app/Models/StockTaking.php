@@ -15,6 +15,7 @@ class StockTaking extends Model
         'material_no',
         'hitung',
         'loc',
+        'is_taking',
         'qty'
     ];
 }
