@@ -7,7 +7,7 @@
             Print
         </button>
         @if ($confirm)
-            <button type="button" id="showForm" wire:click="confirm"
+            <button type="button" id="showForm" wire:click="konfirmasi"
                 class="text-white bg-gradient-to-r from-green-500 to-teal-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
                 Confirmation
             </button>

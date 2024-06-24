@@ -25,7 +25,7 @@ class StockTakingConf extends Component
             $this->stoID = "-";
         }
     }
-    public function confirm()
+    public function konfirmasi()
     {
         $export = $this->data;
         foreach ($this->data as  $value) {
