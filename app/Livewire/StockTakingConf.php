@@ -73,7 +73,8 @@ class StockTakingConf extends Component
                     $st->locsys = $value->locate;
                     $st->qtysys = $value->qty;
                     $res = $st->qty - $value->qty;
-                    $st->result = "$res";
+                    if($res < 0) $st->min = $res;
+                    elseif($res > 0) $st->plus = $res;
                 }
             }
         }
