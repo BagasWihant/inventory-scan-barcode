@@ -49,7 +49,7 @@ class ResultStockTaking extends Component
                 $res = $qty - $listData[$value->material_no]['qtysys'];
 
                 if ($res != 0) {
-                    $listData[$value->material_no][$res > 0 ? 'plus' : 'min'] = "$res";
+                    $listData[$value->material_no][$res > 0 ? 'plus' : 'min'] = abs($res);
                 }
 
             }

@@ -25,7 +25,7 @@ class StockTakingConf extends Component
             $this->stoID = "-";
         }
     }
-    public function confirm()
+    public function konfirmasi()
     {
         $export = $this->data;
         foreach ($this->data as  $value) {
@@ -73,8 +73,8 @@ class StockTakingConf extends Component
                 if ($st->material_no == $value->material_no) {
                     $st->locsys = $value->locate;
                     $st->qtysys = $value->qty;
-                    $res = $st->qty - $value->qty;
-                    if($res < 0) $st->min = $res;
+                    $res = $st->qty - $value->qty; 
+                    if($res < 0) $st->min = abs($res);
                     elseif($res > 0) $st->plus = $res;
                 }
             }
