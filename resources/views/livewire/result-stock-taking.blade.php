@@ -78,34 +78,34 @@
                         {{ $key }}
                     </th>
                     <td class="px-6 py-4">
-                        {{ $d['locsys'] ?? ' - ' }}
+                        {{ $d['locsys'] ?? ' ' }}
                     </td>
                     <td class="px-6 py-4">
-                        {{ $d['qtysys'] ?? ' - ' }}
+                        {{ $d['qtysys'] ?? ' ' }}
                     </td>
                     <td class="px-6 py-4">
-                        {{ $d['loc1'] ?? ' - ' }}
+                        {{ $d['loc1'] ?? ' ' }}
                     </td>
                     <td class="px-6 py-4">
-                        {{ $d['qty1'] ?? ' - ' }}
+                        {{ $d['qty1'] ?? ' ' }}
                     </td>
                     <td class="px-6 py-4">
-                        {{ $d['loc2'] ?? ' - ' }}
+                        {{ $d['loc2'] ?? ' ' }}
                     </td>
                     <td class="px-6 py-4">
-                        {{ $d['qty2'] ?? ' - ' }}
+                        {{ $d['qty2'] ?? ' ' }}
                     </td>
                     <td class="px-6 py-4">
-                        {{ $d['loc3'] ?? ' - ' }}
+                        {{ $d['loc3'] ?? ' ' }}
                     </td>
                     <td class="px-6 py-4">
-                        {{ $d['qty3'] ?? ' - ' }}
+                        {{ $d['qty3'] ?? ' ' }}
                     </td>
                     <td class="px-6 py-4">
-                        {{ $d['plus'] ?? ' - ' }}
+                        {{ $d['plus'] ?? ' ' }}
                     </td>
                     <td class="px-6 py-4">
-                        {{ $d['min'] ?? ' - ' }}
+                        {{ $d['min'] ?? ' ' }}
                     </td>
                 </tr>
             @endforeach
