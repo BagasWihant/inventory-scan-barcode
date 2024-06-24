@@ -12,8 +12,8 @@ class ResultStockTaking extends Component
     {
         $query = DB::table('stock_takings')
             ->selectRaw('material_no,loc,sum(qty) as qty,hitung')
-            ->groupBy(['material_no', 'hitung', 'loc']);
-        if($this->searchKey) $query->where('material_no', 'like', "%$this->searchKey%");
+            ->groupBy(['material_no', 'hitung', 'loc'])->orderByRaw('material_no ASC, hitung ASC');
+        if ($this->searchKey) $query->where('material_no', 'like', "%$this->searchKey%");
         $data = $query->get();
 
         $listMat = $data->pluck('material_no')->unique()->all();
@@ -31,6 +31,8 @@ class ResultStockTaking extends Component
                 $hit = $it->hitung;
                 $tempArray["loc$hit"] = $it->loc;
                 $tempArray["qty$hit"] = $it->qty;
+                // if($hit))
+                // dump($it);
             }
             return [$key => $tempArray];
         })->all();
@@ -39,6 +41,17 @@ class ResultStockTaking extends Component
             if (isset($listData[$value->material_no])) {
                 $listData[$value->material_no]['locsys'] = $value->locate;
                 $listData[$value->material_no]['qtysys'] = $value->qty;
+
+                $qty = $listData[$value->material_no]['qty3'] ??
+                    $listData[$value->material_no]['qty2'] ??
+                    $listData[$value->material_no]['qty1'] ?? 0;
+
+                $res = $qty - $listData[$value->material_no]['qtysys'];
+
+                if ($res != 0) {
+                    $listData[$value->material_no][$res > 0 ? 'plus' : 'min'] = "$res";
+                }
+
             }
         }
 

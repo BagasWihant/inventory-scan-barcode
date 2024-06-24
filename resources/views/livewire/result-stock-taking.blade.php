@@ -34,6 +34,9 @@
                 <th scope="col" class="text-center py-1 border border-gray-300" colspan="2">
                     Hitung 3
                 </th>
+                <th scope="col" class="text-center py-1 border border-gray-300" colspan="2">
+                    Result
+                </th>
             </tr>
             <tr>
                 <th scope="col" class="px-6 py-3 border border-gray-300 text-center">
@@ -59,6 +62,12 @@
                 </th>
                 <th scope="col" class="px-6 py-3 border border-gray-300 text-center">
                         Qty
+                </th>
+                <th scope="col" class="px-6 py-3 border border-gray-300 text-center">
+                        +
+                </th>
+                <th scope="col" class="px-6 py-3 border border-gray-300 text-center">
+                        -
                 </th>
             </tr>
         </thead>
@@ -91,6 +100,12 @@
                     </td>
                     <td class="px-6 py-4">
                         {{ $d['qty3'] ?? ' - ' }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ $d['plus'] ?? ' - ' }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ $d['min'] ?? ' - ' }}
                     </td>
                 </tr>
             @endforeach
