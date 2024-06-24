@@ -33,6 +33,7 @@ class StockTakingConf extends Component
                 ->where('matl_no', $value->material_no)
                 ->update([
                     'qty_IN' => $value->qty,
+                    'loc'=> $value->loc
                 ]);
             DB::table('stock_takings')
                 ->where('is_taking', 0)
