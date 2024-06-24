@@ -26,7 +26,7 @@
                 <th scope="col" class="text-center py-1 border border-gray-300" colspan="2">
                     STO
                 </th>
-                <th scope="col" class="px-6 text-center py-3 border border-gray-300" rowspan="2">
+                <th scope="col" class="px-6 text-center py-3 border border-gray-300" colspan="2">
                     Result
                 </th>
             </tr>
@@ -42,6 +42,12 @@
                 </th>
                 <th scope="col" class="px-6 py-3 border border-gray-300 text-center">
                         Qty
+                </th>
+                <th scope="col" class="px-6 py-3 border border-gray-300 text-center">
+                        +
+                </th>
+                <th scope="col" class="px-6 py-3 border border-gray-300 text-center">
+                        -
                 </th>
             </tr>
         </thead>
@@ -64,7 +70,10 @@
                         {{ $d->qty ?? ' - ' }}
                     </td>
                     <td class="px-6 py-4">
-                        {{ $d->result ?? ' - ' }}
+                        {{ $d->plus ?? ' - ' }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ $d->min ?? ' - ' }}
                     </td>
                 </tr>
             @endforeach
