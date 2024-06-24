@@ -51,7 +51,8 @@ class StockTakingConfirm implements WithEvents, WithCustomStartCell,FromCollecti
             $row->qtysys,
             $row->loc,
             $row->qty,
-            $row->result ?? ' 0 ',
+            $row->plus ?? '  ',
+            $row->min ?? '  ',
         ];
     }
     public function collection()
@@ -97,9 +98,11 @@ class StockTakingConfirm implements WithEvents, WithCustomStartCell,FromCollecti
                 $sheet->setCellValue('E4', "STO");
                 $sheet->setCellValue('E5', "LOC");
                 $sheet->setCellValue('F5', "QTY");
-
-                $sheet->mergeCells('G4:G5');
+                
+                $sheet->mergeCells('G4:H4');
                 $sheet->setCellValue('G4', "RESULT");
+                $sheet->setCellValue('G5', "+");
+                $sheet->setCellValue('H5', "-");
 
                 $sheet->getDelegate()->getStyle('A1:H2')->getFont()->setSize(20);
                 $sheet->getDelegate()->getStyle('A1:H5')->getFont()->setBold(true);
@@ -118,7 +121,7 @@ class StockTakingConfirm implements WithEvents, WithCustomStartCell,FromCollecti
                 $lastRow = $this->count + $baris + 5;
 
                 $event->sheet->getDelegate()->getStyle($cellRange)->applyFromArray($styleArray);
-                $event->sheet->getDelegate()->getStyle("A5:G" . $lastRow)->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle("A5:H" . $lastRow)->applyFromArray($styleArray);
 
                 $border = [
                     'borders' => [
@@ -128,7 +131,7 @@ class StockTakingConfirm implements WithEvents, WithCustomStartCell,FromCollecti
                         ],
                     ],
                 ];
-                $event->sheet->getDelegate()->getStyle("A4:G" . $lastRow)->applyFromArray($border);
+                $event->sheet->getDelegate()->getStyle("A4:H" . $lastRow)->applyFromArray($border);
 
                 for ($i = 1; $i <= $this->count + $baris; $i++) {
                     $sheet->setCellValue('A' . 5 + $i, $i);
