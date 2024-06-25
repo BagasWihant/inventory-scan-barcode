@@ -13,7 +13,8 @@ use function Laravel\Prompts\select;
 
 class InputStockTaking extends Component
 {
-    public $listMaterial, $materialCode, $location, $qty, $userID, $stoID, $hitung, $data;
+    public $listMaterial, $materialCode, $location, $qty, $userID, $stoID, $hitung, $data,$update=false;
+    public $idStockTaking=null;
 
 
     public function mount()
@@ -29,35 +30,76 @@ class InputStockTaking extends Component
             ->where('user_id', auth()->user()->id)->first()->id;
     }
     #[On('materialChange')]
-    public function materialChange()
+    public function materialChange($id = null)
     {
         if ($this->materialCode) {
-            $query = DB::table('material_in_stock')->selectRaw('sum(picking_qty) as picking_qty, locate')
-                ->where('material_no', $this->materialCode)->groupBy('locate');
-            $dataSelected = $query->first();
-            $this->location = $dataSelected->locate;
-            $this->qty = $dataSelected->picking_qty;
+            if ($id) {
+                $this->idStockTaking = $id;
+                $this->update = true;
+                $query = DB::table('stock_takings')
+                ->selectRaw('loc,qty,hitung')
+                ->where('id', $id)
+                ->get();
+                $dataSelected = $query->first();
+                $this->location = $dataSelected->loc;
+                $this->qty = $dataSelected->qty;
+                $this->hitung = $dataSelected->hitung;
+            } else {
+                $this->update = false;
+                $query = DB::table('material_in_stock')->selectRaw('sum(picking_qty) as picking_qty, locate')
+                    ->where('material_no', $this->materialCode)->groupBy('locate');
+                $dataSelected = $query->first();
+                if($dataSelected){
+                    $this->location = $dataSelected->locate;
+                    $this->qty = $dataSelected->picking_qty;
+                }else{
+                    $this->location = null;
+                    $this->qty = null;
+                }
+            }
         }
     }
 
     public function save()
     {
         if ($this->materialCode && $this->hitung) {
-            // dd($this->hitung);
-            StockTaking::create([
-                'sto_id' => $this->stoID,
-                'user_id' => $this->userID,
-                'material_no' => $this->materialCode,
-                'hitung' => $this->hitung,
-                'loc' => $this->location,
-                'qty' => $this->qty
-            ]);
+            if($this->update){
 
-            $this->cancel();
-            // dd($up);
-            return;
+                StockTaking::where('id', $this->idStockTaking)->update([
+                    'loc' => $this->location,
+                    'qty' => $this->qty
+                ]);
+                
+                $this->cancel();
+                // dd($up);
+                return;
+                
+            }else{
+
+                StockTaking::create([
+                    'sto_id' => $this->stoID,
+                    'user_id' => $this->userID,
+                    'material_no' => $this->materialCode,
+                    'hitung' => $this->hitung,
+                    'loc' => $this->location,
+                    'qty' => $this->qty
+                ]);
+                
+                $this->cancel();
+                // dd($up);
+                return;
+            }
         }
-        dd('silahkan pilih material code setelah cancel');
+        $this->dispatch('popup', ['title' => 'Please fill all fields']);
+
+    }
+
+    #[On('deleteMat')]
+    public function deleteMat($id=null) {
+        StockTaking::where('id', $id)->delete();
+    }
+    public function delBtn($id=null) {
+        $this->dispatch('popup', ['id' => $id]);
     }
 
     public function cancel()
@@ -71,7 +113,7 @@ class InputStockTaking extends Component
     public function render()
     {
         $this->data = DB::table('stock_takings')
-            ->selectRaw('sto_id,material_no,loc,qty,hitung')
+            ->selectRaw('sto_id,material_no,loc,qty,hitung,id')
             ->where('user_id', $this->userID)
             ->where('sto_id', $this->stoID)
             ->get();

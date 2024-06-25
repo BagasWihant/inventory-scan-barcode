@@ -2,12 +2,12 @@
     <div class="text-2xl font-extrabold py-6 text-center">Input Stock Taking</div>
 
     <div class="flex justify-end" wire:ignore>
-        <button type="button" id="hideForm" style="display: none" 
+        <button type="button" id="hideForm" style="display: none"
             class="text-white bg-gradient-to-r from-red-500 to-pink-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
             Hide Input
         </button>
-        <button type="button" id="showForm" 
-            class="text-white bg-gradient-to-r from-green-500 to-teal-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
+        <button type="button" id="showForm"
+            class="text-white bg-gradient-to-r from-blue-500 to-teal-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
             Show Input
         </button>
 
@@ -30,6 +30,7 @@
                     <li class="w-full border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-600">
                         <div class="flex items-center ps-3">
                             <input id="horizontal-list-radio-license" type="radio" value="1" wire:model="hitung"
+                                name="hitung"
                                 class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
                             <label for="horizontal-list-radio-license"
                                 class="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">1 </label>
@@ -38,6 +39,7 @@
                     <li class="w-full border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-600">
                         <div class="flex items-center ps-3">
                             <input id="horizontal-list-radio-id" type="radio" value="2" wire:model="hitung"
+                                name="hitung"
                                 class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
                             <label for="horizontal-list-radio-id"
                                 class="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">2</label>
@@ -46,6 +48,7 @@
                     <li class="w-full border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-600">
                         <div class="flex items-center ps-3">
                             <input id="horizontal-list-radio-military" type="radio" value="3" wire:model="hitung"
+                                name="hitung"
                                 class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
                             <label for="horizontal-list-radio-military"
                                 class="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">3</label>
@@ -71,28 +74,31 @@
             <div>
                 <label for="first_name"
                     class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Location</label>
-                <input type="text" id="disabled-input" wire:model="location"
+                <input type="text" id="lokasi" wire:model="location"
                     class="mb-6 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
             <div>
                 <label for="first_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Qty</label>
-                <input type="text" id="first_name" wire:model="qty"
+                <input type="text" id="qty" wire:model="qty"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     placeholder="Qty" />
+                <input type="text" id="ii" hidden>
             </div>
         </div>
 
         <div class="flex justify-end gap-5">
             @if ($materialCode)
                 <button type="button" wire:click="save"
-                    class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Save</button>
+                    class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
+                    {{ $update ? 'Update' : 'Save' }}
+                </button>
             @endif
             <button type="button" wire:click="cancel"
                 class="text-white bg-gradient-to-r from-red-500 to-pink-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Cancel</button>
 
         </div>
     </div>
-   
+
 
     <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -120,6 +126,9 @@
                         Qty
                     </div>
                 </th>
+                <th scope="col" class="px-6 py-3">
+                    Action
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -140,49 +149,106 @@
                     <td class="px-6 py-4">
                         {{ $d->qty }}
                     </td>
+                    <td>
+                        <button @click="editBtn($event.target.getAttribute('prop'))"
+                            prop="{{ json_encode([$d->material_no, $d->id]) }}"
+                            class="text-white bg-gradient-to-r from-blue-500 to-teal-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-xl text-sm p-2.5 text-center me-2 mb-2">Edit</button>
+                        <button x-on:click="$wire.delBtn({{ $d->id }})" wire:loading.attr="disabled" wire:loading.class="cursor-not-allowed" wire:loading.class.remove="from-red-500" wire:target="delBtn"
+                            class="text-white bg-gradient-to-r from-red-500 to-pink-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-xl text-sm p-2.5 text-center me-2 mb-2">Delete</button>
+                        
+                    </td>
                 </tr>
             @endforeach
         </tbody>
     </table>
 </div>
 
+<script>
+    function editBtn(params) {
+        data = JSON.parse(params)
+        $('#ii').val(data[1]);
+        $('#materialselect').val(data[0]).trigger('change');
+        $('#showForm').hide()
+        $('#hideForm').show()
+        $('#tambahForm').slideDown(600)
 
+    };
+</script>
 @script
     <script>
         $(document).ready(function() {
+
             $('#materialselect').select2({
                 placeholder: "Material Code",
                 width: 'resolve'
             });
             $('#materialselect').on('change', function(e) {
                 @this.materialCode = e.target.value
-                $wire.dispatch('materialChange')
+                id = $('#ii').val();
+                $wire.dispatch('materialChange', {
+                    id: id
+                })
+                $('#ii').val('');
             });
             $wire.on('reset', (event) => {
                 $('#materialselect').val(null).trigger('change');
+                $('#ii').val('');
+
             });
+
+            $wire.on('popup', (event) => {
+                if (event[0].id) {
+                    Swal.fire({
+                        title: 'Do you want to delete this data?',
+                        confirmButtonText: 'Yes, delete it!',
+                        showDenyButton: true,
+                        denyButtonText: `No, cancel`,
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $wire.dispatch('deleteMat', {
+                                id: event[0].id
+                            })
+                            Swal.fire({
+                                timer: 1000,
+                                title: "deleted",
+                                icon: "success",
+                                showConfirmButton: false,
+                                timerProgressBar: true,
+                            });
+                        } else if (result.isDenied) {
+                            return Swal.fire({
+                                timer: 1000,
+                                title: "Changes are not saved",
+                                icon: "info",
+                                showConfirmButton: false,
+                                timerProgressBar: true,
+                            });
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        timer: 1000,
+                        title: event[0].title,
+                        icon: "error",
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
+                }
+
+            })
 
             $('#showForm').on('click', function() {
                 $('#showForm').hide()
                 $('#hideForm').show()
                 $('#tambahForm').slideDown(600)
-                
+
             });
-            
+
             $('#hideForm').on('click', function() {
                 $('#showForm').show()
                 $('#hideForm').hide()
                 $('#tambahForm').slideUp(600)
             });
-            // function showForm() {
-            //     $('#showForm').css('display', 'none')
-            //     $('#hideForm').css('display', 'block')
-            // }
-            // function hideForm() {
-            //     $('#showForm').css('display', 'block')
-            //     $('#hideForm').css('display', 'none')
-            // }
-
 
         });
     </script>
