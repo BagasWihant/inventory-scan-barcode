@@ -22,7 +22,7 @@ class InputStockTaking extends Component
         $this->userID = auth()->user()->id;
 
 
-        $this->listMaterial = DB::table('material_in_stock')
+        $this->listMaterial = DB::table('material_in_stock')->where('is_taking', '1')
             ->selectRaw('Distinct(material_no)')->pluck('material_no')->all();
 
 
