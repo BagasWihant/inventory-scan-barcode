@@ -31,7 +31,7 @@
     </div>
 
     <div wire:loading.flex
-        class=" fixed bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
+        class=" fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
         wire:target="confirm,productBarcodeScan,paletBarcodeScan,resetPage" aria-label="Loading..." role="status">
         <svg class="h-20 w-20 animate-spin stroke-white " viewBox="0 0 256 256">
             <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
@@ -129,13 +129,14 @@
                                 </div>
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                <div class="flex items-center">
-                                    keterangan
-                                </div>
+                                Location
                             </th>
-                            <th scope="col" class="px-6 py-3">
+                            <th scope="col" class="w-4">
+                                keterangan
+                            </th>
+                            <th scope="col" class="px-3 py-3">
                                 <div class="flex items-center">
-                                    Location
+                                    Action
                                 </div>
                             </th>
                         </tr>
@@ -146,9 +147,6 @@
                                 if ($v->total == $v->counter && $v->qty_more == 0) {
                                     $ket = 'OK CONFIRM';
                                     $class = ' bg-green-300 dark:bg-green-500';
-                                    // } elseif ($v->sisa == 0 && $v->qty_more > 0) {
-                                    //     $ket = 'NEW ITEM';
-                                    //     $class = ' bg-blue-400';
                                 } elseif ($v->counter > $v->total || $v->qty_more > 0) {
                                     $ket = 'EXCESS';
                                     $class = ' bg-amber-400';
@@ -161,19 +159,25 @@
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->material }}</th>
-                                {{-- <th scope="row"
-                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->sisa }} </th> --}}
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->counter }} </th>
+                                <th scope="row"
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {{ $v->location_cd }}
+                                </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $ket }}
                                 </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->location_cd }}
+                                    @if ($v->counter > 0)
+                                        <button wire:click="resetItem({{ json_encode([$v->material, $v->palet]) }})"
+                                            class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg p-1 group bg-gradient-to-br from-red-800 to-red-500 group-hover:from-red-900 group-hover:to-red-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
+                                            Reset
+                                        </button>
+                                    @endif
                                 </th>
                             </tr>
                         @endforeach
@@ -310,7 +314,7 @@
                         timerProgressBar: true,
                     });
                 }
-            
+
             });
             // if (qty) {
             //     Swal.fire(`Entered qty: ${qty}`);

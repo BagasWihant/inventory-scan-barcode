@@ -288,6 +288,18 @@ class ListProduct extends Component
         $this->dispatch('paletFocus');
     }
 
+    public function resetItem($req){
+        $qryUPdate = tempCounter::where('palet', $req[1])->where('material', $req[0]);
+        $data = $qryUPdate->first();
+
+        $qryUPdate->update([
+            'sisa' => $data->total,
+            'counter'=>0,
+            'qty_more' =>0,
+            'prop_scan' => null,
+        ]);
+    }
+
     public function confirm()
     {
 
