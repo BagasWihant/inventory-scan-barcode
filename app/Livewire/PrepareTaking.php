@@ -52,6 +52,10 @@ class PrepareTaking extends Component
             ->whereIn('material_no', $this->pluckStock)
             ->where('is_taking', '0')
             ->update(['is_taking' => 1]);
+            // {is taking 0 belum prepare}
+            // {is taking 1 prepare}
+            // {is taking 2 confirm}
+            // {is taking 9 STO hasil confirm}
         
         $name = auth()->user()->username . date('d-m-Y H:i');
         return Excel::download(new ExportStockTaking($this->dataStock), "Stock Taking - $name.pdf", \Maatwebsite\Excel\Excel::MPDF);
