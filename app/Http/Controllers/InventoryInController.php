@@ -47,4 +47,8 @@ class InventoryInController extends Controller
         return view('pages.taking-conf');
     }
 
+    public function reportStockTaking(){
+        return view('pages.report-taking');
+    }
+
 }

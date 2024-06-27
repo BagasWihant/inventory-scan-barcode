@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Models\MenuOptions;
 use Illuminate\Support\Facades\DB;
 
 class ResultStockTaking extends Component
@@ -10,8 +11,12 @@ class ResultStockTaking extends Component
     public $searchKey;
     public function render()
     {
+        // GET STO ACTIVE
+        $sto = MenuOptions::select('id')->where('status', '1')
+            ->where('user_id', auth()->user()->id)->first();
         $query = DB::table('stock_takings')
             ->selectRaw('material_no,loc,sum(qty) as qty,hitung')
+            ->where('sto_id', $sto->id)
             ->groupBy(['material_no', 'hitung', 'loc'])->orderByRaw('material_no ASC, hitung ASC');
         if ($this->searchKey) $query->where('material_no', 'like', "%$this->searchKey%");
         $data = $query->get();

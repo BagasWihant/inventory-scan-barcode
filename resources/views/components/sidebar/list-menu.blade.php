@@ -20,6 +20,7 @@
                 ['url' => route('input.stock.taking'), 'label' => 'Input Stock Taking'],
                 ['url' => route('result.stock.taking'), 'label' => 'Stock Taking Result'],
                 ['url' => route('conf.stock.taking'), 'label' => 'Stock Taking Confirmation'],          
+                ['url' => route('report.stock.taking'), 'label' => 'Report Stock Taking'],          
             ],
         ],
     ];
