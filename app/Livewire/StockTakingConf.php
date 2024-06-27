@@ -13,7 +13,7 @@ use Spatie\LaravelIgnition\Recorders\DumpRecorder\Dump;
 
 class StockTakingConf extends Component
 {
-    public $data, $queryStock, $userID, $confirm, $sto;
+    public $data, $queryStock, $userID, $confirm, $sto,$search;
 
     public function mount()
     {
@@ -87,6 +87,9 @@ class StockTakingConf extends Component
             ->select('material_no', 'loc', 'qty', 'hitung', 'created_at', DB::raw('ROW_NUMBER() OVER (PARTITION BY material_no ORDER BY created_at DESC) AS lastest_rank'))
             ->where('qty',">", '0')
             ->where('is_taking', '0');
+
+            if($this->search) $queryStock->where('material_no', 'like', '%'.$this->search.'%');
+
         $getqryLatest = $queryStock->get();
         $data = $getqryLatest->where('lastest_rank', 1);
 
