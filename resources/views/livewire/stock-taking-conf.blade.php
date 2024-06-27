@@ -1,4 +1,10 @@
 <div class="dark:text-white max-w-7xl mx-auto">
+    <div class="fixed left-0 top-0  h-screen w-screen flex justify-center items-center bg-slate-300/70 z-50"
+        wire:loading.flex wire:target="konfirmasi,search">
+        <div class="absolute animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-purple-500"></div>
+        <img src="https://www.svgrepo.com/show/509001/avatar-thinking-9.svg" class="rounded-full h-28 w-28">
+    </div>
+
     <div class="text-2xl font-extrabold py-6 text-center">Stock Taking Confirmation</div>
 
     <div class="flex justify-between">
@@ -15,10 +21,6 @@
                 placeholder="Search here..." />
         </div>
 
-        {{-- <button type="button" id="hideForm" wire:click="export"
-            class="text-white bg-gradient-to-r from-red-500 to-pink-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
-            Print
-        </button> --}}
         <div class="">
 
             @if ($confirm)

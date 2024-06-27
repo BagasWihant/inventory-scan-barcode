@@ -1,7 +1,14 @@
 <div class="dark:text-white max-w-7xl mx-auto">
-    <div class="text-2xl font-extrabold pt-6 text-center">Stock Taking Confirmation </div>
+       
+    <div class="fixed left-0 top-0  h-screen w-screen flex justify-center items-center bg-slate-300/70 z-50"
+        wire:loading.flex wire:target="showData,export">
+        <div class="absolute animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-purple-500"></div>
+        <img src="https://www.svgrepo.com/show/509001/avatar-thinking-9.svg" class="rounded-full h-28 w-28">
+    </div>
+
+    <div class="text-2xl font-extrabold pt-6 text-center">Report Stock Taking </div>
     @if ($stoId)
-        <div class="text font-sans py-1 text-center"><strong> {{ 'STO ID : ' . $stoId  }}</strong> </div>
+        <div class="text font-sans py-1 text-center"><strong> {{ 'STO ID : ' . $stoId }}</strong> </div>
     @endif
     <div class="text font-sans pb-3 text-center">Date : {{ date('d-m-Y') }} </div>
 

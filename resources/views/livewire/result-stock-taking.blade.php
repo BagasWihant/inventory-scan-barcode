@@ -1,4 +1,11 @@
 <div class="dark:text-white max-w-7xl mx-auto">
+       
+    <div class="fixed left-0 top-0  h-screen w-screen flex justify-center items-center bg-slate-300/70 z-50"
+        wire:loading.flex wire:target="searchKey">
+        <div class="absolute animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-purple-500"></div>
+        <img src="https://www.svgrepo.com/show/509001/avatar-thinking-9.svg" class="rounded-full h-28 w-28">
+    </div>
+
     <div class="text-2xl font-extrabold py-6 text-center">Result Stock Taking</div>
 
     <div class="grid grid-cols-3 pb-3">
