@@ -85,6 +85,7 @@ class StockTakingConf extends Component
     {
         $queryStock = DB::table('stock_takings')
             ->select('material_no', 'loc', 'qty', 'hitung', 'created_at', DB::raw('ROW_NUMBER() OVER (PARTITION BY material_no ORDER BY created_at DESC) AS lastest_rank'))
+            ->where('qty',">", '0')
             ->where('is_taking', '0');
         $getqryLatest = $queryStock->get();
         $data = $getqryLatest->where('lastest_rank', 1);
