@@ -316,11 +316,42 @@
                 }
 
             });
-            // if (qty) {
-            //     Swal.fire(`Entered qty: ${qty}`);
-
-            // }
-
         });
+
+        $wire.on('newItem2', (event) => {
+            
+            Swal.fire({
+                title: event[0].title,
+                html: `Qty : ${event[0].qty}`,
+                showDenyButton: true,
+                denyButtonText: `Don't save`
+            }).then((result) => {
+                /* Read more about isConfirmed, isDenied below */
+                if (result.isConfirmed) {
+                    $wire.dispatch('insertNew', {
+                        qty: event[0].qty,
+                    })
+                    Swal.fire({
+                        timer: 1000,
+                        title: "Saved",
+                        icon: "success",
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
+                } else if (result.isDenied) {
+                    $wire.dispatch('insertNew', {
+                        save: false
+                    })
+                    Swal.fire({
+                        timer: 1000,
+                        title: "Changes are not saved",
+                        icon: "info",
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
+                }
+
+            });
+        })
     </script>
 @endscript

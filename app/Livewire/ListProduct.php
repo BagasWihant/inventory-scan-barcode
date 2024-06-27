@@ -127,12 +127,11 @@ class ListProduct extends Component
                     ->where('palet', $this->paletBarcode);
                 $data = $tempCount->first();
 
+                $mat_mst = DB::table('material_mst')
+                    ->select('iss_min_lot')
+                    ->where('matl_no', $this->sws_code)->first();
+
                 if ($tempCount->count() > 0) {
-
-                    $mat_mst = DB::table('material_mst')
-                        ->select('iss_min_lot')
-                        ->where('matl_no', $this->sws_code)->first();
-
                     if ($mat_mst->iss_min_lot == 1) {
                         $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
                     } else {
@@ -162,20 +161,19 @@ class ListProduct extends Component
                     }
                 } else {
 
-                    $cek = DB::table('material_setup_mst_CNC_KIAS2')
-                        ->selectRaw('COUNT(DISTINCT picking_qty) as jml, max(picking_qty) as qty')
-                        ->where('material_no', $supplierCode->sws_code);
-                    if ($cek->count() > 0) {
-                        $data = $cek->first();
-                        if ($data->jml > 1) {
-                            $this->dispatch('newItem', ['qty' => 0, 'title' => 'Item Duplicate']);
-                            return;
-                        }
-                        $this->dispatch('newItem', ['qty' => $data->qty, 'title' => 'New Item but in Database']);
+                    if ($mat_mst->iss_min_lot == 1) {
+                        $this->dispatch('newItem', ['qty' => 0, 'title' => 'Item with Duplicate Qty']);
+                        return;
+                    } else {
+                        $cek = DB::table('material_setup_mst_CNC_KIAS2')
+                            ->selectRaw('max(picking_qty) as qty')
+                            ->where('material_no', $supplierCode->sws_code)->first();
+                            
+                        $this->dispatch('newItem2', ['qty' => $cek->qty, 'title' => 'New Item Detected']);
                         return;
                     }
                     // insert barcode tidak terecord
-                    $this->dispatch('newItem', ['title' => 'New Item']);
+                    $this->dispatch('newItem', ['title' => 'New Item not in Database']);
                 }
             }
         }
@@ -288,16 +286,29 @@ class ListProduct extends Component
         $this->dispatch('paletFocus');
     }
 
-    public function resetItem($req){
+    public function resetItem($req)
+    {
         $qryUPdate = tempCounter::where('palet', $req[1])->where('material', $req[0]);
         $data = $qryUPdate->first();
 
-        $qryUPdate->update([
-            'sisa' => $data->total,
-            'counter'=>0,
-            'qty_more' =>0,
-            'prop_scan' => null,
-        ]);
+        $materialSetup = DB::table('material_setup_mst_cnc_kias2')
+            ->where('pallet_no', $req[1])
+            ->where('serial_no', '00000')
+            ->where('material_no', $req[0]);
+
+
+        if ($materialSetup->count() > 0) {
+            $materialSetup->delete();
+            $qryUPdate->delete();
+        } else {
+            $qryUPdate->update([
+                'sisa' => $data->total,
+                'counter' => 0,
+                'qty_more' => 0,
+                'prop_scan' => null,
+            ]);
+        }
+        $this->dispatch('paletFocus');
     }
 
     public function confirm()

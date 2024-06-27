@@ -58,7 +58,7 @@ class PrepareTaking extends Component
             // {is taking 9 STO hasil confirm}
         
         $name = auth()->user()->username . date('d-m-Y H:i');
-        return Excel::download(new ExportStockTaking($this->dataStock), "Stock Taking - $name.pdf", \Maatwebsite\Excel\Excel::MPDF);
+        return Excel::download(new ExportStockTaking($this->dataStock,$this->dataStatus->id), "Stock Taking - $name.pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
     public function render()
