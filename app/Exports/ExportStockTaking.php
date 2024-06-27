@@ -12,19 +12,21 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
+use Maatwebsite\Excel\Concerns\WithDrawings;
 
 class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollection, WithColumnWidths, WithMapping
 {
-    public $data, $count;
-    public function __construct($dt)
+    public $data, $count,$sto_id;
+    public function __construct($dt,$sto_id)
     {
         $this->data = $dt;
+        $this->sto_id = $sto_id;
         $this->count = count($dt);
     }
 
     public function startCell(): string
     {
-        return 'A6';
+        return 'A8';
     }
 
     public function columnWidths(): array
@@ -79,13 +81,12 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
 
     public function drawings()
     {
-
         $drawing = new Drawing();
         $drawing->setName('Logo');
         $drawing->setDescription('This is my logo');
-        $drawing->setPath(public_path('/assets/logo.png'));
+        $drawing->setPath(public_path('/assets/sws.jpg'));
         $drawing->setHeight(50);
-        $drawing->setCoordinates('A1');
+        $drawing->setCoordinates('H3');
         return $drawing;
     }
 
@@ -100,32 +101,52 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
                 $baris = 50;
                 $spreadset = new Spreadsheet;
 
-                $sheet->mergeCells('A1:H2');
+                $sheet->mergeCells('A1:H1');
                 $sheet->setCellValue('A1', "PRINT STOCK TAKING");
 
-                $sheet->mergeCells('A4:A5');
-                $sheet->setCellValue('A4', "NO");
+                $sheet->mergeCells('A2:B2');
+                $sheet->setCellValue('A2', "Date");
 
-                $sheet->mergeCells('B4:B5');
-                $sheet->setCellValue('B4', "MATERIAL NO");
+                $sheet->mergeCells('C2:D2');
+                $sheet->setCellValue('C2', ": " . date('d-m-Y H:i'));
 
-                $sheet->mergeCells('C4:D4');
-                $sheet->setCellValue('C4', "HITUNG 1");
-                $sheet->setCellValue('C5', "LOC");
-                $sheet->setCellValue('D5', "QTY");
+                $sheet->mergeCells('A3:B3');
+                $sheet->setCellValue('A3', "Stock Taking ID ");
+                $sheet->setCellValue('A4', "  ");
+                $sheet->setCellValue('C3',  ": ".$this->sto_id);
 
-                $sheet->mergeCells('E4:F4');
-                $sheet->setCellValue('E4', "HITUNG 2");
-                $sheet->setCellValue('E5', "LOC");
-                $sheet->setCellValue('F5', "QTY");
+                $left = [
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+                        'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+                    ],
+                ];
+                $event->sheet->getDelegate()->getStyle('A2:H3')->applyFromArray($left);
+                
 
-                $sheet->mergeCells('G4:H4');
-                $sheet->setCellValue('G4', "HITUNG 3");
-                $sheet->setCellValue('G5', "LOC");
-                $sheet->setCellValue('H5', "QTY");
+                $sheet->mergeCells('A5:A6');
+                $sheet->setCellValue('A5', "NO");
 
-                $sheet->getDelegate()->getStyle('A1:H2')->getFont()->setSize(20);
-                $sheet->getDelegate()->getStyle('A1:H5')->getFont()->setBold(true);
+                $sheet->mergeCells('B5:B6');
+                $sheet->setCellValue('B5', "MATERIAL NO");
+
+                $sheet->mergeCells('C5:D5');
+                $sheet->setCellValue('C5', "HITUNG 1");
+                $sheet->setCellValue('C6', "LOC");
+                $sheet->setCellValue('D6', "QTY");
+
+                $sheet->mergeCells('E5:F5');
+                $sheet->setCellValue('E5', "HITUNG 2");
+                $sheet->setCellValue('E6', "LOC");
+                $sheet->setCellValue('F6', "QTY");
+
+                $sheet->mergeCells('G5:H5');
+                $sheet->setCellValue('G5', "HITUNG 3");
+                $sheet->setCellValue('G6', "LOC");
+                $sheet->setCellValue('H6', "QTY");
+
+                $sheet->getDelegate()->getStyle('A1:H1')->getFont()->setSize(20);
+                $sheet->getDelegate()->getStyle('A1:H6')->getFont()->setBold(true);
 
                 $styleArray = [
                     'alignment' => [
@@ -133,12 +154,12 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
                         'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                     ],
                 ];
-                $event->sheet->getDelegate()->getStyle('G4:H4')->applyFromArray($styleArray);
-                $event->sheet->getDelegate()->getStyle('E4:F4')->applyFromArray($styleArray);
-                $event->sheet->getDelegate()->getStyle('C4:D4')->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle('G5:H5')->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle('E5:F5')->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle('C5:D5')->applyFromArray($styleArray);
 
-                $cellRange = 'A1:G3'; // All headers
-                $lastRow = $this->count + $baris + 5;
+                $cellRange = 'A1:G1'; // All headers
+                $lastRow = $this->count + $baris + 6;
 
                 $event->sheet->getDelegate()->getStyle($cellRange)->applyFromArray($styleArray);
                 $event->sheet->getDelegate()->getStyle("A5:H" . $lastRow)->applyFromArray($styleArray);
@@ -151,36 +172,40 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
                         ],
                     ],
                 ];
-                $event->sheet->getDelegate()->getStyle("A4:H" . $lastRow)->applyFromArray($border);
+                $event->sheet->getDelegate()->getStyle("A5:H" . $lastRow)->applyFromArray($border);
 
                 for ($i = 1; $i <= $this->count + $baris; $i++) {
-                    $sheet->setCellValue('A' . 5 + $i, $i);
+                    $sheet->setCellValue('A' . 7 + $i, $i);
                 }
 
-                $blank = $lastRow + 5;
+                $blank = $lastRow + 10;
                 for ($i = $lastRow + 1; $i <= $blank; $i++) {
                     $sheet->setCellValue('A' . $i, "  ");
                 }
 
                 $sign1 = $blank + 1;
-                $sheet->setCellValue('F' . $sign1, "Penghitung 1");
+                $sheet->setCellValue('F' . $sign1, " Penghitung 1");
                 $sheet->mergeCells('F' . $sign1 + 1 . ':F' . $sign1 + 4);
                 $sheet->setCellValue('F' . $sign1 + 1, "  ");
-                $sheet->setCellValue('F' . $sign1 + 5, "Nama: a a");
-                $event->sheet->getDelegate()->getStyle("F" . $sign1 + 3)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $event->sheet->getDelegate()->getStyle("F" . $sign1 + 3)->getAlignment()->setWrapText(true);
+                $sheet->setCellValue('F' . $sign1 + 5, " Nama : ");
+                $event->sheet->getDelegate()->getStyle("F" . $sign1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setWrapText(true);
+                $event->sheet->getDelegate()->getStyle("F".$sign1.":F" . $sign1+5)->applyFromArray($border);
+
 
                 $sheet->setCellValue('G' . $sign1, "Penghitung 2");
                 $sheet->mergeCells('G' . $sign1 + 1 . ':G' . $sign1 + 4);
                 $sheet->setCellValue('G' . $sign1 + 1, "  ");
-                $sheet->setCellValue('G' . $sign1 + 5, "Nama: a a");
-                $event->sheet->getDelegate()->getStyle("G" . $sign1 + 3)->applyFromArray($styleArray)->getAlignment()->setWrapText(true);
+                $sheet->setCellValue('G' . $sign1 + 5, " Nama :");
+                $event->sheet->getDelegate()->getStyle("G" . $sign1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setWrapText(true);
+                $event->sheet->getDelegate()->getStyle("G".$sign1.":G" . $sign1+5)->applyFromArray($border);
 
                 $sheet->setCellValue('H' . $sign1, "Penghitung 3");
                 $sheet->mergeCells('H' . $sign1 + 1 . ':H' . $sign1 + 4);
                 $sheet->setCellValue('H' . $sign1 + 1, "  ");
-                $sheet->setCellValue('H' . $sign1 + 5, "Nama: a a");
-                $event->sheet->getDelegate()->getStyle("H" . $sign1 + 3)->applyFromArray($styleArray)->getAlignment()->setWrapText(true);
+                $sheet->setCellValue('H' . $sign1 + 5, " Nama :");
+                $event->sheet->getDelegate()->getStyle("H" . $sign1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setWrapText(true);
+                $event->sheet->getDelegate()->getStyle("H".$sign1.":H" . $sign1+5)->applyFromArray($border);
+
 
                 $sheet->getDelegate()->getStyle('F'.$sign1.':H'.$sign1)->getFont()->setBold(true);
                 
@@ -188,20 +213,25 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
                 $sheet->setCellValue('F' . $sign2, "Penghitung 4");
                 $sheet->mergeCells('F' . $sign2 + 1 . ':F' . $sign2 + 4);
                 $sheet->setCellValue('F' . $sign2 + 1, "  ");
-                $sheet->setCellValue('F' . $sign2 + 5, "Nama: a a");
-                $event->sheet->getDelegate()->getStyle("F" . $sign2 + 3)->applyFromArray($styleArray)->getAlignment()->setWrapText(true);
+                $sheet->setCellValue('F' . $sign2 + 5, " Nama : ");
+                $event->sheet->getDelegate()->getStyle("F" . $sign2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setWrapText(true);
+                $event->sheet->getDelegate()->getStyle("F".$sign2.":F" . $sign2+5)->applyFromArray($border);
+
 
                 $sheet->setCellValue('G' . $sign2, "Penghitung 5");
                 $sheet->mergeCells('G' . $sign2 + 1 . ':G' . $sign2 + 4);
                 $sheet->setCellValue('G' . $sign2 + 1, "  ");
-                $sheet->setCellValue('G' . $sign2 + 5, "Nama: a a");
-                $event->sheet->getDelegate()->getStyle("G" . $sign2 + 3)->applyFromArray($styleArray)->getAlignment()->setWrapText(true);
+                $sheet->setCellValue('G' . $sign2 + 5, " Nama :");
+                $event->sheet->getDelegate()->getStyle("G" . $sign2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setWrapText(true);
+                $event->sheet->getDelegate()->getStyle("G".$sign2.":G" . $sign2+5)->applyFromArray($border);
+
 
                 $sheet->setCellValue('H' . $sign2, "Penghitung 6");
                 $sheet->mergeCells('H' . $sign2 + 1 . ':H' . $sign2 + 4);
                 $sheet->setCellValue('H' . $sign2 + 1, "  ");
-                $sheet->setCellValue('H' . $sign2 + 5, "Nama: a a");
-                $event->sheet->getDelegate()->getStyle("H" . $sign2 + 3)->applyFromArray($styleArray)->getAlignment()->setWrapText(true);
+                $sheet->setCellValue('H' . $sign2 + 5, " Nama :");
+                $event->sheet->getDelegate()->getStyle("H" . $sign2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setWrapText(true);
+                $event->sheet->getDelegate()->getStyle("H".$sign2.":H" . $sign2+5)->applyFromArray($border);
 
                 $sheet->getDelegate()->getStyle('F'.$sign2.':H'.$sign2)->getFont()->setBold(true);
 
