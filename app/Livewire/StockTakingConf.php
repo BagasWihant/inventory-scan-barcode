@@ -94,6 +94,7 @@ class StockTakingConf extends Component
 
         $inStock = DB::table('material_in_stock')
             ->select('material_no', 'locate', DB::raw('sum(picking_qty) as qty'))
+            ->where('material_no', '>','0')
             ->whereIn('material_no', $listMat)
             ->groupBy('material_no', 'locate')
             ->get();
