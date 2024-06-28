@@ -47,10 +47,10 @@ class PrepareTaking extends Component
 
     public function exportPdf()
     {
-        // $update = DB::table('material_in_stock')
-        //     ->whereIn('material_no', $this->pluckStock)
-        //     ->where('is_taking', '0')
-        //     ->update(['is_taking' => 1]);
+        $update = DB::table('material_in_stock')
+            ->whereIn('material_no', $this->pluckStock)
+            ->where('is_taking', '0')
+            ->update(['is_taking' => 1]);
             // {is taking 0 belum prepare}
             // {is taking 1 prepare}
             // {is taking 2 confirm}

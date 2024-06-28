@@ -33,8 +33,8 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
     {
         return [
             'A' => 3,
-            'B' => 23,
-            'C' => 20,
+            'B' => 20,
+            'C' => 23,
             'D' => 20,
             'E' => 20,
             'F' => 20,
@@ -49,8 +49,8 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
         $no = 1;
         return [
             $no++,
-            $row->material_no,
             $row->locate,
+            $row->material_no,
             $char,
             $char,
 
@@ -131,9 +131,9 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
                 $sheet->setCellValue('A5', "NO");
 
                 $sheet->mergeCells('B5:B6');
-                $sheet->setCellValue('B5', "MATERIAL NO");
+                $sheet->setCellValue('B5', "Location");
                 $sheet->mergeCells('C5:C6');
-                $sheet->setCellValue('C5', "Location");
+                $sheet->setCellValue('C5', "MATERIAL NO");
 
                 $sheet->mergeCells('D5:E5');
                 $sheet->setCellValue('D5', "HITUNG 1");
