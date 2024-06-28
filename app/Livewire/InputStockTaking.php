@@ -82,6 +82,7 @@ class InputStockTaking extends Component
                     'material_no' => $this->materialCode,
                     'hitung' => $this->hitung,
                     'loc' => $this->location,
+                    'is_taking' => '0',
                     'qty' => $this->qty
                 ]);
                 
