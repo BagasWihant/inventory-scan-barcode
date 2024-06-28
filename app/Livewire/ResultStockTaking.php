@@ -13,10 +13,15 @@ class ResultStockTaking extends Component
     {
         // GET STO ACTIVE
         $sto = MenuOptions::select('id')->where('status', '1')
-            ->where('user_id', auth()->user()->id)->first();
+            ->where('user_id', auth()->user()->id);
+        if ($sto->count() > 0) {
+            $laststo = collect($sto->first());
+        }else{
+            $laststo['id'] = '-';
+        }
         $query = DB::table('stock_takings')
             ->selectRaw('material_no,loc,sum(qty) as qty,hitung')
-            ->where('sto_id', $sto->id)
+            ->where('sto_id', $laststo['id'])
             ->groupBy(['material_no', 'hitung', 'loc'])->orderByRaw('material_no ASC, hitung ASC');
         if ($this->searchKey) $query->where('material_no', 'like', "%$this->searchKey%");
         $data = $query->get();
@@ -56,7 +61,6 @@ class ResultStockTaking extends Component
                 if ($res != 0) {
                     $listData[$value->material_no][$res > 0 ? 'plus' : 'min'] = abs($res);
                 }
-
             }
         }
 

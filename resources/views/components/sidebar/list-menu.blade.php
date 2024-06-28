@@ -19,8 +19,8 @@
                 ['url' => route('prepare.stock.taking'), 'label' => 'Prepare Stock Taking', 'admin' => ''],
                 ['url' => route('input.stock.taking'), 'label' => 'Input Stock Taking'],
                 ['url' => route('result.stock.taking'), 'label' => 'Stock Taking Result'],
-                ['url' => route('conf.stock.taking'), 'label' => 'Stock Taking Confirmation'],          
-                ['url' => route('report.stock.taking'), 'label' => 'Report Stock Taking'],          
+                ['url' => route('conf.stock.taking'), 'label' => 'Stock Taking Confirmation', 'admin' => ''],          
+                ['url' => route('report.stock.taking'), 'label' => 'Report Stock Taking', 'admin' => ''],          
             ],
         ],
     ];
