@@ -108,7 +108,7 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
                 $sheet->setCellValue('A2', "Date");
 
                 $sheet->mergeCells('C2:D2');
-                $sheet->setCellValue('C2', ": " . date('d-m-Y H:i'));
+                $sheet->setCellValue('C2', ": " . date('d-m-Y'));
 
                 $sheet->mergeCells('A3:B3');
                 $sheet->setCellValue('A3', "Stock Taking ID ");
