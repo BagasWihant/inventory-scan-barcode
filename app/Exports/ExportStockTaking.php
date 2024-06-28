@@ -40,6 +40,7 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
             'F' => 20,
             'G' => 20,
             'H' => 20,
+            'I' => 20,
         ];
     }
     public function map($row): array
@@ -49,6 +50,7 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
         return [
             $no++,
             $row->material_no,
+            $row->locate,
             $char,
             $char,
 
@@ -70,6 +72,7 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
         return [
             ' ',
             ' ',
+            'Location',
             'LOC',
             'QTY',
             'LOC',
@@ -101,7 +104,7 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
                 $baris = 50;
                 $spreadset = new Spreadsheet;
 
-                $sheet->mergeCells('A1:H1');
+                $sheet->mergeCells('A1:I1');
                 $sheet->setCellValue('A1', "PRINT STOCK TAKING");
 
                 $sheet->mergeCells('A2:B2');
@@ -129,21 +132,23 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
 
                 $sheet->mergeCells('B5:B6');
                 $sheet->setCellValue('B5', "MATERIAL NO");
+                $sheet->mergeCells('C5:C6');
+                $sheet->setCellValue('C5', "Location");
 
-                $sheet->mergeCells('C5:D5');
-                $sheet->setCellValue('C5', "HITUNG 1");
-                $sheet->setCellValue('C6', "LOC");
-                $sheet->setCellValue('D6', "QTY");
+                $sheet->mergeCells('D5:E5');
+                $sheet->setCellValue('D5', "HITUNG 1");
+                $sheet->setCellValue('D6', "LOC");
+                $sheet->setCellValue('E6', "QTY");
 
-                $sheet->mergeCells('E5:F5');
-                $sheet->setCellValue('E5', "HITUNG 2");
-                $sheet->setCellValue('E6', "LOC");
-                $sheet->setCellValue('F6', "QTY");
+                $sheet->mergeCells('F5:G5');
+                $sheet->setCellValue('F5', "HITUNG 2");
+                $sheet->setCellValue('F6', "LOC");
+                $sheet->setCellValue('G6', "QTY");
 
-                $sheet->mergeCells('G5:H5');
-                $sheet->setCellValue('G5', "HITUNG 3");
-                $sheet->setCellValue('G6', "LOC");
-                $sheet->setCellValue('H6', "QTY");
+                $sheet->mergeCells('H5:I5');
+                $sheet->setCellValue('H5', "HITUNG 3");
+                $sheet->setCellValue('H6', "LOC");
+                $sheet->setCellValue('I6', "QTY");
 
                 $sheet->getDelegate()->getStyle('A1:H1')->getFont()->setSize(20);
                 $sheet->getDelegate()->getStyle('A1:H6')->getFont()->setBold(true);
@@ -154,15 +159,13 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
                         'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                     ],
                 ];
-                $event->sheet->getDelegate()->getStyle('G5:H5')->applyFromArray($styleArray);
-                $event->sheet->getDelegate()->getStyle('E5:F5')->applyFromArray($styleArray);
-                $event->sheet->getDelegate()->getStyle('C5:D5')->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle('D5:I5')->applyFromArray($styleArray);
 
                 $cellRange = 'A1:G1'; // All headers
                 $lastRow = $this->count + $baris + 6;
 
                 $event->sheet->getDelegate()->getStyle($cellRange)->applyFromArray($styleArray);
-                $event->sheet->getDelegate()->getStyle("A5:H" . $lastRow)->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle("A5:I" . $lastRow)->applyFromArray($styleArray);
 
                 $border = [
                     'borders' => [
@@ -172,7 +175,7 @@ class ExportStockTaking implements WithEvents, WithCustomStartCell, FromCollecti
                         ],
                     ],
                 ];
-                $event->sheet->getDelegate()->getStyle("A5:H" . $lastRow)->applyFromArray($border);
+                $event->sheet->getDelegate()->getStyle("A5:I" . $lastRow)->applyFromArray($border);
 
                 for ($i = 1; $i <= $this->count + $baris; $i++) {
                     $sheet->setCellValue('A' . 7 + $i, $i);

@@ -11,7 +11,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class PrepareTaking extends Component
 {
-    public $statusActive, $date, $id, $canOpen, $user_id, $dataStatus, $dataStock, $pluckStock;
+    public $statusActive, $date, $id, $canOpen, $user_id, $dataStatus, $dataStock=[], $pluckStock=[];
 
 
 
@@ -33,11 +33,10 @@ class PrepareTaking extends Component
     {
         $qry = DB::table('material_in_stock')
             ->where('is_taking', '0')
-            ->selectRaw('material_no, sum(picking_qty) as qty')->groupBy('material_no');
+            ->selectRaw('material_no, sum(picking_qty) as qty,locate')->groupBy(['material_no','locate'])->orderBy('locate');
         $this->dataStock = $qry->get();
         $this->pluckStock = $qry->pluck('material_no');
 
-        sleep(0.5);
         $this->date = $this->date ?? now();
         MenuOptions::create([
             'status' => 1,
@@ -48,10 +47,10 @@ class PrepareTaking extends Component
 
     public function exportPdf()
     {
-        $update = DB::table('material_in_stock')
-            ->whereIn('material_no', $this->pluckStock)
-            ->where('is_taking', '0')
-            ->update(['is_taking' => 1]);
+        // $update = DB::table('material_in_stock')
+        //     ->whereIn('material_no', $this->pluckStock)
+        //     ->where('is_taking', '0')
+        //     ->update(['is_taking' => 1]);
             // {is taking 0 belum prepare}
             // {is taking 1 prepare}
             // {is taking 2 confirm}
@@ -74,7 +73,7 @@ class PrepareTaking extends Component
 
         $qry = DB::table('material_in_stock')
             ->where('is_taking', '0')
-            ->selectRaw('material_no, sum(picking_qty) as qty')->groupBy('material_no');
+            ->selectRaw('material_no, sum(picking_qty) as qty,locate')->groupBy(['material_no','locate'])->orderBy('locate');
         $this->dataStock = $qry->get();
         $this->pluckStock = $qry->pluck('material_no');
 
