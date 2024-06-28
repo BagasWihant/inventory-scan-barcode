@@ -17,7 +17,8 @@ class InputStockTakingMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $menu = MenuOptions::where('status', '1')
-        ->where('user_id', auth()->user()->id)->first();
+        // ->where('user_id', auth()->user()->id)
+        ->first();
         if (!$menu) {
             return response()->view('errors.403', [
                 'message' => 'Please start prepare your stock taking first',
