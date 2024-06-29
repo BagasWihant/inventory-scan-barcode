@@ -22,8 +22,9 @@ class InputStockTaking extends Component
         $this->userID = auth()->user()->id;
 
 
-        $this->listMaterial = DB::table('material_in_stock')->where('is_taking', '1')
-            ->selectRaw('Distinct(material_no)')->pluck('material_no')->all();
+        $this->listMaterial = DB::table('material_mst')->selectRaw('Distinct(matl_no) as material_no')->pluck('material_no')->all();
+        // $this->listMaterial = DB::table('material_in_stock')->where('is_taking', '1')
+        //     ->selectRaw('Distinct(material_no)')->pluck('material_no')->all();
 
 
         $this->stoID = MenuOptions::where('status', '1')
