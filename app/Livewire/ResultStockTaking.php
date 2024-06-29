@@ -12,8 +12,7 @@ class ResultStockTaking extends Component
     public function render()
     {
         // GET STO ACTIVE
-        $sto = MenuOptions::select('id')->where('status', '1')
-            ->where('user_id', auth()->user()->id);
+        $sto = MenuOptions::select('id')->where('status', '1');
         if ($sto->count() > 0) {
             $laststo = collect($sto->first());
         } else {
@@ -51,6 +50,7 @@ class ResultStockTaking extends Component
         foreach ($listData as $key => $v) {
 
             if ($countInStock > 0) {
+                $found = false;
                 foreach ($inStock as $value) {
                     if ($key == $value->material_no) {
                         $qty = $listData[$value->material_no]['qty3'] ??
@@ -67,19 +67,23 @@ class ResultStockTaking extends Component
                         if ($res != 0) {
                             $listData[$value->material_no][$res > 0 ? 'plus' : 'min'] = abs($res);
                         }
-                    } else {
+                        $found = true;
+                        break;
+                
+                    } 
+                }
+                if (!$found) {
 
-                        $qty = $listData[$key]['qty3'] ??
-                            $listData[$key]['qty2'] ??
-                            $listData[$key]['qty1'] ?? 0;
+                    $qty = $listData[$key]['qty3'] ??
+                        $listData[$key]['qty2'] ??
+                        $listData[$key]['qty1'] ?? 0;
 
-                        $res = $qty - 0;
-                        $listData[$key]['locsys'] = "NOT FOUND";
-                        $listData[$key]['qtysys'] = 0;
+                    $res = $qty - 0;
+                    $listData[$key]['locsys'] = "NOT FOUND";
+                    $listData[$key]['qtysys'] = 0;
 
-                        if ($res != 0) {
-                            $listData[$key][$res > 0 ? 'plus' : 'min'] = abs($res);
-                        }
+                    if ($res != 0) {
+                        $listData[$key][$res > 0 ? 'plus' : 'min'] = abs($res);
                     }
                 }
             } else {
