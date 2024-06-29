@@ -180,7 +180,8 @@
 
             $('#materialselect').select2({
                 placeholder: "Material Code",
-                width: 'resolve'
+                width: 'resolve',
+                tags: true
             });
             $('#materialselect').on('change', function(e) {
                 @this.materialCode = e.target.value
