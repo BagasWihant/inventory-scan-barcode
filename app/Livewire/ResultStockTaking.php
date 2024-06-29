@@ -16,7 +16,7 @@ class ResultStockTaking extends Component
             ->where('user_id', auth()->user()->id);
         if ($sto->count() > 0) {
             $laststo = collect($sto->first());
-        }else{
+        } else {
             $laststo['id'] = '-';
         }
         $query = DB::table('stock_takings')
@@ -33,6 +33,8 @@ class ResultStockTaking extends Component
             ->whereIn('material_no', $listMat)
             ->groupBy('material_no', 'locate')
             ->get();
+        $countInStock = count($inStock);
+
         $output = collect($data)->groupBy('material_no')->all();
 
         $listData =  collect($output)->mapWithKeys(function ($item, $key) {
@@ -42,27 +44,60 @@ class ResultStockTaking extends Component
                 $tempArray["loc$hit"] = $it->loc;
                 $tempArray["qty$hit"] = $it->qty;
                 // if($hit))
-                // dump($it);
             }
             return [$key => $tempArray];
         })->all();
 
-        foreach ($inStock as $value) {
-            if (isset($listData[$value->material_no])) {
-                $listData[$value->material_no]['locsys'] = $value->locate;
-                $listData[$value->material_no]['qtysys'] = $value->qty;
+        foreach ($listData as $key => $v) {
 
-                $qty = $listData[$value->material_no]['qty3'] ??
-                    $listData[$value->material_no]['qty2'] ??
-                    $listData[$value->material_no]['qty1'] ?? 0;
+            if ($countInStock > 0) {
+                foreach ($inStock as $value) {
+                    if ($key == $value->material_no) {
+                        $qty = $listData[$value->material_no]['qty3'] ??
+                            $listData[$value->material_no]['qty2'] ??
+                            $listData[$value->material_no]['qty1'] ?? 0;
 
-                $res = $qty - $listData[$value->material_no]['qtysys'];
+                        $listData[$value->material_no]['locsys'] = $value->locate;
+                        $listData[$value->material_no]['qtysys'] = $value->qty;
 
+                        $res = $qty - $listData[$value->material_no]['qtysys'];
+                        $listData[$value->material_no]['locsys'] = $value->locate;
+                        $listData[$value->material_no]['qtysys'] = $value->qty;
+
+                        if ($res != 0) {
+                            $listData[$value->material_no][$res > 0 ? 'plus' : 'min'] = abs($res);
+                        }
+                    } else {
+
+                        $qty = $listData[$key]['qty3'] ??
+                            $listData[$key]['qty2'] ??
+                            $listData[$key]['qty1'] ?? 0;
+
+                        $res = $qty - 0;
+                        $listData[$key]['locsys'] = "NOT FOUND";
+                        $listData[$key]['qtysys'] = 0;
+
+                        if ($res != 0) {
+                            $listData[$key][$res > 0 ? 'plus' : 'min'] = abs($res);
+                        }
+                    }
+                }
+            } else {
+
+                $qty = $listData[$key]['qty3'] ??
+                    $listData[$key]['qty2'] ??
+                    $listData[$key]['qty1'] ?? 0;
+
+                $res = $qty - 0;
+                $listData[$key]['locsys'] = "NOT FOUND";
+                $listData[$key]['qtysys'] = 0;
                 if ($res != 0) {
-                    $listData[$value->material_no][$res > 0 ? 'plus' : 'min'] = abs($res);
+                    $listData[$key][$res > 0 ? 'plus' : 'min'] = abs($res);
                 }
             }
+
         }
+
 
         return view(
             'livewire.result-stock-taking',
