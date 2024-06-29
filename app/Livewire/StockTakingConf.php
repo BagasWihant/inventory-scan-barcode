@@ -13,7 +13,7 @@ use Spatie\LaravelIgnition\Recorders\DumpRecorder\Dump;
 
 class StockTakingConf extends Component
 {
-    public $data, $queryStock, $userID, $confirm, $sto,$search;
+    public $data, $queryStock, $userID, $confirm, $sto, $search;
 
     public function mount()
     {
@@ -29,7 +29,7 @@ class StockTakingConf extends Component
     public function konfirmasi()
     {
         $export = $this->data;
-        
+
         foreach ($this->data as  $value) {
             $result_qty = $value->qty - $value->qtysys;
             RealStockTaking::create([
@@ -47,11 +47,11 @@ class StockTakingConf extends Component
                 ->where('material_no', $value->material_no)
                 ->where('user_id', $this->userID)
                 ->update([
-                    'is_taking'=>2
+                    'is_taking' => 2
                 ]);
-                
+
             itemIn::create([
-                'pallet_no' => "STO-".$this->sto->id,
+                'pallet_no' => "STO-" . $this->sto->id,
                 'material_no' => $value->material_no,
                 'picking_qty' => $result_qty,
                 'locate' => $value->loc,
@@ -72,7 +72,7 @@ class StockTakingConf extends Component
         ]);
 
         $this->confirm = false;
-        return Excel::download(new StockTakingConfirm($export), "Confirmation Stock_".$this->sto->id."_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+        return Excel::download(new StockTakingConfirm($export), "Confirmation Stock_" . $this->sto->id . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
     public function export()
@@ -85,34 +85,61 @@ class StockTakingConf extends Component
     {
         $queryStock = DB::table('stock_takings')
             ->select('material_no', 'loc', 'qty', 'hitung', 'created_at', DB::raw('ROW_NUMBER() OVER (PARTITION BY material_no ORDER BY created_at DESC) AS lastest_rank'))
-            ->where('qty',">", '0')
+            ->where('qty', ">", '0')
             ->where('is_taking', '0');
 
-            if($this->search) $queryStock->where('material_no', 'like', '%'.$this->search.'%');
+        if ($this->search) $queryStock->where('material_no', 'like', '%' . $this->search . '%');
 
         $getqryLatest = $queryStock->get();
         $data = $getqryLatest->where('lastest_rank', 1);
+        
 
         $listMat = $data->pluck('material_no')->unique()->all();
 
         $inStock = DB::table('material_in_stock')
             ->select('material_no', 'locate', DB::raw('sum(picking_qty) as qty'))
-            ->where('material_no', '>','0')
+            ->where('material_no', '>', '0')
             ->whereIn('material_no', $listMat)
             ->groupBy('material_no', 'locate')
             ->get();
-
-        foreach ($inStock as $value) {
-            foreach ($data as $st) {
-                if ($st->material_no == $value->material_no) {
-                    $st->locsys = $value->locate;
-                    $st->qtysys = $value->qty;
-                    $res = $st->qty - $value->qty;
-                    if ($res < 0) $st->min = abs($res);
-                    elseif ($res > 0) $st->plus = $res;
+        $countInStock = count($inStock);
+        foreach ($data as $st) {
+            if ($countInStock > 0) {
+                foreach ($inStock as $value) {
+                    if ($st->material_no == $value->material_no) {
+                        $st->locsys = $value->locate;
+                        $st->qtysys = $value->qty;
+                        $res = $st->qty - $value->qty;
+                        if ($res < 0) $st->min = abs($res);
+                        elseif ($res > 0) $st->plus = $res;
+                    } else {
+                        $st->locsys = 'NOT FOUND';
+                        $st->qtysys = 0;
+                        $res = $st->qty - 0;
+                        if ($res < 0) $st->min = abs($res);
+                        elseif ($res > 0) $st->plus = $res;
+                    }
                 }
+            } else {
+                $st->locsys = 'NOT FOUND';
+                $st->qtysys = 0;
+                $res = $st->qty - 0;
+                if ($res < 0) $st->min = abs($res);
+                elseif ($res > 0) $st->plus = $res;
             }
         }
+
+        // foreach ($inStock as $value) {
+        //     foreach ($data as $st) {
+        //         if ($st->material_no == $value->material_no) {
+        //             $st->locsys = $value->locate;
+        //             $st->qtysys = $value->qty;
+        //             $res = $st->qty - $value->qty;
+        //             if ($res < 0) $st->min = abs($res);
+        //             elseif ($res > 0) $st->plus = $res;
+        //         }
+        //     }
+        // }
 
         $this->data = $data;
 
