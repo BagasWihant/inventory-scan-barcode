@@ -102,23 +102,30 @@ class StockTakingConf extends Component
             ->whereIn('material_no', $listMat)
             ->groupBy('material_no', 'locate')
             ->get();
+            
         $countInStock = count($inStock);
         foreach ($data as $st) {
             if ($countInStock > 0) {
-                foreach ($inStock as $value) {
+                $found = false;
+                foreach ($inStock as $value) {                    
                     if ($st->material_no == $value->material_no) {
                         $st->locsys = $value->locate;
                         $st->qtysys = $value->qty;
                         $res = $st->qty - $value->qty;
                         if ($res < 0) $st->min = abs($res);
                         elseif ($res > 0) $st->plus = $res;
-                    } else {
-                        $st->locsys = 'NOT FOUND';
-                        $st->qtysys = 0;
-                        $res = $st->qty - 0;
-                        if ($res < 0) $st->min = abs($res);
-                        elseif ($res > 0) $st->plus = $res;
-                    }
+                        $found = true;
+                        break;
+                    } 
+                }
+
+                if (!$found) {
+                    $st->locsys = 'NOT FOUND';
+                    $st->qtysys = 0;
+                    $res = $st->qty - 0;
+                    
+                    if ($res < 0) $st->min = abs($res);
+                    elseif ($res > 0) $st->plus = $res;
                 }
             } else {
                 $st->locsys = 'NOT FOUND';
