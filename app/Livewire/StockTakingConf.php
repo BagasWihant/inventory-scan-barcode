@@ -18,8 +18,7 @@ class StockTakingConf extends Component
     public function mount()
     {
         $this->userID = auth()->user()->id;
-        $this->sto = MenuOptions::where('status', '1')
-            ->where('user_id', $this->userID)->first();
+        $this->sto = MenuOptions::where('status', '1')->first();
         if ($this->sto) {
             $this->confirm = true;
         } else {

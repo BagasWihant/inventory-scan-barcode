@@ -85,6 +85,10 @@ class InputStockTaking extends Component
                     $this->dispatch('popup', ['title' => 'Material already taken by other user']);
                     return;
                 }
+                if ($checkDouble) {
+                    $this->dispatch('popup', ['title' => 'Material already taken ']);
+                    return;
+                }
                 StockTaking::create([
                     'sto_id' => $this->stoID,
                     'user_id' => $this->userID,

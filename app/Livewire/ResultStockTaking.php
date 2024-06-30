@@ -26,7 +26,7 @@ class ResultStockTaking extends Component
             ->groupBy(['material_no', 'hitung', 'loc'])->orderByRaw('material_no ASC, hitung ASC');
 
         if ($this->searchKey) $query->where('material_no', 'like', "%$this->searchKey%");
-        if ($user->role_id != '3' || $user->admin != '1') $query->where('user_id', $user->id);
+        if ($user->Role_ID != '3' && $user->Admin != '1') $query->where('user_id', $user->id);
         
         $data = $query->get();
 
