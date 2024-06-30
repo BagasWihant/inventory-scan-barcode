@@ -11,6 +11,8 @@ class ResultStockTaking extends Component
     public $searchKey;
     public function render()
     {
+        // GET USER
+        $user = auth()->user();
         // GET STO ACTIVE
         $sto = MenuOptions::select('id')->where('status', '1');
         if ($sto->count() > 0) {
@@ -22,7 +24,10 @@ class ResultStockTaking extends Component
             ->selectRaw('material_no,loc,sum(qty) as qty,hitung')
             ->where('sto_id', $laststo['id'])
             ->groupBy(['material_no', 'hitung', 'loc'])->orderByRaw('material_no ASC, hitung ASC');
+
         if ($this->searchKey) $query->where('material_no', 'like', "%$this->searchKey%");
+        if ($user->role_id != '3' || $user->admin != '1') $query->where('user_id', $user->id);
+        
         $data = $query->get();
 
         $listMat = $data->pluck('material_no')->unique()->all();
@@ -69,8 +74,7 @@ class ResultStockTaking extends Component
                         }
                         $found = true;
                         break;
-                
-                    } 
+                    }
                 }
                 if (!$found) {
 
@@ -99,7 +103,6 @@ class ResultStockTaking extends Component
                     $listData[$key][$res > 0 ? 'plus' : 'min'] = abs($res);
                 }
             }
-
         }
 
 
