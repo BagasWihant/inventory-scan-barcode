@@ -1,5 +1,5 @@
 <div class="dark:text-white max-w-7xl mx-auto">
-       
+
     <div class="fixed left-0 top-0  h-screen w-screen flex justify-center items-center bg-slate-300/70 z-50"
         wire:loading.flex wire:target="showData,export">
         <div class="absolute animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-purple-500"></div>
@@ -14,7 +14,7 @@
 
 
     <div class="flex justify-between pb-3">
-        <div class="col-span-2" wire:ignore>
+        <div class="flex gap-4 w-1/4" wire:ignore>
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
             </label>
             <select wire:model="stoId"
@@ -22,27 +22,33 @@
                 <option value="">Choose STO ID</option>
                 @foreach ($listSto as $p)
                     <option value="{{ $p->id }}">{{ $p->id }} |
-                        {{ date('d-m-Y H:i:s', strtotime($p->date_start)) }}</option>
+                        {{ date('d-m-Y', strtotime($p->date_start)) }}</option>
                 @endforeach
             </select>
+
+            <button wire:click="showData"
+                class="shadow-lg w-full relative flex items-center justify-center  overflow-hidden text-sm font-medium rounded-lg group bg-gradient-to-br from-cyan-500 to-blue-500 group-hover:from-cyan-500 group-hover:to-blue-500 text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
+                Show Data
+                
+            </button>
         </div>
         <div class="col-span-1 flex justify-center items-end gap-4">
             @if (count($data) > 0)
-                <button wire:click="export"
+                <button wire:click="export('excel')"
                     class="shadow-lg relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-green-500 to-cyan-500 group-hover:from-green-500 group-hover:to-cyan-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
                     <span
                         class="relative px-5 py-1 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
-                        Export
+                        Excel
+                    </span>
+                </button>
+                <button wire:click="export('pdf')"
+                    class="shadow-lg relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-red-500 to-pink-500 group-hover:from-red-500 group-hover:to-pink-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
+                    <span
+                        class="relative px-5 py-1 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
+                        Pdf
                     </span>
                 </button>
             @endif
-            <button wire:click="showData"
-                class="shadow-lg relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-cyan-500 to-blue-500 group-hover:from-cyan-500 group-hover:to-blue-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
-                <span
-                    class="relative px-5 py-1 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
-                    Show Data
-                </span>
-            </button>
         </div>
     </div>
 
@@ -118,3 +124,43 @@
         </table>
     @endif
 </div>
+
+<script>
+    function showopt() {
+        Swal.fire({
+            title: "Pilih Export ",
+            showDenyButton: true,
+            showCancelButton: true,
+
+            confirmButtonText: "PDF",
+            denyButtonText: `Excel`
+        }).then((result) => {
+            /* Read more about isConfirmed, isDenied below */
+            if (result.isConfirmed) {
+                $wire.dispatch('export', {
+                    type: 'pdf',
+                })
+                Swal.fire({
+                    timer: 1000,
+                    title: "Export to PDF",
+                    icon: "success",
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            } else if (result.isDenied) {
+                $wire.dispatch('export', {
+                    type: 'excel',
+
+                })
+                Swal.fire({
+                    timer: 1000,
+                    title: "Export to Excel",
+                    icon: "success",
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            }
+
+        });
+    }
+</script>

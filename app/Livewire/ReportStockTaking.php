@@ -6,6 +6,7 @@ use App\Exports\ExportReportStockTaking;
 use Livewire\Component;
 use App\Models\MenuOptions;
 use App\Models\RealStockTaking;
+use Livewire\Attributes\On;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ReportStockTaking extends Component
@@ -22,9 +23,11 @@ class ReportStockTaking extends Component
         }
         $this->data = [];
     }
+    
+    function export($type) {
+        if($type == 'pdf') return Excel::download(new ExportReportStockTaking($this->data), "Export Stock_".$this->stoId."_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
 
-    function export() {
-        return Excel::download(new ExportReportStockTaking($this->data), "Export Stock_".$this->stoId."_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+        return Excel::download(new ExportReportStockTaking($this->data), "Export Stock_".$this->stoId."_" . date('YmdHis') . ".xlsx", \Maatwebsite\Excel\Excel::XLSX);
     }
     public function render()
     {
