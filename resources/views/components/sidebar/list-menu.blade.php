@@ -7,6 +7,7 @@
             'label' => 'Receiving',
             'child' => [
                 ['url' => route('inventory.index'), 'label' => 'Receiving Material CNC'],
+                ['url' => route('inventory.po'), 'label' => 'Receiving PO'],
                 ['url' => route('instock'), 'label' => 'Material Stock'],
                 ['url' => route('checking'), 'label' => 'Check Stock'],
                 ['url' => route('abnormal'), 'label' => 'Abnormal Material'],

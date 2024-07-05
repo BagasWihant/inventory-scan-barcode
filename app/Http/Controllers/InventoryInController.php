@@ -15,6 +15,11 @@ class InventoryInController extends Controller
         return view('pages.list-product');
         
     }
+    public function po()
+    {
+        return view('pages.po');
+        
+    }
     
     public function abnormal() {
         return view('pages.abnormal-item');
