@@ -21,6 +21,7 @@ class tempCounter extends Model
         'qty_more',
         'prop_ori',
         'prop_scan',
-        'scan_count'
+        'scan_count',
+        'flag',
     ];
 }
