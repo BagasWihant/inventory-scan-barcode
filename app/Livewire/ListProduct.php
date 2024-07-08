@@ -92,7 +92,7 @@ class ListProduct extends Component
         $this->paletBarcode = substr($this->paletBarcode, 0, 10);
         // dump($this->paletBarcode !== $this->previousPaletBarcode);
         if (strlen($this->paletBarcode) > 2) {
-            DB::table('temp_counters')->where('userID', $this->userId)->delete();
+            DB::table('temp_counters')->where('userID', $this->userId)->where('flag',0)->delete();
             $truk = DB::table('delivery_mst')->where('pallet_no', $this->paletBarcode)->select('trucking_id')->first();
             if ($truk) {
                 $this->dispatch('produkFocus');
