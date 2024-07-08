@@ -4,11 +4,12 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\tempCounter;
+use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 
 class PurchaseOrderIn extends Component
 {
-    public $userId, $po, $listMaterial = [], $listMaterialScan, $listKitNo;
+    public $userId, $po, $listMaterial = [], $listMaterialScan, $listKitNo,$sws_code;
     public $surat_jalan;
     public $palet;
     public $material_no;
@@ -31,44 +32,93 @@ class PurchaseOrderIn extends Component
 
     public function materialNoScan()
     {
-        $getTempCounterData = DB::table('temp_counters')->where('palet', $this->po)->where('material', $this->material_no);
-        $dataTempCount = $getTempCounterData->first();
-        if ($dataTempCount) {
+        $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->material_no)->select('sws_code')->first();
 
-            if ($dataTempCount->prop_ori === null) {
-                $productsQuery = DB::table('material_setup_mst_supplier')->where('kit_no', $this->po)
-                    ->where('material_no', $this->material_no)
-                    ->selectRaw('material_no,picking_qty,kit_no');
+        if ($supplierCode) {
+            $this->sws_code = $supplierCode->sws_code;
+            $getTempCounterData = DB::table('temp_counters')->where('palet', $this->po)->where('material', $this->material_no);
 
-                $mergedQty = $productsQuery->get()->pluck('picking_qty')->all();
 
-                $getTempCounterData->update(['prop_ori' => json_encode($mergedQty)]);
+            $mat_mst = DB::table('material_mst')
+                ->select('iss_min_lot')
+                ->where('matl_no', $this->sws_code)->first();
+
+            if ($mat_mst->iss_min_lot == 1) {
+                $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
             }
+            // $dataTempCount = $getTempCounterData->first();
+            // if ($dataTempCount) {
 
-            $decodePropOri = json_decode($getTempCounterData->first()->prop_ori);
-            $dataTempCounter = $getTempCounterData->first();
+            //     if ($dataTempCount->prop_ori === null) {
+            //         $productsQuery = DB::table('material_setup_mst_supplier')->where('kit_no', $this->po)
+            //             ->where('material_no', $this->material_no)
+            //             ->selectRaw('material_no,picking_qty,kit_no');
 
-            $materialData = DB::table('material_setup_mst_supplier')
-                ->where('kit_no', $this->po)->where('material_no', $this->material_no)
-                ->selectRaw('material_no,sum(picking_qty) as picking_qty,kit_no,count(picking_qty) as pax')
-                ->groupBy(['material_no', 'kit_no'])
-                ->orderByDesc('pax')
-                ->orderBy('material_no')->first();
+            //         $mergedQty = $productsQuery->get()->pluck('picking_qty')->all();
+
+            //         $getTempCounterData->update(['prop_ori' => json_encode($mergedQty)]);
+            //     }
+
+            //     $decodePropOri = json_decode($getTempCounterData->first()->prop_ori);
+            //     $dataTempCounter = $getTempCounterData->first();
+
+            //     $materialData = DB::table('material_setup_mst_supplier')
+            //         ->where('kit_no', $this->po)->where('material_no', $this->material_no)
+            //         ->selectRaw('material_no,sum(picking_qty) as picking_qty,kit_no,count(picking_qty) as pax')
+            //         ->groupBy(['material_no', 'kit_no'])
+            //         ->orderByDesc('pax')
+            //         ->orderBy('material_no')->first();
 
 
-            $newPropScan = isset($dataTempCounter->prop_scan) ? json_decode($dataTempCounter->prop_scan) : [];
+            //     $newPropScan = isset($dataTempCounter->prop_scan) ? json_decode($dataTempCounter->prop_scan) : [];
 
-            $counter = $dataTempCounter->counter + $decodePropOri[0];
-            $sisa = $dataTempCounter->sisa - $decodePropOri[0];
-            
-            array_push($newPropScan, $decodePropOri[0]);
-            array_splice($decodePropOri, 0, 1);
+            //     $counter = $dataTempCounter->counter + $decodePropOri[0];
+            //     $sisa = $dataTempCounter->sisa - $decodePropOri[0];
 
-            $getTempCounterData->update([
-                'prop_ori' => json_encode($decodePropOri),
-                'prop_scan' => json_encode($newPropScan),
-                'counter' => $counter, 'sisa' => $sisa
-            ]);
+            //     array_push($newPropScan, $decodePropOri[0]);
+            //     array_splice($decodePropOri, 0, 1);
+
+            //     $getTempCounterData->update([
+            //         'prop_ori' => json_encode($decodePropOri),
+            //         'prop_scan' => json_encode($newPropScan),
+            //         'counter' => $counter, 'sisa' => $sisa
+            //     ]);
+            // }
+        }
+        $this->material_no = null;
+    }
+
+    #[On('insertNew')]
+    public function insertNew(int $qty = 0, $save = true, $update = false)
+    {
+        dump('aa');
+        if ($update) {
+            $tempCount = DB::table('temp_counters')
+                ->where('material', $this->sws_code)
+                ->where('userID', $this->userId)
+                ->where('palet', $this->po);
+            $data = $tempCount->first();
+            dump($tempCount->toRawSql());
+            $counter = $data->counter + $qty;
+
+            $new_prop_scan = isset($data->prop_scan) ? json_decode($data->prop_scan) : [];
+            array_push($new_prop_scan, $qty);
+
+            $sisa = $data->sisa - $qty;
+            if ($data->total < $data->counter || $data->sisa <= 0) {
+
+                $this->material_no = null;
+                $more = $data->qty_more + 1;
+                $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more, 'prop_scan' => json_encode($new_prop_scan)]);
+                return;
+            } else {
+
+                $tempCount->update([
+                    'counter' => $counter,
+                    'sisa' => $sisa,
+                    'prop_scan' => json_encode($new_prop_scan),
+                ]);
+            }
         }
         $this->material_no = null;
     }

@@ -224,3 +224,89 @@
         </div>
     @endif
 </div>
+
+@script
+<script>
+        $wire.on('newItem', async (event) => {
+            // jika item duplicate
+            if (event[0].update) {
+
+                await Swal.fire({
+                    title: event[0].title,
+                    input: "number",
+                    inputValue: event[0].qty ?? 0,
+                    inputLabel: "Qty per pax",
+                    inputPlaceholder: "qty",
+                    showDenyButton: true,
+                    denyButtonText: `Don't save`
+                }).then((result) => {
+                    /* Read more about isConfirmed, isDenied below */
+                    if (result.isConfirmed) {
+                        $wire.dispatch('insertNew', {
+                            qty: result.value,
+                            update: true,
+                            save: false
+                        })
+                        return Swal.fire({
+                            timer: 1000,
+                            title: "Updated",
+                            icon: "success",
+                            showConfirmButton: false,
+                            timerProgressBar: true,
+                        });
+                    } else if (result.isDenied) {
+                        console.log('here');
+                        $wire.dispatch('insertNew', {
+                            save: false
+                        })
+                        return Swal.fire({
+                            timer: 1000,
+                            title: "Changes are not saved",
+                            icon: "info",
+                            showConfirmButton: false,
+                            timerProgressBar: true,
+                        });
+                    }
+                });
+                return
+            }
+
+            await Swal.fire({
+                title: event[0].title,
+                input: "number",
+                inputValue: event[0].qty ?? 0,
+                inputLabel: "Qty per pax",
+                inputPlaceholder: "qty",
+                showDenyButton: true,
+                denyButtonText: `Don't save`
+            }).then((result) => {
+                /* Read more about isConfirmed, isDenied below */
+                if (result.isConfirmed) {
+                    $wire.dispatch('insertNew', {
+                        qty: result.value,
+                    })
+                    Swal.fire({
+                        timer: 1000,
+                        title: "Saved",
+                        icon: "success",
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
+                } else if (result.isDenied) {
+                    $wire.dispatch('insertNew', {
+                        save: false
+                    })
+                    Swal.fire({
+                        timer: 1000,
+                        title: "Changes are not saved",
+                        icon: "info",
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
+                }
+
+            });
+        });
+
+</script>
+@endscript
