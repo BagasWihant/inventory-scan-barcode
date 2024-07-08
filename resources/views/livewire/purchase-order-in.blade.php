@@ -1,20 +1,27 @@
 <div>
     <div class="flex gap-4">
         <div class="flex flex-col w-full">
-            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PO
-            </label>
+            <div class="w-full" wire:ignore>
+                <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PO
+                </label>
+                <select id="materialselect" style="width: 100%" wire:model.live="po"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    <option selected>Choose Material</option>
+                    @foreach ($listKitNo as $p)
+                        <option value="{{ $p->kit_no }}">{{ $p->kit_no }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-
-            <input focus wire:keydown.debounce.150ms="poChange" wire:model="po" type="text" id="paletBarcode"
-                class=" w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+            {{-- <input focus wire:keydown.debounce.150ms="poChange" wire:model="po" type="text" id="paletBarcode"
+                class=" w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"> --}}
 
         </div>
         <div class="flex flex-col w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Surat Jalan
             </label>
-            <input focus wire:model="paletBarcode" wire:keydown.debounce.150ms="paletBarcodeScan" type="text"
-                id="paletBarcode"
-                class=" w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+            <input wire:model="surat_jalan" type="text"
+                class=" w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
         </div>
 
@@ -27,46 +34,46 @@
                     class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300">
                     <option>L</option>
                 </select>
-                <input wire:model="trucking_id" type="text"
+                <input wire:model="palet" type="text"
                     class="block w-full
-                     p-4 text-gray-700 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                     p-2 text-gray-700 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
         </div>
 
         <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No
             </label>
-            <input wire:model="produkBarcode" wire:keydown.debounce.150ms="productBarcodeScan" type="text"
+            <input wire:model="material_no" wire:keydown.debounce.150ms="materialNoScan" type="text"
                 id="produkBarcode"
-                class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
         </div>
     </div>
     <div wire:loading.flex
-    class=" fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
-    wire:target="poChange" aria-label="Loading..." role="status">
-    <svg class="h-20 w-20 animate-spin stroke-white " viewBox="0 0 256 256">
-        <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
-            stroke-linejoin="round" stroke-width="24"></line>
-        <line x1="195.9" y1="60.1" x2="173.3" y2="82.7" stroke-linecap="round"
-            stroke-linejoin="round" stroke-width="24"></line>
-        <line x1="224" y1="128" x2="192" y2="128" stroke-linecap="round"
-            stroke-linejoin="round" stroke-width="24">
-        </line>
-        <line x1="195.9" y1="195.9" x2="173.3" y2="173.3" stroke-linecap="round"
-            stroke-linejoin="round" stroke-width="24"></line>
-        <line x1="128" y1="224" x2="128" y2="192" stroke-linecap="round"
-            stroke-linejoin="round" stroke-width="24">
-        </line>
-        <line x1="60.1" y1="195.9" x2="82.7" y2="173.3" stroke-linecap="round"
-            stroke-linejoin="round" stroke-width="24"></line>
-        <line x1="32" y1="128" x2="64" y2="128" stroke-linecap="round"
-            stroke-linejoin="round" stroke-width="24"></line>
-        <line x1="60.1" y1="60.1" x2="82.7" y2="82.7" stroke-linecap="round"
-            stroke-linejoin="round" stroke-width="24">
-        </line>
-    </svg>
-    <span class="text-4xl font-medium text-white">Loading...</span>
-</div>
+        class=" fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
+        wire:target="po,materialNoScan" aria-label="Loading..." role="status">
+        <svg class="h-20 w-20 animate-spin stroke-white " viewBox="0 0 256 256">
+            <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24"></line>
+            <line x1="195.9" y1="60.1" x2="173.3" y2="82.7" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24"></line>
+            <line x1="224" y1="128" x2="192" y2="128" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24">
+            </line>
+            <line x1="195.9" y1="195.9" x2="173.3" y2="173.3" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24"></line>
+            <line x1="128" y1="224" x2="128" y2="192" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24">
+            </line>
+            <line x1="60.1" y1="195.9" x2="82.7" y2="173.3" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24"></line>
+            <line x1="32" y1="128" x2="64" y2="128" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24"></line>
+            <line x1="60.1" y1="60.1" x2="82.7" y2="82.7" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24">
+            </line>
+        </svg>
+        <span class="text-4xl font-medium text-white">Loading...</span>
+    </div>
 
 
 

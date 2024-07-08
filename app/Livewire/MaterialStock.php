@@ -28,9 +28,9 @@ class MaterialStock extends Component
 
         
         $query = DB::table('material_mst')
-        ->selectRaw('matl_no as material_no,qty,loc as locate')
+        ->selectRaw('matl_no as material_no,qty,loc_cd as locate')
         ->where('qty','>',0)
-        ->groupBy(['matl_no','loc','qty']);
+        ->groupBy(['matl_no','loc_cd','qty']);
         $query->where('matl_no','like',"%$this->searchKey%");
         $data= $query->paginate($this->perPage);
         

@@ -8,21 +8,71 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseOrderIn extends Component
 {
-    public $userId, $po, $listMaterial = [], $listMaterialScan;
+    public $userId, $po, $listMaterial = [], $listMaterialScan, $listKitNo;
+    public $surat_jalan;
+    public $palet;
+    public $material_no;
 
     public function mount()
     {
         $this->userId = auth()->user()->id;
+        $this->listKitNo = DB::table('material_setup_mst_supplier')->selectRaw('distinct(kit_no)')->get();
     }
-    public function poChange()
+
+    public function updated($n, $v)
     {
-        if (strlen($this->po) > 3) {
+        if ($n === 'po') {
             DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
-        } else {
-            // $this->paletInput = true;
-            $this->dispatch('paletFocus');
         }
     }
+    public function updating($property, $value)
+    {
+    }
+
+    public function materialNoScan()
+    {
+        $getTempCounterData = DB::table('temp_counters')->where('palet', $this->po)->where('material', $this->material_no);
+        $dataTempCount = $getTempCounterData->first();
+        if ($dataTempCount) {
+
+            if ($dataTempCount->prop_ori === null) {
+                $productsQuery = DB::table('material_setup_mst_supplier')->where('kit_no', $this->po)
+                    ->where('material_no', $this->material_no)
+                    ->selectRaw('material_no,picking_qty,kit_no');
+
+                $mergedQty = $productsQuery->get()->pluck('picking_qty')->all();
+
+                $getTempCounterData->update(['prop_ori' => json_encode($mergedQty)]);
+            }
+
+            $decodePropOri = json_decode($getTempCounterData->first()->prop_ori);
+            $dataTempCounter = $getTempCounterData->first();
+
+            $materialData = DB::table('material_setup_mst_supplier')
+                ->where('kit_no', $this->po)->where('material_no', $this->material_no)
+                ->selectRaw('material_no,sum(picking_qty) as picking_qty,kit_no,count(picking_qty) as pax')
+                ->groupBy(['material_no', 'kit_no'])
+                ->orderByDesc('pax')
+                ->orderBy('material_no')->first();
+
+
+            $newPropScan = isset($dataTempCounter->prop_scan) ? json_decode($dataTempCounter->prop_scan) : [];
+
+            $counter = $dataTempCounter->counter + $decodePropOri[0];
+            $sisa = $dataTempCounter->sisa - $decodePropOri[0];
+            
+            array_push($newPropScan, $decodePropOri[0]);
+            array_splice($decodePropOri, 0, 1);
+
+            $getTempCounterData->update([
+                'prop_ori' => json_encode($decodePropOri),
+                'prop_scan' => json_encode($newPropScan),
+                'counter' => $counter, 'sisa' => $sisa
+            ]);
+        }
+        $this->material_no = null;
+    }
+
     public function render()
     {
         $getScanned = DB::table('material_in_stock')->select('material_no')
@@ -34,6 +84,7 @@ class PurchaseOrderIn extends Component
         $productsQuery = DB::table('material_setup_mst_supplier')->where('kit_no', $this->po)
             ->selectRaw('material_no,sum(picking_qty) as picking_qty,kit_no,count(picking_qty) as pax')
             ->groupBy(['material_no', 'kit_no'])
+            ->orderByDesc('pax')
             ->orderBy('material_no');
 
         $getall = $productsQuery->get();
@@ -76,7 +127,7 @@ class PurchaseOrderIn extends Component
             ->select('a.*', 'b.location_cd')
             ->where('userID', $this->userId)
             ->orderByDesc('pax')
-            ->orderByDesc('material')
+            ->orderBy('material')
             ->get();
 
 
