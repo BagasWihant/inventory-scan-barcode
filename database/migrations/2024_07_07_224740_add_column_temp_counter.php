@@ -14,6 +14,12 @@ return new class extends Migration
         Schema::table('temp_counters', function (Blueprint $table) {
             $table->char('flag',1)->comment('0=palet,1=po')->default(0);
         });
+        Schema::table('material_in_stock', function (Blueprint $table) {
+            $table->char('kit_no',50)->nullable()->after('material_no');
+        });
+        Schema::table('abnormal_materials', function (Blueprint $table) {
+            $table->char('kit_no',50)->nullable()->after('material_no');
+        });
     }
 
     /**
@@ -24,6 +30,12 @@ return new class extends Migration
         
         Schema::table('temp_counters', function (Blueprint $table) {
             $table->dropColumn('flag');
+        });
+        Schema::table('material_in_stock', function (Blueprint $table) {
+            $table->dropColumn('kit_no');
+        });
+        Schema::table('abnormal_materials', function (Blueprint $table) {
+            $table->dropColumn('kit_no');
         });
     }
 };
