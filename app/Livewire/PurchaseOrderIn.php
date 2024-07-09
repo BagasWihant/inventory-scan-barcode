@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseOrderIn extends Component
 {
-    public $userId, $po, $listMaterial = [], $listMaterialScan, $listKitNo, $sws_code, $statusLoading;
+    public $userId, $po, $listMaterial = [], $listMaterialScan, $listKitNo = [], $sws_code, $statusLoading;
+    public $searchPo;
     public $paletCode, $palet, $noPalet;
     public $surat_jalan;
     public $material_no;
@@ -20,7 +21,6 @@ class PurchaseOrderIn extends Component
     public function mount()
     {
         $this->userId = auth()->user()->id;
-        $this->listKitNo = DB::table('material_setup_mst_supplier')->selectRaw('distinct(kit_no)')->get();
     }
     public function updated($n, $v)
     {
@@ -30,15 +30,37 @@ class PurchaseOrderIn extends Component
             $this->poDisable = true;
         }
     }
+
     public function updating($prop, $v)
     {
-
         if ($prop === 'po') {
-            DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
+
+
+            // DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
         }
     }
 
+    public function poChange()
+    {
+        if (strlen($this->searchPo) >= 4) {
+            $this->listKitNo = DB::table('material_setup_mst_supplier')
+                ->selectRaw('kit_no')
+                ->where('kit_no', 'like', "%$this->searchPo%")
+                ->groupBy('kit_no')
+                ->limit(10)
+                ->get();
+        }
+    }
+    public function choosePo($po = null)
+    {
+        $this->po = $po;
+        $this->searchPo = $po;
+        $this->listKitNo = [];
 
+        $this->suratJalanDisable = true;
+        $this->paletDisable = true;
+        $this->poDisable = true;
+    }
     public function materialNoScan()
     {
         $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->material_no)->select('sws_code')->first();
@@ -173,11 +195,13 @@ class PurchaseOrderIn extends Component
                             'locate' => $data->location_cd,
                             'trucking_id' => $data->trucking_id,
                             'kit_no' => $this->po,
+                            'surat_jalan' => $this->surat_jalan,
                             'user_id' => $this->userId
                         ]);
                     } else {
                         abnormalMaterial::create([
                             'kit_no' => $this->po,
+                            'surat_jalan' => $this->surat_jalan,
                             'pallet_no' => $paletCode,
                             'material_no' => $data->material,
                             'picking_qty' => $value,
@@ -196,6 +220,7 @@ class PurchaseOrderIn extends Component
                     abnormalMaterial::create([
                         'pallet_no' => $paletCode,
                         'kit_no' => $this->po,
+                        'surat_jalan' => $this->surat_jalan,
                         'material_no' => $data->material,
                         'picking_qty' => $kurangnya,
                         'locate' => $data->location_cd,
@@ -209,10 +234,11 @@ class PurchaseOrderIn extends Component
                 for ($i = 1; $i <= $data->pax; $i++) {
                     $qty = floor($data->sisa / $data->pax);
                     $sisa = $sisa - $qty;
-                    if($i > $data->pax) $qty = $sisa;
+                    if ($i > $data->pax) $qty = $sisa;
                     # code...
                     abnormalMaterial::create([
                         'kit_no' => $this->po,
+                        'surat_jalan' => $this->surat_jalan,
                         'pallet_no' => $paletCode,
                         'material_no' => $data->material,
                         'picking_qty' => $qty,
@@ -235,6 +261,7 @@ class PurchaseOrderIn extends Component
         $this->po = null;
         $this->surat_jalan = null;
         $this->palet = null;
+        $this->searchPo = null;
         $this->noPalet = null;
         DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
         $this->dispatch('SJFocus');
@@ -248,11 +275,12 @@ class PurchaseOrderIn extends Component
             ->pluck('material_no')
             ->all();
 
-        $productsQuery = DB::table('material_setup_mst_supplier')->where('kit_no', $this->po)
-            ->selectRaw('material_no,sum(picking_qty) as picking_qty,kit_no,count(picking_qty) as pax')
-            ->groupBy(['material_no', 'kit_no'])
+        $productsQuery = DB::table('material_setup_mst_supplier as a')->where('a.kit_no', $this->po)
+            ->selectRaw('a.material_no,sum(a.picking_qty) as picking_qty,count(a.picking_qty) as pax,a.kit_no,sum(b.picking_qty) as stock_in')
+            ->leftJoin('material_in_stock as b', 'a.material_no', '=', 'b.material_no')
+            ->groupBy(['a.material_no', 'a.kit_no'])
             ->orderByDesc('pax')
-            ->orderBy('material_no');
+            ->orderBy('a.material_no');
 
         $getall = $productsQuery->get();
         $materialNos = $getall->pluck('material_no')->all();
@@ -289,9 +317,9 @@ class PurchaseOrderIn extends Component
 
 
         $scannedCounter = DB::table('temp_counters as a')
-            ->leftJoin('matloc_temp_CNCKIAS2 as b', 'a.material', '=', 'b.material_no')
+            ->leftJoin('material_mst as b', 'a.material', '=', 'b.matl_no')
             ->where('palet', $this->po)
-            ->select('a.*', 'b.location_cd')
+            ->select('a.*', 'b.loc_cd as location_cd')
             ->where('userID', $this->userId)
             ->orderByDesc('pax')
             ->orderBy('material')

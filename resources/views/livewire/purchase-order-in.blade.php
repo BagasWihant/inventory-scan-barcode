@@ -1,10 +1,11 @@
 <div>
     <div class="flex gap-4">
-      
+
         <div class="flex flex-col w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Surat Jalan
             </label>
-            <input wire:model.live="surat_jalan" type="text" @if ($suratJalanDisable) disabled @endif id="surat_jalan"
+            <input wire:model.live="surat_jalan" type="text" @if ($suratJalanDisable) disabled @endif
+                id="surat_jalan"
                 class=" w-full p-2 text-gray-900 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
         </div>
@@ -14,12 +15,13 @@
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Palet
             </label>
             <div class="w-full flex ">
-                <select id="section" name="section" value="{{ old('section') }}" wire:model.change="palet" @if ($paletDisable) disabled @endif
+                <select id="section" name="section" value="{{ old('section') }}" wire:model.change="palet"
+                    @if ($paletDisable) disabled @endif
                     class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300">
                     <option value="">Choose Code</option>
                     <option value="L">L</option>
                 </select>
-                <input wire:model.live="noPalet" type="text"  @if ($paletDisable) disabled @endif
+                <input wire:model.live="noPalet" type="text" @if ($paletDisable) disabled @endif
                     class="block w-full
                      p-2 text-gray-700 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
@@ -29,13 +31,20 @@
             <div class="w-full">
                 <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PO
                 </label>
-                <select id="materialselect" style="width: 100%" wire:model.live="po" @if ($poDisable) disabled @endif
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    <option selected>Choose Material</option>
-                    @foreach ($listKitNo as $p)
-                        <option value="{{ $p->kit_no }}">{{ $p->kit_no }}</option>
-                    @endforeach
-                </select>
+                <input wire:model="searchPo" wire:keydown.debounce.150ms="poChange" type="text" id="produkBarcode" @if ($poDisable) disabled @endif
+                    class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                <div class="absolute rounded-md w-48" id="floating">
+                    <div class="py-3 px-4 bg-green-100 text-green-500" wire:loading wire:target="poChange">Searching</div>
+                    @if (strlen($searchPo) >= 4 && $po != $searchPo)
+                        @forelse ($listKitNo as $p)
+                            <div class="py-3 px-4 text-base bg-blue-200" role="button" wire:click="choosePo('{{ $p->kit_no }}')">{{ $p->kit_no }}
+                            </div>
+                        @empty
+                            <div class="py-3 px-4 text-base bg-red-200">Tidak Ditemukan</div>
+                        @endforelse
+                    @endif
+
+                </div>
             </div>
 
         </div>
@@ -49,7 +58,7 @@
     </div>
     <div wire:loading.flex
         class=" fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
-        wire:target="po,materialNoScan,resetPage,confirm" aria-label="Loading..." role="status">
+        wire:target="materialNoScan,resetPage,confirm,choosePo" aria-label="Loading..." role="status">
         <svg class="h-20 w-20 animate-spin stroke-white " viewBox="0 0 256 256">
             <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
                 stroke-linejoin="round" stroke-width="24"></line>
@@ -71,7 +80,7 @@
                 stroke-linejoin="round" stroke-width="24">
             </line>
         </svg>
-        <span class="text-4xl font-medium text-white">{{$statusLoading ?? 'Loading...'}}</span>
+        <span class="text-4xl font-medium text-white">{{ $statusLoading ?? 'Loading...' }}</span>
     </div>
 
 
@@ -90,12 +99,12 @@
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 <div class="flex items-center">
-                                    Pax
+                                    QTY Picking List
                                 </div>
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 <div class="flex items-center">
-                                    Qty pickinglist
+                                    In Stock
                                 </div>
                             </th>
                         </tr>
@@ -111,11 +120,11 @@
                                     {{ $product->material_no }}</th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $product->pax }}
+                                    {{ $product->picking_qty }}
                                 </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $product->picking_qty }}
+                                    {{ $product->stock_in }}
                                 </th>
                             </tr>
                         @endforeach
@@ -242,7 +251,7 @@
 
 @script
     <script>
-         $wire.on('SJFocus', (event) => {
+        $wire.on('SJFocus', (event) => {
             setTimeout(function() {
                 $("#surat_jalan").focus()
             }, 50);
