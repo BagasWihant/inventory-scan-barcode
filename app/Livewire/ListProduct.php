@@ -189,13 +189,14 @@ class ListProduct extends Component
             ->all();
 
         $productsQuery = DB::table('material_setup_mst_CNC_KIAS2 as a')
-            ->selectRaw('pallet_no, a.material_no,count(a.material_no) as pax, sum(picking_qty) as picking_qty, min(serial_no) as serial_no,loc as location_cd')
-            ->leftJoin('stock_takings as b', 'a.material_no', '=', 'b.material_no')
-            ->where('pallet_no', $this->paletBarcode)
+            ->selectRaw('pallet_no, a.material_no,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,loc_cd as location_cd')
+            ->leftJoin('material_mst as b', 'a.material_no', '=', 'b.matl_no')
+            ->where('a.pallet_no', $this->paletBarcode)
             ->whereNotIn('a.material_no', $getScanned)
-            ->groupBy('pallet_no', 'a.material_no', 'loc')
+            ->groupBy('a.pallet_no', 'a.material_no', 'b.loc_cd')
             ->orderByDesc('pax')
             ->orderByDesc('a.material_no');
+            
 
         $picking = DB::table('material_setup_mst_CNC_KIAS2')
             ->selectRaw('picking_qty,material_no,count(picking_qty) as jml_pick')
