@@ -1,27 +1,11 @@
 <div>
     <div class="flex gap-4">
-        <div class="flex flex-col w-full">
-            <div class="w-full" wire:ignore>
-                <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PO
-                </label>
-                <select id="materialselect" style="width: 100%" wire:model.live="po"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    <option selected>Choose Material</option>
-                    @foreach ($listKitNo as $p)
-                        <option value="{{ $p->kit_no }}">{{ $p->kit_no }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- <input focus wire:keydown.debounce.150ms="poChange" wire:model="po" type="text" id="paletBarcode"
-                class=" w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"> --}}
-
-        </div>
+      
         <div class="flex flex-col w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Surat Jalan
             </label>
-            <input wire:model="surat_jalan" type="text"
-                class=" w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+            <input wire:model.live="surat_jalan" type="text" @if ($suratJalanDisable) disabled @endif id="surat_jalan"
+                class=" w-full p-2 text-gray-900 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
         </div>
 
@@ -30,16 +14,31 @@
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Palet
             </label>
             <div class="w-full flex ">
-                <select id="section" name="section" value="{{ old('section') }}"
+                <select id="section" name="section" value="{{ old('section') }}" wire:model.change="palet" @if ($paletDisable) disabled @endif
                     class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300">
-                    <option>L</option>
+                    <option value="">Choose Code</option>
+                    <option value="L">L</option>
                 </select>
-                <input wire:model="palet" type="text"
+                <input wire:model.live="noPalet" type="text"  @if ($paletDisable) disabled @endif
                     class="block w-full
                      p-2 text-gray-700 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
         </div>
 
+        <div class="flex flex-col w-full">
+            <div class="w-full">
+                <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PO
+                </label>
+                <select id="materialselect" style="width: 100%" wire:model.live="po" @if ($poDisable) disabled @endif
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    <option selected>Choose Material</option>
+                    @foreach ($listKitNo as $p)
+                        <option value="{{ $p->kit_no }}">{{ $p->kit_no }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+        </div>
         <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No
             </label>
@@ -50,7 +49,7 @@
     </div>
     <div wire:loading.flex
         class=" fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
-        wire:target="po,materialNoScan" aria-label="Loading..." role="status">
+        wire:target="po,materialNoScan,resetPage,confirm" aria-label="Loading..." role="status">
         <svg class="h-20 w-20 animate-spin stroke-white " viewBox="0 0 256 256">
             <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
                 stroke-linejoin="round" stroke-width="24"></line>
@@ -72,9 +71,8 @@
                 stroke-linejoin="round" stroke-width="24">
             </line>
         </svg>
-        <span class="text-4xl font-medium text-white">Loading...</span>
+        <span class="text-4xl font-medium text-white">{{$statusLoading ?? 'Loading...'}}</span>
     </div>
-
 
 
     @if (count($listMaterial) > 0)
@@ -201,11 +199,28 @@
         </div>
         <div class="flex justify-end pt-3">
             <button type="button" wire:click="resetPage"
-                class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Reset</button>
+                class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
+                <span wire:loading.remove wire:target="resetPage">
+                    Reset All
+                </span>
+                <div role="status" wire:loading wire:target="resetPage">
+                    <svg aria-hidden="true"
+                        class="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-gray-600 dark:fill-gray-300"
+                        viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                            fill="currentColor" />
+                        <path
+                            d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                            fill="currentFill" />
+                    </svg>
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </button>
             <button type="button" wire:click="confirm"
                 class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
-                <span wire:loading.remove>
-                    Download & Konfimasi
+                <span wire:loading.remove wire:target="confirm">
+                    Konfimasi
                 </span>
                 <div role="status" wire:loading wire:target="confirm">
                     <svg aria-hidden="true"
@@ -226,7 +241,12 @@
 </div>
 
 @script
-<script>
+    <script>
+         $wire.on('SJFocus', (event) => {
+            setTimeout(function() {
+                $("#surat_jalan").focus()
+            }, 50);
+        });
         $wire.on('newItem', async (event) => {
             // jika item duplicate
             if (event[0].update) {
@@ -248,7 +268,7 @@
                             save: false
                         })
                         return Swal.fire({
-                            timer: 1000,
+                            timer: 2000,
                             title: "Updated",
                             icon: "success",
                             showConfirmButton: false,
@@ -286,7 +306,7 @@
                         qty: result.value,
                     })
                     Swal.fire({
-                        timer: 1000,
+                        timer: 2000,
                         title: "Saved",
                         icon: "success",
                         showConfirmButton: false,
@@ -307,6 +327,5 @@
 
             });
         });
-
-</script>
+    </script>
 @endscript

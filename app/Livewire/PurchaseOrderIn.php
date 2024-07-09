@@ -2,33 +2,42 @@
 
 namespace App\Livewire;
 
+use App\Models\itemIn;
 use Livewire\Component;
 use App\Models\tempCounter;
 use Livewire\Attributes\On;
+use App\Models\abnormalMaterial;
 use Illuminate\Support\Facades\DB;
 
 class PurchaseOrderIn extends Component
 {
-    public $userId, $po, $listMaterial = [], $listMaterialScan, $listKitNo,$sws_code;
+    public $userId, $po, $listMaterial = [], $listMaterialScan, $listKitNo, $sws_code, $statusLoading;
+    public $paletCode, $palet, $noPalet;
     public $surat_jalan;
-    public $palet;
     public $material_no;
+    public $suratJalanDisable = false, $paletDisable = false, $poDisable = false;
 
     public function mount()
     {
         $this->userId = auth()->user()->id;
         $this->listKitNo = DB::table('material_setup_mst_supplier')->selectRaw('distinct(kit_no)')->get();
     }
-
     public function updated($n, $v)
     {
         if ($n === 'po') {
+            $this->suratJalanDisable = true;
+            $this->paletDisable = true;
+            $this->poDisable = true;
+        }
+    }
+    public function updating($prop, $v)
+    {
+
+        if ($prop === 'po') {
             DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
         }
     }
-    public function updating($property, $value)
-    {
-    }
+
 
     public function materialNoScan()
     {
@@ -91,14 +100,13 @@ class PurchaseOrderIn extends Component
     #[On('insertNew')]
     public function insertNew(int $qty = 0, $save = true, $update = false)
     {
-        dump('aa');
         if ($update) {
             $tempCount = DB::table('temp_counters')
                 ->where('material', $this->sws_code)
                 ->where('userID', $this->userId)
                 ->where('palet', $this->po);
             $data = $tempCount->first();
-            dump($tempCount->toRawSql());
+
             $counter = $data->counter + $qty;
 
             $new_prop_scan = isset($data->prop_scan) ? json_decode($data->prop_scan) : [];
@@ -121,6 +129,115 @@ class PurchaseOrderIn extends Component
             }
         }
         $this->material_no = null;
+    }
+
+    public function resetItem($data)
+    {
+        $qryUPdate = tempCounter::where('palet', $data[1])->where('material', $data[0]);
+        $data = $qryUPdate->first();
+
+        $qryUPdate->update([
+            'sisa' => $data->total,
+            'counter' => 0,
+            'qty_more' => 0,
+            'prop_scan' => null,
+        ]);
+        $this->dispatch('SJFocus');
+    }
+    public function confirm()
+    {
+        $paletCode = "$this->palet-$this->noPalet";
+        $fixProduct = DB::table('temp_counters')
+            ->leftJoin('delivery_mst as d', 'temp_counters.palet', '=', 'd.pallet_no')
+            ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
+            ->select('temp_counters.*', 'd.trucking_id', 'm.location_cd')
+            ->where('userID', $this->userId)
+            ->where('flag', 1)
+            ->where('palet', $this->po);
+
+        $loopData = $fixProduct->get();
+        foreach ($loopData as $data) {
+            $pax = $data->pax;
+            $qty = $data->total / $pax;
+            $kelebihan = $data->qty_more;
+            if ($data->prop_scan != null) {
+
+                $prop_scan = json_decode($data->prop_scan, true);
+                $masuk = 1;
+                foreach ($prop_scan as $value) {
+                    if ($masuk <= $data->pax || $data->total > $data->counter) {
+                        itemIn::create([
+                            'pallet_no' => $paletCode,
+                            'material_no' => $data->material,
+                            'picking_qty' => $value,
+                            'locate' => $data->location_cd,
+                            'trucking_id' => $data->trucking_id,
+                            'kit_no' => $this->po,
+                            'user_id' => $this->userId
+                        ]);
+                    } else {
+                        abnormalMaterial::create([
+                            'kit_no' => $this->po,
+                            'pallet_no' => $paletCode,
+                            'material_no' => $data->material,
+                            'picking_qty' => $value,
+                            'locate' => $data->location_cd,
+                            'trucking_id' => $data->trucking_id,
+                            'user_id' => $this->userId,
+                            'status' => 1
+                        ]);
+                    }
+                    $masuk++;
+                }
+                // kurang
+                if ($data->total > $data->counter) {
+                    $count = $data->pax - $masuk;
+                    $kurangnya = $data->total - $data->counter;
+                    abnormalMaterial::create([
+                        'pallet_no' => $paletCode,
+                        'kit_no' => $this->po,
+                        'material_no' => $data->material,
+                        'picking_qty' => $kurangnya,
+                        'locate' => $data->location_cd,
+                        'trucking_id' => $data->trucking_id,
+                        'user_id' => $this->userId,
+                        'status' => 0
+                    ]);
+                }
+            } else {
+                $sisa = $data->sisa;
+                for ($i = 1; $i <= $data->pax; $i++) {
+                    $qty = floor($data->sisa / $data->pax);
+                    $sisa = $sisa - $qty;
+                    if($i > $data->pax) $qty = $sisa;
+                    # code...
+                    abnormalMaterial::create([
+                        'kit_no' => $this->po,
+                        'pallet_no' => $paletCode,
+                        'material_no' => $data->material,
+                        'picking_qty' => $qty,
+                        'locate' => $data->location_cd,
+                        'trucking_id' => $data->trucking_id,
+                        'user_id' => $this->userId,
+                        'status' => 0
+                    ]);
+                }
+            }
+        }
+        $this->resetPage();
+    }
+
+    public function resetPage()
+    {
+        $this->suratJalanDisable = false;
+        $this->paletDisable = false;
+        $this->poDisable = false;
+        $this->po = null;
+        $this->surat_jalan = null;
+        $this->palet = null;
+        $this->noPalet = null;
+        DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
+        $this->dispatch('SJFocus');
     }
 
     public function render()
