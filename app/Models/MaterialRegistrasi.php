@@ -10,5 +10,6 @@ class MaterialRegistrasi extends Model
     use HasFactory;
 
     public $timestamps = false;
+    public $fillable = ['material_no'];
 
 }
