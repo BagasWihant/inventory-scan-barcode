@@ -127,12 +127,12 @@ class ListProduct extends Component
                     ->where('palet', $this->paletBarcode);
                 $data = $tempCount->first();
 
-                $mat_mst = DB::table('material_mst')
-                    ->select('iss_min_lot')
-                    ->where('matl_no', $this->sws_code)->first();
+                $mat_regis = DB::table('material_registrasis')
+                    ->select('material_no')
+                    ->where('material_no', $this->sws_code)->exists();
 
                 if ($tempCount->count() > 0) {
-                    if ($mat_mst->iss_min_lot == 1) {
+                    if ($mat_regis) {
                         $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
                     } else {
                         $qry = DB::table('material_setup_mst_CNC_KIAS2')
@@ -161,7 +161,7 @@ class ListProduct extends Component
                     }
                 } else {
 
-                    if ($mat_mst->iss_min_lot == 1) {
+                    if ($mat_regis) {
                         $this->dispatch('newItem', ['qty' => 0, 'title' => 'Item with Duplicate Qty']);
                         return;
                     } else {
