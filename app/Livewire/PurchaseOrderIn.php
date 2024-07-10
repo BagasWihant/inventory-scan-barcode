@@ -53,6 +53,7 @@ class PurchaseOrderIn extends Component
     }
     public function choosePo($po = null)
     {
+        DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
         $this->po = $po;
         $this->searchPo = $po;
         $this->listKitNo = [];
@@ -295,13 +296,14 @@ class PurchaseOrderIn extends Component
             $counterExists = in_array($value->material_no, $existingCounters);
             if (!$counterExists) {
                 try {
+                    $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
                     DB::beginTransaction();
                     $insert = [
                         'material' => $value->material_no,
                         'palet' => $this->po,
                         'userID' => $this->userId,
-                        'sisa' => $value->picking_qty,
-                        'total' => $value->picking_qty,
+                        'sisa' => $total,
+                        'total' => $total,
                         'pax' => $value->pax,
                         'flag' => 1
                     ];
