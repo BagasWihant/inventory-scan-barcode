@@ -6,6 +6,7 @@
             'url' => '#',
             'label' => 'Receiving',
             'child' => [
+                ['url' => route('materialRegistrasi'), 'label' => 'Material Registrasi'],
                 ['url' => route('inventory.index'), 'label' => 'Receiving Material CNC'],
                 ['url' => route('inventory.po'), 'label' => 'Receiving PO'],
                 ['url' => route('instock'), 'label' => 'Material Stock'],

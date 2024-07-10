@@ -15,10 +15,13 @@ class InventoryInController extends Controller
         return view('pages.list-product');
         
     }
+
+    public function materialRegistrasi() {
+        return view('pages.materialRegis');
+    }
     public function po()
     {
         return view('pages.po');
-        
     }
     
     public function abnormal() {
