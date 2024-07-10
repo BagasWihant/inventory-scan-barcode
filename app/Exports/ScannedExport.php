@@ -18,9 +18,9 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Style;
 
-class ScannedExport implements WithEvents, WithCustomStartCell,FromCollection,WithColumnWidths,WithHeadings,WithMapping
+class ScannedExport implements WithEvents, WithCustomStartCell, FromCollection, WithColumnWidths, WithHeadings, WithMapping
 {
-    public $data,$count;
+    public $data, $count;
     public function __construct($dt)
     {
         $this->data = $dt;
@@ -29,19 +29,23 @@ class ScannedExport implements WithEvents, WithCustomStartCell,FromCollection,Wi
 
     public function startCell(): string
     {
-        return 'A5';
+        return 'A7';
     }
 
     public function columnWidths(): array
     {
         return [
-            'A' => 3,
-            'B' => 15,
-            'C' => 22,            
-            'D' => 7,            
-            'E' => 15,            
-            'F' => 15,            
-            'G' => 20,            
+            'A' => 15,
+            'B' => 5,
+            'C' => 5,
+            'D' => 10,
+            'E' => 10,
+            'F' => 10,
+            'G' => 10,
+            'H' => 10,
+            'I' => 10,
+            'J' => 10,
+            'K' => 10,
         ];
     }
 
@@ -50,36 +54,40 @@ class ScannedExport implements WithEvents, WithCustomStartCell,FromCollection,Wi
         return view('exports.in-stock', ['data' => $this->data]);
     }
 
-    public function map($row): array{
+    public function map($row): array
+    {
         // $qty = $row->counter;
         // if($row->counter > $row->total){
         //     $qty = $row->total;
         // }
         $char = "□";
+        $kosong = "  ";
         return [
-            $char,
-            $row->palet,
             $row->material,
             $row->pax,
             $row->counter,
-            $row->trucking_id,
-            $row->location_cd,
         ];
     }
 
-    public function collection(){
+    public function collection()
+    {
         return $this->data;
     }
 
-    public function headings(): array{
+    public function headings(): array
+    {
         return [
-            'Pallet No',
-            ' ',
             'Material No',
             'Pax',
             'Picking Qty',
-            'Trucking ID',
-            'Location',
+            'Loc 1',
+            'Qty',
+            'Loc 2',
+            'Qty',
+            'Loc 3',
+            'Qty',
+            'Loc 4',
+            'Qty',
         ];
     }
 
@@ -105,12 +113,26 @@ class ScannedExport implements WithEvents, WithCustomStartCell,FromCollection,Wi
                 $sheet = $event->sheet;
                 $spreadset = new Spreadsheet;
 
-                $sheet->mergeCells('A1:G3');
+                $sheet->mergeCells('A1:K3');
                 $sheet->setCellValue('A1', "Scanned List");
-                $sheet->mergeCells('A4:C4');
-                $sheet->setCellValue('A4', "  ");
-                $sheet->getDelegate()->getStyle('A1:G2')->getFont()->setSize(20);
-                $sheet->getDelegate()->getStyle('A1:G5')->getFont()->setBold(true);
+                $sheet->mergeCells('A4:B4');
+                $sheet->setCellValue('A4', "Pallet No");
+                $sheet->mergeCells('C4:D4');
+                $sheet->setCellValue('C4', ": " . $this->data[0]->palet);
+                $sheet->mergeCells('A5:B5');
+                $sheet->setCellValue('A5', "Trucking ID");
+                $sheet->mergeCells('C5:D5');
+                $sheet->setCellValue('C5', ": " . $this->data[0]->trucking_id);
+                $sheet->mergeCells('A6:C6');
+                $sheet->setCellValue('A6', "  ");
+                $sheet->getDelegate()->getStyle('A1:K2')->getFont()->setSize(20);
+                $sheet->getDelegate()->getStyle('A1:K6')->getFont()->setBold(true);
+                $sheet->getDelegate()->getStyle('A4:K5')->applyFromArray([
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+                        'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
+                ]);
 
                 $styleArray = [
                     'alignment' => [
@@ -118,11 +140,10 @@ class ScannedExport implements WithEvents, WithCustomStartCell,FromCollection,Wi
                         'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                     ],
                 ];
-                
-                $sheet->mergeCells('A5:B5');
-                $cellRange = 'A1:G3'; // All headers
+
+                $cellRange = 'A1:K3'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->applyFromArray($styleArray);
-                $event->sheet->getDelegate()->getStyle("A5:G".$this->count+5)->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle("A7:K" . $this->count + 7)->applyFromArray($styleArray);
 
                 $border = [
                     'borders' => [
@@ -132,7 +153,7 @@ class ScannedExport implements WithEvents, WithCustomStartCell,FromCollection,Wi
                         ],
                     ],
                 ];
-                $event->sheet->getDelegate()->getStyle("A5:G".$this->count+5)->applyFromArray($border);
+                $event->sheet->getDelegate()->getStyle("A7:K" . $this->count + 7)->applyFromArray($border);
             }
         ];
     }

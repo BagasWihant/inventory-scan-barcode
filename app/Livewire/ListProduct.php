@@ -323,71 +323,71 @@ class ListProduct extends Component
             ->where('palet', $this->paletBarcode);
 
         $b = $fixProduct->get();
-        foreach ($b as $data) {
-            $pax = $data->pax;
-            $qty = $data->total / $pax;
-            $kelebihan = $data->qty_more;
-            if ($data->prop_scan != null) {
+        // foreach ($b as $data) {
+        //     $pax = $data->pax;
+        //     $qty = $data->total / $pax;
+        //     $kelebihan = $data->qty_more;
+        //     if ($data->prop_scan != null) {
 
-                $prop_scan = json_decode($data->prop_scan, true);
-                $masuk = 1;
-                foreach ($prop_scan as $value) {
-                    if ($masuk <= $data->pax || $data->total > $data->counter) {
-                        itemIn::create([
-                            'pallet_no' => $this->paletBarcode,
-                            'material_no' => $data->material,
-                            'picking_qty' => $value,
-                            'locate' => $data->location_cd,
-                            'trucking_id' => $data->trucking_id,
-                            'user_id' => $this->userId
-                        ]);
-                    } else {
-                        abnormalMaterial::create([
-                            'pallet_no' => $this->paletBarcode,
-                            'material_no' => $data->material,
-                            'picking_qty' => $value,
-                            'locate' => $data->location_cd,
-                            'trucking_id' => $data->trucking_id,
-                            'user_id' => $this->userId,
-                            'status' => 1
-                        ]);
-                    }
-                    $masuk++;
-                }
-                // kurang
-                if ($data->total > $data->counter) {
-                    $count = $data->pax - $masuk;
-                    $kurangnya = $data->total - $data->counter;
-                    abnormalMaterial::create([
-                        'pallet_no' => $this->paletBarcode,
-                        'material_no' => $data->material,
-                        'picking_qty' => $kurangnya,
-                        'locate' => $data->location_cd,
-                        'trucking_id' => $data->trucking_id,
-                        'user_id' => $this->userId,
-                        'status' => 0
-                    ]);
-                }
-            } else {
-                $belumIsiSamaSekali = $data->sisa / $data->pax;
-                for ($i = 0; $i < $data->pax; $i++) {
-                    # code...
-                    abnormalMaterial::create([
-                        'pallet_no' => $this->paletBarcode,
-                        'material_no' => $data->material,
-                        'picking_qty' => $belumIsiSamaSekali,
-                        'locate' => $data->location_cd,
-                        'trucking_id' => $data->trucking_id,
-                        'user_id' => $this->userId,
-                        'status' => 0
-                    ]);
-                }
-            }
-        }
-        $this->paletInput = false;
+        //         $prop_scan = json_decode($data->prop_scan, true);
+        //         $masuk = 1;
+        //         foreach ($prop_scan as $value) {
+        //             if ($masuk <= $data->pax || $data->total > $data->counter) {
+        //                 itemIn::create([
+        //                     'pallet_no' => $this->paletBarcode,
+        //                     'material_no' => $data->material,
+        //                     'picking_qty' => $value,
+        //                     'locate' => $data->location_cd,
+        //                     'trucking_id' => $data->trucking_id,
+        //                     'user_id' => $this->userId
+        //                 ]);
+        //             } else {
+        //                 abnormalMaterial::create([
+        //                     'pallet_no' => $this->paletBarcode,
+        //                     'material_no' => $data->material,
+        //                     'picking_qty' => $value,
+        //                     'locate' => $data->location_cd,
+        //                     'trucking_id' => $data->trucking_id,
+        //                     'user_id' => $this->userId,
+        //                     'status' => 1
+        //                 ]);
+        //             }
+        //             $masuk++;
+        //         }
+        //         // kurang
+        //         if ($data->total > $data->counter) {
+        //             $count = $data->pax - $masuk;
+        //             $kurangnya = $data->total - $data->counter;
+        //             abnormalMaterial::create([
+        //                 'pallet_no' => $this->paletBarcode,
+        //                 'material_no' => $data->material,
+        //                 'picking_qty' => $kurangnya,
+        //                 'locate' => $data->location_cd,
+        //                 'trucking_id' => $data->trucking_id,
+        //                 'user_id' => $this->userId,
+        //                 'status' => 0
+        //             ]);
+        //         }
+        //     } else {
+        //         $belumIsiSamaSekali = $data->sisa / $data->pax;
+        //         for ($i = 0; $i < $data->pax; $i++) {
+        //             # code...
+        //             abnormalMaterial::create([
+        //                 'pallet_no' => $this->paletBarcode,
+        //                 'material_no' => $data->material,
+        //                 'picking_qty' => $belumIsiSamaSekali,
+        //                 'locate' => $data->location_cd,
+        //                 'trucking_id' => $data->trucking_id,
+        //                 'user_id' => $this->userId,
+        //                 'status' => 0
+        //             ]);
+        //         }
+        //     }
+        // }
+        // $this->paletInput = false;
         $paletBarcode = $this->paletBarcode;
 
-        $this->resetPage();
+        // $this->resetPage();
 
         return Excel::download(new ScannedExport($b), "Scanned Items_" . $paletBarcode . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
