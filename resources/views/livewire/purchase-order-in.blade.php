@@ -31,20 +31,27 @@
             <div class="w-full">
                 <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PO
                 </label>
-                <input wire:model="searchPo" wire:keydown.debounce.150ms="poChange" type="text" id="produkBarcode" @if ($poDisable) disabled @endif
+                <input wire:model="searchPo" wire:keydown.debounce.300ms="poChange" type="text" id="produkBarcode"
+                    @if ($poDisable) disabled @endif autocomplete="off"
                     class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                <div class="absolute rounded-md w-48" id="floating">
-                    <div class="py-3 px-4 bg-green-100 text-green-500" wire:loading wire:target="poChange">Searching</div>
-                    @if (strlen($searchPo) >= 4 && $po != $searchPo)
-                        @forelse ($listKitNo as $p)
-                            <div class="py-3 px-4 text-base bg-blue-200" role="button" wire:click="choosePo('{{ $p->kit_no }}')">{{ $p->kit_no }}
-                            </div>
-                        @empty
-                            <div class="py-3 px-4 text-base bg-red-200">Tidak Ditemukan</div>
-                        @endforelse
-                    @endif
 
+                <div class="absolute contents rounded-md">
+                    <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
+                        wire:target="poChange">Searching</div>
+                    <div wire:loading.remove class="rounded-lg bg-slate-50">
+
+                        @if (strlen($searchPo) >= 3 && $po != $searchPo)
+                            @forelse ($listKitNo as $p)
+                                <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
+                                    wire:click="choosePo('{{ $p->kit_no }}')">{{ $p->kit_no }}
+                                </div>
+                            @empty
+                                <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
+                            @endforelse
+                        @endif
+                    </div>
                 </div>
+
             </div>
 
         </div>

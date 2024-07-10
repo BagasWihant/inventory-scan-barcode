@@ -42,7 +42,7 @@ class PurchaseOrderIn extends Component
 
     public function poChange()
     {
-        if (strlen($this->searchPo) >= 4) {
+        if (strlen($this->searchPo) >= 3) {
             $this->listKitNo = DB::table('material_setup_mst_supplier')
                 ->selectRaw('kit_no')
                 ->where('kit_no', 'like', "%$this->searchPo%")
