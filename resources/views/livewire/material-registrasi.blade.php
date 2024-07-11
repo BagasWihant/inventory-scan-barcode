@@ -1,9 +1,9 @@
 <div class="darkmax-w-7xl mx-auto">
     <div class="text-2xl text-center font-extrabold py-6" id="setHerePagination">Material Registrasi</div>
 
-    <div class="flex gap-5 justify-items-center">
+    <div class="flex gap-5 justify-between">
 
-        <div class="w-1/4">
+        <div class="w-1/4" wire:ignore>
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No
             </label>
 
@@ -117,11 +117,11 @@
                 showConfirmButton: false,
                 timerProgressBar: true,
             });
+            $('#materialselect').val(null).trigger('change');
         });
         $('#materialselect').select2({
             placeholder: "Material Code",
-            width: 'resolve',
-            tags: true
+            width: 'resolve'
         });
         $('#materialselect').on('change', function(e) {
             @this.material = e.target.value
