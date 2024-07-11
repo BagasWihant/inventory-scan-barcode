@@ -43,14 +43,14 @@ class MaterialStock extends Component
     }
     
 
-    public function exportPdf()  {
-        $dataCetak = $this->getData();
-        if($this->searchKey) $name = "InStock_".$this->searchKey."-".date('Ymd').".pdf";
-        else $name = "InStock-".date('Ymd').".pdf";
+    // public function exportPdf()  {
+    //     $dataCetak = $this->getData();
+    //     if($this->searchKey) $name = "InStock_".$this->searchKey."-".date('Ymd').".pdf";
+    //     else $name = "InStock-".date('Ymd').".pdf";
         
-        return Excel::download(new InStockExport($dataCetak), $name, \Maatwebsite\Excel\Excel::MPDF);
+    //     return Excel::download(new InStockExport($dataCetak), $name, \Maatwebsite\Excel\Excel::MPDF);
         
-    }
+    // }
     
     public function exportExcel()  {
         $dataCetak = $this->getData();
@@ -63,9 +63,9 @@ class MaterialStock extends Component
 
     private function getData() {
         $query = DB::table('material_mst')
-        ->selectRaw('matl_no as material_no,qty,loc as locate')
+        ->selectRaw('matl_no as material_no,qty,loc_cd as locate')
         ->where('qty','>',0)
-        ->groupBy(['matl_no','loc','qty']);
+        ->groupBy(['matl_no','loc_cd','qty']);
         $query->where('matl_no','like',"%$this->searchKey%");
         return $query->get();
         
