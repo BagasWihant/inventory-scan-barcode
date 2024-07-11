@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use App\Exports\InStockExport;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,10 @@ class MaterialStock extends Component
         $this->resetPage();
     }
 
+    public function editLokasi($id,$locate) {
+        DB::table('material_mst')->where('id', $id)->update(['loc_cd' => $locate]);
+    }
+
     public function render()
     {
         // $query = DB::table('material_in_stock')
@@ -28,9 +33,9 @@ class MaterialStock extends Component
 
         
         $query = DB::table('material_mst')
-        ->selectRaw('matl_no as material_no,qty,loc_cd as locate')
+        ->selectRaw('matl_no as material_no,qty,loc_cd as locate,id')
         ->where('qty','>',0)
-        ->groupBy(['matl_no','loc_cd','qty']);
+        ->groupBy(['matl_no','loc_cd','qty','id']);
         $query->where('matl_no','like',"%$this->searchKey%");
         $data= $query->paginate($this->perPage);
         
@@ -43,14 +48,6 @@ class MaterialStock extends Component
     }
     
 
-    // public function exportPdf()  {
-    //     $dataCetak = $this->getData();
-    //     if($this->searchKey) $name = "InStock_".$this->searchKey."-".date('Ymd').".pdf";
-    //     else $name = "InStock-".date('Ymd').".pdf";
-        
-    //     return Excel::download(new InStockExport($dataCetak), $name, \Maatwebsite\Excel\Excel::MPDF);
-        
-    // }
     
     public function exportExcel()  {
         $dataCetak = $this->getData();

@@ -6,7 +6,7 @@
         <img src="https://www.svgrepo.com/show/509001/avatar-thinking-9.svg" class="rounded-full h-28 w-28">
     </div>
 
-    <div class="text-2xl font-extrabold py-6 text-center">Checking Stock</div>
+    <div class="text-2xl font-extrabold py-6 text-center">Receiving Report</div>
     <div class="grid md:grid-cols-8 gap-3 w-full pb-6">
 
         <div class="col-span-2" wire:ignore>

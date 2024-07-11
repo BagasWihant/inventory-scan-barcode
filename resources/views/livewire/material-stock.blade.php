@@ -3,7 +3,7 @@
     <div class="text-2xl text-center font-extrabold py-6" id="setHerePagination">Stock Material</div>
 
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-        <div class="flex justify-between" >
+        <div class="flex justify-between">
 
             <div class="flex gap-4">
 
@@ -33,7 +33,7 @@
             <div class="">
                 <button type="button" wire:click="exportExcel"
                     class="text-white bg-green-600 hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Excel</button>
-               </div>
+            </div>
         </div>
 
         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -54,6 +54,9 @@
                             Qty
                         </div>
                     </th>
+                    <th scope="col" class="w-1/5">
+                        Action
+                    </th>
                 </tr>
             </thead>
             <tbody wire:ignore.self>
@@ -67,6 +70,15 @@
                         </td>
                         <td class="px-6 py-4">
                             {{ $d->qty }}
+                        </td>
+                        <td class="flex gap-5">
+                            <button type="button" onclick="editLokasi({{ $d->id }},'{{ $d->locate }}')"
+                                class="text-white bg-yellow-400 hover:bg-yellow-800 font-medium rounded-full text-sm px-3 py-1 text-center">Edit
+                                Lokasi</button>
+                            <button type="button" wire:click="printMaterial({{ $d->id }})"
+                                class="text-white bg-blue-400 hover:bg-blue-800 font-medium rounded-full text-sm px-3 py-1 text-center">Print
+                                Material</button>
+
                         </td>
                     </tr>
                 @endforeach
@@ -82,7 +94,38 @@
     </div>
 
 </div>
+<script>
+    function editLokasi(id,lokasi) {
+        Swal.fire({
+            title: 'Edit Lokasi',
+            input: "text",
+            inputValue: lokasi,
+            showDenyButton: true,
+            denyButtonText: `Don't save`
+        }).then((result) => {
+            /* Read more about isConfirmed, isDenied below */
+            if (result.isConfirmed) {
+                @this.editLokasi(id,result.value)
 
+                return Swal.fire({
+                    timer: 1000,
+                    title: "Updated",
+                    icon: "success",
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            } else if (result.isDenied) {
+                return Swal.fire({
+                    timer: 1000,
+                    title: "Changes are not saved",
+                    icon: "info",
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            }
+        });
+    }
+</script>
 @script
     <script>
         $wire.on('searchFocus', (event) => {
