@@ -17,8 +17,9 @@ class MaterialRegistrasi extends Component
 
     public function render()
     {
+        $added = ModelsMaterialRegistrasi::where('material_no', 'like', "%$this->searchMaterial%")->paginate(20);
         return view('livewire.material-registrasi', [
-            'listMaterialAdded' => ModelsMaterialRegistrasi::paginate(20),
+            'listMaterialAdded' => $added,
             'listMaterialComboBox' =>  DB::table('material_mst')
                 ->select('matl_no')
                 ->groupBy('matl_no')->get()
@@ -40,6 +41,10 @@ class MaterialRegistrasi extends Component
         $this->material = $mat;
         $this->searchMaterial = $mat;
         $this->materialDisable = true;
+    }
+
+    public function searching(){
+        
     }
 
     public function addMaterial()
