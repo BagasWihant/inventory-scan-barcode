@@ -11,26 +11,29 @@ class MaterialRegistrasi extends Component
 {
     use WithPagination;
 
-    public $listMaterialComboBox = [];
+    // public $listMaterialComboBox = [];
     public $searchMaterial, $material;
     public $materialDisable = false;
 
     public function render()
     {
-        return view('livewire.material-registrasi',[
-            'listMaterialAdded' =>ModelsMaterialRegistrasi::paginate(20)
+        return view('livewire.material-registrasi', [
+            'listMaterialAdded' => ModelsMaterialRegistrasi::paginate(20),
+            'listMaterialComboBox' =>  DB::table('material_mst')
+                ->select('matl_no')
+                ->groupBy('matl_no')->get()
         ]);
     }
 
-    public function materialType()
-    {
-        if (strlen($this->searchMaterial) >= 1) {
-            $this->listMaterialComboBox = DB::table('material_mst')
-                ->select('matl_no')
-                ->where('matl_no', 'like', "%$this->searchMaterial%")
-                ->groupBy('matl_no')->limit(10)->get();
-        }
-    }
+    // public function materialType()
+    // {
+    //     if (strlen($this->searchMaterial) >= 1) {
+    //         $this->listMaterialComboBox = DB::table('material_mst')
+    //             ->select('matl_no')
+    //             ->where('matl_no', 'like', "%$this->searchMaterial%")
+    //             ->groupBy('matl_no')->limit(20)->get();
+    //     }
+    // }
 
     public function chooseMaterial($mat)
     {
@@ -44,13 +47,18 @@ class MaterialRegistrasi extends Component
         $exists = ModelsMaterialRegistrasi::where('material_no', $this->material)->exists();
         $this->searchMaterial = null;
         $this->materialDisable = false;
-        
+
         if ($exists) return $this->dispatch('notification', ['icon' => 'error', 'title' => 'Material already added']);
-        
+
         ModelsMaterialRegistrasi::create([
             'material_no' => $this->material
         ]);
         $this->material = null;
         return $this->dispatch('notification', ['icon' => 'success', 'title' => 'Successfully added']);
+    }
+    
+    public function deleteMaterial($id=null){
+        ModelsMaterialRegistrasi::where('id', $id)->delete();
+        return $this->dispatch('notification', ['icon' => 'success', 'title' => 'Successfully deleted']);
     }
 }
