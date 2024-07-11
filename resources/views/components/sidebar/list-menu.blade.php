@@ -4,13 +4,20 @@
     $menu = [
         [
             'url' => '#',
-            'label' => 'Receiving',
+            'label' => 'Master',
             'child' => [
                 ['url' => route('materialRegistrasi'), 'label' => 'Material Registrasi'],
+
+            ],
+        ],
+        [
+            'url' => '#',
+            'label' => 'Receiving',
+            'child' => [
                 ['url' => route('inventory.index'), 'label' => 'Receiving Material CNC'],
-                ['url' => route('inventory.po'), 'label' => 'Receiving PO'],
+                ['url' => route('inventory.po'), 'label' => 'Receiving Supplier'],
                 ['url' => route('instock'), 'label' => 'Material Stock'],
-                ['url' => route('checking'), 'label' => 'Check Stock'],
+                ['url' => route('checking'), 'label' => 'Receiving Report'],
                 ['url' => route('abnormal'), 'label' => 'Abnormal Material'],
             ],
         ],
@@ -21,8 +28,8 @@
                 ['url' => route('prepare.stock.taking'), 'label' => 'Prepare Stock Taking', 'admin' => ''],
                 ['url' => route('input.stock.taking'), 'label' => 'Input Stock Taking'],
                 ['url' => route('result.stock.taking'), 'label' => 'Stock Taking Result'],
-                ['url' => route('conf.stock.taking'), 'label' => 'Stock Taking Confirmation', 'admin' => ''],          
-                ['url' => route('report.stock.taking'), 'label' => 'Report Stock Taking', 'admin' => ''],          
+                ['url' => route('conf.stock.taking'), 'label' => 'Stock Taking Confirmation', 'admin' => ''],
+                ['url' => route('report.stock.taking'), 'label' => 'Report Stock Taking', 'admin' => ''],
             ],
         ],
     ];
