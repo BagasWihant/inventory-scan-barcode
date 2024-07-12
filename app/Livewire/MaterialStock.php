@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use App\Exports\InStockExport;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithoutUrlPagination;
 use Maatwebsite\Excel\Facades\Excel;
@@ -13,14 +14,28 @@ use Maatwebsite\Excel\Facades\Excel;
 class MaterialStock extends Component
 {
     use WithPagination,WithoutUrlPagination;
-    public $searchKey,$perPage=10;
+    public $searchKey,$perPage=10,$modal=false,$modalName;
+    public $detailMaterial = [];
 
     public function setPerPage() {
         $this->resetPage();
     }
 
-    public function editLokasi($id,$locate) {
-        DB::table('material_mst')->where('id', $id)->update(['loc_cd' => $locate]);
+    public function editLokasi($mat,$locate) {
+        DB::table('material_mst')->where('matl_no', "$mat")->update(['loc_cd' => "$locate"]);
+    }
+
+    public function printMaterial($mat){
+        $data = DB::select('EXEC sp_WH_inv_kartustok ?,?,?,?',['detail',$mat,'','']);
+        // $this->dispatch('showModalDetail',$data);
+        $this->modal = true;
+        $this->detailMaterial = $data;
+        $this->modalName = $mat;
+    }
+    public function closeModal() {
+        $this->detailMaterial = [];
+        $this->modalName = null;
+        $this->modal = false;
     }
 
     public function render()
@@ -31,16 +46,8 @@ class MaterialStock extends Component
         // $query->where('material_no','like',"%$this->searchKey%");
         // $data= $query->get();
 
-        
-        $query = DB::table('material_mst')
-        ->selectRaw('matl_no as material_no,qty,loc_cd as locate,id')
-        ->where('qty','>',0)
-        ->groupBy(['matl_no','loc_cd','qty','id']);
-        $query->where('matl_no','like',"%$this->searchKey%");
-        $data= $query->paginate($this->perPage);
-        
-        if($this->searchKey) $this->dispatch('searchFocus');
-
+        $query = DB::select("EXEC sp_WH_inv_mst ?",[$this->searchKey??'']);
+        $data = $query;
 
         return view('livewire.material-stock',[
             'datas'=>$data,
