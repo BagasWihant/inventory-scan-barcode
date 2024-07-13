@@ -15,9 +15,9 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 
-class InStockExport implements WithEvents, WithCustomStartCell, FromCollection,WithColumnWidths,WithHeadings
+class InStockExport implements WithEvents, WithCustomStartCell, FromCollection, WithColumnWidths, WithHeadings
 {
-    public $data,$count;
+    public $data, $count;
     public function __construct($dt)
     {
         $this->data = $dt;
@@ -33,8 +33,12 @@ class InStockExport implements WithEvents, WithCustomStartCell, FromCollection,W
     {
         return [
             'A' => 25,
-            'B' => 20,            
-            'C' => 20,            
+            'B' => 20,
+            'C' => 20,
+            'D' => 20,
+            'E' => 10,
+            'F' => 15,
+            'G' => 15,
         ];
     }
 
@@ -43,19 +47,25 @@ class InStockExport implements WithEvents, WithCustomStartCell, FromCollection,W
         return view('exports.in-stock', ['data' => $this->data]);
     }
 
-    public function collection(){
+    public function collection()
+    {
         return $this->data;
     }
 
-    public function headings(): array{
+    public function headings(): array
+    {
         return [
-            'Material No',
-            'Qty',
+            'Material Code',
+            'Material Name',
+            'Wire Name',
             'Location',
+            'Satuan',
+            'Min Lot',
+            'Qty',
         ];
     }
 
-  
+
     /**
      * @return array
      */
@@ -65,8 +75,13 @@ class InStockExport implements WithEvents, WithCustomStartCell, FromCollection,W
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet;
 
-                $sheet->mergeCells('B1:D2');
-                $sheet->setCellValue('B1', "HASIL EXPORT");
+                $sheet->mergeCells('A1:G2');
+                $sheet->setCellValue('A1', "REPORT STOCK MATERIAL");
+                $sheet->setCellValue('A3', "Per Tanggal : " . date('d-m-Y'));
+                $sheet->getDelegate()->getStyle('A1:G2')->getFont()->setSize(20);
+                $sheet->getDelegate()->getStyle('A1:G3')->getFont()->setBold(true);
+
+
 
                 $styleArray = [
                     'alignment' => [
@@ -83,9 +98,9 @@ class InStockExport implements WithEvents, WithCustomStartCell, FromCollection,W
                     ],
                 ];
 
-                $cellRange = 'A1:C'.$this->count+5; // All headers
+                $cellRange = 'A1:G' . $this->count + 5; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->applyFromArray($styleArray);
-                $event->sheet->getDelegate()->getStyle("A5:C".$this->count +5)->applyFromArray($border);
+                $event->sheet->getDelegate()->getStyle("A5:G" . $this->count + 5)->applyFromArray($border);
             }
         ];
     }
