@@ -15,7 +15,7 @@ class MaterialStock extends Component
 {
     use WithPagination,WithoutUrlPagination;
     public $searchKey,$perPage=10,$modal=false,$modalName;
-    public $detailMaterial = [];
+    public $detailMaterial = [],$dataCetak=[];
 
     public function setPerPage() {
         $this->resetPage();
@@ -48,6 +48,7 @@ class MaterialStock extends Component
 
         $query = DB::select("EXEC sp_WH_inv_mst ?",[$this->searchKey??'']);
         $data = $query;
+        $this->dataCetak  = $query;
 
         return view('livewire.material-stock',[
             'datas'=>$data,
@@ -57,11 +58,10 @@ class MaterialStock extends Component
 
     
     public function exportExcel()  {
-        $dataCetak = $this->getData();
-
+        // dd($this->dataCetak);
         if($this->searchKey) $name = "InStock_".$this->searchKey."-".date('Ymd').".xlsx";
         else $name = "InStock-".date('Ymd').".xlsx";
-        return Excel::download(new InStockExport($dataCetak), $name, \Maatwebsite\Excel\Excel::XLSX);
+        return Excel::download(new InStockExport(collect($this->dataCetak)), $name, \Maatwebsite\Excel\Excel::XLSX);
         
     }
 
