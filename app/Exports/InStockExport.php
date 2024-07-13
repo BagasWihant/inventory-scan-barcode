@@ -77,7 +77,7 @@ class InStockExport implements WithEvents, WithCustomStartCell, FromCollection, 
 
                 $sheet->mergeCells('A1:G2');
                 $sheet->setCellValue('A1', "REPORT STOCK MATERIAL");
-                $sheet->setCellValue('A3', "Per Tanggal : " . date('d-m-Y'));
+                $sheet->setCellValue('A3', "Per Tanggal : " . date('d-m-Y H:i'));
                 $sheet->getDelegate()->getStyle('A1:G2')->getFont()->setSize(20);
                 $sheet->getDelegate()->getStyle('A1:G3')->getFont()->setBold(true);
 
