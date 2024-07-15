@@ -61,6 +61,8 @@ class PurchaseOrderIn extends Component
         $this->suratJalanDisable = true;
         $this->paletDisable = true;
         $this->poDisable = true;
+        $this->paletCode = "$this->palet-$this->noPalet";
+
     }
     public function materialNoScan()
     {
@@ -169,7 +171,7 @@ class PurchaseOrderIn extends Component
     }
     public function confirm()
     {
-        $paletCode = "$this->palet-$this->noPalet";
+
         $fixProduct = DB::table('temp_counters')
             ->leftJoin('delivery_mst as d', 'temp_counters.palet', '=', 'd.pallet_no')
             ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
@@ -190,7 +192,7 @@ class PurchaseOrderIn extends Component
                 foreach ($prop_scan as $value) {
                     if ($masuk <= $data->pax || $data->total > $data->counter) {
                         itemIn::create([
-                            'pallet_no' => $paletCode,
+                            'pallet_no' => $this->paletCode,
                             'material_no' => $data->material,
                             'picking_qty' => $value,
                             'locate' => $data->location_cd,
@@ -203,7 +205,7 @@ class PurchaseOrderIn extends Component
                         abnormalMaterial::create([
                             'kit_no' => $this->po,
                             'surat_jalan' => $this->surat_jalan,
-                            'pallet_no' => $paletCode,
+                            'pallet_no' => $this->paletCode,
                             'material_no' => $data->material,
                             'picking_qty' => $value,
                             'locate' => $data->location_cd,
@@ -219,7 +221,7 @@ class PurchaseOrderIn extends Component
                     $count = $data->pax - $masuk;
                     $kurangnya = $data->total - $data->counter;
                     abnormalMaterial::create([
-                        'pallet_no' => $paletCode,
+                        'pallet_no' => $this->paletCode,
                         'kit_no' => $this->po,
                         'surat_jalan' => $this->surat_jalan,
                         'material_no' => $data->material,
@@ -240,7 +242,7 @@ class PurchaseOrderIn extends Component
                     abnormalMaterial::create([
                         'kit_no' => $this->po,
                         'surat_jalan' => $this->surat_jalan,
-                        'pallet_no' => $paletCode,
+                        'pallet_no' => $this->paletCode,
                         'material_no' => $data->material,
                         'picking_qty' => $qty,
                         'locate' => $data->location_cd,
@@ -264,6 +266,7 @@ class PurchaseOrderIn extends Component
         $this->palet = null;
         $this->searchPo = null;
         $this->noPalet = null;
+        $this->paletCode = null;
         DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
         $this->dispatch('SJFocus');
     }
@@ -271,7 +274,7 @@ class PurchaseOrderIn extends Component
     public function render()
     {
         $getScanned = DB::table('material_in_stock')->select('material_no')
-            ->where('pallet_no', $this->po)
+            ->where('pallet_no', $this->paletCode)
             ->union(DB::table('abnormal_materials')->select('material_no')->where('pallet_no', $this->po))
             ->pluck('material_no')
             ->all();
