@@ -278,17 +278,19 @@ class PurchaseOrderIn extends Component
             ->union(DB::table('abnormal_materials')->select('material_no')->where('pallet_no', $this->po))
             ->pluck('material_no')
             ->all();
-
-        $productsQuery = DB::table('material_setup_mst_supplier as a')->where('a.kit_no', $this->po)
+            
+            $productsQuery = DB::table('material_setup_mst_supplier as a')->where('a.kit_no', $this->po)
             ->selectRaw('a.material_no,sum(a.picking_qty) as picking_qty,count(a.picking_qty) as pax,a.kit_no,sum(b.picking_qty) as stock_in')
-            ->leftJoin('material_in_stock as b', 'a.material_no', '=', 'b.material_no')
+            ->leftJoin('material_in_stock as b', function ($join) {
+                $join->on('a.material_no', '=', 'b.material_no')->where('b.pallet_no', $this->paletCode);
+            })
             ->groupBy(['a.material_no', 'a.kit_no'])
             ->orderByDesc('pax')
             ->orderBy('a.material_no');
-
+            
         $getall = $productsQuery->get();
         $materialNos = $getall->pluck('material_no')->all();
-
+        
         $existingCounters = DB::table('temp_counters')
             ->where('palet', $this->po)
             ->whereIn('material', $materialNos)
