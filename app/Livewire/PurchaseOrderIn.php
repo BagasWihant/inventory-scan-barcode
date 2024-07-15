@@ -75,7 +75,7 @@ class PurchaseOrderIn extends Component
             $mat_mst = DB::table('material_mst')
                 ->select('iss_min_lot')
                 ->where('matl_no', $this->sws_code)->first();
-            $check_lineNsetup = DB::table('material_setup_mst_supplier')->select(['setup_by','line_c'])->where('kit_no', $this->po)->where('material_no', $this->material_no)->first();
+            $check_lineNsetup = DB::table('material_setup_mst_supplier')->select('line_c')->where('kit_no', $this->po)->where('material_no', $this->material_no)->get()->toArray();
 
             if ($mat_mst->iss_min_lot == 1) {
                 $this->material_no = null;
@@ -90,12 +90,13 @@ class PurchaseOrderIn extends Component
     }
 
     #[On('insertNew')]
-    public function insertNew(int $qty = 0, $save = true, $update = false)
+    public function insertNew(int $qty = 0,$line = null, $save = true, $update = false)
     {
         if ($update) {
             $tempCount = DB::table('temp_counters')
                 ->where('material', $this->sws_code)
                 ->where('userID', $this->userId)
+                ->where('line_c', $line)
                 ->where('palet', $this->po);
             $data = $tempCount->first();
 
@@ -153,10 +154,8 @@ class PurchaseOrderIn extends Component
             $qty = $data->total / $pax;
             $kelebihan = $data->qty_more;
             $prop_ori = json_decode($data->prop_ori, true);
-            if(!isset($prop_ori['line_c'])){
-                $prop_ori['line_c'] = null;
-            }
-            if(!isset($prop_ori['setup_by'])){
+
+            if (!isset($prop_ori['setup_by'])) {
                 $prop_ori['setup_by'] = null;
             }
 
@@ -175,7 +174,7 @@ class PurchaseOrderIn extends Component
                             'kit_no' => $this->po,
                             'surat_jalan' => $this->surat_jalan,
                             'user_id' => $this->userId,
-                            'line_c' => $prop_ori['line_c'],
+                            'line_c' => $$data->line_c,
                             'setup_by' => $prop_ori['setup_by'],
                         ]);
                     } else {
@@ -189,7 +188,7 @@ class PurchaseOrderIn extends Component
                             'trucking_id' => $data->trucking_id,
                             'user_id' => $this->userId,
                             'status' => 1,
-                            'line_c' => $prop_ori['line_c'],
+                            'line_c' => $$data->line_c,
                             'setup_by' => $prop_ori['setup_by'],
                         ]);
                     }
@@ -209,7 +208,7 @@ class PurchaseOrderIn extends Component
                         'trucking_id' => $data->trucking_id,
                         'user_id' => $this->userId,
                         'status' => 0,
-                        'line_c' => $prop_ori['line_c'],
+                        'line_c' => $$data->line_c,
                         'setup_by' => $prop_ori['setup_by'],
                     ]);
                 }
@@ -230,7 +229,7 @@ class PurchaseOrderIn extends Component
                         'trucking_id' => $data->trucking_id,
                         'user_id' => $this->userId,
                         'status' => 0,
-                        'line_c' => $prop_ori['line_c'],
+                        'line_c' => $$data->line_c,
                         'setup_by' => $prop_ori['setup_by'],
                     ]);
                 }
@@ -274,15 +273,17 @@ class PurchaseOrderIn extends Component
         $getall = $productsQuery->get();
         $materialNos = $getall->pluck('material_no')->all();
 
-        $existingCounters = DB::table('temp_counters')
+        $getTempCounterData = DB::table('temp_counters')
+            ->select(['material', 'line_c'])
             ->where('palet', $this->po)
-            ->whereIn('material', $materialNos)
-            ->pluck('material')
-            ->all();
-
+            ->whereIn('material', $materialNos);
+        $existingMaterial = $getTempCounterData->pluck('material')->all();
+        $existingLine = $getTempCounterData->pluck('line_c')->all();
         foreach ($getall as $value) {
-            $counterExists = in_array($value->material_no, $existingCounters);
-            if (!$counterExists) {
+            $materialExists = in_array($value->material_no, $existingMaterial);
+            $lineExists = in_array($value->line_c, $existingLine);
+            if (!$materialExists || !$lineExists) {
+
                 try {
                     $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
                     DB::beginTransaction();
@@ -294,7 +295,8 @@ class PurchaseOrderIn extends Component
                         'total' => $total,
                         'pax' => $value->pax,
                         'flag' => 1,
-                        'prop_ori' => json_encode(['line_c' => $value->line_c, 'setup_by' => $value->setup_by]),
+                        'prop_ori' => json_encode(['setup_by' => $value->setup_by]),
+                        'line_c' => $value->line_c,
                     ];
 
 

@@ -119,12 +119,9 @@
                     <tbody>
                         @foreach ($listMaterial as $product)
                             <tr class=" border rounded dark:border-gray-700 ">
-                                {{-- <th scope="row"
-                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $product->pallet_no }}</th> --}}
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $product->material_no }}</th>
+                                    {{ $product->material_no . ' - ' . $product->line_c }}</th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->picking_qty }}
@@ -184,7 +181,7 @@
                             <tr class=" border rounded {{ $class }} dark:border-gray-700">
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->material }}</th>
+                                    {{ $v->material . ' - ' . $v->line_c }}</th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->counter }} </th>
@@ -267,12 +264,24 @@
             // jika item duplicate
             if (event[0].update) {
                 if (event[0].line) {
-                    console.log(event[0].line);
+                    const lineValue = event[0].line
+
+                    console.log(lineValue);
+                    if (lineValue.length > 1) {
+                        linehtml = '<select id="swal-input2" class="swal2-input" >'
+                        lineValue.map((i) => {
+                            linehtml += '<option value="' + i.line_c + '">' + i.line_c + '</option>'
+                        })
+                        linehtml += '</select>'
+                    } else {
+                        linehtml = `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" disabled>`
+                    }
+
                     return Swal.fire({
                         title: event[0].title,
                         html: `
                     <input id="swal-input1" class="swal2-input">
-                     <input id="swal-input2" class="swal2-input" value="${event[0].line.line_c}" disabled>
+                    ${linehtml}
                     `,
                         showDenyButton: true,
                         denyButtonText: `Don't save`,
