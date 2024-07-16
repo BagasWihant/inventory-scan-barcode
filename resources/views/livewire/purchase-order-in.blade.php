@@ -106,6 +106,16 @@
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 <div class="flex items-center">
+                                    Line C
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                <div class="flex items-center">
+                                    Setup By
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                <div class="flex items-center">
                                     QTY Picking List
                                 </div>
                             </th>
@@ -121,7 +131,16 @@
                             <tr class=" border rounded dark:border-gray-700 ">
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $product->material_no . ' - ' . $product->line_c }}</th>
+                                    {{ $product->material_no }}</th>
+
+                                <th scope="row"
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {{ $product->line_c }}
+                                </th>
+                                <th scope="row"
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {{ $product->setup_by }}
+                                </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->picking_qty }}
@@ -145,6 +164,9 @@
                         <tr>
                             <th scope="col " class="px-6 py-3">
                                 Material No
+                            </th>
+                            <th scope="col " class="px-6 py-3">
+                                Line C
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 <div class="flex items-center">
@@ -181,7 +203,10 @@
                             <tr class=" border rounded {{ $class }} dark:border-gray-700">
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->material . ' - ' . $v->line_c }}</th>
+                                    {{ $v->material }}</th>
+                                <th scope="row"
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {{ $v->line_c }}</th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->counter }} </th>
