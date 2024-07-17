@@ -221,7 +221,7 @@
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     @if ($v->counter > 0)
-                                        <button wire:click="resetItem({{ json_encode([$v->material, $v->palet]) }})"
+                                        <button wire:click="resetItem({{ json_encode([$v->material, $v->palet,json_decode($v->prop_ori,true)['setup_by']]) }})"
                                             class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg p-1 group bg-gradient-to-br from-red-800 to-red-500 group-hover:from-red-900 group-hover:to-red-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
                                             Reset
                                         </button>
@@ -285,29 +285,35 @@
                 $("#surat_jalan").focus()
             }, 50);
         });
-        $wire.on('newItem', async (event) => {
+        $wire.on('newItem', (event) => {
             // jika item duplicate
             if (event[0].update) {
-                if (event[0].line) {
-                    const lineValue = event[0].line
+                if (event[0].setup_by === 'PO COT') {
 
+                    const lineValue = event[0].line
                     console.log(lineValue);
+                    linehtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Line C</strong>'
+
                     if (lineValue.length > 1) {
-                        linehtml = '<select id="swal-input2" class="swal2-input" >'
+                        linehtml += '<select id="swal-input2" class="swal2-input my-2" >'
                         lineValue.map((i) => {
                             linehtml += '<option value="' + i.line_c + '">' + i.line_c + '</option>'
                         })
                         linehtml += '</select>'
                     } else {
-                        linehtml = `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" disabled>`
+                        linehtml =
+                            `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" disabled>`
                     }
 
+                    linehtml += '</div>'
                     return Swal.fire({
                         title: event[0].title,
-                        html: `
-                    <input id="swal-input1" class="swal2-input">
-                    ${linehtml}
-                    `,
+                        html: `<div class="flex flex-col">
+                                <strong>Qty</strong>
+                                <input id="swal-input1" class="swal2-input">
+                            </div>
+                            ${linehtml}
+                            `,
                         showDenyButton: true,
                         denyButtonText: `Don't save`,
                         preConfirm: () => {
@@ -349,20 +355,33 @@
                         }
                     });
                 }
-                await Swal.fire({
+                return Swal.fire({
                     title: event[0].title,
                     html: `
-                    <input id="swal-input1" class="swal2-input">
-                     <input id="swal-input2" class="swal2-input" value>
+                            <div class="flex flex-col">
+                                <strong>Qty</strong>
+                                <input id="swal-input1" class="swal2-input">
+                            </div>
+                            <div class="flex flex-col">
+                                <strong>Line C</strong>
+                                <input id="swal-input2" class="swal2-input">
+                            </div>
                     `,
                     showDenyButton: true,
                     denyButtonText: `Don't save`,
+                    preConfirm: () => {
+                        return [
+                            document.getElementById("swal-input1").value,
+                            document.getElementById("swal-input2").value
+                        ];
+                    }
 
                 }).then((result) => {
                     /* Read more about isConfirmed, isDenied below */
                     if (result.isConfirmed) {
                         $wire.dispatch('insertNew', {
-                            qty: result.value,
+                            qty: result.value[0],
+                            lineNew: result.value[1],
                             update: true,
                             save: false
                         })

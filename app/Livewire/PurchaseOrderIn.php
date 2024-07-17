@@ -75,7 +75,7 @@ class PurchaseOrderIn extends Component
             $mat_mst = DB::table('material_mst')
                 ->select('iss_min_lot')
                 ->where('matl_no', $this->sws_code)->first();
-            $check_lineNsetup = DB::table('material_setup_mst_supplier')->select('line_c')->where('kit_no', $this->po)->where('material_no', $this->material_no)->get()->toArray();
+            $check_lineNsetup = DB::table('material_setup_mst_supplier')->select(['line_c', 'setup_by'])->where('kit_no', $this->po)->where('material_no', $this->material_no)->get()->toArray();
 
             if ($mat_mst->iss_min_lot == 1) {
                 $this->material_no = null;
@@ -90,14 +90,16 @@ class PurchaseOrderIn extends Component
     }
 
     #[On('insertNew')]
-    public function insertNew(int $qty = 0,$line = null, $save = true, $update = false)
+    public function insertNew(int $qty = 0, $line = null, $lineNew = null, $update = false)
     {
         if ($update) {
             $tempCount = DB::table('temp_counters')
                 ->where('material', $this->sws_code)
                 ->where('userID', $this->userId)
-                ->where('line_c', $line)
                 ->where('palet', $this->po);
+            if (!$lineNew) {
+                $tempCount->where('line_c', $line);
+            }
             $data = $tempCount->first();
 
             $counter = $data->counter + $qty;
@@ -107,34 +109,60 @@ class PurchaseOrderIn extends Component
 
             $sisa = $data->sisa - $qty;
             if ($data->total < $data->counter || $data->sisa <= 0) {
-
+                // kelebihan
                 $this->material_no = null;
                 $more = $data->qty_more + 1;
-                $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more, 'prop_scan' => json_encode($new_prop_scan)]);
+                if ($lineNew) {
+                    $updateData = ['line_c' => $lineNew, 'counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more, 'prop_scan' => json_encode($new_prop_scan)];
+                } else {
+                    $updateData = ['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more, 'prop_scan' => json_encode($new_prop_scan)];
+                }
+                $tempCount->update($updateData);
                 return;
             } else {
 
-                $tempCount->update([
-                    'counter' => $counter,
-                    'sisa' => $sisa,
-                    'prop_scan' => json_encode($new_prop_scan),
-                ]);
+                if ($lineNew) {
+                    $updateData = [
+                        'counter' => $counter,
+                        'sisa' => $sisa,
+                        'prop_scan' => json_encode($new_prop_scan),
+                        'line_c' => $lineNew
+                    ];
+                } else {
+                    $updateData = [
+                        'counter' => $counter,
+                        'sisa' => $sisa,
+                        'prop_scan' => json_encode($new_prop_scan)
+                    ];
+                }
+
+                $tempCount->update($updateData);
             }
         }
         $this->material_no = null;
     }
 
-    public function resetItem($data)
+    public function resetItem($req)
     {
-        $qryUPdate = tempCounter::where('palet', $data[1])->where('material', $data[0]);
+        $qryUPdate = tempCounter::where('palet', $req[1])->where('material', $req[0]);
         $data = $qryUPdate->first();
-
-        $qryUPdate->update([
+        if(isset($req[2]) && $req[2] == 'PO MCS'){
+           $dataUpdate =  [
             'sisa' => $data->total,
             'counter' => 0,
             'qty_more' => 0,
             'prop_scan' => null,
-        ]);
+            'line_c' => null
+           ];
+        }else{
+            $dataUpdate =  [
+                'sisa' => $data->total,
+                'counter' => 0,
+                'qty_more' => 0,
+                'prop_scan' => null
+            ];
+        }
+        $qryUPdate->update($dataUpdate);
         $this->dispatch('SJFocus');
     }
     public function confirm()
