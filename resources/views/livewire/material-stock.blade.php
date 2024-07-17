@@ -104,7 +104,7 @@
                             {{ $d->Qty }}
                         </td>
                         <td class="flex gap-5">
-                            <button type="button" onclick="editLokasi({{ $d->Code }},'{{ $d->Location }}')"
+                            <button type="button" onclick="editLokasi('{{ $d->Code }}','{{ $d->Location }}')"
                                 class="text-white bg-yellow-400 hover:bg-yellow-800 font-medium rounded-full text-sm px-3 py-1 text-center">Edit
                                 Lokasi</button>
                             <button type="button" onclick="openModal('{{ $d->Code }}')"
@@ -255,13 +255,13 @@
 
     function openModal(co) {
         @this.printMaterial(co)
-        
+
         overlayCl.classList.remove('hidden')
         overlayCl.classList.add('flex');
         setTimeout(() => {
             modalCl.remove('opacity-0')
             modalCl.remove('-translate-y-full')
-            modalCl.remove('scale-150')
+            modalCl.remove('scale-[2]')
         }, 500);
 
     }
@@ -270,10 +270,10 @@
         modalCl.add('-translate-y-full')
         setTimeout(() => {
             modalCl.add('opacity-0')
-            modalCl.add('scale-150')
-        }, 100);
-        setTimeout(() => overlayCl.classList.add('hidden'), 300);
-        @this.closeModal()
+            modalCl.add('scale-[2]')
+            overlayCl.classList.add('hidden')
+            @this.closeModal()
+        }, 500);
     }
 </script>
 @script
