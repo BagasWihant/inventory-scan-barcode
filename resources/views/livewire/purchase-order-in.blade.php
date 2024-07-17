@@ -288,7 +288,7 @@
         $wire.on('newItem', (event) => {
             // jika item duplicate
             if (event[0].update) {
-                if (event[0].setup_by === 'PO COT') {
+                if (event[0].line[0].setup_by === 'PO COT') {
 
                     const lineValue = event[0].line
                     console.log(lineValue);
