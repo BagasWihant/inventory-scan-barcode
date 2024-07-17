@@ -255,14 +255,14 @@
 
     function openModal(co) {
         @this.printMaterial(co)
-
+        
         overlayCl.classList.remove('hidden')
         overlayCl.classList.add('flex');
         setTimeout(() => {
             modalCl.remove('opacity-0')
             modalCl.remove('-translate-y-full')
             modalCl.remove('scale-150')
-        }, 300);
+        }, 500);
 
     }
 
