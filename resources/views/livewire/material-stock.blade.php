@@ -128,11 +128,11 @@
     {{-- @if ($modal) --}}
     <!-- Main modal -->
     <div id="overlayModal" tabindex="-1" aria-hidden="true" wire:ignore.self
-        class="hidden bg-slate-200/60 backdrop-filter backdrop-blur-sm overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        class="hidden max-h-screen bg-slate-200/60 backdrop-filter backdrop-blur-sm overflow-hiden hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] ">
         <div wire:ignore.self class="relative p-4 opacity-0 transform -translate-y-full scale-150 bg-white rounded-xl shadow-lg  transition-transform duration-200"
             id="modal">
             <!-- Modal content -->
-            <div class="relative">
+            <div class="relative max-h-screen">
                 <!-- Modal header -->
                 <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -149,63 +149,65 @@
                         <span class="sr-only">Close modal</span>
                     </button>
                 </div>
-                <!-- Modal body -->
-                <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="p-1">
-                                Tanggal
-                            </th>
-                            <th scope="col" class="p-1">
-                                Trucking
-                            </th>
-                            <th scope="col" class="p-1">
-                                Receive
-                            </th>
-                            <th scope="col" class="p-1">
-                                In
-                            </th>
-                            <th scope="col" class="p-1">
-                                Out
-                            </th>
-                            <th scope="col" class="p-1">
-                                Supply
-                            </th>
-                            <th scope="col" class="p-1">
-                                Qty
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody wire:ignore.self>
-                        @forelse ($detailMaterial as $d)
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                <td class="px-6 py-4">
-                                    {{ $d->Tgl }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    {{ $d->Trucking }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    {{ $d->Receive }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    {{ $d->{'Qty IN'} }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    {{ $d->{'Qty Out'} }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    {{ $d->Supply }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    {{ $d->Qty }}
-                                </td>
+                <div class="overflow-y-auto max-h-[568px]">
+                    <!-- Modal body -->
+                    <table class="w-full max-h-screen text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="p-1">
+                                    Tanggal
+                                </th>
+                                <th scope="col" class="p-1">
+                                    Trucking
+                                </th>
+                                <th scope="col" class="p-1">
+                                    Receive
+                                </th>
+                                <th scope="col" class="p-1">
+                                    In
+                                </th>
+                                <th scope="col" class="p-1">
+                                    Out
+                                </th>
+                                <th scope="col" class="p-1">
+                                    Supply
+                                </th>
+                                <th scope="col" class="p-1">
+                                    Qty
+                                </th>
                             </tr>
-                        @empty
-                            <span class="text-xl text-center font-bold py-4">Belum Ada Data</span>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody wire:ignore.self>
+                            @forelse ($detailMaterial as $d)
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-6 py-4">
+                                        {{ $d->Tgl }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{ $d->Trucking }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{ $d->Receive }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{ $d->{'Qty IN'} }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{ $d->{'Qty Out'} }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{ $d->Supply }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{ $d->Qty }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <span class="text-xl text-center font-bold py-4">Belum Ada Data</span>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
