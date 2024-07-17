@@ -291,7 +291,6 @@
                 if (event[0].line[0].setup_by === 'PO COT') {
 
                     const lineValue = event[0].line
-                    console.log(lineValue);
                     linehtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Line C</strong>'
 
                     if (lineValue.length > 1) {
@@ -301,7 +300,7 @@
                         })
                         linehtml += '</select>'
                     } else {
-                        linehtml =
+                        linehtml +=
                             `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" disabled>`
                     }
 
