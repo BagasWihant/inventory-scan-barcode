@@ -128,7 +128,7 @@
     {{-- @if ($modal) --}}
     <!-- Main modal -->
     <div id="overlayModal" tabindex="-1" aria-hidden="true" wire:ignore.self
-        class="hidden max-h-screen bg-slate-200/60 backdrop-filter backdrop-blur-sm overflow-hiden hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] ">
+        class="max-h-screen bg-slate-200/60 backdrop-filter backdrop-blur-sm overflow-hiden hidden fixed top-0 right-0 left-0 z-10 justify-center items-center w-full md:inset-0 h-screen ">
         <div wire:ignore.self class="relative p-4 opacity-0 transform -translate-y-full scale-150 bg-white rounded-xl shadow-lg  transition-transform duration-200"
             id="modal">
             <!-- Modal content -->
