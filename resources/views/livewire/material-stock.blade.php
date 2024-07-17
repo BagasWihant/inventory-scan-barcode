@@ -129,7 +129,8 @@
     <!-- Main modal -->
     <div id="overlayModal" tabindex="-1" aria-hidden="true" wire:ignore.self
         class="max-h-screen bg-slate-200/60 backdrop-filter backdrop-blur-sm overflow-hiden hidden fixed top-0 right-0 left-0 z-10 justify-center items-center w-full md:inset-0 h-screen ">
-        <div wire:ignore.self class="relative p-4 opacity-0 transform -translate-y-full scale-150 bg-white rounded-xl shadow-lg  transition-transform duration-200"
+        <div wire:ignore.self
+            class="relative p-4 opacity-0 transform -translate-y-full scale-150 bg-white rounded-xl shadow-lg  transition-transform duration-200"
             id="modal">
             <!-- Modal content -->
             <div class="relative max-h-screen">
@@ -139,8 +140,7 @@
                         Detail Material {{ $modalName }}
                     </h3>
                     <button onclick="closeModal()" type="button"
-                        class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                        data-modal-toggle="crud-modal">
+                        class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
                         <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                             viewBox="0 0 14 14">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
@@ -151,7 +151,8 @@
                 </div>
                 <div class="overflow-y-auto max-h-[568px]">
                     <!-- Modal body -->
-                    <table class="w-full max-h-screen text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    <table
+                        class="w-full max-h-screen text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr>
                                 <th scope="col" class="p-1">
@@ -261,7 +262,7 @@
         setTimeout(() => {
             modalCl.remove('opacity-0')
             modalCl.remove('-translate-y-full')
-            modalCl.remove('scale-[2]')
+            modalCl.remove('scale-150')
         }, 500);
 
     }
@@ -270,7 +271,7 @@
         modalCl.add('-translate-y-full')
         setTimeout(() => {
             modalCl.add('opacity-0')
-            modalCl.add('scale-[2]')
+            modalCl.add('scale-150')
             overlayCl.classList.add('hidden')
             @this.closeModal()
         }, 500);
