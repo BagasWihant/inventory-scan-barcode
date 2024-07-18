@@ -26,6 +26,12 @@
                      p-2 text-gray-700 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
         </div>
+        <div class="w-1/4">
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white ">Setup By
+            </label>
+            <input wire:model="input_setup_by" disabled
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base">
+        </div>
 
         <div class="flex flex-col w-full">
             <div class="w-full">
@@ -54,12 +60,6 @@
 
             </div>
 
-        </div>
-        <div class="w-1/4">
-            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white ">Setup By
-            </label>
-            <input wire:model="input_setup_by" disabled
-                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base">
         </div>
         <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No
@@ -218,7 +218,8 @@
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     @if ($v->counter > 0)
-                                        <button wire:click="resetItem({{ json_encode([$v->material, $v->palet,json_decode($v->prop_ori,true)['setup_by']]) }})"
+                                        <button
+                                            wire:click="resetItem({{ json_encode([$v->material, $v->palet, json_decode($v->prop_ori, true)['setup_by']]) }})"
                                             class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg p-1 group bg-gradient-to-br from-red-800 to-red-500 group-hover:from-red-900 group-hover:to-red-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
                                             Reset
                                         </button>
