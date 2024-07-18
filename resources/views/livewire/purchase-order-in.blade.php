@@ -33,7 +33,7 @@
                 </label>
                 <input wire:model="searchPo" wire:keydown.debounce.300ms="poChange" type="text" id="produkBarcode"
                     @if ($poDisable) disabled @endif autocomplete="off"
-                    class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    class="@if ($poDisable) bg-gray-50 @endif block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
                 <div class="absolute contents">
                     <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
@@ -54,6 +54,12 @@
 
             </div>
 
+        </div>
+        <div class="w-1/4">
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white ">Setup By
+            </label>
+            <input wire:model="input_setup_by" disabled
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base">
         </div>
         <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No
@@ -111,11 +117,6 @@
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 <div class="flex items-center">
-                                    Setup By
-                                </div>
-                            </th>
-                            <th scope="col" class="px-6 py-3">
-                                <div class="flex items-center">
                                     QTY Picking List
                                 </div>
                             </th>
@@ -136,10 +137,6 @@
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->line_c }}
-                                </th>
-                                <th scope="row"
-                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $product->setup_by }}
                                 </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">

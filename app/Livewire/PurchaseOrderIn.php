@@ -16,6 +16,7 @@ class PurchaseOrderIn extends Component
     public $paletCode, $palet, $noPalet;
     public $surat_jalan;
     public $material_no;
+    public $input_setup_by;
     public $suratJalanDisable = false, $paletDisable = false, $poDisable = false;
 
     public function mount()
@@ -146,15 +147,15 @@ class PurchaseOrderIn extends Component
     {
         $qryUPdate = tempCounter::where('palet', $req[1])->where('material', $req[0]);
         $data = $qryUPdate->first();
-        if(isset($req[2]) && $req[2] == 'PO MCS'){
-           $dataUpdate =  [
-            'sisa' => $data->total,
-            'counter' => 0,
-            'qty_more' => 0,
-            'prop_scan' => null,
-            'line_c' => null
-           ];
-        }else{
+        if (isset($req[2]) && $req[2] == 'PO MCS') {
+            $dataUpdate =  [
+                'sisa' => $data->total,
+                'counter' => 0,
+                'qty_more' => 0,
+                'prop_scan' => null,
+                'line_c' => null
+            ];
+        } else {
             $dataUpdate =  [
                 'sisa' => $data->total,
                 'counter' => 0,
@@ -268,6 +269,7 @@ class PurchaseOrderIn extends Component
 
     public function resetPage()
     {
+        $this->input_setup_by = null;
         $this->suratJalanDisable = false;
         $this->paletDisable = false;
         $this->poDisable = false;
@@ -307,7 +309,13 @@ class PurchaseOrderIn extends Component
             ->whereIn('material', $materialNos);
         $existingMaterial = $getTempCounterData->pluck('material')->all();
         $existingLine = $getTempCounterData->pluck('line_c')->all();
+        $loopKe = 1;
         foreach ($getall as $value) {
+            if ($loopKe == 1) {
+                $this->input_setup_by = $value->setup_by;
+            }
+            $loopKe++;
+
             $materialExists = in_array($value->material_no, $existingMaterial);
             $lineExists = in_array($value->line_c, $existingLine);
             if (!$materialExists || !$lineExists) {
