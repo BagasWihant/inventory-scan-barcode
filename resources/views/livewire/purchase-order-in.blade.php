@@ -6,8 +6,41 @@
             </label>
             <input wire:model.live="surat_jalan" type="text" @if ($suratJalanDisable) disabled @endif
                 id="surat_jalan"
-                class=" w-full p-2 text-gray-900 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                class="@if ($suratJalanDisable) bg-gray-100 @endif w-full p-2 text-gray-900 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
+        </div>
+
+        <div class="w-full">
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PO
+            </label>
+            <input wire:model="searchPo" wire:keydown.debounce.300ms="poChange" type="text" id="produkBarcode"
+                @if ($poDisable) disabled @endif autocomplete="off"
+                class="@if ($poDisable) bg-gray-100 @endif block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+
+            <div class="absolute contents">
+                <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
+                    wire:target="poChange">Searching</div>
+                <div wire:loading.remove class="rounded-lg bg-slate-50 shadow">
+
+                    @if (strlen($searchPo) >= 3 && $po != $searchPo)
+                        @forelse ($listKitNo as $p)
+                            <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
+                                wire:click="choosePo('{{ $p->kit_no }}')">{{ $p->kit_no }}
+                            </div>
+                        @empty
+                            <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
+                        @endforelse
+                    @endif
+                </div>
+            </div>
+
+        </div>
+
+        <div class="w-1/4">
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white ">Setup By
+            </label>
+            <input wire:model="input_setup_by" disabled
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-100 text-base">
         </div>
 
         <div class="flex flex-col w-full">
@@ -16,57 +49,24 @@
             </label>
             <div class="w-full flex ">
                 <select id="section" name="section" value="{{ old('section') }}" wire:model.change="palet"
-                    @if ($paletDisable) disabled @endif
-                    class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300">
+                    class="mt-1 p-2 border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300">
                     <option value="">Choose Code</option>
                     <option value="L">L</option>
                 </select>
-                <input wire:model.live="noPalet" type="text" @if ($paletDisable) disabled @endif
+                <input wire:model.live="noPalet" type="text" 
                     class="block w-full
                      p-2 text-gray-700 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
         </div>
-        <div class="w-1/4">
-            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white ">Setup By
-            </label>
-            <input wire:model="input_setup_by" disabled
-                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base">
-        </div>
 
-        <div class="flex flex-col w-full">
-            <div class="w-full">
-                <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PO
-                </label>
-                <input wire:model="searchPo" wire:keydown.debounce.300ms="poChange" type="text" id="produkBarcode"
-                    @if ($poDisable) disabled @endif autocomplete="off"
-                    class="@if ($poDisable) bg-gray-50 @endif block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+        
 
-                <div class="absolute contents">
-                    <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
-                        wire:target="poChange">Searching</div>
-                    <div wire:loading.remove class="rounded-lg bg-slate-50 shadow">
-
-                        @if (strlen($searchPo) >= 3 && $po != $searchPo)
-                            @forelse ($listKitNo as $p)
-                                <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
-                                    wire:click="choosePo('{{ $p->kit_no }}')">{{ $p->kit_no }}
-                                </div>
-                            @empty
-                                <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
-                            @endforelse
-                        @endif
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
         <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No
             </label>
             <input wire:model="material_no" wire:keydown.debounce.150ms="materialNoScan" type="text"
                 id="produkBarcode"
-                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
         </div>
     </div>
     <div wire:loading.flex
