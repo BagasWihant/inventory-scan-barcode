@@ -104,10 +104,10 @@
         </nav>
         <div class="flex">
             <aside :class="sidebarOpen ? 'left-0 w-72' : '-left-72 w-0'"
-                class="relative min-h-screen transition-all mt-16 duration-300 flex flex-col text-md font-semibold top-0 z-40 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700"
+                class="relative min-h-screen transition-all mt-16 duration-300 flex flex-col text-md font-semibold top-0 z-40  bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700"
                 aria-label="Sidebar">
 
-                <div :class="sidebarOpen ? 'px-3' : ''" class="h-full py-4 px-3 overflow-y-auto bg-white dark:bg-gray-800 ">
+                <div :class="sidebarOpen ? 'px-3' : ''" class="h-[92vh] w-60 py-4 px-3 overflow-y-auto bg-white dark:bg-gray-800 fixed">
                     <ul class="space-y-2 font-medium text-sm">
                         <x-sidebar.list-menu :menuList="true" />
                     </ul>
