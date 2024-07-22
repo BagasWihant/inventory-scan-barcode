@@ -286,8 +286,10 @@
         $wire.on('newItem', (event) => {
             // jika item duplicate
             if (event[0].update) {
-
+                let locationValue = null
                 const lineValue = event[0].line
+
+                if(event[0].loc_cd) locationValue = event[0].loc_cd
                 linehtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Line C</strong>'
                 lokasihtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Location</strong>'
 
@@ -305,7 +307,6 @@
                 locationData = ['ASSY', 'CNC']
                 lokasihtml += '<select id="swal-input3" class="swal2-input my-2" >'
                 locationData.map((i) => {
-                    console.table(i)
                     lokasihtml += '<option value="' + i + '">' + i + '</option>'
                 })
                 lokasihtml += '</select>'
@@ -327,12 +328,8 @@
                                 <input id="swal-input1" class="swal2-input">
                             </div>
                             <div class="flex flex-col">
-                                <strong>Line C</strong>
-                                <input id="swal-input2" class="swal2-input" readonly>
-                            </div>
-                            <div class="flex flex-col">
                                 <strong>Location</strong>
-                                <input id="swal-input3" class="swal2-input" value="CNC" readonly>
+                                <input id="swal-input3" class="swal2-input" value="${locationValue}" readonly>
                             </div>`
                 }
                 return Swal.fire({
@@ -373,7 +370,6 @@
                             timerProgressBar: true,
                         });
                     } else if (result.isDenied) {
-                        console.log('here');
                         $wire.dispatch('insertNew', {
                             save: false
                         })
