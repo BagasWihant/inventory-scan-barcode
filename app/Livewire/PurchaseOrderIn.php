@@ -184,7 +184,6 @@ class PurchaseOrderIn extends Component
     }
     public function confirm()
     {
-        $this->paletCode = "$this->palet-$this->noPalet";
 
         $fixProduct = DB::table('temp_counters')
             ->leftJoin('delivery_mst as d', 'temp_counters.palet', '=', 'd.pallet_no')
@@ -306,6 +305,7 @@ class PurchaseOrderIn extends Component
 
     public function render()
     {
+        $this->paletCode = $this->palet."-".$this->noPalet;
 
         $getScanned = DB::table('material_in_stock')->select('material_no')
             ->where('pallet_no', $this->paletCode)
