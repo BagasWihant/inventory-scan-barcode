@@ -340,6 +340,9 @@
                     html: `${html}`,
                     showDenyButton: true,
                     denyButtonText: `Don't save`,
+                    didOpen: () => {
+                        $('#swal-input1').focus()
+                    },
                     preConfirm: () => {
                         return [
                             document.getElementById("swal-input1").value,
