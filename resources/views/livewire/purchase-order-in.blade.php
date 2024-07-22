@@ -53,13 +53,13 @@
                     <option value="">Choose Code</option>
                     <option value="L">L</option>
                 </select>
-                <input wire:model.live="noPalet" type="text" 
+                <input wire:model.live="noPalet" type="text"
                     class="block w-full
                      p-2 text-gray-700 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
         </div>
 
-        
+
 
         <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No
@@ -286,99 +286,79 @@
         $wire.on('newItem', (event) => {
             // jika item duplicate
             if (event[0].update) {
+
+                const lineValue = event[0].line
+                linehtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Line C</strong>'
+                lokasihtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Location</strong>'
+
+                if (lineValue.length > 1) {
+                    linehtml += '<select id="swal-input2" class="swal2-input my-2" >'
+                    lineValue.map((i) => {
+                        linehtml += '<option value="' + i.line_c + '">' + i.line_c + '</option>'
+                    })
+                    linehtml += '</select>'
+                } else {
+                    linehtml +=
+                        `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" disabled>`
+                }
+
+                locationData = ['ASSY', 'CNC']
+                lokasihtml += '<select id="swal-input3" class="swal2-input my-2" >'
+                locationData.map((i) => {
+                    console.table(i)
+                    lokasihtml += '<option value="' + i + '">' + i + '</option>'
+                })
+                lokasihtml += '</select>'
+
+                linehtml += '</div>'
+
                 if (event[0].line[0].setup_by === 'PO COT') {
-
-                    const lineValue = event[0].line
-                    linehtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Line C</strong>'
-
-                    if (lineValue.length > 1) {
-                        linehtml += '<select id="swal-input2" class="swal2-input my-2" >'
-                        lineValue.map((i) => {
-                            linehtml += '<option value="' + i.line_c + '">' + i.line_c + '</option>'
-                        })
-                        linehtml += '</select>'
-                    } else {
-                        linehtml +=
-                            `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" disabled>`
-                    }
-
-                    linehtml += '</div>'
-                    return Swal.fire({
-                        title: event[0].title,
-                        html: `<div class="flex flex-col">
+                    html = `<div class="flex flex-col">
                                 <strong>Qty</strong>
                                 <input id="swal-input1" class="swal2-input">
                             </div>
                             ${linehtml}
-                            `,
-                        showDenyButton: true,
-                        denyButtonText: `Don't save`,
-                        preConfirm: () => {
-                            return [
-                                document.getElementById("swal-input1").value,
-                                document.getElementById("swal-input2").value
-                            ];
-                        }
-
-                    }).then((result) => {
-                        console.log(result);
-                        /* Read more about isConfirmed, isDenied below */
-                        if (result.isConfirmed) {
-                            $wire.dispatch('insertNew', {
-                                qty: result.value[0],
-                                line: result.value[1],
-                                update: true,
-                                save: false
-                            })
-                            return Swal.fire({
-                                timer: 2000,
-                                title: "Updated",
-                                icon: "success",
-                                showConfirmButton: false,
-                                timerProgressBar: true,
-                            });
-                        } else if (result.isDenied) {
-                            console.log('here');
-                            $wire.dispatch('insertNew', {
-                                save: false
-                            })
-                            return Swal.fire({
-                                timer: 1000,
-                                title: "Changes are not saved",
-                                icon: "info",
-                                showConfirmButton: false,
-                                timerProgressBar: true,
-                            });
-                        }
-                    });
-                }
-                return Swal.fire({
-                    title: event[0].title,
-                    html: `
+                            ${lokasihtml}
+                            `
+                } else {
+                    html = `
                             <div class="flex flex-col">
                                 <strong>Qty</strong>
                                 <input id="swal-input1" class="swal2-input">
                             </div>
                             <div class="flex flex-col">
                                 <strong>Line C</strong>
-                                <input id="swal-input2" class="swal2-input">
+                                <input id="swal-input2" class="swal2-input" readonly>
                             </div>
-                    `,
+                            <div class="flex flex-col">
+                                <strong>Location</strong>
+                                <input id="swal-input3" class="swal2-input" value="CNC" readonly>
+                            </div>`
+                }
+                return Swal.fire({
+                    title: event[0].title,
+                    html: `${html}`,
                     showDenyButton: true,
                     denyButtonText: `Don't save`,
                     preConfirm: () => {
                         return [
                             document.getElementById("swal-input1").value,
-                            document.getElementById("swal-input2").value
+                            document.getElementById("swal-input2").value,
+                            document.getElementById("swal-input3").value
                         ];
                     }
 
                 }).then((result) => {
+                    console.log(result);
                     /* Read more about isConfirmed, isDenied below */
                     if (result.isConfirmed) {
                         $wire.dispatch('insertNew', {
-                            qty: result.value[0],
-                            lineNew: result.value[1],
+                            reqData: {
+
+                                qty: result.value[0],
+                                lineNew: result.value[1],
+                                location: result.value[2],
+                            },
                             update: true,
                             save: false
                         })
@@ -403,7 +383,7 @@
                         });
                     }
                 });
-                return
+
             }
         });
     </script>
