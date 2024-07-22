@@ -152,6 +152,7 @@ class PurchaseOrderIn extends Component
                         'prop_scan' => json_encode($new_prop_scan)
                     ];
                 }
+                // dd($updateData);
                 $tempCount->update($updateData);
             }
         }
@@ -183,6 +184,8 @@ class PurchaseOrderIn extends Component
     }
     public function confirm()
     {
+        $this->paletCode = "$this->palet-$this->noPalet";
+
         $fixProduct = DB::table('temp_counters')
             ->leftJoin('delivery_mst as d', 'temp_counters.palet', '=', 'd.pallet_no')
             ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
@@ -303,7 +306,6 @@ class PurchaseOrderIn extends Component
 
     public function render()
     {
-        $this->paletCode = "$this->palet-$this->noPalet";
 
         $getScanned = DB::table('material_in_stock')->select('material_no')
             ->where('pallet_no', $this->paletCode)
