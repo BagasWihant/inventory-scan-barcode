@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 class CheckingStock extends Component
 {
-    public $paletBarcode, $materialCode, $dateStart, $dateEnd;
-    public $shipped = [], $inStock = [], $listMaterial = [];
+    public $paletBarcode = "", $materialCode = "", $dateStart = "", $dateEnd = "";
+    public $receivingData = [], $inStock = [], $listMaterial = [];
 
     #[On('paletChange')]
     public function paletChange()
@@ -26,67 +26,21 @@ class CheckingStock extends Component
 
     public function searching()
     {
-
-        // ITEM YANG DIKIRIM
-        $queryShippedRaw = DB::table('material_setup_mst_CNC_KIAS2 as a')
-            ->selectRaw("a.material_no,count(a.material_no) as pax, sum(picking_qty) as picking_qty, min(serial_no) as serial_no,location_cd, FORMAT(setup_date,'dd-MM-yyyy') as date")
-            ->leftJoin('matloc_temp_CNCKIAS2 as b', 'a.material_no', '=', 'b.material_no');
-
-        if ($this->paletBarcode) {
-            $queryShippedRaw->where('pallet_no', $this->paletBarcode);
-        }else{
-            return $this->dispatch('popup',['title'=>'Pallet Barcode must be filled']);
+        if (!$this->dateStart && !$this->dateEnd) {
+            $this->dateStart = '2023-01-01';
+            $this->dateEnd = date('Y-m-d');
         }
 
-        if ($this->materialCode) {
-            $queryShippedRaw->where('a.material_no', $this->materialCode);
-        } else {
-            if ($this->listMaterial) {
-                $queryShippedRaw->whereIn('a.material_no', $this->listMaterial);
-            }
-        }
-
-        if ($this->dateStart && $this->dateEnd) {
-            $queryShippedRaw->whereRaw('setup_date >= ?', $this->dateStart);
-            $queryShippedRaw->whereRaw('setup_date <= ?', $this->dateEnd);
-        }else{
-            return $this->dispatch('popup',['title'=>'Please select date']);
-        }
-
-        $productsQuery = $queryShippedRaw->groupByRaw("pallet_no,a.material_no,location_cd, FORMAT(setup_date,'dd-MM-yyyy')")
-        ->orderByDesc('a.material_no')
-        ->orderByDesc('picking_qty');
-        $tempList = $productsQuery->pluck('material_no')->all();
-
-        $this->shipped = $productsQuery->get();
-
-        // ITEM YANG DITERIMa / STOCK
-        // $queryStockRaw = DB::table('material_in_stock as a')
-        //     ->selectRaw('a.pallet_no, a.material_no,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty,a.locate,b.status')
-        //     ->leftJoin('abnormal_materials as b', function ($join) {
-        //         $join->on('a.pallet_no', '=', 'b.pallet_no')
-        //             ->on('a.material_no', '=', 'b.material_no');
-        //     });
-        // if ($this->materialCode) {
-        //     $queryStockRaw->where('a.material_no', $this->materialCode);
-        // } else {
-        //     $queryStockRaw->whereIn('a.material_no', $tempList);
-        // }
-        // if ($this->paletBarcode) {
-        //     $queryShippedRaw->where('pallet_no', $this->paletBarcode);
-        // }
+        $this->receivingData = DB::select('EXEC sp_Receiving_report ?,?,?,?,?,?,?', [
+            'detail',
+            $this->paletBarcode ?? "",
+            $this->dateStart ?? '',
+            $this->dateEnd ?? "",
+            '',
+            $this->materialCode ?? "",
+            '',
+        ]);
         
-        $queryStockRaw = DB::table('material_mst')->selectRaw('matl_no,loc,qty');
-        
-        if ($this->materialCode) {
-            $queryStockRaw->where('matl_no', $this->materialCode);
-        } else {
-            $queryStockRaw->whereIn('matl_no', $tempList);
-        }
-
-        $getScanned = $queryStockRaw->orderByDesc('matl_no')->orderByDesc('qty')->get();
-        
-        $this->inStock = $getScanned;
     }
 
 

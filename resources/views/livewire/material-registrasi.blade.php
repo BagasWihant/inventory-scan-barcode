@@ -1,9 +1,9 @@
 <div class="darkmax-w-7xl mx-auto">
     <div class="text-2xl text-center font-extrabold py-6" id="setHerePagination">Material Registrasi</div>
 
-    <div class="flex gap-5 justify-items-center">
+    <div class="flex gap-5 ">
 
-        <div class="w-1/4">
+        <div class="w-1/4" wire:ignore>
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No
             </label>
 
@@ -44,7 +44,14 @@
     </div>
 
     @if ($listMaterialAdded != null)
-        <div class="text-base text-left font-extrabold py-6" id="setHerePagination">List Material Registrasi</div>
+        <div class=" py-6" id="setHerePagination">
+            <span class="text-base text-left font-extrabold block">
+                List Material Registrasi
+            </span>
+            <input wire:model="searchMaterial" wire:keydown.debounce.150ms="searching" type="text"
+                id="searchMaterial"
+                class="p-1 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+        </div>
 
         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -117,11 +124,11 @@
                 showConfirmButton: false,
                 timerProgressBar: true,
             });
+            $('#materialselect').val(null).trigger('change');
         });
         $('#materialselect').select2({
             placeholder: "Material Code",
-            width: 'resolve',
-            tags: true
+            width: 'resolve'
         });
         $('#materialselect').on('change', function(e) {
             @this.material = e.target.value

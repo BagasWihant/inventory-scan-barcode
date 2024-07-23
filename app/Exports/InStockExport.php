@@ -4,22 +4,24 @@ namespace App\Exports;
 
 use App\Models\itemIn;
 use Illuminate\Contracts\View\View;
-use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\FromView;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 use Maatwebsite\Excel\Concerns\WithDrawings;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\FromCollection;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 
-class InStockExport implements WithEvents, WithCustomStartCell, WithDrawings,FromCollection,WithColumnWidths,WithHeadings
+class InStockExport implements WithEvents, WithCustomStartCell, FromCollection, WithColumnWidths, WithHeadings
 {
-    public $data;
+    public $data, $count;
     public function __construct($dt)
     {
         $this->data = $dt;
+        $this->count = count($dt);
     }
 
     public function startCell(): string
@@ -30,10 +32,13 @@ class InStockExport implements WithEvents, WithCustomStartCell, WithDrawings,Fro
     public function columnWidths(): array
     {
         return [
-            'A' => 15,
-            'B' => 25,            
-            'C' => 10,            
-            'D' => 10,            
+            'A' => 25,
+            'B' => 20,
+            'C' => 20,
+            'D' => 20,
+            'E' => 10,
+            'F' => 15,
+            'G' => 15,
         ];
     }
 
@@ -42,30 +47,24 @@ class InStockExport implements WithEvents, WithCustomStartCell, WithDrawings,Fro
         return view('exports.in-stock', ['data' => $this->data]);
     }
 
-    public function collection(){
+    public function collection()
+    {
         return $this->data;
     }
 
-    public function headings(): array{
+    public function headings(): array
+    {
         return [
-            'Pallet No',
-            'Material No',
-            'Pax',
-            'Picking Qty',
+            'Material Code',
+            'Material Name',
+            'Wire Name',
+            'Location',
+            'Satuan',
+            'Min Lot',
+            'Qty',
         ];
     }
 
-    public function drawings()
-    {
-
-        $drawing = new Drawing();
-        $drawing->setName('Logo');
-        $drawing->setDescription('This is my logo');
-        $drawing->setPath(public_path('/assets/logo.jpg'));
-        $drawing->setHeight(50);
-        $drawing->setCoordinates('A1');
-        return $drawing;
-    }
 
     /**
      * @return array
@@ -76,8 +75,13 @@ class InStockExport implements WithEvents, WithCustomStartCell, WithDrawings,Fro
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet;
 
-                $sheet->mergeCells('B1:D2');
-                $sheet->setCellValue('B1', "HASIL EXPORT");
+                $sheet->mergeCells('A1:G2');
+                $sheet->setCellValue('A1', "REPORT STOCK MATERIAL");
+                $sheet->setCellValue('A3', "Per Tanggal : " . date('d-m-Y H:i'));
+                $sheet->getDelegate()->getStyle('A1:G2')->getFont()->setSize(20);
+                $sheet->getDelegate()->getStyle('A1:G3')->getFont()->setBold(true);
+
+
 
                 $styleArray = [
                     'alignment' => [
@@ -85,8 +89,18 @@ class InStockExport implements WithEvents, WithCustomStartCell, WithDrawings,Fro
                     ],
                 ];
 
-                $cellRange = 'A1:D1'; // All headers
+                $border = [
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color' => ['argb' => '000000'],
+                        ],
+                    ],
+                ];
+
+                $cellRange = 'A1:G' . $this->count + 5; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle("A5:G" . $this->count + 5)->applyFromArray($border);
             }
         ];
     }

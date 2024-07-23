@@ -23,5 +23,6 @@ class tempCounter extends Model
         'prop_scan',
         'scan_count',
         'flag',
+        'line_c',
     ];
 }

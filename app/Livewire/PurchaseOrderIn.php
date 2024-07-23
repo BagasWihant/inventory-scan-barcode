@@ -16,6 +16,7 @@ class PurchaseOrderIn extends Component
     public $paletCode, $palet, $noPalet;
     public $surat_jalan;
     public $material_no;
+    public $input_setup_by;
     public $suratJalanDisable = false, $paletDisable = false, $poDisable = false;
 
     public function mount()
@@ -72,104 +73,117 @@ class PurchaseOrderIn extends Component
 
 
             $mat_mst = DB::table('material_mst')
-                ->select('iss_min_lot')
+                ->select(['iss_min_lot','loc_cd'])
                 ->where('matl_no', $this->sws_code)->first();
+            $check_lineNsetup = DB::table('material_setup_mst_supplier')->select(['line_c', 'setup_by'])->where('kit_no', $this->po)->where('material_no', $this->material_no)->get()->toArray();
 
             if ($mat_mst->iss_min_lot == 1) {
-                $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
+                $this->material_no = null;
+                if ($check_lineNsetup) {
+                    return $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true, 'line' => $check_lineNsetup,'loc_cd' => $mat_mst->loc_cd]);
+                }
+                return $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
             }
-            // $dataTempCount = $getTempCounterData->first();
-            // if ($dataTempCount) {
-
-            //     if ($dataTempCount->prop_ori === null) {
-            //         $productsQuery = DB::table('material_setup_mst_supplier')->where('kit_no', $this->po)
-            //             ->where('material_no', $this->material_no)
-            //             ->selectRaw('material_no,picking_qty,kit_no');
-
-            //         $mergedQty = $productsQuery->get()->pluck('picking_qty')->all();
-
-            //         $getTempCounterData->update(['prop_ori' => json_encode($mergedQty)]);
-            //     }
-
-            //     $decodePropOri = json_decode($getTempCounterData->first()->prop_ori);
-            //     $dataTempCounter = $getTempCounterData->first();
-
-            //     $materialData = DB::table('material_setup_mst_supplier')
-            //         ->where('kit_no', $this->po)->where('material_no', $this->material_no)
-            //         ->selectRaw('material_no,sum(picking_qty) as picking_qty,kit_no,count(picking_qty) as pax')
-            //         ->groupBy(['material_no', 'kit_no'])
-            //         ->orderByDesc('pax')
-            //         ->orderBy('material_no')->first();
-
-
-            //     $newPropScan = isset($dataTempCounter->prop_scan) ? json_decode($dataTempCounter->prop_scan) : [];
-
-            //     $counter = $dataTempCounter->counter + $decodePropOri[0];
-            //     $sisa = $dataTempCounter->sisa - $decodePropOri[0];
-
-            //     array_push($newPropScan, $decodePropOri[0]);
-            //     array_splice($decodePropOri, 0, 1);
-
-            //     $getTempCounterData->update([
-            //         'prop_ori' => json_encode($decodePropOri),
-            //         'prop_scan' => json_encode($newPropScan),
-            //         'counter' => $counter, 'sisa' => $sisa
-            //     ]);
-            // }
         }
         $this->material_no = null;
     }
 
     #[On('insertNew')]
-    public function insertNew(int $qty = 0, $save = true, $update = false)
+    public function insertNew(array $reqData = null, $update = false)
     {
-        if ($update) {
+        if ($update && $reqData !== null) {
             $tempCount = DB::table('temp_counters')
                 ->where('material', $this->sws_code)
                 ->where('userID', $this->userId)
                 ->where('palet', $this->po);
+            if ($reqData['lineNew']) {
+                $tempCount->where('line_c', $reqData['lineNew']);
+            }
             $data = $tempCount->first();
 
-            $counter = $data->counter + $qty;
+            $counter = $data->counter + $reqData['qty'];
 
             $new_prop_scan = isset($data->prop_scan) ? json_decode($data->prop_scan) : [];
-            array_push($new_prop_scan, $qty);
+            array_push($new_prop_scan, $reqData['qty']);
 
-            $sisa = $data->sisa - $qty;
+            $sisa = $data->sisa - $reqData['qty'];
+            // save location on modal to prop_ori
+            $prop_ori_update = json_decode($data->prop_ori, true);
+            $prop_ori_update['location'] = $reqData['location'];
+
             if ($data->total < $data->counter || $data->sisa <= 0) {
-
+                // kelebihan
                 $this->material_no = null;
                 $more = $data->qty_more + 1;
-                $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more, 'prop_scan' => json_encode($new_prop_scan)]);
+                if ($reqData['lineNew']) {
+                    $updateData = [
+                        'line_c' => $reqData['lineNew'],
+                        'counter' => $counter,
+                        'sisa' => $sisa,
+                        'qty_more' => $more,
+                        'prop_scan' => json_encode($new_prop_scan),
+                        'prop_ori' => json_encode($prop_ori_update)
+                    ];
+                } else {
+                    $updateData = [
+                        'counter' => $counter,
+                        'sisa' => $sisa, 'qty_more' => $more,
+                        'prop_scan' => json_encode($new_prop_scan),
+                        'prop_ori' => json_encode($prop_ori_update),
+                    ];
+                }
+                $tempCount->update($updateData);
                 return;
             } else {
-
-                $tempCount->update([
-                    'counter' => $counter,
-                    'sisa' => $sisa,
-                    'prop_scan' => json_encode($new_prop_scan),
-                ]);
+                if ($reqData['lineNew']) {
+                    $updateData = [
+                        'counter' => $counter,
+                        'sisa' => $sisa,
+                        'prop_scan' => json_encode($new_prop_scan),
+                        'prop_ori' => json_encode($prop_ori_update),
+                        'line_c' => $reqData['lineNew']
+                    ];
+                } else {
+                    $updateData = [
+                        'counter' => $counter,
+                        'sisa' => $sisa,
+                        'prop_ori' => json_encode($prop_ori_update),
+                        'prop_scan' => json_encode($new_prop_scan)
+                    ];
+                }
+                // dd($updateData);
+                $tempCount->update($updateData);
             }
         }
         $this->material_no = null;
     }
 
-    public function resetItem($data)
+    public function resetItem($req)
     {
-        $qryUPdate = tempCounter::where('palet', $data[1])->where('material', $data[0]);
+        $qryUPdate = tempCounter::where('palet', $req[1])->where('material', $req[0]);
         $data = $qryUPdate->first();
-
-        $qryUPdate->update([
-            'sisa' => $data->total,
-            'counter' => 0,
-            'qty_more' => 0,
-            'prop_scan' => null,
-        ]);
+        if (isset($req[2]) && $req[2] == 'PO MCS') {
+            $dataUpdate =  [
+                'sisa' => $data->total,
+                'counter' => 0,
+                'qty_more' => 0,
+                'prop_scan' => null,
+                'line_c' => null
+            ];
+        } else {
+            $dataUpdate =  [
+                'sisa' => $data->total,
+                'counter' => 0,
+                'qty_more' => 0,
+                'prop_scan' => null
+            ];
+        }
+        $qryUPdate->update($dataUpdate);
         $this->dispatch('SJFocus');
     }
     public function confirm()
     {
-        $paletCode = "$this->palet-$this->noPalet";
+
         $fixProduct = DB::table('temp_counters')
             ->leftJoin('delivery_mst as d', 'temp_counters.palet', '=', 'd.pallet_no')
             ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
@@ -183,6 +197,12 @@ class PurchaseOrderIn extends Component
             $pax = $data->pax;
             $qty = $data->total / $pax;
             $kelebihan = $data->qty_more;
+            $prop_ori = json_decode($data->prop_ori, true);
+
+            if (!isset($prop_ori['setup_by'])) {
+                $prop_ori['setup_by'] = null;
+            }
+
             if ($data->prop_scan != null) {
 
                 $prop_scan = json_decode($data->prop_scan, true);
@@ -190,26 +210,32 @@ class PurchaseOrderIn extends Component
                 foreach ($prop_scan as $value) {
                     if ($masuk <= $data->pax || $data->total > $data->counter) {
                         itemIn::create([
-                            'pallet_no' => $paletCode,
+                            'pallet_no' => $this->paletCode,
                             'material_no' => $data->material,
                             'picking_qty' => $value,
                             'locate' => $data->location_cd,
                             'trucking_id' => $data->trucking_id,
                             'kit_no' => $this->po,
                             'surat_jalan' => $this->surat_jalan,
-                            'user_id' => $this->userId
+                            'user_id' => $this->userId,
+                            'line_c' => $data->line_c,
+                            'locate' => $prop_ori['location'] ?? null,
+                            'setup_by' => $prop_ori['setup_by'],
                         ]);
                     } else {
                         abnormalMaterial::create([
                             'kit_no' => $this->po,
                             'surat_jalan' => $this->surat_jalan,
-                            'pallet_no' => $paletCode,
+                            'pallet_no' => $this->paletCode,
                             'material_no' => $data->material,
                             'picking_qty' => $value,
                             'locate' => $data->location_cd,
                             'trucking_id' => $data->trucking_id,
                             'user_id' => $this->userId,
-                            'status' => 1
+                            'status' => 1,
+                            'line_c' => $$data->line_c,
+                            'locate' => $prop_ori['location'] ?? null,
+                            'setup_by' => $prop_ori['setup_by'],
                         ]);
                     }
                     $masuk++;
@@ -219,7 +245,7 @@ class PurchaseOrderIn extends Component
                     $count = $data->pax - $masuk;
                     $kurangnya = $data->total - $data->counter;
                     abnormalMaterial::create([
-                        'pallet_no' => $paletCode,
+                        'pallet_no' => $this->paletCode,
                         'kit_no' => $this->po,
                         'surat_jalan' => $this->surat_jalan,
                         'material_no' => $data->material,
@@ -227,7 +253,10 @@ class PurchaseOrderIn extends Component
                         'locate' => $data->location_cd,
                         'trucking_id' => $data->trucking_id,
                         'user_id' => $this->userId,
-                        'status' => 0
+                        'status' => 0,
+                        'line_c' => $$data->line_c,
+                        'locate' => $prop_ori['location'] ?? null,
+                        'setup_by' => $prop_ori['setup_by'],
                     ]);
                 }
             } else {
@@ -240,13 +269,16 @@ class PurchaseOrderIn extends Component
                     abnormalMaterial::create([
                         'kit_no' => $this->po,
                         'surat_jalan' => $this->surat_jalan,
-                        'pallet_no' => $paletCode,
+                        'pallet_no' => $this->paletCode,
                         'material_no' => $data->material,
                         'picking_qty' => $qty,
                         'locate' => $data->location_cd,
                         'trucking_id' => $data->trucking_id,
                         'user_id' => $this->userId,
-                        'status' => 0
+                        'status' => 0,
+                        'line_c' => $$data->line_c,
+                        'locate' => $prop_ori['location'] ?? null,
+                        'setup_by' => $prop_ori['setup_by'],
                     ]);
                 }
             }
@@ -256,6 +288,7 @@ class PurchaseOrderIn extends Component
 
     public function resetPage()
     {
+        $this->input_setup_by = null;
         $this->suratJalanDisable = false;
         $this->paletDisable = false;
         $this->poDisable = false;
@@ -264,37 +297,50 @@ class PurchaseOrderIn extends Component
         $this->palet = null;
         $this->searchPo = null;
         $this->noPalet = null;
+        $this->paletCode = null;
         DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
         $this->dispatch('SJFocus');
     }
 
     public function render()
     {
+        $this->paletCode = $this->palet."-".$this->noPalet;
+
         $getScanned = DB::table('material_in_stock')->select('material_no')
-            ->where('pallet_no', $this->po)
+            ->where('pallet_no', $this->paletCode)
             ->union(DB::table('abnormal_materials')->select('material_no')->where('pallet_no', $this->po))
             ->pluck('material_no')
             ->all();
 
         $productsQuery = DB::table('material_setup_mst_supplier as a')->where('a.kit_no', $this->po)
-            ->selectRaw('a.material_no,sum(a.picking_qty) as picking_qty,count(a.picking_qty) as pax,a.kit_no,sum(b.picking_qty) as stock_in')
-            ->leftJoin('material_in_stock as b', 'a.material_no', '=', 'b.material_no')
-            ->groupBy(['a.material_no', 'a.kit_no'])
+            ->selectRaw('a.material_no,sum(a.picking_qty) as picking_qty,count(a.picking_qty) as pax,a.kit_no,sum(b.picking_qty) as stock_in,a.line_c,a.setup_by')
+            ->leftJoin('material_in_stock as b', function ($join) {
+                $join->on('a.material_no', '=', 'b.material_no')->where('b.pallet_no', $this->paletCode);
+            })
+            ->groupBy(['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by'])
             ->orderByDesc('pax')
             ->orderBy('a.material_no');
 
         $getall = $productsQuery->get();
         $materialNos = $getall->pluck('material_no')->all();
 
-        $existingCounters = DB::table('temp_counters')
+        $getTempCounterData = DB::table('temp_counters')
+            ->select(['material', 'line_c'])
             ->where('palet', $this->po)
-            ->whereIn('material', $materialNos)
-            ->pluck('material')
-            ->all();
-
+            ->whereIn('material', $materialNos);
+        $existingMaterial = $getTempCounterData->pluck('material')->all();
+        $existingLine = $getTempCounterData->pluck('line_c')->all();
+        $loopKe = 1;
         foreach ($getall as $value) {
-            $counterExists = in_array($value->material_no, $existingCounters);
-            if (!$counterExists) {
+            if ($loopKe == 1) {
+                $this->input_setup_by = $value->setup_by;
+            }
+            $loopKe++;
+
+            $materialExists = in_array($value->material_no, $existingMaterial);
+            $lineExists = in_array($value->line_c, $existingLine);
+            if (!$materialExists || !$lineExists) {
+
                 try {
                     $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
                     DB::beginTransaction();
@@ -305,7 +351,9 @@ class PurchaseOrderIn extends Component
                         'sisa' => $total,
                         'total' => $total,
                         'pax' => $value->pax,
-                        'flag' => 1
+                        'flag' => 1,
+                        'prop_ori' => json_encode(['setup_by' => $value->setup_by]),
+                        'line_c' => $value->line_c,
                     ];
 
 

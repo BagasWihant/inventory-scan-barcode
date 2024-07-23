@@ -6,8 +6,41 @@
             </label>
             <input wire:model.live="surat_jalan" type="text" @if ($suratJalanDisable) disabled @endif
                 id="surat_jalan"
-                class=" w-full p-2 text-gray-900 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                class="@if ($suratJalanDisable) bg-gray-100 @endif w-full p-2 text-gray-900 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
+        </div>
+
+        <div class="w-full">
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PO
+            </label>
+            <input wire:model="searchPo" wire:keydown.debounce.300ms="poChange" type="text" id="produkBarcode"
+                @if ($poDisable) disabled @endif autocomplete="off"
+                class="@if ($poDisable) bg-gray-100 @endif block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+
+            <div class="absolute contents">
+                <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
+                    wire:target="poChange">Searching</div>
+                <div wire:loading.remove class="rounded-lg bg-slate-50 shadow">
+
+                    @if (strlen($searchPo) >= 3 && $po != $searchPo)
+                        @forelse ($listKitNo as $p)
+                            <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
+                                wire:click="choosePo('{{ $p->kit_no }}')">{{ $p->kit_no }}
+                            </div>
+                        @empty
+                            <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
+                        @endforelse
+                    @endif
+                </div>
+            </div>
+
+        </div>
+
+        <div class="w-1/4">
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white ">Setup By
+            </label>
+            <input wire:model="input_setup_by" disabled
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-100 text-base">
         </div>
 
         <div class="flex flex-col w-full">
@@ -16,51 +49,24 @@
             </label>
             <div class="w-full flex ">
                 <select id="section" name="section" value="{{ old('section') }}" wire:model.change="palet"
-                    @if ($paletDisable) disabled @endif
-                    class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300">
+                    class="mt-1 p-2 border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300">
                     <option value="">Choose Code</option>
                     <option value="L">L</option>
                 </select>
-                <input wire:model.live="noPalet" type="text" @if ($paletDisable) disabled @endif
+                <input wire:model.live="noPalet" type="text"
                     class="block w-full
                      p-2 text-gray-700 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
         </div>
 
-        <div class="flex flex-col w-full">
-            <div class="w-full">
-                <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PO
-                </label>
-                <input wire:model="searchPo" wire:keydown.debounce.300ms="poChange" type="text" id="produkBarcode"
-                    @if ($poDisable) disabled @endif autocomplete="off"
-                    class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
-                <div class="absolute contents">
-                    <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
-                        wire:target="poChange">Searching</div>
-                    <div wire:loading.remove class="rounded-lg bg-slate-50 shadow">
 
-                        @if (strlen($searchPo) >= 3 && $po != $searchPo)
-                            @forelse ($listKitNo as $p)
-                                <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
-                                    wire:click="choosePo('{{ $p->kit_no }}')">{{ $p->kit_no }}
-                                </div>
-                            @empty
-                                <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
-                            @endforelse
-                        @endif
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
         <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No
             </label>
             <input wire:model="material_no" wire:keydown.debounce.150ms="materialNoScan" type="text"
                 id="produkBarcode"
-                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
         </div>
     </div>
     <div wire:loading.flex
@@ -106,6 +112,11 @@
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 <div class="flex items-center">
+                                    Line C
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                <div class="flex items-center">
                                     QTY Picking List
                                 </div>
                             </th>
@@ -119,12 +130,14 @@
                     <tbody>
                         @foreach ($listMaterial as $product)
                             <tr class=" border rounded dark:border-gray-700 ">
-                                {{-- <th scope="row"
-                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $product->pallet_no }}</th> --}}
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->material_no }}</th>
+
+                                <th scope="row"
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {{ $product->line_c }}
+                                </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $product->picking_qty }}
@@ -148,6 +161,9 @@
                         <tr>
                             <th scope="col " class="px-6 py-3">
                                 Material No
+                            </th>
+                            <th scope="col " class="px-6 py-3">
+                                Line C
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 <div class="flex items-center">
@@ -187,6 +203,9 @@
                                     {{ $v->material }}</th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {{ $v->line_c }}</th>
+                                <th scope="row"
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ $v->counter }} </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -199,7 +218,8 @@
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     @if ($v->counter > 0)
-                                        <button wire:click="resetItem({{ json_encode([$v->material, $v->palet]) }})"
+                                        <button
+                                            wire:click="resetItem({{ json_encode([$v->material, $v->palet, json_decode($v->prop_ori, true)['setup_by']]) }})"
                                             class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg p-1 group bg-gradient-to-br from-red-800 to-red-500 group-hover:from-red-900 group-hover:to-red-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
                                             Reset
                                         </button>
@@ -263,23 +283,82 @@
                 $("#surat_jalan").focus()
             }, 50);
         });
-        $wire.on('newItem', async (event) => {
+        $wire.on('newItem', (event) => {
             // jika item duplicate
             if (event[0].update) {
+                let locationValue = null
+                const lineValue = event[0].line
 
-                await Swal.fire({
+                if(event[0].loc_cd) locationValue = event[0].loc_cd
+                linehtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Line C</strong>'
+                lokasihtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Location</strong>'
+
+                if (lineValue.length > 1) {
+                    linehtml += '<select id="swal-input2" class="swal2-input my-2" >'
+                    lineValue.map((i) => {
+                        linehtml += '<option value="' + i.line_c + '">' + i.line_c + '</option>'
+                    })
+                    linehtml += '</select>'
+                } else {
+                    linehtml +=
+                        `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" disabled>`
+                }
+
+                locationData = ['ASSY', 'CNC']
+                lokasihtml += '<select id="swal-input3" class="swal2-input my-2" >'
+                locationData.map((i) => {
+                    lokasihtml += '<option value="' + i + '">' + i + '</option>'
+                })
+                lokasihtml += '</select>'
+
+                linehtml += '</div>'
+
+                if (event[0].line[0].setup_by === 'PO COT') {
+                    html = `<div class="flex flex-col">
+                                <strong>Qty</strong>
+                                <input id="swal-input1" class="swal2-input">
+                            </div>
+                            ${linehtml}
+                            ${lokasihtml}
+                            `
+                } else {
+                    html = `
+                            <div class="flex flex-col">
+                                <strong>Qty</strong>
+                                <input id="swal-input1" class="swal2-input">
+                            </div>
+                            <div class="flex flex-col">
+                                <strong>Location</strong>
+                                <input id="swal-input3" class="swal2-input" value="${locationValue}" readonly>
+                            </div>`
+                }
+                return Swal.fire({
                     title: event[0].title,
-                    input: "number",
-                    inputValue: event[0].qty ?? 0,
-                    inputLabel: "Qty per pax",
-                    inputPlaceholder: "qty",
+                    html: `${html}`,
                     showDenyButton: true,
-                    denyButtonText: `Don't save`
+                    denyButtonText: `Don't save`,
+                    didOpen: () => {
+                        $('#swal-input1').focus()
+                    },
+                    preConfirm: () => {
+                        return [
+                            document.getElementById("swal-input1").value,
+                            document.getElementById("swal-input2").value,
+                            document.getElementById("swal-input3").value
+                        ];
+                    }
+
                 }).then((result) => {
+                    console.log(result);
                     /* Read more about isConfirmed, isDenied below */
                     if (result.isConfirmed) {
                         $wire.dispatch('insertNew', {
-                            qty: result.value,
+                            reqData: {
+
+                                qty: result.value[0],
+                                lineNew: result.value[1],
+                                location: result.value[2],
+                            },
                             update: true,
                             save: false
                         })
@@ -291,7 +370,6 @@
                             timerProgressBar: true,
                         });
                     } else if (result.isDenied) {
-                        console.log('here');
                         $wire.dispatch('insertNew', {
                             save: false
                         })
@@ -304,44 +382,8 @@
                         });
                     }
                 });
-                return
+
             }
-
-            await Swal.fire({
-                title: event[0].title,
-                input: "number",
-                inputValue: event[0].qty ?? 0,
-                inputLabel: "Qty per pax",
-                inputPlaceholder: "qty",
-                showDenyButton: true,
-                denyButtonText: `Don't save`
-            }).then((result) => {
-                /* Read more about isConfirmed, isDenied below */
-                if (result.isConfirmed) {
-                    $wire.dispatch('insertNew', {
-                        qty: result.value,
-                    })
-                    Swal.fire({
-                        timer: 2000,
-                        title: "Saved",
-                        icon: "success",
-                        showConfirmButton: false,
-                        timerProgressBar: true,
-                    });
-                } else if (result.isDenied) {
-                    $wire.dispatch('insertNew', {
-                        save: false
-                    })
-                    Swal.fire({
-                        timer: 1000,
-                        title: "Changes are not saved",
-                        icon: "info",
-                        showConfirmButton: false,
-                        timerProgressBar: true,
-                    });
-                }
-
-            });
         });
     </script>
 @endscript

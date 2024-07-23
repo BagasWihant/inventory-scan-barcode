@@ -6,7 +6,7 @@
         <img src="https://www.svgrepo.com/show/509001/avatar-thinking-9.svg" class="rounded-full h-28 w-28">
     </div>
 
-    <div class="text-2xl font-extrabold py-6 text-center">Checking Stock</div>
+    <div class="text-2xl font-extrabold py-6 text-center">Receiving Report</div>
     <div class="grid md:grid-cols-8 gap-3 w-full pb-6">
 
         <div class="col-span-2" wire:ignore>
@@ -64,90 +64,73 @@
         </div>
     </div>
     
-    @if (count($shipped) > 0)
-        <div class=" grid grid-cols-2 justify-around gap-4">
+    @if (count($receivingData) > 0)
+        <div class=" grid ">
             <div class="">
                 <span class="text-gray-900 flex justify-center font-semibold">Stock Material</span>
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 shadow-md">
-                    <thead class="text-xs text-gray-800 uppercase bg-green-100 dark:bg-green-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-800 uppercase bg-slate-200 dark:text-gray-400">
                         <tr>
                             <th scope="col " class="px-6 py-3">
+                                Date SIWS
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Received Date
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Trucking ID
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Kit No
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Pallet No
+                            </th>
+                            <th scope="col" class="px-6 py-3">
                                 Material No
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                <div class="flex items-center">
-                                    Qty
-                                </div>
+                                Qty Deliv SIWS
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                <div class="flex items-center">
-                                    Location
-                                </div>
+                                Qty Receive KIAS
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-green-50">
-                        @foreach ($inStock as $v)
+                    <tbody class="bg-slate-50">
+                        @foreach ($receivingData as $v)
                             <tr class=" border rounded dark:border-gray-700">
 
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->matl_no }} </th>
+                                    {{ $v->Delivery_Supply_Date_SIWS }} </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->qty }}
+                                    {{ $v->Received_Date }}
                                 </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->loc }}
-                                </th>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            <div class="">
-                <span class="text-gray-900 flex justify-center font-semibold">Received Material</span>
-                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 shadow-md">
-                    <thead class="text-xs text-gray-700 uppercase bg-red-100 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col " class="px-6 py-3">
-                                Material No
-                            </th>
-                            <th scope="col" class="px-6 py-3">
-                                <div class="flex items-center">
-                                    Qty
-                                </div>
-                            </th>
-                            <th scope="col" class="px-6 py-3">
-                                <div class="flex items-center">
-                                    Location
-                                </div>
-                            </th>
-                            <th scope="col" class="px-6 py-3">
-                                <div class="flex items-center">
-                                    date
-                                </div>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-red-50">
-                        @foreach ($shipped as $v)
-                            <tr class=" border rounded dark:border-gray-700">
-                                <th scope="row"
-                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->material_no }} </th>
-                                <th scope="row"
-                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->picking_qty }}
+                                    {{ $v->trucking_id }}
                                 </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->location_cd }}
+                                    {{ $v->kit_no }}
                                 </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->date }}
+                                    {{ $v->pallet_no }}
+                                </th>
+                                <th scope="row"
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {{ $v->material_no }}
+                                </th>
+                                <th scope="row"
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {{ $v->Qty_Delivery_SIWS }}
+                                </th>
+                                <th scope="row"
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {{ $v->Qty_Received_KIAS }}
                                 </th>
                             </tr>
                         @endforeach

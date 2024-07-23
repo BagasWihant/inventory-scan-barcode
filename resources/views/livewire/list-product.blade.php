@@ -245,7 +245,7 @@
                     title: event[0].title,
                     input: "number",
                     inputValue: event[0].qty ?? 0,
-                    inputLabel: "Qty per pax",
+                    inputLabel: "Qty ",
                     inputPlaceholder: "qty",
                     showDenyButton: true,
                     denyButtonText: `Don't save`
@@ -285,7 +285,7 @@
                 title: event[0].title,
                 input: "number",
                 inputValue: event[0].qty ?? 0,
-                inputLabel: "Qty per pax",
+                inputLabel: "Qty ",
                 inputPlaceholder: "qty",
                 showDenyButton: true,
                 denyButtonText: `Don't save`
