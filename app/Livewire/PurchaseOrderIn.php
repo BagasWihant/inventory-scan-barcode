@@ -111,6 +111,15 @@ class PurchaseOrderIn extends Component
             $prop_ori_update = json_decode($data->prop_ori, true);
             $prop_ori_update['location'] = $reqData['location'];
 
+            $updatePropOnly = [
+                'prop_ori' => json_encode($prop_ori_update)
+            ];
+            // TIDAK BISA BUAT temp variable
+            DB::table('temp_counters')
+            ->where('material', $this->sws_code)
+            ->where('userID', $this->userId)
+            ->where('palet', $this->po)->update($updatePropOnly);
+
             if ($data->total < $data->counter || $data->sisa <= 0) {
                 // kelebihan
                 $this->material_no = null;
@@ -122,14 +131,12 @@ class PurchaseOrderIn extends Component
                         'sisa' => $sisa,
                         'qty_more' => $more,
                         'prop_scan' => json_encode($new_prop_scan),
-                        'prop_ori' => json_encode($prop_ori_update)
                     ];
                 } else {
                     $updateData = [
                         'counter' => $counter,
                         'sisa' => $sisa, 'qty_more' => $more,
                         'prop_scan' => json_encode($new_prop_scan),
-                        'prop_ori' => json_encode($prop_ori_update),
                     ];
                 }
                 $tempCount->update($updateData);
@@ -140,14 +147,12 @@ class PurchaseOrderIn extends Component
                         'counter' => $counter,
                         'sisa' => $sisa,
                         'prop_scan' => json_encode($new_prop_scan),
-                        'prop_ori' => json_encode($prop_ori_update),
                         'line_c' => $reqData['lineNew']
                     ];
                 } else {
                     $updateData = [
                         'counter' => $counter,
                         'sisa' => $sisa,
-                        'prop_ori' => json_encode($prop_ori_update),
                         'prop_scan' => json_encode($new_prop_scan)
                     ];
                 }
@@ -162,6 +167,9 @@ class PurchaseOrderIn extends Component
     {
         $qryUPdate = tempCounter::where('palet', $req[1])->where('material', $req[0]);
         $data = $qryUPdate->first();
+        $decodePropOri = json_decode($data->prop_ori, true);
+        $tmp['setup_by'] = $decodePropOri['setup_by'];
+        $newPropOri = json_encode($tmp);
         if (isset($req[2]) && $req[2] == 'PO MCS') {
             $dataUpdate =  [
                 'sisa' => $data->total,
@@ -175,7 +183,8 @@ class PurchaseOrderIn extends Component
                 'sisa' => $data->total,
                 'counter' => 0,
                 'qty_more' => 0,
-                'prop_scan' => null
+                'prop_scan' => null,
+                'prop_ori' => $newPropOri
             ];
         }
         $qryUPdate->update($dataUpdate);
@@ -313,11 +322,11 @@ class PurchaseOrderIn extends Component
             ->all();
 
         $productsQuery = DB::table('material_setup_mst_supplier as a')->where('a.kit_no', $this->po)
-            ->selectRaw('a.material_no,sum(a.picking_qty) as picking_qty,count(a.picking_qty) as pax,a.kit_no,sum(b.picking_qty) as stock_in,a.line_c,a.setup_by')
+            ->selectRaw('a.material_no,a.picking_qty,count(a.picking_qty) as pax,a.kit_no,b.picking_qty as stock_in,a.line_c,a.setup_by')
             ->leftJoin('material_in_stock as b', function ($join) {
                 $join->on('a.material_no', '=', 'b.material_no')->where('b.pallet_no', $this->paletCode);
             })
-            ->groupBy(['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by'])
+            ->groupBy(['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by','a.picking_qty','b.picking_qty'])
             ->orderByDesc('pax')
             ->orderBy('a.material_no');
 
