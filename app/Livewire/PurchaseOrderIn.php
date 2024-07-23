@@ -73,14 +73,24 @@ class PurchaseOrderIn extends Component
 
 
             $mat_mst = DB::table('material_mst')
-                ->select(['iss_min_lot','loc_cd'])
+                ->select(['iss_min_lot', 'loc_cd'])
                 ->where('matl_no', $this->sws_code)->first();
             $check_lineNsetup = DB::table('material_setup_mst_supplier')->select(['line_c', 'setup_by'])->where('kit_no', $this->po)->where('material_no', $this->material_no)->get()->toArray();
 
             if ($mat_mst->iss_min_lot == 1) {
                 $this->material_no = null;
                 if ($check_lineNsetup) {
-                    return $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true, 'line' => $check_lineNsetup,'loc_cd' => $mat_mst->loc_cd]);
+                    // check lokasi di kolom prop ori
+                    $checkLocation = tempCounter::select('prop_ori')->where('palet', $this->po)->where('material', $this->sws_code)->first();
+                    $decodePropOri = json_decode($checkLocation->prop_ori, true);
+                    return $this->dispatch('newItem', [
+                        'qty' => 0,
+                        'title' => 'Material with manual Qty',
+                        'update' => true,
+                        'line' => $check_lineNsetup,
+                        'loc_cd' => $mat_mst->loc_cd,
+                        'locationSet' => isset($decodePropOri['location']) ? [$decodePropOri['location']] : null
+                    ]);
                 }
                 return $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
             }
@@ -116,9 +126,9 @@ class PurchaseOrderIn extends Component
             ];
             // TIDAK BISA BUAT temp variable
             DB::table('temp_counters')
-            ->where('material', $this->sws_code)
-            ->where('userID', $this->userId)
-            ->where('palet', $this->po)->update($updatePropOnly);
+                ->where('material', $this->sws_code)
+                ->where('userID', $this->userId)
+                ->where('palet', $this->po)->update($updatePropOnly);
 
             if ($data->total < $data->counter || $data->sisa <= 0) {
                 // kelebihan
@@ -313,7 +323,7 @@ class PurchaseOrderIn extends Component
 
     public function render()
     {
-        $this->paletCode = $this->palet."-".$this->noPalet;
+        $this->paletCode = $this->palet . "-" . $this->noPalet;
 
         $getScanned = DB::table('material_in_stock')->select('material_no')
             ->where('pallet_no', $this->paletCode)
@@ -326,7 +336,7 @@ class PurchaseOrderIn extends Component
             ->leftJoin('material_in_stock as b', function ($join) {
                 $join->on('a.material_no', '=', 'b.material_no')->where('b.pallet_no', $this->paletCode);
             })
-            ->groupBy(['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by','a.picking_qty','b.picking_qty'])
+            ->groupBy(['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty'])
             ->orderByDesc('pax')
             ->orderBy('a.material_no');
 
