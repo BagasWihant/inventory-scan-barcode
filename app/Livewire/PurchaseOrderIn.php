@@ -165,7 +165,7 @@ class PurchaseOrderIn extends Component
 
     public function resetItem($req)
     {
-        $qryUPdate = tempCounter::where('palet', $req[1])->where('material', $req[0]);
+        $qryUPdate = tempCounter::where('palet', $req[1])->where('material', $req[0])->where('line_c', $req[3]);
         $data = $qryUPdate->first();
         $decodePropOri = json_decode($data->prop_ori, true);
         $tmp['setup_by'] = $decodePropOri['setup_by'];
