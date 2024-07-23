@@ -209,7 +209,7 @@
                                     {{ $v->counter }} </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $v->location_cd }}
+                                    {{ isset(json_decode($v->prop_ori, true)['location']) ? json_decode($v->prop_ori, true)['location'] .'*': $v->location_cd }} 
                                 </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -289,7 +289,7 @@
                 let locationValue = null
                 const lineValue = event[0].line
 
-                if(event[0].loc_cd) locationValue = event[0].loc_cd
+                if (event[0].loc_cd) locationValue = event[0].loc_cd
                 linehtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Line C</strong>'
                 lokasihtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Location</strong>'
 
@@ -301,7 +301,7 @@
                     linehtml += '</select>'
                 } else {
                     linehtml +=
-                        `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" disabled>`
+                        `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" readonly>`
                 }
 
                 locationData = ['ASSY', 'CNC']
@@ -326,10 +326,11 @@
                             <div class="flex flex-col">
                                 <strong>Qty</strong>
                                 <input id="swal-input1" class="swal2-input">
-                            </div>
+                                </div>
+                                <input id="swal-input2" class="swal2-input" hidden>
                             <div class="flex flex-col">
                                 <strong>Location</strong>
-                                <input id="swal-input3" class="swal2-input" value="${locationValue}" readonly>
+                                <input id="swal-input3" class="swal2-input" value="${locationValue}">
                             </div>`
                 }
                 return Swal.fire({
