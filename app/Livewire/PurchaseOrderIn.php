@@ -233,7 +233,7 @@ class PurchaseOrderIn extends Component
                             'trucking_id' => $data->trucking_id,
                             'user_id' => $this->userId,
                             'status' => 1,
-                            'line_c' => $$data->line_c,
+                            'line_c' => $data->line_c,
                             'locate' => $prop_ori['location'] ?? null,
                             'setup_by' => $prop_ori['setup_by'],
                         ]);
@@ -254,7 +254,7 @@ class PurchaseOrderIn extends Component
                         'trucking_id' => $data->trucking_id,
                         'user_id' => $this->userId,
                         'status' => 0,
-                        'line_c' => $$data->line_c,
+                        'line_c' => $data->line_c,
                         'locate' => $prop_ori['location'] ?? null,
                         'setup_by' => $prop_ori['setup_by'],
                     ]);
@@ -276,7 +276,7 @@ class PurchaseOrderIn extends Component
                         'trucking_id' => $data->trucking_id,
                         'user_id' => $this->userId,
                         'status' => 0,
-                        'line_c' => $$data->line_c,
+                        'line_c' => $data->line_c,
                         'locate' => $prop_ori['location'] ?? null,
                         'setup_by' => $prop_ori['setup_by'],
                     ]);
