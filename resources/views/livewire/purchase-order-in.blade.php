@@ -301,7 +301,7 @@
                     linehtml += '</select>'
                 } else {
                     linehtml +=
-                        `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" disabled>`
+                        `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" readonly>`
                 }
 
                 locationData = ['ASSY', 'CNC']
@@ -329,7 +329,7 @@
                             </div>
                             <div class="flex flex-col">
                                 <strong>Location</strong>
-                                <input id="swal-input3" class="swal2-input" value="${locationValue}" readonly>
+                                <input id="swal-input3" class="swal2-input" value="${locationValue}">
                             </div>`
                 }
                 return Swal.fire({
