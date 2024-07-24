@@ -113,8 +113,6 @@ class PurchaseOrderIn extends Component
 
             $counter = $data->counter + $reqData['qty'];
 
-            $new_prop_scan = isset($data->prop_scan) ? json_decode($data->prop_scan) : [];
-            array_push($new_prop_scan, $reqData['qty']);
 
             $sisa = $data->sisa - $reqData['qty'];
             // save location on modal to prop_ori
@@ -130,6 +128,9 @@ class PurchaseOrderIn extends Component
                 ->where('userID', $this->userId)
                 ->where('palet', $this->po)->update($updatePropOnly);
 
+            $new_prop_scan = isset($data->prop_scan) ? json_decode($data->prop_scan) : [];
+            array_push($new_prop_scan, $reqData['qty']);
+            
             if ($data->total < $data->counter || $data->sisa <= 0) {
                 // kelebihan
                 $this->material_no = null;
