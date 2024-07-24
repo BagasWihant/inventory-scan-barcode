@@ -98,32 +98,24 @@
 
 
     @if (count($listMaterial) > 0)
-        <div class="grid grid-cols-2 row gap-4 overflow-x-auto sm:rounded-lg p-3 ">
-            <div class="w-full">
+        <div class="flex  gap-4 overflow-x-auto sm:rounded-lg p-3 ">
+            <div class="w-[90%]">
 
                 <h2 class="p-3 text-xl text-center font-extrabold dark:text-white">List Barang </h2>
                 <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
                             <th scope="col" class="px-6 py-3">
-                                <div class="flex items-center">
                                     Material No
-                                </div>
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                <div class="flex items-center">
                                     Line C
-                                </div>
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                <div class="flex items-center">
                                     QTY Picking List
-                                </div>
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                <div class="flex items-center">
                                     In Stock
-                                </div>
                             </th>
                         </tr>
                     </thead>
