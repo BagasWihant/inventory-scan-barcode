@@ -307,7 +307,7 @@
                 }
 
                 if (locationSet) {
-                   lokasihtml += `<input id="swal-input2" class="swal2-input" value="${locationSet[0]}" readonly>`
+                   lokasihtml += `<input id="swal-input3" class="swal2-input" value="${locationSet[0]}" readonly>`
                 } else {
                     locationData = ['ASSY', 'CNC']
                     lokasihtml += '<select id="swal-input3" class="swal2-input my-2" >'
