@@ -338,8 +338,8 @@ class PurchaseOrderIn extends Component
                 $join->on('a.material_no', '=', 'b.material_no')->where('b.pallet_no', $this->paletCode);
             })
             ->groupBy(['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty'])
-            ->orderByDesc('a.line_c')
-            ->orderBy('a.material_no');
+            ->orderBy('a.material_no')
+            ->orderByDesc('a.line_c');
 
         $getall = $productsQuery->get();
         $materialNos = $getall->pluck('material_no')->all();
@@ -391,8 +391,8 @@ class PurchaseOrderIn extends Component
             ->where('palet', $this->po)
             ->select('a.*', 'b.loc_cd as location_cd')
             ->where('userID', $this->userId)
-            ->orderByDesc('line_c')
             ->orderBy('material')
+            ->orderByDesc('line_c')
             ->get();
 
 
