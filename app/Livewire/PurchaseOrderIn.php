@@ -335,7 +335,10 @@ class PurchaseOrderIn extends Component
         $productsQuery = DB::table('material_setup_mst_supplier as a')->where('a.kit_no', $this->po)
             ->selectRaw('a.material_no,a.picking_qty,count(a.picking_qty) as pax,a.kit_no,b.picking_qty as stock_in,a.line_c,a.setup_by')
             ->leftJoin('material_in_stock as b', function ($join) {
-                $join->on('a.material_no', '=', 'b.material_no')->where('b.pallet_no', $this->paletCode);
+                $join->on('a.material_no', '=', 'b.material_no')
+                ->on('a.kit_no', '=', 'b.kit_no')
+                ->on('a.line_c', '=', 'b.line_c')
+                ->where('b.pallet_no', $this->paletCode);
             })
             ->groupBy(['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty'])
             ->orderBy('a.material_no')
