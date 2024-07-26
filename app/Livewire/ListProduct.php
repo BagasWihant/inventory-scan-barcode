@@ -92,7 +92,7 @@ class ListProduct extends Component
         $this->paletBarcode = substr($this->paletBarcode, 0, 10);
         // dump($this->paletBarcode !== $this->previousPaletBarcode);
         if (strlen($this->paletBarcode) > 2) {
-            DB::table('temp_counters')->where('userID', $this->userId)->where('flag',0)->delete();
+            DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 0)->delete();
             $truk = DB::table('delivery_mst')->where('pallet_no', $this->paletBarcode)->select('trucking_id')->first();
             if ($truk) {
                 $this->dispatch('produkFocus');
@@ -117,6 +117,12 @@ class ListProduct extends Component
         }
 
         if (strlen($this->produkBarcode) > 2) {
+
+            if (strtolower(substr($this->paletBarcode, 0, 1)) == "c") {
+                $tempSplit = explode(' ', $this->produkBarcode);
+                $this->produkBarcode = substr($tempSplit[0], 23, 15);
+            }
+            
             $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->produkBarcode)->select('sws_code')->first();
             if ($supplierCode) {
                 $this->sws_code = $supplierCode->sws_code;
@@ -168,7 +174,7 @@ class ListProduct extends Component
                         $cek = DB::table('material_setup_mst_CNC_KIAS2')
                             ->selectRaw('max(picking_qty) as qty')
                             ->where('material_no', $supplierCode->sws_code)->first();
-                            
+
                         $this->dispatch('newItem2', ['qty' => $cek->qty, 'title' => 'New Item Detected']);
                         return;
                     }
@@ -196,7 +202,7 @@ class ListProduct extends Component
             ->groupBy('a.pallet_no', 'a.material_no', 'b.loc_cd')
             ->orderByDesc('pax')
             ->orderByDesc('a.material_no');
-            
+
 
         $picking = DB::table('material_setup_mst_CNC_KIAS2')
             ->selectRaw('picking_qty,material_no,count(picking_qty) as jml_pick')
