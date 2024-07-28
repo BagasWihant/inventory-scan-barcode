@@ -120,7 +120,13 @@ class ListProduct extends Component
 
             if (strtolower(substr($this->paletBarcode, 0, 1)) == "c") {
                 $tempSplit = explode(' ', $this->produkBarcode);
-                $this->produkBarcode = substr($tempSplit[0], 23, 15);
+
+                if(strtolower(substr($this->produkBarcode, 0, 1)) == "p") {
+                    $this->produkBarcode = substr($this->produkBarcode, 1, 15);
+                }else{
+                    $this->produkBarcode = substr($tempSplit[0], 23, 15);
+                }
+                dd($this->produkBarcode);
             }
             
             $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->produkBarcode)->select('sws_code')->first();
