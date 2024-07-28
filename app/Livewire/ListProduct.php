@@ -271,8 +271,10 @@ class ListProduct extends Component
             ->get();
 
         $props = [0, 'No Data'];
-        if ($getall->count() == 0 && count($getScanned) > 0) {
+        if ($getall->count() == 0 && count($getScanned) > 0 ) {
             $props = [1, 'Scan Confirmed'];
+        }elseif($this->paletBarcode!=null){
+            $props = [1, 'No Data'];
         }
         $this->dispatch('paletFocus');
 
