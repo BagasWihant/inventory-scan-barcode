@@ -10,6 +10,21 @@
 
         </div>
 
+        <div class="flex flex-col w-full">
+
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Palet
+            </label>
+            <div class="w-full flex ">
+                <select id="section" name="section" value="{{ old('section') }}" wire:model.change="palet"
+                    class="p-2 border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300">
+                    <option value="">Choose Code</option>
+                    <option value="L">L</option>
+                </select>
+                <input wire:model.live="noPalet" type="text"
+                    class="block w-full p-2 text-gray-700 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+            </div>
+        </div>
+
         <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PO
             </label>
@@ -42,23 +57,6 @@
             <input wire:model="input_setup_by" disabled
                 class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-100 text-base">
         </div>
-
-        <div class="flex flex-col w-full">
-
-            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Palet
-            </label>
-            <div class="w-full flex ">
-                <select id="section" name="section" value="{{ old('section') }}" wire:model.change="palet"
-                    class="p-2 border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300">
-                    <option value="">Choose Code</option>
-                    <option value="L">L</option>
-                </select>
-                <input wire:model.live="noPalet" type="text"
-                    class="block w-full p-2 text-gray-700 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-            </div>
-        </div>
-
-
 
         <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No
@@ -382,6 +380,17 @@
                 });
 
             }
+        });
+        $wire.on('alert', (event) => {
+            console.log(event);
+            Swal.fire({
+                timer: event[0].time,
+                title: event[0].title,
+                icon: event[0].icon,
+                text: event[0].text,
+                showConfirmButton: false,
+                timerProgressBar: true,
+            });
         });
     </script>
 @endscript

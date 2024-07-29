@@ -54,14 +54,18 @@ class PurchaseOrderIn extends Component
     }
     public function choosePo($po = null)
     {
-        DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
-        $this->po = $po;
-        $this->searchPo = $po;
-        $this->listKitNo = [];
+        if ($this->paletCode !== '-') {
+            DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
+            $this->po = $po;
+            $this->searchPo = $po;
+            $this->listKitNo = [];
 
-        $this->suratJalanDisable = true;
-        $this->paletDisable = true;
-        $this->poDisable = true;
+            $this->suratJalanDisable = true;
+            $this->paletDisable = true;
+            $this->poDisable = true;
+        } else {
+            return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'Please input Palet first, to avoid inaccurate data']);
+        }
     }
     public function materialNoScan()
     {
@@ -130,7 +134,7 @@ class PurchaseOrderIn extends Component
 
             $new_prop_scan = isset($data->prop_scan) ? json_decode($data->prop_scan) : [];
             array_push($new_prop_scan, $reqData['qty']);
-            
+
             if ($data->total < $data->counter || $data->sisa <= 0) {
                 // kelebihan
                 $this->material_no = null;
@@ -336,9 +340,9 @@ class PurchaseOrderIn extends Component
             ->selectRaw('a.material_no,a.picking_qty,count(a.picking_qty) as pax,a.kit_no,b.picking_qty as stock_in,a.line_c,a.setup_by')
             ->leftJoin('material_in_stock as b', function ($join) {
                 $join->on('a.material_no', '=', 'b.material_no')
-                ->on('a.kit_no', '=', 'b.kit_no')
-                ->on('a.line_c', '=', 'b.line_c')
-                ->where('b.pallet_no', $this->paletCode);
+                    ->on('a.kit_no', '=', 'b.kit_no')
+                    ->on('a.line_c', '=', 'b.line_c')
+                    ->where('b.pallet_no', $this->paletCode);
             })
             ->groupBy(['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty'])
             ->orderBy('a.material_no')
