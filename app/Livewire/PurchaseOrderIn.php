@@ -216,6 +216,9 @@ class PurchaseOrderIn extends Component
             ->where('flag', 1)
             ->where('palet', $this->po);
 
+        // remove data in abnormal_materials
+        $dd = abnormalMaterial::where(['pallet_no' => $this->paletCode, 'kit_no' => $this->po,])->delete();
+
         $loopData = $fixProduct->get();
         foreach ($loopData as $data) {
             $pax = $data->pax;
