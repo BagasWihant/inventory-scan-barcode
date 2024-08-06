@@ -70,16 +70,15 @@ class PurchaseOrderIn extends Component
     public function materialNoScan()
     {
         $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->material_no)->select('sws_code')->first();
-
         if ($supplierCode) {
             $this->sws_code = $supplierCode->sws_code;
-            $getTempCounterData = DB::table('temp_counters')->where('palet', $this->po)->where('material', $this->material_no);
+            // $getTempCounterData = DB::table('temp_counters')->where('palet', $this->po)->where('material', $this->material_no);
 
 
             $mat_mst = DB::table('material_mst')
                 ->select(['iss_min_lot', 'loc_cd'])
                 ->where('matl_no', $this->sws_code)->first();
-            $check_lineNsetup = DB::table('material_setup_mst_supplier')->select(['line_c', 'setup_by'])->where('kit_no', $this->po)->where('material_no', $this->material_no)->get()->toArray();
+            $check_lineNsetup = DB::table('material_setup_mst_supplier')->select(['line_c', 'setup_by'])->where('kit_no', $this->po)->where('material_no', $this->sws_code)->get()->toArray();
 
             if ($mat_mst->iss_min_lot == 1) {
                 $this->material_no = null;
