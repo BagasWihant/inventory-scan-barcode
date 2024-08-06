@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class CheckingStock extends Component
 {
-    public $paletBarcode = "", $materialCode = "", $dateStart = "", $dateEnd = "", $kitNo = "", $paletNo;
+    public $paletBarcode = "", $materialCode = "", $dateStart = "", $dateEnd = "", $kitNo = "", $paletNo="",$materialCodeSupp="";
     public $receivingData = [], $inStock = [], $listMaterial = [], $listPalet = [], $listPaletNoSup = [];
     public $mode = null;
 
@@ -33,6 +33,8 @@ class CheckingStock extends Component
                 break;
 
             case 'paletNo':
+                $this->materialCodeSupp = "";
+
                 $distinc = DB::table('material_in_stock')->select('material_no')->where('kit_no', $this->kitNo)->where('pallet_no', $this->paletNo)->distinct();
                 $this->listMaterial = $distinc->pluck('material_no')->all();
                 break;
@@ -56,17 +58,20 @@ class CheckingStock extends Component
         }
     }
 
-    public function materialChange()
-    {
-        $this->materialCode =  $this->materialCode == "" ? null : $this->materialCode;
-    }
+    // public function materialChange()
+    // {
+    //     $this->materialCode =  $this->materialCode == "" ? null : $this->materialCode;
+    // }
 
     public function resetData()
     {
         $this->receivingData = [];
         $this->paletBarcode = "";
         $this->materialCode = "";
+        $this->materialCodeSupp = "";
         $this->dateStart = "";
+        $this->paletNo = "";
+        $this->kitNo = "";
         $this->dateEnd = "";
     }
     public function showData($mode)
@@ -87,15 +92,16 @@ class CheckingStock extends Component
                 '',
             ]);
         } else {
-
-            $this->receivingData = DB::select('EXEC sp_Receiving_report_supplier ?,?,?,?,?,?', [
+            $data = [
                 'detail',
                 $this->kitNo ?? "",
                 $this->dateStart ?? '',
                 $this->dateEnd ?? "",
                 $this->paletNo ?? "",
-                $this->materialCode ?? "",
-            ]);
+                $this->materialCodeSupp ?? "",
+            ];
+            dump($data);
+            $this->receivingData = DB::select('EXEC sp_Receiving_report_supplier ?,?,?,?,?,?', $data);
         }
     }
 
