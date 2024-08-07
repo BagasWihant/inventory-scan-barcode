@@ -205,7 +205,7 @@
                                     {{ $ket }}
                                 </th>
                                 <th scope="row"
-                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    class="p-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     @if ($v->counter > 0)
                                         <button
                                             wire:click="resetItem({{ json_encode([$v->material, $v->palet, json_decode($v->prop_ori, true)['setup_by'], $v->line_c]) }})"
@@ -277,7 +277,6 @@
                 let locationValue = null
                 const lineValue = event[0].line
                 const locationSet = event[0].locationSet
-                console.log(locationSet);
 
                 if (event[0].loc_cd) locationValue = event[0].loc_cd
                 linehtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Line C</strong>'

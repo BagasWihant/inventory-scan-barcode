@@ -100,7 +100,7 @@ class CheckingStock extends Component
                 $this->paletNo ?? "",
                 $this->materialCodeSupp ?? "",
             ];
-            dump($data);
+            
             $this->receivingData = DB::select('EXEC sp_Receiving_report_supplier ?,?,?,?,?,?', $data);
         }
     }

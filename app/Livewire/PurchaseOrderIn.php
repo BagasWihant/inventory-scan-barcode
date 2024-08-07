@@ -78,7 +78,7 @@ class PurchaseOrderIn extends Component
             $mat_mst = DB::table('material_mst')
                 ->select(['iss_min_lot', 'loc_cd'])
                 ->where('matl_no', $this->sws_code)->first();
-            $check_lineNsetup = DB::table('material_setup_mst_supplier')->select(['line_c', 'setup_by'])->where('kit_no', $this->po)->where('material_no', $this->sws_code)->get()->toArray();
+            $check_lineNsetup = DB::table('material_setup_mst_supplier')->select(['line_c', 'setup_by', 'picking_qty'])->where('kit_no', $this->po)->where('material_no', $this->sws_code)->get()->toArray();
 
             if ($mat_mst->iss_min_lot == 1) {
                 $this->material_no = null;
@@ -96,6 +96,9 @@ class PurchaseOrderIn extends Component
                     ]);
                 }
                 return $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
+            } else {
+                $data = ['qty' => $check_lineNsetup[0]->picking_qty, 'location' => $mat_mst->loc_cd];
+                $this->insertNew($data,true);
             }
         }
         $this->material_no = null;
@@ -109,7 +112,7 @@ class PurchaseOrderIn extends Component
                 ->where('material', $this->sws_code)
                 ->where('userID', $this->userId)
                 ->where('palet', $this->po);
-            if ($reqData['lineNew']) {
+            if (isset($reqData['lineNew'])) {
                 $tempCount->where('line_c', $reqData['lineNew']);
             }
             $data = $tempCount->first();
@@ -138,7 +141,7 @@ class PurchaseOrderIn extends Component
                 // kelebihan
                 $this->material_no = null;
                 $more = $data->qty_more + 1;
-                if ($reqData['lineNew']) {
+                if (isset($reqData['lineNew'])) {
                     $updateData = [
                         'line_c' => $reqData['lineNew'],
                         'counter' => $counter,
@@ -156,7 +159,7 @@ class PurchaseOrderIn extends Component
                 $tempCount->update($updateData);
                 return;
             } else {
-                if ($reqData['lineNew']) {
+                if (isset($reqData['lineNew'])) {
                     $updateData = [
                         'counter' => $counter,
                         'sisa' => $sisa,
@@ -349,6 +352,7 @@ class PurchaseOrderIn extends Component
             ->groupBy(['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty'])
             ->orderBy('a.material_no')
             ->orderByDesc('a.line_c');
+
 
         $getall = $productsQuery->get();
         $materialNos = $getall->pluck('material_no')->all();
