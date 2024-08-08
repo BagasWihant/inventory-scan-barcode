@@ -112,7 +112,8 @@ class PurchaseOrderIn extends Component
                 ->where('material', $this->sws_code)
                 ->where('userID', $this->userId)
                 ->where('palet', $this->po);
-            if (isset($reqData['lineNew'])) {
+            if (isset($reqData['lineNew']) && $reqData['lineNew'] !== "" ) {
+
                 $tempCount->where('line_c', $reqData['lineNew']);
             }
             $data = $tempCount->first();
@@ -141,7 +142,7 @@ class PurchaseOrderIn extends Component
                 // kelebihan
                 $this->material_no = null;
                 $more = $data->qty_more + 1;
-                if (isset($reqData['lineNew'])) {
+                if (isset($reqData['lineNew']) && $reqData['lineNew'] !== "") {
                     $updateData = [
                         'line_c' => $reqData['lineNew'],
                         'counter' => $counter,
@@ -159,7 +160,7 @@ class PurchaseOrderIn extends Component
                 $tempCount->update($updateData);
                 return;
             } else {
-                if (isset($reqData['lineNew'])) {
+                if (isset($reqData['lineNew']) && $reqData['lineNew'] !== "") {
                     $updateData = [
                         'counter' => $counter,
                         'sisa' => $sisa,
@@ -346,7 +347,6 @@ class PurchaseOrderIn extends Component
             ->leftJoin('material_in_stock as b', function ($join) {
                 $join->on('a.material_no', '=', 'b.material_no')
                     ->on('a.kit_no', '=', 'b.kit_no')
-                    ->on('a.line_c', '=', 'b.line_c')
                     ->where('b.pallet_no', $this->paletCode);
             })
             ->groupBy(['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty'])
