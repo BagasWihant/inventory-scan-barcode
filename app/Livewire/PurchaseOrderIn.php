@@ -8,6 +8,7 @@ use App\Models\tempCounter;
 use Livewire\Attributes\On;
 use App\Models\abnormalMaterial;
 use Illuminate\Support\Facades\DB;
+use stdClass;
 
 class PurchaseOrderIn extends Component
 {
@@ -56,6 +57,10 @@ class PurchaseOrderIn extends Component
     {
         if ($this->paletCode !== '-') {
             DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
+
+            $getSetupby = DB::table('material_setup_mst_supplier')->select('setup_by')->where('kit_no', $po)->first();
+            if ($getSetupby) $this->input_setup_by = $getSetupby->setup_by;
+
             $this->po = $po;
             $this->searchPo = $po;
             $this->listKitNo = [];
@@ -98,7 +103,7 @@ class PurchaseOrderIn extends Component
                 return $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
             } else {
                 $data = ['qty' => $check_lineNsetup[0]->picking_qty, 'location' => $mat_mst->loc_cd];
-                $this->insertNew($data,true);
+                $this->insertNew($data, true);
             }
         }
         $this->material_no = null;
@@ -112,7 +117,7 @@ class PurchaseOrderIn extends Component
                 ->where('material', $this->sws_code)
                 ->where('userID', $this->userId)
                 ->where('palet', $this->po);
-            if (isset($reqData['lineNew']) && $reqData['lineNew'] !== "" ) {
+            if (isset($reqData['lineNew']) && $reqData['lineNew'] !== "") {
 
                 $tempCount->where('line_c', $reqData['lineNew']);
             }
@@ -335,88 +340,89 @@ class PurchaseOrderIn extends Component
     public function render()
     {
         $this->paletCode = $this->palet . "-" . $this->noPalet;
+        if ($this->po != null) {
 
-        $getScanned = DB::table('material_in_stock')->select('material_no')
-            ->where('pallet_no', $this->paletCode)
-            ->union(DB::table('abnormal_materials')->select('material_no')->where('pallet_no', $this->po))
-            ->pluck('material_no')
-            ->all();
-
-        $productsQuery = DB::table('material_setup_mst_supplier as a')->where('a.kit_no', $this->po)
-            ->selectRaw('a.material_no,a.picking_qty,count(a.picking_qty) as pax,a.kit_no,b.picking_qty as stock_in,a.line_c,a.setup_by')
-            ->leftJoin('material_in_stock as b', function ($join) {
+            $joinCondition = function ($join) {
                 $join->on('a.material_no', '=', 'b.material_no')
                     ->on('a.kit_no', '=', 'b.kit_no')
                     ->where('b.pallet_no', $this->paletCode);
-            })
-            ->groupBy(['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty'])
-            ->orderBy('a.material_no')
-            ->orderByDesc('a.line_c');
-
-
-        $getall = $productsQuery->get();
-        $materialNos = $getall->pluck('material_no')->all();
-
-        $getTempCounterData = DB::table('temp_counters')
-            ->select(['material', 'line_c'])
-            ->where('palet', $this->po)
-            ->whereIn('material', $materialNos);
-        $existingMaterial = $getTempCounterData->pluck('material')->all();
-        $existingLine = $getTempCounterData->pluck('line_c')->all();
-        $loopKe = 1;
-        foreach ($getall as $value) {
-            if ($loopKe == 1) {
-                $this->input_setup_by = $value->setup_by;
+            };
+            $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty'];
+           
+            if ($this->input_setup_by == "PO COT") {
+                $joinCondition = function ($join) {
+                    $join->on('a.material_no', '=', 'b.material_no')
+                        ->on('a.kit_no', '=', 'b.kit_no')
+                        ->on('a.line_c', '=', 'b.line_c')
+                        ->where('b.pallet_no', $this->paletCode);
+                };
             }
-            $loopKe++;
 
-            $materialExists = in_array($value->material_no, $existingMaterial);
-            $lineExists = in_array($value->line_c, $existingLine);
-            if (!$materialExists || !$lineExists) {
-
-                try {
-                    $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
-                    DB::beginTransaction();
-                    $insert = [
-                        'material' => $value->material_no,
-                        'palet' => $this->po,
-                        'userID' => $this->userId,
-                        'sisa' => $total,
-                        'total' => $total,
-                        'pax' => $value->pax,
-                        'flag' => 1,
-                        'prop_ori' => json_encode(['setup_by' => $value->setup_by]),
-                        'line_c' => $value->line_c,
-                    ];
+            $productsQuery = DB::table('material_setup_mst_supplier as a')
+                ->where('a.kit_no', $this->po)
+                ->selectRaw('a.material_no, a.picking_qty, count(a.picking_qty) as pax, a.kit_no, b.picking_qty as stock_in, a.line_c, a.setup_by')
+                ->leftJoin('material_in_stock as b', $joinCondition)
+                ->groupBy($groupByColumns)
+                ->orderBy('a.material_no')
+                ->orderByDesc('a.line_c');  
 
 
-                    tempCounter::create($insert);
-                    DB::commit();
-                } catch (\Throwable $th) {
-                    DB::rollBack();
+            $getall = $productsQuery->get();
+            $materialNos = $getall->pluck('material_no')->all();
+
+            $getTempCounterData = DB::table('temp_counters')
+                ->select(['material', 'line_c'])
+                ->where('palet', $this->po)
+                ->whereIn('material', $materialNos);
+            $existingMaterial = $getTempCounterData->pluck('material')->all();
+            $existingLine = $getTempCounterData->pluck('line_c')->all();
+
+            foreach ($getall as $value) {   
+
+                $materialExists = in_array($value->material_no, $existingMaterial);
+                $lineExists = in_array($value->line_c, $existingLine);
+                if (!$materialExists || !$lineExists) {
+
+                    try {
+                        $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
+                        DB::beginTransaction();
+                        $insert = [
+                            'material' => $value->material_no,
+                            'palet' => $this->po,
+                            'userID' => $this->userId,
+                            'sisa' => $total,
+                            'total' => $total,
+                            'pax' => $value->pax,
+                            'flag' => 1,
+                            'prop_ori' => json_encode(['setup_by' => $value->setup_by]),
+                            'line_c' => $value->line_c,
+                        ];
+
+
+                        tempCounter::create($insert);
+                        DB::commit();
+                    } catch (\Throwable $th) {
+                        DB::rollBack();
+                    }
                 }
             }
+
+
+            $scannedCounter = DB::table('temp_counters as a')
+                ->leftJoin('material_mst as b', 'a.material', '=', 'b.matl_no')
+                ->where('palet', $this->po)
+                ->select('a.*', 'b.loc_cd as location_cd')
+                ->where('userID', $this->userId)
+                ->orderBy('material')
+                ->orderByDesc('line_c')
+                ->get();
+
+
+            $this->dispatch('paletFocus');
+
+            $this->listMaterial = $getall;
+            $this->listMaterialScan = $scannedCounter;
         }
-
-
-        $scannedCounter = DB::table('temp_counters as a')
-            ->leftJoin('material_mst as b', 'a.material', '=', 'b.matl_no')
-            ->where('palet', $this->po)
-            ->select('a.*', 'b.loc_cd as location_cd')
-            ->where('userID', $this->userId)
-            ->orderBy('material')
-            ->orderByDesc('line_c')
-            ->get();
-
-
-        $props = [0, 'No Data'];
-        if ($getall->count() == 0 && count($getScanned) > 0) {
-            $props = [1, 'Scan Confirmed'];
-        }
-        $this->dispatch('paletFocus');
-
-        $this->listMaterial = $getall;
-        $this->listMaterialScan = $scannedCounter;
 
         return view('livewire.purchase-order-in');
     }
