@@ -68,6 +68,7 @@ class PurchaseOrderIn extends Component
             $this->suratJalanDisable = true;
             $this->paletDisable = true;
             $this->poDisable = true;
+            return $this->dispatch('materialFocus');
         } else {
             return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'Please input Palet first, to avoid inaccurate data']);
         }
