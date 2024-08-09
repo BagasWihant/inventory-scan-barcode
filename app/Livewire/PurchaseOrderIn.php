@@ -333,6 +333,8 @@ class PurchaseOrderIn extends Component
         $this->searchPo = null;
         $this->noPalet = null;
         $this->paletCode = null;
+        $this->listMaterial = [];
+        $this->listMaterialScan = [];
         DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
         $this->dispatch('SJFocus');
     }
