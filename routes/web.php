@@ -16,6 +16,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('isPrepareStockTaking')->controller(InventoryInController::class)->group(function () {
         Route::get('palet_in', 'index')->name('inventory.index');
         Route::get('po_in', 'po')->name('inventory.po');
+        Route::get('setup_stock_supplier', 'setup_stock_supplier')->name('setup_stock_supplier');
         Route::get('abnormal', 'abnormal')->name('abnormal');
         Route::get('instock', 'instock')->name('instock');
         Route::get('checking', 'checking')->name('checking');

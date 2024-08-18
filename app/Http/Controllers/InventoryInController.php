@@ -59,4 +59,8 @@ class InventoryInController extends Controller
         return view('pages.report-taking');
     }
 
+    public function setup_stock_supplier() {
+     return view('pages.setup-stock-supplier');   
+    }
+
 }
