@@ -28,11 +28,12 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
     public function columnWidths(): array
     {
         return [
-            'A' => 30,
-            'B' => 20,
+            'A' => 5,
+            'B' => 30,
             'C' => 20,
             'D' => 20,
             'E' => 20,
+            'F' => 20,
         ];
     }
 
@@ -45,9 +46,11 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
     }
     public function map($row): array
     {
+        $char = "□";
         return [
+            $char,
             $row->material,
-            isset(json_decode($row->prop_ori, true)['location']) ? json_decode($row->prop_ori, true)['location'] : $row->loc_cd,
+            isset(json_decode($row->prop_ori, true)['location']) ? json_decode($row->prop_ori, true)['location'] : $row->location_cd,
             $row->line_c,
             $row->total,
             $row->counter,
@@ -57,6 +60,7 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
     public function headings(): array
     {
         return [
+            '   ',
             'Material',
             'Location',
             'Line C',
@@ -69,7 +73,7 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
-                $max_col = "E";
+                $max_col = "F";
                 $sheet = $event->sheet;
 
                 $sheet->mergeCells("A1:".$max_col."1");

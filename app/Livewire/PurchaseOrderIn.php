@@ -225,7 +225,7 @@ class PurchaseOrderIn extends Component
             // ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
             ->leftJoin('material_mst as b', 'temp_counters.material', '=', 'b.matl_no')
 
-            ->select('temp_counters.*', 'd.trucking_id', 'b.loc_cd')
+            ->select('temp_counters.*', 'd.trucking_id', 'b.loc_cd as location_cd')
             ->where('userID', $this->userId)
             ->where('flag', 1)
             ->where('palet', $this->po);
@@ -329,7 +329,7 @@ class PurchaseOrderIn extends Component
             'palet_no' => $this->paletCode
         ];
         $this->resetPage();
-        return Excel::download(new ReceivingSupplierReport($dataPrint), "Scanned Items_" . $this->po . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+        return Excel::download(new ReceivingSupplierReport($dataPrint), "Scanned Items_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
     public function resetPage()
