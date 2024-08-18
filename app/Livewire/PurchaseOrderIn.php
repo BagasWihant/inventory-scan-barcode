@@ -2,12 +2,14 @@
 
 namespace App\Livewire;
 
+use App\Exports\ReceivingSupplierReport;
 use App\Models\itemIn;
 use Livewire\Component;
 use App\Models\tempCounter;
 use Livewire\Attributes\On;
 use App\Models\abnormalMaterial;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use stdClass;
 
 class PurchaseOrderIn extends Component
@@ -219,8 +221,10 @@ class PurchaseOrderIn extends Component
 
         $fixProduct = DB::table('temp_counters')
             ->leftJoin('delivery_mst as d', 'temp_counters.palet', '=', 'd.pallet_no')
-            ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
-            ->select('temp_counters.*', 'd.trucking_id', 'm.location_cd')
+            // ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
+            ->leftJoin('material_mst as b', 'temp_counters.material', '=', 'b.matl_no')
+
+            ->select('temp_counters.*', 'd.trucking_id', 'b.loc_cd')
             ->where('userID', $this->userId)
             ->where('flag', 1)
             ->where('palet', $this->po);
@@ -229,6 +233,8 @@ class PurchaseOrderIn extends Component
         $dd = abnormalMaterial::where(['pallet_no' => $this->paletCode, 'kit_no' => $this->po,])->delete();
 
         $loopData = $fixProduct->get();
+        return Excel::download(new ReceivingSupplierReport($loopData), "Scanned Items_" . $this->po . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+
         foreach ($loopData as $data) {
             $pax = $data->pax;
             $qty = $data->total / $pax;
@@ -319,6 +325,7 @@ class PurchaseOrderIn extends Component
                 }
             }
         }
+        
         $this->resetPage();
     }
 
