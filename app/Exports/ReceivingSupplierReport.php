@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
@@ -13,11 +14,12 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadings, WithEvents, WithCustomStartCell, WithColumnWidths
 {
-    public $data, $count;
+    public $data, $count,$palet_no;
     public function __construct($dt)
     {
-        $this->data = $dt;
-        $this->count = count($dt);
+        $this->palet_no = $dt['palet_no'];
+        $this->data = $dt['data'];
+        $this->count = count($dt['data']);
     }
     public function startCell(): string
     {
@@ -30,6 +32,7 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
             'B' => 20,
             'C' => 20,
             'D' => 20,
+            'E' => 20,
         ];
     }
 
@@ -45,6 +48,7 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
         return [
             $row->material,
             isset(json_decode($row->prop_ori, true)['location']) ? json_decode($row->prop_ori, true)['location'] : $row->loc_cd,
+            $row->line_c,
             $row->total,
             $row->counter,
         ];
@@ -55,6 +59,7 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
         return [
             'Material',
             'Location',
+            'Line C',
             'Qty Picking',
             'Qty Received',
         ];
@@ -64,20 +69,22 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
-                $max_col = "D";
+                $max_col = "E";
                 $sheet = $event->sheet;
 
                 $sheet->mergeCells("A1:".$max_col."1");
                 $sheet->setCellValue('A1', "RECEIVING SUPPLIER REPORT");
-
-                $sheet->setCellValue('A2', "   ");
-                $sheet->setCellValue('A3', "Pallet No");
-                $sheet->setCellValue('B3', ": " . $this->data[0]->palet);
-
-                $sheet->setCellValue('A4', "LINE C");
-                $sheet->setCellValue('B4', ": " . $this->data[0]->line_c);
                 
-                $sheet->setCellValue('A5', "  ");
+                $sheet->mergeCells("A2:".$max_col."2");
+                $sheet->setCellValue('A2', Carbon::now('Asia/Jakarta')->format('l, j F Y H:i:s'));
+                $sheet->setCellValue('A3', "   ");
+                $sheet->setCellValue('A4', "Kit No");
+                $sheet->setCellValue('B4', ": " . $this->data[0]->palet);
+
+                $sheet->setCellValue('A5', "Pallet No");
+                $sheet->setCellValue('B5', ": " . $this->palet_no);
+                
+                $sheet->setCellValue('A6', "  ");
                 $sheet->getDelegate()->getStyle('A1:'.$max_col.'1')->getFont()->setSize(20);
                 $sheet->getDelegate()->getStyle('A1:'.$max_col.'7')->getFont()->setBold(true);
 
@@ -103,7 +110,7 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
                 ];
                 $event->sheet->getDelegate()->getStyle("A7:". $max_col . $this->count + 7)->applyFromArray($border);
                 $event->sheet->getDelegate()->getStyle('A7:' . $max_col . $this->count + 7)->applyFromArray($styleArray);
-                $event->sheet->getDelegate()->getStyle('A1:'.$max_col.'1')->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle('A1:'.$max_col.'2')->applyFromArray($styleArray);
             }
         ];
     }

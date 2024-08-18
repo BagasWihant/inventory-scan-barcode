@@ -161,7 +161,8 @@ class PurchaseOrderIn extends Component
                 } else {
                     $updateData = [
                         'counter' => $counter,
-                        'sisa' => $sisa, 'qty_more' => $more,
+                        'sisa' => $sisa,
+                        'qty_more' => $more,
                         'prop_scan' => json_encode($new_prop_scan),
                     ];
                 }
@@ -233,8 +234,6 @@ class PurchaseOrderIn extends Component
         $dd = abnormalMaterial::where(['pallet_no' => $this->paletCode, 'kit_no' => $this->po,])->delete();
 
         $loopData = $fixProduct->get();
-        return Excel::download(new ReceivingSupplierReport($loopData), "Scanned Items_" . $this->po . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
-
         foreach ($loopData as $data) {
             $pax = $data->pax;
             $qty = $data->total / $pax;
@@ -325,8 +324,12 @@ class PurchaseOrderIn extends Component
                 }
             }
         }
-        
+        $dataPrint = [
+            'data' => $loopData,
+            'palet_no' => $this->paletCode
+        ];
         $this->resetPage();
+        return Excel::download(new ReceivingSupplierReport($dataPrint), "Scanned Items_" . $this->po . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
     public function resetPage()
@@ -358,7 +361,7 @@ class PurchaseOrderIn extends Component
                     ->where('b.pallet_no', $this->paletCode);
             };
             $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty'];
-           
+
             if ($this->input_setup_by == "PO COT") {
                 $joinCondition = function ($join) {
                     $join->on('a.material_no', '=', 'b.material_no')
@@ -374,7 +377,7 @@ class PurchaseOrderIn extends Component
                 ->leftJoin('material_in_stock as b', $joinCondition)
                 ->groupBy($groupByColumns)
                 ->orderBy('a.material_no')
-                ->orderByDesc('a.line_c');  
+                ->orderByDesc('a.line_c');
 
 
             $getall = $productsQuery->get();
@@ -387,7 +390,7 @@ class PurchaseOrderIn extends Component
             $existingMaterial = $getTempCounterData->pluck('material')->all();
             $existingLine = $getTempCounterData->pluck('line_c')->all();
 
-            foreach ($getall as $value) {   
+            foreach ($getall as $value) {
 
                 $materialExists = in_array($value->material_no, $existingMaterial);
                 $lineExists = in_array($value->line_c, $existingLine);
