@@ -23,7 +23,7 @@ class CreateNewPalet extends Component
         $month = date('m');
         $count = PaletRegister::selectRaw('count(*)+1 as no')->whereRaw('MONTH(created_at) = ' . $month)->where('is_done', 1)->first();
         $number = str_pad($count->no, 4, "0", STR_PAD_LEFT);
-        $this->palet_no = "C-$month-$number";
+        $this->palet_no = "C2-$month-$number";
 
         $this->listLocation = DB::select("EXEC sp_Line_CD");
     }
