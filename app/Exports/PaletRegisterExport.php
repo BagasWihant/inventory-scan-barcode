@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
@@ -115,9 +116,29 @@ class PaletRegisterExport implements FromCollection, WithMapping, WithHeadings, 
                     $sheet->setCellValue('A' . 7 + $i, $i);
                 }
 
+                $lastRow = $this->count +7;
+
                 $event->sheet->getDelegate()->getStyle("A7:". $max_col . $this->count + 7)->applyFromArray($border);
                 $event->sheet->getDelegate()->getStyle('A7:' . $max_col . $this->count + 7)->applyFromArray($styleArray);
                 $event->sheet->getDelegate()->getStyle('A1:'.$max_col.'2')->applyFromArray($styleArray);
+
+                $sign1 = $lastRow + 3;
+                $sheet->setCellValue('B' . $sign1, " Created by");
+                $sheet->mergeCells('B' . $sign1 + 1 . ':B' . $sign1 + 4);
+                $sheet->setCellValue('B' . $sign1 + 1, "  ");
+                $event->sheet->getDelegate()->getStyle("B".$sign1.":B" . $sign1+5)->applyFromArray($border);
+                
+                $sheet->setCellValue('C' . $sign1, " Supply by");
+                $sheet->mergeCells('C' . $sign1 + 1 . ':C' . $sign1 + 4);
+                $sheet->setCellValue('C' . $sign1 + 1, "  ");
+                $event->sheet->getDelegate()->getStyle("C".$sign1.":C" . $sign1+5)->applyFromArray($border);
+
+                $sheet->setCellValue('D' . $sign1, " Received by");
+                $sheet->mergeCells('D' . $sign1 + 1 . ':D' . $sign1 + 4);
+                $sheet->setCellValue('D' . $sign1 + 1, "  ");
+                $event->sheet->getDelegate()->getStyle("D".$sign1.":D" . $sign1+5)->applyFromArray($border);
+
+                $sheet->getDelegate()->getStyle('B'.$sign1.':D'.$sign1)->getFont()->setBold(true);
             }
         ];
     }
