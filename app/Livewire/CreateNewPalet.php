@@ -31,7 +31,10 @@ class CreateNewPalet extends Component
     {
         if ($props === 'scanMaterial') {
             $getMaterial = DB::table('material_mst')->where('matl_no', $this->scanMaterial)->select('matl_nm')->first();
-            if (!$getMaterial) return;
+            if (!$getMaterial) {
+                $this->scanMaterial = null;
+                return;
+            }
             $this->material_name = $getMaterial->matl_nm;
             $this->dispatch('addMaterial', ['material_name' => $getMaterial->matl_nm, 'material_no' => $this->scanMaterial]);
         }
@@ -72,6 +75,11 @@ class CreateNewPalet extends Component
         redirect(route('register_palet'));
         return Excel::download(new PaletRegisterExport($dataExport), "Scanned Items_" . $this->palet_no . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
+
+    public function deleteMaterial($id = null){
+        PaletRegisterDetail::destroy($id);
+    }
+
     public function render()
     {
 
