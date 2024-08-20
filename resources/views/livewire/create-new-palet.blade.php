@@ -2,6 +2,10 @@
 
     <div class="text-2xl font-extrabold py-6 text-center">Create New Palet</div>
     <div class="max-w-7xl mx-auto">
+        <div class="flex justify-start">
+            <a wire:navigate href="{{route('register_palet')}}" 
+            class=" text-base text-white block bg-amber-700 font-bold rounded-lg px-2 py-1 text-center ">Back</a>
+        </div>
         <div class="grid grid-cols-2">
             <div class="w-80">
                 <div class="py-4" wire:ignore>
@@ -61,7 +65,7 @@
                                 {{ $product->qty }}
                             </th>
                             <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                <button class="bg-red-500  text-white font-bold py-2 px-4 rounded-lg">Delete</button>
+                                <button class="bg-red-500  text-white font-bold py-2 px-4 rounded-lg" wire:click="deleteMaterial({{ $product->id }})">Delete</button>
                             </th>
                         </tr>
                     @endforeach
@@ -85,7 +89,7 @@
                 tags: true
             });
             $('#lineselect').on('select2:select', function(e) {
-                $wire.lineSelected = e.params.data.id;
+                @this.set('lineSelected', e.params.data.id)
             });
             $wire.on('addMaterial', (data) => {
                 Swal.fire({
