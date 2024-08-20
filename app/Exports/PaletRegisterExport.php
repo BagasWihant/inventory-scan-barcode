@@ -37,6 +37,7 @@ class PaletRegisterExport implements FromCollection, WithMapping, WithHeadings, 
             'B' => 30,
             'C' => 20,
             'D' => 20,
+            'E' => 20,
         ];
     }
     public function collection()
@@ -123,22 +124,22 @@ class PaletRegisterExport implements FromCollection, WithMapping, WithHeadings, 
                 $event->sheet->getDelegate()->getStyle('A1:'.$max_col.'2')->applyFromArray($styleArray);
 
                 $sign1 = $lastRow + 3;
-                $sheet->setCellValue('B' . $sign1, " Created by");
-                $sheet->mergeCells('B' . $sign1 + 1 . ':B' . $sign1 + 4);
-                $sheet->setCellValue('B' . $sign1 + 1, "  ");
-                $event->sheet->getDelegate()->getStyle("B".$sign1.":B" . $sign1+5)->applyFromArray($border);
-                
-                $sheet->setCellValue('C' . $sign1, " Supply by");
+                $sheet->setCellValue('C' . $sign1, " Created by");
                 $sheet->mergeCells('C' . $sign1 + 1 . ':C' . $sign1 + 4);
                 $sheet->setCellValue('C' . $sign1 + 1, "  ");
                 $event->sheet->getDelegate()->getStyle("C".$sign1.":C" . $sign1+5)->applyFromArray($border);
-
-                $sheet->setCellValue('D' . $sign1, " Received by");
+                
+                $sheet->setCellValue('D' . $sign1, " Supply by");
                 $sheet->mergeCells('D' . $sign1 + 1 . ':D' . $sign1 + 4);
                 $sheet->setCellValue('D' . $sign1 + 1, "  ");
                 $event->sheet->getDelegate()->getStyle("D".$sign1.":D" . $sign1+5)->applyFromArray($border);
 
-                $sheet->getDelegate()->getStyle('B'.$sign1.':D'.$sign1)->getFont()->setBold(true);
+                $sheet->setCellValue('E' . $sign1, " Received by");
+                $sheet->mergeCells('E' . $sign1 + 1 . ':E' . $sign1 + 4);
+                $sheet->setCellValue('E' . $sign1 + 1, "  ");
+                $event->sheet->getDelegate()->getStyle("E".$sign1.":E" . $sign1+5)->applyFromArray($border);
+
+                $sheet->getDelegate()->getStyle('B'.$sign1.':E'.$sign1)->getFont()->setBold(true);
             }
         ];
     }
