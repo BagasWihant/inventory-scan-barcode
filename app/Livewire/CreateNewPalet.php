@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Exports\PaletRegisterExport;
+use App\Models\itemIn;
 use App\Models\PaletRegister;
 use App\Models\PaletRegisterDetail;
 use Illuminate\Support\Facades\DB;
@@ -27,17 +28,22 @@ class CreateNewPalet extends Component
 
         $this->listLocation = DB::select("EXEC sp_Line_CD");
     }
-    public function updated($props, $s)
+    public function scanMaterialChange()
     {
-        if ($props === 'scanMaterial') {
-            $getMaterial = DB::table('material_mst')->where('matl_no', $this->scanMaterial)->select('matl_nm')->first();
-            if (!$getMaterial) {
-                $this->scanMaterial = null;
-                return;
-            }
-            $this->material_name = $getMaterial->matl_nm;
-            $this->dispatch('addMaterial', ['material_name' => $getMaterial->matl_nm, 'material_no' => $this->scanMaterial]);
+        $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->scanMaterial)->select('sws_code')->first();
+        if (!$supplierCode) {
+            $this->scanMaterial = null;
+            return $this->dispatch('notification', ['icon' => 'error', 'title' => 'Material not Found']);
         }
+
+        $check_in_stock = itemIn::where('material_no', $supplierCode->sws_code)->selectRaw('sum(picking_qty) as  qty')->first();
+        if (!$check_in_stock) {
+            $this->scanMaterial = null;
+            return $this->dispatch('notification', ['icon' => 'error', 'title' => 'Material not in stock']);
+        }
+
+        $this->material_name = $supplierCode->sws_code;
+        $this->dispatch('addMaterial', ['material_name' => $supplierCode->sws_code, 'material_no' => $this->scanMaterial, 'max' => $check_in_stock->qty]);
     }
 
     #[On('savingMaterial')]
@@ -61,8 +67,12 @@ class CreateNewPalet extends Component
 
     public function savePallet()
     {
-        PaletRegister::where('palet_no',$this->palet_no)->where('is_done',0)->update(['is_done' => 1]);
-        PaletRegisterDetail::where('palet_no',$this->palet_no)->where('is_done',0)->update(['is_done' => 1]);
+        if($this->lineSelected == null){
+            return $this->dispatch('notification', ['icon' => 'error', 'title' => 'Please Select Line']);
+
+        }
+        PaletRegister::where('palet_no', $this->palet_no)->where('is_done', 0)->update(['is_done' => 1]);
+        PaletRegisterDetail::where('palet_no', $this->palet_no)->where('is_done', 0)->update(['is_done' => 1]);
         $generator = new BarcodeGeneratorPNG();
         $barcode = $generator->getBarcode($this->palet_no, $generator::TYPE_CODE_128);
         Storage::put('public/barcodes/' . $this->palet_no . '.png', $barcode);
@@ -76,7 +86,8 @@ class CreateNewPalet extends Component
         return Excel::download(new PaletRegisterExport($dataExport), "Scanned Items_" . $this->palet_no . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
-    public function deleteMaterial($id = null){
+    public function deleteMaterial($id = null)
+    {
         PaletRegisterDetail::destroy($id);
     }
 

@@ -25,10 +25,10 @@
                 </select>
             </div>
             <div class="w-full">
-                <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Scan
+                <label for="large-input"  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Scan
                     Material
                 </label>
-                <input wire:model.live="scanMaterial" type="text"
+                <input wire:model="scanMaterial" wire:keydown.debounce.150ms="scanMaterialChange" type="text" id="scanMaterial"
                     class=" w-full p-2 text-gray-900 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
         </div>
@@ -81,7 +81,6 @@
     </div>
 
 </div>
-
 @script
     <script>
         $(document).ready(function() {
@@ -105,7 +104,7 @@
                             </div>
                             <div class="flex flex-col">
                                 <strong>Qty</strong>
-                                <input id="qty" class="swal2-input" >
+                                <input id="qty" type="number" max="${data[0].max}"  class="swal2-input" >
                             </div>`,
                     showDenyButton: true,
                     denyButtonText: `Don't save`,
@@ -117,6 +116,16 @@
                 }).then((result) => {
                     /* Read more about isConfirmed, isDenied below */
                     if (result.isConfirmed) {
+                        if (parseInt(result.value[0]) > parseInt(data[0].max)) {
+                            @this.scanMaterial = null
+                            return Swal.fire({
+                                timer: 1000,
+                                title: "Max QTY is " + data[0].max,
+                                icon: "info",
+                                showConfirmButton: false,
+                                timerProgressBar: true,
+                            });
+                        }
                         $wire.dispatch('savingMaterial', {
                             qty: result.value[0],
                         })
@@ -141,6 +150,15 @@
                         });
                     }
                 });
+            })
+            $wire.on('notification', (event) => {
+                Swal.fire({
+                    timer: 1000,
+                    title: event[0].title,
+                    icon: event[0].icon,
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                })
             })
         });
     </script>
