@@ -30,20 +30,26 @@ class CreateNewPalet extends Component
     }
     public function scanMaterialChange()
     {
-        $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->scanMaterial)->select('sws_code')->first();
-        if (!$supplierCode) {
+        $querysupplierCode = DB::table('material_conversion_mst')
+            ->leftJoin('material_mst', 'material_conversion_mst.sws_code', 'material_mst.matl_no')
+            ->where('material_conversion_mst.supplier_code', $this->scanMaterial)->select(['matl_no', 'matl_nm']);
+
+        if (!$querysupplierCode->exists()) {
             $this->scanMaterial = null;
             return $this->dispatch('notification', ['icon' => 'error', 'title' => 'Material not Found']);
         }
+        $supplierCode = $querysupplierCode->first();
 
-        $check_in_stock = itemIn::where('material_no', $supplierCode->sws_code)->selectRaw('sum(picking_qty) as  qty')->first();
-        if (!$check_in_stock) {
+        $check_in_stock = itemIn::where('material_no', $supplierCode->matl_no)
+            ->where('pallet_no', 'like', "L-%")->selectRaw('sum(picking_qty) as  qty');
+
+        if (!$check_in_stock->exists()) {
             $this->scanMaterial = null;
             return $this->dispatch('notification', ['icon' => 'error', 'title' => 'Material not in stock']);
         }
-
-        $this->material_name = $supplierCode->sws_code;
-        $this->dispatch('addMaterial', ['material_name' => $supplierCode->sws_code, 'material_no' => $this->scanMaterial, 'max' => $check_in_stock->qty]);
+        $sum_qty = $check_in_stock->first()->qty;
+        $this->material_name = $supplierCode->matl_nm;
+        $this->dispatch('addMaterial', ['material_name' => $supplierCode->matl_nm, 'material_no' => $supplierCode->matl_no, 'max' => $sum_qty]);
     }
 
     #[On('savingMaterial')]
@@ -51,6 +57,9 @@ class CreateNewPalet extends Component
     {
         $checkingPaletNo = PaletRegister::where('palet_no', $this->palet_no)->exists();
         if (!$checkingPaletNo) {
+            if ($this->lineSelected == null) {
+                return $this->dispatch('notification', ['icon' => 'error', 'title' => 'Please Select Line First']);
+            }
             PaletRegister::create([
                 'palet_no' => $this->palet_no,
                 'line_c' => $this->lineSelected
@@ -67,12 +76,13 @@ class CreateNewPalet extends Component
 
     public function savePallet()
     {
-        if($this->lineSelected == null){
+        if ($this->lineSelected == null) {
             return $this->dispatch('notification', ['icon' => 'error', 'title' => 'Please Select Line']);
-
         }
-        PaletRegister::where('palet_no', $this->palet_no)->where('is_done', 0)->update(['is_done' => 1]);
+
+        PaletRegister::where('palet_no', $this->palet_no)->where('is_done', 0)->update(['is_done' => 1, 'line_c' => $this->lineSelected]);
         PaletRegisterDetail::where('palet_no', $this->palet_no)->where('is_done', 0)->update(['is_done' => 1]);
+
         $generator = new BarcodeGeneratorPNG();
         $barcode = $generator->getBarcode($this->palet_no, $generator::TYPE_CODE_128);
         Storage::put('public/barcodes/' . $this->palet_no . '.png', $barcode);

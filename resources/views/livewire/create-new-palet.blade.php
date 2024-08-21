@@ -153,11 +153,9 @@
             })
             $wire.on('notification', (event) => {
                 Swal.fire({
-                    timer: 1000,
                     title: event[0].title,
                     icon: event[0].icon,
-                    showConfirmButton: false,
-                    timerProgressBar: true,
+                    confirmButtonText: `OK`,
                 })
             })
         });
