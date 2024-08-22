@@ -1,11 +1,11 @@
 <div>
     <div class="text-2xl font-extrabold py-6 text-center">Register Palet</div>
 
-    <div class="flex justify-end">
+    {{-- <div class="flex justify-end">
         <a wire:navigate href="{{ route('create_palet') }}"
             class=" text-base text-white block bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-bold rounded-lg px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">Buat
             Pallet Baru</a>
-    </div>
+    </div> --}}
 
     <div wire:loading.flex
         class=" fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
@@ -77,7 +77,7 @@
                             {{ $product->supply_date }}
                         </th>
                         <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            {{ $product->status }}
+                            {{ $product->status == 1 ? 'Sudah Supply' : 'Belum Supply' }}
                         </th>
                         <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                             <button class="bg-blue-500  text-white font-bold py-2 px-4 rounded-lg"
