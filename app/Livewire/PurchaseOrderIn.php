@@ -228,7 +228,7 @@ class PurchaseOrderIn extends Component
             // ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
             ->leftJoin('material_mst as b', 'temp_counters.material', '=', 'b.matl_no')
 
-            ->select('temp_counters.*', 'd.trucking_id', 'b.loc_cd as location_cd')
+            ->select('temp_counters.*', 'd.trucking_id', 'b.loc_cd as location_cd','matl_nm')
             ->where('userID', $this->userId)
             ->where('flag', 1)
             ->where('palet', $this->po);
@@ -330,18 +330,17 @@ class PurchaseOrderIn extends Component
         
 
         $month = date('m');
-        $count = PaletRegister::selectRaw('count(*)+1 as no')->whereRaw('MONTH(created_at) = ' . $month)->where('is_done', 1)->first();
-        $number = str_pad($count->no, 4, "0", STR_PAD_LEFT);
-        $paletRegister = "C2-$month-$number";
-
+        $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi',$this->paletCode)->first();
+        
         $generator = new BarcodeGeneratorPNG();
-        $barcode = $generator->getBarcode($paletRegister, $generator::TYPE_CODE_128);
-        Storage::put('public/barcodes/' . $paletRegister . '.png', $barcode);
+        $barcode = $generator->getBarcode($dataPaletRegister->palet_no, $generator::TYPE_CODE_128);
+        Storage::put('public/barcodes/' . $dataPaletRegister->palet_no . '.png', $barcode);
 
         $dataPrint = [
             'data' => $loopData,
-            'palet_no' => $this->paletCode,
-            'palet_register' => $paletRegister
+            'palet_no' => $dataPaletRegister->palet_no,
+            'issue_date' => $dataPaletRegister->issue_date,
+            'line_c' => $dataPaletRegister->line_c
         ];
         $this->resetPage();
         return Excel::download(new ReceivingSupplierReport($dataPrint), "Scanned Items_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
