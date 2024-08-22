@@ -126,6 +126,26 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
                 $event->sheet->getDelegate()->getStyle("A8:". $max_col . $this->count + 8)->applyFromArray($border);
                 $event->sheet->getDelegate()->getStyle('A8:' . $max_col . $this->count + 8)->applyFromArray($styleArray);
                 $event->sheet->getDelegate()->getStyle('A1:'.$max_col.'2')->applyFromArray($styleArray);
+
+                $lastRow = $this->count +8;
+
+                $sign1 = $lastRow + 3;
+                $sheet->setCellValue('D' . $sign1, " Created by");
+                $sheet->mergeCells('D' . $sign1 + 1 . ':D' . $sign1 + 4);
+                $sheet->setCellValue('D' . $sign1 + 1, "  ");
+                $event->sheet->getDelegate()->getStyle("D".$sign1.":D" . $sign1+5)->applyFromArray($border);
+                
+                $sheet->setCellValue('E' . $sign1, " Supply by");
+                $sheet->mergeCells('E' . $sign1 + 1 . ':E' . $sign1 + 4);
+                $sheet->setCellValue('E' . $sign1 + 1, "  ");
+                $event->sheet->getDelegate()->getStyle("E".$sign1.":E" . $sign1+5)->applyFromArray($border);
+
+                $sheet->setCellValue('F' . $sign1, " Received by");
+                $sheet->mergeCells('F' . $sign1 + 1 . ':F' . $sign1 + 4);
+                $sheet->setCellValue('F' . $sign1 + 1, "  ");
+                $event->sheet->getDelegate()->getStyle("F".$sign1.":F" . $sign1+5)->applyFromArray($border);
+
+                $sheet->getDelegate()->getStyle('D'.$sign1.':F'.$sign1)->getFont()->setBold(true);
             }
         ];
     }
