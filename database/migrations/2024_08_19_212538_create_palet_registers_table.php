@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('palet_registers', function (Blueprint $table) {
             $table->string('palet_no',32)->primary();
+            $table->integer('user_id');
+            $table->string('palet_no_iwpi',20);
+            $table->string('surat_jalan',50);
+            $table->date('issue_date');
             $table->string('line_c',50);
             $table->char('status',1)->default(0);
             $table->char('is_done',1)->default(0);

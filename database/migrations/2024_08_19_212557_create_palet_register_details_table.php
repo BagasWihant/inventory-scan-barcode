@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('material_name',50);
             $table->integer('qty');
             $table->char('is_done',1)->default(0);
+            $table->integer('user_id');
             $table->timestamps();
 
             $table->foreign('palet_no')->references('palet_no')->on('palet_registers')->cascadeOnDelete();
