@@ -6,24 +6,27 @@ use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
+use Maatwebsite\Excel\Concerns\WithDrawings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
-class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadings, WithEvents, WithCustomStartCell, WithColumnWidths
+class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadings, WithEvents, WithCustomStartCell, WithColumnWidths,WithDrawings
 {
-    public $data, $count,$palet_no;
+    public $data, $count,$palet_no,$paletRegister;
     public function __construct($dt)
     {
         $this->palet_no = $dt['palet_no'];
         $this->data = $dt['data'];
         $this->count = count($dt['data']);
+        $this->paletRegister = $dt['palet_register'];
     }
     public function startCell(): string
     {
-        return 'A7';
+        return 'A8';
     }
     public function columnWidths(): array
     {
@@ -82,15 +85,23 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
                 $sheet->mergeCells("A2:".$max_col."2");
                 $sheet->setCellValue('A2', Carbon::now('Asia/Jakarta')->format('l, j F Y H:i:s'));
                 $sheet->setCellValue('A3', "   ");
-                $sheet->setCellValue('A4', "Kit No");
-                $sheet->setCellValue('B4', ": " . $this->data[0]->palet);
 
-                $sheet->setCellValue('A5', "Pallet No");
-                $sheet->setCellValue('B5', ": " . $this->palet_no);
+                $sheet->mergeCells("A4:B4");
+                $sheet->setCellValue('A4', "Kit No");
+                $sheet->setCellValue('C4', ": " . $this->data[0]->palet);
                 
-                $sheet->setCellValue('A6', "  ");
+                $sheet->mergeCells("A5:B5");
+                $sheet->setCellValue('A5', "Pallet No");
+                $sheet->setCellValue('C5', ": " . $this->palet_no);
+                
+                $sheet->mergeCells("A6:B6");
+                $sheet->setCellValue('A6', "Pallet Register");
+                $sheet->setCellValue('C6', ": " . $this->paletRegister);
+                
+                $sheet->mergeCells("D4:F6");
+                $sheet->setCellValue('A7', "  ");
                 $sheet->getDelegate()->getStyle('A1:'.$max_col.'1')->getFont()->setSize(20);
-                $sheet->getDelegate()->getStyle('A1:'.$max_col.'7')->getFont()->setBold(true);
+                $sheet->getDelegate()->getStyle('A1:'.$max_col.'8')->getFont()->setBold(true);
 
 
                 $styleArray = [
@@ -112,10 +123,23 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
                         ],
                     ],
                 ];
-                $event->sheet->getDelegate()->getStyle("A7:". $max_col . $this->count + 7)->applyFromArray($border);
-                $event->sheet->getDelegate()->getStyle('A7:' . $max_col . $this->count + 7)->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle("A8:". $max_col . $this->count + 8)->applyFromArray($border);
+                $event->sheet->getDelegate()->getStyle('A8:' . $max_col . $this->count + 8)->applyFromArray($styleArray);
                 $event->sheet->getDelegate()->getStyle('A1:'.$max_col.'2')->applyFromArray($styleArray);
             }
         ];
+    }
+
+    public function drawings()
+    {
+
+        $drawing = new Drawing();
+        $drawing->setName('Logo');
+        $drawing->setDescription('This is my logo');
+        $drawing->setPath(public_path('storage/barcodes/'.$this->paletRegister.'.png'));
+        $drawing->setHeight(40);
+        $drawing->setWidth(300);
+        $drawing->setCoordinates('D4');
+        return $drawing;
     }
 }
