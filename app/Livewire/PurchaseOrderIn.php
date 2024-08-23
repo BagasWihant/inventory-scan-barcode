@@ -332,18 +332,23 @@ class PurchaseOrderIn extends Component
         $month = date('m');
         $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi',$this->paletCode)->first();
         
-        $generator = new BarcodeGeneratorPNG();
-        $barcode = $generator->getBarcode($dataPaletRegister->palet_no, $generator::TYPE_CODE_128);
-        Storage::put('public/barcodes/' . $dataPaletRegister->palet_no . '.png', $barcode);
+        if ($dataPaletRegister) {
+            $generator = new BarcodeGeneratorPNG();
+            $barcode = $generator->getBarcode($dataPaletRegister->palet_no, $generator::TYPE_CODE_128);
+            Storage::put('public/barcodes/' . $dataPaletRegister->palet_no . '.png', $barcode);
 
-        $dataPrint = [
-            'data' => $loopData,
-            'palet_no' => $dataPaletRegister->palet_no,
-            'issue_date' => $dataPaletRegister->issue_date,
-            'line_c' => $dataPaletRegister->line_c
-        ];
-        $this->resetPage();
-        return Excel::download(new ReceivingSupplierReport($dataPrint), "Scanned Items_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+            $dataPrint = [
+                'data' => $loopData,
+                'palet_no' => $dataPaletRegister->palet_no,
+                'issue_date' => $dataPaletRegister->issue_date,
+                'line_c' => $dataPaletRegister->line_c
+            ];
+            $this->resetPage();
+            return Excel::download(new ReceivingSupplierReport($dataPrint), "Scanned Items_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+        } else {
+
+            $this->resetPage();
+        }
     }
 
     public function resetPage()
