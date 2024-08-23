@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Exports\ReceivingSupplierNotAssyReport;
 use App\Exports\ReceivingSupplierReport;
 use App\Models\itemIn;
 use Livewire\Component;
@@ -228,7 +229,7 @@ class PurchaseOrderIn extends Component
             // ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
             ->leftJoin('material_mst as b', 'temp_counters.material', '=', 'b.matl_no')
 
-            ->select('temp_counters.*', 'd.trucking_id', 'b.loc_cd as location_cd','matl_nm')
+            ->select('temp_counters.*', 'd.trucking_id', 'b.loc_cd as location_cd', 'matl_nm')
             ->where('userID', $this->userId)
             ->where('flag', 1)
             ->where('palet', $this->po);
@@ -237,6 +238,18 @@ class PurchaseOrderIn extends Component
         $dd = abnormalMaterial::where(['pallet_no' => $this->paletCode, 'kit_no' => $this->po,])->delete();
 
         $loopData = $fixProduct->get();
+        $collectionTempCounter = collect($loopData);
+        $checkASSY = tempCounter::where('userID', $this->userId)
+            ->where('flag', 1)
+            ->where('palet', $this->po)->where('prop_ori', 'like', '%"location":"ASSY"%')->exists();
+        $checkNotASSY = tempCounter::where('userID', $this->userId)
+            ->where('flag', 1)->whereNotNull('prop_scan')
+            ->where('palet', $this->po)->where('prop_ori', 'not like', '%"location":"ASSY"%')->exists();
+
+        if ($checkASSY && $checkNotASSY) {
+            return $this->dispatch('alert', ['title' => 'Warning', 'time' => 5000, 'icon' => 'error', 'text' => 'Double location detected ASSY and CNC']);
+        }
+
         foreach ($loopData as $data) {
             $pax = $data->pax;
             $qty = $data->total / $pax;
@@ -327,28 +340,36 @@ class PurchaseOrderIn extends Component
                 }
             }
         }
-        
 
-        $month = date('m');
-        $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi',$this->paletCode)->first();
-        
-        if ($dataPaletRegister) {
-            $generator = new BarcodeGeneratorPNG();
-            $barcode = $generator->getBarcode($dataPaletRegister->palet_no, $generator::TYPE_CODE_128);
-            Storage::put('public/barcodes/' . $dataPaletRegister->palet_no . '.png', $barcode);
+        // JIKA ASSY
+        if ($checkASSY) {
+            $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi', $this->paletCode)->first();
 
-            $dataPrint = [
-                'data' => $loopData,
-                'palet_no' => $dataPaletRegister->palet_no,
-                'issue_date' => $dataPaletRegister->issue_date,
-                'line_c' => $dataPaletRegister->line_c
-            ];
-            $this->resetPage();
-            return Excel::download(new ReceivingSupplierReport($dataPrint), "Scanned Items_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
-        } else {
+            if ($dataPaletRegister) {
+                $generator = new BarcodeGeneratorPNG();
+                $barcode = $generator->getBarcode($dataPaletRegister->palet_no, $generator::TYPE_CODE_128);
+                Storage::put('public/barcodes/' . $dataPaletRegister->palet_no . '.png', $barcode);
 
-            $this->resetPage();
+                $dataPrint = [
+                    'data' => $loopData,
+                    'palet_no' => $dataPaletRegister->palet_no,
+                    'issue_date' => $dataPaletRegister->issue_date,
+                    'line_c' => $dataPaletRegister->line_c
+                ];
+                $this->resetPage();
+                $this->dispatch('alert', ['title' => 'Succes', 'time' => 5000, 'icon' => 'succes', 'text' => 'ASSY material saved succesfully']);
+                return Excel::download(new ReceivingSupplierReport($dataPrint), "Receiving ASSY_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+            } else {
+                $this->resetPage();
+                return $this->dispatch('alert', ['title' => 'Succes', 'time' => 5000, 'icon' => 'succes', 'text' => 'material saved succesfully without palet']);
+            }
         }
+        $dataPrint = [
+            'data' => $loopData,
+            'palet_no' => $this->paletCode,
+        ];
+        $this->dispatch('alert', [ 'time' => 5000, 'icon' => 'success', 'title' => 'Other ASSY material saved succesfully']);
+        return Excel::download(new ReceivingSupplierNotAssyReport($dataPrint), "Receiving Not ASSY_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
     public function resetPage()
