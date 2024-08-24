@@ -82,11 +82,14 @@ class ReceivingSupplierNotAssyReport implements FromCollection, WithMapping, Wit
                 $sheet->mergeCells("A2:".$max_col."2");
                 $sheet->setCellValue('A2', Carbon::now('Asia/Jakarta')->format('l, j F Y H:i:s'));
                 $sheet->setCellValue('A3', "   ");
-                $sheet->setCellValue('A4', "Kit No");
-                $sheet->setCellValue('B4', ": " . $this->data[0]->palet);
 
+                $sheet->mergeCells("A4:B4");
+                $sheet->setCellValue('A4', "Kit No");
+                $sheet->setCellValue('C4', ": " . $this->data[0]->palet);
+                
+                $sheet->mergeCells("A5:B5");
                 $sheet->setCellValue('A5', "Pallet No");
-                $sheet->setCellValue('B5', ": " . $this->palet_no);
+                $sheet->setCellValue('C5', ": " . $this->palet_no);
                 
                 $sheet->setCellValue('A6', "  ");
                 $sheet->getDelegate()->getStyle('A1:'.$max_col.'1')->getFont()->setSize(20);

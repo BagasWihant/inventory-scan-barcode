@@ -99,6 +99,7 @@ class PurchaseOrderIn extends Component
                     $checkLocation = tempCounter::select('prop_ori')->where('palet', $this->po)->where('material', $this->sws_code)->first();
                     $decodePropOri = json_decode($checkLocation->prop_ori, true);
                     return $this->dispatch('newItem', [
+                        'q' => 1,
                         'qty' => 0,
                         'title' => 'Material with manual Qty',
                         'update' => true,
@@ -107,9 +108,10 @@ class PurchaseOrderIn extends Component
                         'locationSet' => isset($decodePropOri['location']) ? [$decodePropOri['location']] : null
                     ]);
                 }
-                return $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
+                return $this->dispatch('newItem', ['q' => 1,'qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
             } else {
                 return $this->dispatch('newItem', [
+                    'q' => 0,
                     'qty' => $check_lineNsetup[0]->picking_qty,
                     'line' => $check_lineNsetup,
                     'title' => 'Material with manual Qty',
@@ -251,7 +253,8 @@ class PurchaseOrderIn extends Component
             ->select('temp_counters.*', 'd.trucking_id', 'b.loc_cd as location_cd', 'matl_nm')
             ->where('userID', $this->userId)
             ->where('flag', 1)
-            ->where('palet', $this->po);
+            ->where('palet', $this->po)
+            ->orderByDesc('scanned_time');
 
         // remove data in abnormal_materials
         $dd = abnormalMaterial::where(['pallet_no' => $this->paletCode, 'kit_no' => $this->po,])->delete();
@@ -383,11 +386,11 @@ class PurchaseOrderIn extends Component
                 return $this->dispatch('alert', ['title' => 'Succes', 'time' => 5000, 'icon' => 'succes', 'text' => 'material saved succesfully without palet']);
             }
         }
-        $this->resetPage();
         $dataPrint = [
             'data' => $loopData,
             'palet_no' => $this->paletCode,
         ];
+        $this->resetPage();
         $this->dispatch('alert', ['time' => 5000, 'icon' => 'success', 'title' => 'Other ASSY material saved succesfully']);
         return Excel::download(new ReceivingSupplierNotAssyReport($dataPrint), "Receiving Not ASSY_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
