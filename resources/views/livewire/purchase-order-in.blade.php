@@ -282,7 +282,6 @@
                 let locationValue = null
                 const lineValue = event[0].line ?? null
                 const locationSet = event[0].locationSet
-                const q = event[0].q
 
                 if (event[0].loc_cd) locationValue = event[0].loc_cd
                 linehtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Line C</strong>'
@@ -323,17 +322,7 @@
                             ${lokasihtml}
                             `
                 } else {
-                    if (q == 0) {
-                        html = `
-                                <div class="flex flex-col">
-                                    <strong>Qty</strong>
-                                    <input id="swal-input1" class="swal2-input">
-                                    </div>
-                                    <input id="swal-input2" class="swal2-input" hidden>
-                                    <input id="swal-input3" class="swal2-input"  hidden>
-                                    `
-                    } else {
-                        html = `
+                    html = `
                                 <div class="flex flex-col">
                                     <strong>Qty</strong>
                                     <input id="swal-input1" class="swal2-input">
@@ -341,9 +330,8 @@
                                     <input id="swal-input2" class="swal2-input" hidden>
                                 <div class="flex flex-col">
                                     <strong>Location</strong>
-                                    <input id="swal-input3" class="swal2-input" value="${locationValue}" readonly>
+                                    <input id="swal-input3" class="swal2-input" value="${locationValue}" >
                                 </div>`
-                    }
                 }
                 return Swal.fire({
                     title: event[0].title,

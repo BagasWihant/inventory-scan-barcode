@@ -99,7 +99,6 @@ class PurchaseOrderIn extends Component
                     $checkLocation = tempCounter::select('prop_ori')->where('palet', $this->po)->where('material', $this->sws_code)->first();
                     $decodePropOri = json_decode($checkLocation->prop_ori, true);
                     return $this->dispatch('newItem', [
-                        'q' => 1,
                         'qty' => 0,
                         'title' => 'Material with manual Qty',
                         'update' => true,
@@ -108,10 +107,9 @@ class PurchaseOrderIn extends Component
                         'locationSet' => isset($decodePropOri['location']) ? [$decodePropOri['location']] : null
                     ]);
                 }
-                return $this->dispatch('newItem', ['q' => 1,'qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
+                return $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
             } else {
                 return $this->dispatch('newItem', [
-                    'q' => 0,
                     'qty' => $check_lineNsetup[0]->picking_qty,
                     'line' => $check_lineNsetup,
                     'title' => 'Material with manual Qty',
