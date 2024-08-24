@@ -109,8 +109,14 @@ class PurchaseOrderIn extends Component
                 }
                 return $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
             } else {
-                $data = ['qty' => $check_lineNsetup[0]->picking_qty, 'location' => $mat_mst->loc_cd];
-                $this->insertNew($data, true);
+                return $this->dispatch('newItem', [
+                    'qty' => $check_lineNsetup[0]->picking_qty,
+                    'line' => $check_lineNsetup,
+                    'title' => 'Material with manual Qty',
+                    'update' => true,
+                    'loc_cd' => $mat_mst->loc_cd,
+                ]);
+                // $this->insertNew($data, true);
             }
         }
         $this->material_no = null;
@@ -150,6 +156,15 @@ class PurchaseOrderIn extends Component
             $new_prop_scan = isset($data->prop_scan) ? json_decode($data->prop_scan) : [];
             array_push($new_prop_scan, $reqData['qty']);
 
+            // update scanned time material setup
+            $scannedTime = now();
+            DB::table('material_setup_mst_supplier')->where('kit_no', $this->po)->where('material_no', $this->sws_code)
+                ->when(!empty($reqData['lineNew']), fn($q) => $q->where('line_c', $reqData['lineNew']))
+                ->update([
+                    'scanned_time' => $scannedTime,
+                    'being_used' => 1
+                ]);
+
             if ($data->total < $data->counter || $data->sisa <= 0) {
                 // kelebihan
                 $this->material_no = null;
@@ -161,6 +176,7 @@ class PurchaseOrderIn extends Component
                         'sisa' => $sisa,
                         'qty_more' => $more,
                         'prop_scan' => json_encode($new_prop_scan),
+                        'scanned_time' => $scannedTime,
                     ];
                 } else {
                     $updateData = [
@@ -168,6 +184,7 @@ class PurchaseOrderIn extends Component
                         'sisa' => $sisa,
                         'qty_more' => $more,
                         'prop_scan' => json_encode($new_prop_scan),
+                        'scanned_time' => $scannedTime,
                     ];
                 }
                 $tempCount->update($updateData);
@@ -178,13 +195,15 @@ class PurchaseOrderIn extends Component
                         'counter' => $counter,
                         'sisa' => $sisa,
                         'prop_scan' => json_encode($new_prop_scan),
-                        'line_c' => $reqData['lineNew']
+                        'line_c' => $reqData['lineNew'],
+                        'scanned_time' => $scannedTime,
                     ];
                 } else {
                     $updateData = [
                         'counter' => $counter,
                         'sisa' => $sisa,
-                        'prop_scan' => json_encode($new_prop_scan)
+                        'prop_scan' => json_encode($new_prop_scan),
+                        'scanned_time' => $scannedTime,
                     ];
                 }
                 // dd($updateData);
@@ -364,16 +383,25 @@ class PurchaseOrderIn extends Component
                 return $this->dispatch('alert', ['title' => 'Succes', 'time' => 5000, 'icon' => 'succes', 'text' => 'material saved succesfully without palet']);
             }
         }
+        $this->resetPage();
         $dataPrint = [
             'data' => $loopData,
             'palet_no' => $this->paletCode,
         ];
-        $this->dispatch('alert', [ 'time' => 5000, 'icon' => 'success', 'title' => 'Other ASSY material saved succesfully']);
+        $this->dispatch('alert', ['time' => 5000, 'icon' => 'success', 'title' => 'Other ASSY material saved succesfully']);
         return Excel::download(new ReceivingSupplierNotAssyReport($dataPrint), "Receiving Not ASSY_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
     public function resetPage()
     {
+
+        // reset scanned time in material supplier
+        DB::table('material_setup_mst_supplier')->where('kit_no', $this->po)->where('being_used', 1)
+            ->update([
+                'scanned_time' => null,
+                'being_used' => null,
+            ]);
+
         $this->input_setup_by = null;
         $this->suratJalanDisable = false;
         $this->paletDisable = false;
@@ -400,7 +428,7 @@ class PurchaseOrderIn extends Component
                     ->on('a.kit_no', '=', 'b.kit_no')
                     ->where('b.pallet_no', $this->paletCode);
             };
-            $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty'];
+            $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty', 'scanned_time'];
 
             if ($this->input_setup_by == "PO COT") {
                 $joinCondition = function ($join) {
@@ -416,8 +444,9 @@ class PurchaseOrderIn extends Component
                 ->selectRaw('a.material_no, a.picking_qty, count(a.picking_qty) as pax, a.kit_no, b.picking_qty as stock_in, a.line_c, a.setup_by')
                 ->leftJoin('material_in_stock as b', $joinCondition)
                 ->groupBy($groupByColumns)
-                ->orderBy('a.material_no')
-                ->orderByDesc('a.line_c');
+                ->orderByDesc('scanned_time')
+                ->orderBy('a.material_no');
+
 
 
             $getall = $productsQuery->get();
@@ -466,9 +495,10 @@ class PurchaseOrderIn extends Component
                 ->where('palet', $this->po)
                 ->select('a.*', 'b.loc_cd as location_cd')
                 ->where('userID', $this->userId)
+                ->orderByDesc('scanned_time')
                 ->orderBy('material')
-                ->orderByDesc('line_c')
                 ->get();
+            // dump($scannedCounter);
 
 
             $this->dispatch('paletFocus');

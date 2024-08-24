@@ -103,16 +103,16 @@
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
                             <th scope="col" class="px-6 py-3">
-                                    Material No
+                                Material No
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                    Line C
+                                Line C
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                    QTY Picking List
+                                QTY Picking List
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                    In Stock
+                                In Stock
                             </th>
                         </tr>
                     </thead>
@@ -280,22 +280,23 @@
             // jika item duplicate
             if (event[0].update) {
                 let locationValue = null
-                const lineValue = event[0].line
+                const lineValue = event[0].line ?? null
                 const locationSet = event[0].locationSet
 
                 if (event[0].loc_cd) locationValue = event[0].loc_cd
                 linehtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Line C</strong>'
                 lokasihtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Location</strong>'
-
-                if (lineValue.length > 1) {
-                    linehtml += '<select id="swal-input2" class="swal2-input my-2" >'
-                    lineValue.map((i) => {
-                        linehtml += '<option value="' + i.line_c + '">' + i.line_c + '</option>'
-                    })
-                    linehtml += '</select>'
-                } else {
-                    linehtml +=
-                        `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" readonly>`
+                if (lineValue !== null) {
+                    if (lineValue.length > 1) {
+                        linehtml += '<select id="swal-input2" class="swal2-input my-2" >'
+                        lineValue.map((i) => {
+                            linehtml += '<option value="' + i.line_c + '">' + i.line_c + '</option>'
+                        })
+                        linehtml += '</select>'
+                    } else {
+                        linehtml +=
+                            `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" >`
+                    }
                 }
 
                 if (locationSet) {
@@ -349,7 +350,6 @@
                     }
 
                 }).then((result) => {
-                    console.log(result);
                     /* Read more about isConfirmed, isDenied below */
                     if (result.isConfirmed) {
                         $wire.dispatch('insertNew', {

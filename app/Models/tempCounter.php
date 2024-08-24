@@ -24,5 +24,6 @@ class tempCounter extends Model
         'scan_count',
         'flag',
         'line_c',
+        'scanned_time',
     ];
 }
