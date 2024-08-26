@@ -14,6 +14,7 @@ class CheckingStock extends Component
 
     public function updated($prop)
     {
+        dump($prop);
         switch ($prop) {
             case 'paletBarcode':
                 $this->paletBarcode = substr($this->paletBarcode, 0, 10);
@@ -50,8 +51,6 @@ class CheckingStock extends Component
         $this->resetData();
         $this->mode = $mode;
         if ($this->mode == 'cnc') {
-            $distinc = DB::table('material_setup_mst_CNC_KIAS2')->select('pallet_no')->distinct();
-            $this->listPalet = $distinc->pluck('pallet_no')->all();
         } else {
             $distinc = DB::table('material_in_stock')->where('kit_no', '!=', '')->select('kit_no as pallet_no')->distinct();
             $this->listPalet = $distinc->pluck('pallet_no')->all();
