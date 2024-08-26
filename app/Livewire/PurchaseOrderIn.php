@@ -81,7 +81,25 @@ class PurchaseOrderIn extends Component
     }
     public function materialNoScan()
     {
-        $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->material_no)->select('sws_code')->first();
+        // parsing  PCL-L24-1077 / S0 150 381036060115T2108P6001  / XHN3  / 210824 / 2 / ANDIK
+        // parsing  PCL-L24-1077 / S03603815100101602108P6001  / YD30  / 210824 / 2 / ANDIK
+        $qr = $this->material_no;
+        $split = explode("/", $this->material_no);
+        if(count($split) < 2){
+            $this->material_no=null;
+            return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'Material number not found']);
+        }
+        $qtyParse = substr($split[1],3,3);
+
+        $hapus9huruf = substr(trim($split[1]),-9);
+        $hapusdepan = substr(trim($split[1]),0,5); 
+        $parse1= str_replace($hapusdepan,"",trim($split[1]));
+        $material_noParse = str_replace($hapus9huruf,"",$parse1);
+
+        $lineParse = trim($split[2]);
+        
+        
+        $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $material_noParse)->select('sws_code')->first();
         if ($supplierCode) {
             $this->sws_code = $supplierCode->sws_code;
             // $getTempCounterData = DB::table('temp_counters')->where('palet', $this->po)->where('material', $this->material_no);
@@ -90,34 +108,15 @@ class PurchaseOrderIn extends Component
             $mat_mst = DB::table('material_mst')
                 ->select(['iss_min_lot', 'loc_cd'])
                 ->where('matl_no', $this->sws_code)->first();
-            $check_lineNsetup = DB::table('material_setup_mst_supplier')->select(['line_c', 'setup_by', 'picking_qty'])->where('kit_no', $this->po)->where('material_no', $this->sws_code)->get()->toArray();
+            // $check_lineNsetup = DB::table('material_setup_mst_supplier')->select(['line_c', 'setup_by', 'picking_qty'])->where('kit_no', $this->po)->where('material_no', $this->sws_code)->get()->toArray();
 
-            if ($mat_mst->iss_min_lot == 1) {
-                $this->material_no = null;
-                if ($check_lineNsetup) {
-                    // check lokasi di kolom prop ori
-                    $checkLocation = tempCounter::select('prop_ori')->where('palet', $this->po)->where('material', $this->sws_code)->first();
-                    $decodePropOri = json_decode($checkLocation->prop_ori, true);
-                    return $this->dispatch('newItem', [
-                        'qty' => 0,
-                        'title' => 'Material with manual Qty',
-                        'update' => true,
-                        'line' => $check_lineNsetup,
-                        'loc_cd' => $mat_mst->loc_cd,
-                        'locationSet' => isset($decodePropOri['location']) ? [$decodePropOri['location']] : null
-                    ]);
-                }
-                return $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
-            } else {
-                return $this->dispatch('newItem', [
-                    'qty' => $check_lineNsetup[0]->picking_qty,
-                    'line' => $check_lineNsetup,
-                    'title' => 'Material with manual Qty',
-                    'update' => true,
-                    'loc_cd' => $mat_mst->loc_cd,
-                ]);
-                // $this->insertNew($data, true);
-            }
+            $dataInsert=[
+                'qty'=>$qtyParse,
+                'lineNew'=>$lineParse,
+                'location'=>'ASSY',
+                'qr'=>$qr
+            ];
+            $this->insertNew($dataInsert, true);
         }
         $this->material_no = null;
     }
@@ -125,6 +124,13 @@ class PurchaseOrderIn extends Component
     #[On('insertNew')]
     public function insertNew(array $reqData = null, $update = false)
     {
+        $insert = DB::select('EXEC sp_WH_rcv_QRConvert ?,?',["$reqData[qr]",$this->userId]);
+        if($insert[0]->status !== '1'){
+            $this->material_no=null;
+            return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => $insert[0]->status]);
+       
+        }
+        
         if ($update && $reqData !== null) {
             $tempCount = DB::table('temp_counters')
                 ->where('material', $this->sws_code)
@@ -206,9 +212,11 @@ class PurchaseOrderIn extends Component
                         'scanned_time' => $scannedTime,
                     ];
                 }
-                // dd($updateData);
+                
                 $tempCount->update($updateData);
             }
+          
+
         }
         $this->material_no = null;
     }
@@ -453,17 +461,20 @@ class PurchaseOrderIn extends Component
             $materialNos = $getall->pluck('material_no')->all();
 
             $getTempCounterData = DB::table('temp_counters')
-                ->select(['material', 'line_c'])
+                ->select(['material', 'line_c','userID'])
                 ->where('palet', $this->po)
                 ->whereIn('material', $materialNos);
-            $existingMaterial = $getTempCounterData->pluck('material')->all();
-            $existingLine = $getTempCounterData->pluck('line_c')->all();
-
+            $collecTempCounter = collect($getTempCounterData->get());
+            // $existingMaterial = $getTempCounterData->pluck('material')->all();
+            // $existingLine = $getTempCounterData->pluck('line_c')->all();
+            
             foreach ($getall as $value) {
+                $checkUserScan = $collecTempCounter->where('material',$value->material_no)->where('userID',$this->userId)->first();
+                
 
-                $materialExists = in_array($value->material_no, $existingMaterial);
-                $lineExists = in_array($value->line_c, $existingLine);
-                if (!$materialExists || !$lineExists) {
+                // $materialExists = in_array($value->material_no, $existingMaterial);
+                // $lineExists = in_array($value->line_c, $existingLine);
+                if (!$checkUserScan) {
 
                     try {
                         $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
