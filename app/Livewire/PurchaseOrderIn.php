@@ -300,20 +300,20 @@ class PurchaseOrderIn extends Component
                             'setup_by' => $prop_ori['setup_by'],
                         ]);
                     } else {
-                        abnormalMaterial::create([
-                            'kit_no' => $this->po,
-                            'surat_jalan' => $this->surat_jalan,
-                            'pallet_no' => $this->paletCode,
-                            'material_no' => $data->material,
-                            'picking_qty' => $value,
-                            'locate' => $data->location_cd,
-                            'trucking_id' => $data->trucking_id,
-                            'user_id' => $this->userId,
-                            'status' => 1,
-                            'line_c' => $data->line_c,
-                            'locate' => $prop_ori['location'] ?? null,
-                            'setup_by' => $prop_ori['setup_by'],
-                        ]);
+                        // abnormalMaterial::create([
+                        //     'kit_no' => $this->po,
+                        //     'surat_jalan' => $this->surat_jalan,
+                        //     'pallet_no' => $this->paletCode,
+                        //     'material_no' => $data->material,
+                        //     'picking_qty' => $value,
+                        //     'locate' => $data->location_cd,
+                        //     'trucking_id' => $data->trucking_id,
+                        //     'user_id' => $this->userId,
+                        //     'status' => 1,
+                        //     'line_c' => $data->line_c,
+                        //     'locate' => $prop_ori['location'] ?? null,
+                        //     'setup_by' => $prop_ori['setup_by'],
+                        // ]);
                     }
                     $masuk++;
                 }
@@ -321,20 +321,20 @@ class PurchaseOrderIn extends Component
                 if ($data->total > $data->counter) {
                     $count = $data->pax - $masuk;
                     $kurangnya = $data->total - $data->counter;
-                    abnormalMaterial::create([
-                        'pallet_no' => $this->paletCode,
-                        'kit_no' => $this->po,
-                        'surat_jalan' => $this->surat_jalan,
-                        'material_no' => $data->material,
-                        'picking_qty' => $kurangnya,
-                        'locate' => $data->location_cd,
-                        'trucking_id' => $data->trucking_id,
-                        'user_id' => $this->userId,
-                        'status' => 0,
-                        'line_c' => $data->line_c,
-                        'locate' => $prop_ori['location'] ?? null,
-                        'setup_by' => $prop_ori['setup_by'],
-                    ]);
+                    // abnormalMaterial::create([
+                    //     'pallet_no' => $this->paletCode,
+                    //     'kit_no' => $this->po,
+                    //     'surat_jalan' => $this->surat_jalan,
+                    //     'material_no' => $data->material,
+                    //     'picking_qty' => $kurangnya,
+                    //     'locate' => $data->location_cd,
+                    //     'trucking_id' => $data->trucking_id,
+                    //     'user_id' => $this->userId,
+                    //     'status' => 0,
+                    //     'line_c' => $data->line_c,
+                    //     'locate' => $prop_ori['location'] ?? null,
+                    //     'setup_by' => $prop_ori['setup_by'],
+                    // ]);
                 }
             } else {
                 $sisa = $data->sisa;
@@ -342,21 +342,20 @@ class PurchaseOrderIn extends Component
                     $qty = floor($data->sisa / $data->pax);
                     $sisa = $sisa - $qty;
                     if ($i > $data->pax) $qty = $sisa;
-                    # code...
-                    abnormalMaterial::create([
-                        'kit_no' => $this->po,
-                        'surat_jalan' => $this->surat_jalan,
-                        'pallet_no' => $this->paletCode,
-                        'material_no' => $data->material,
-                        'picking_qty' => $qty,
-                        'locate' => $data->location_cd,
-                        'trucking_id' => $data->trucking_id,
-                        'user_id' => $this->userId,
-                        'status' => 0,
-                        'line_c' => $data->line_c,
-                        'locate' => $prop_ori['location'] ?? null,
-                        'setup_by' => $prop_ori['setup_by'],
-                    ]);
+                    // abnormalMaterial::create([
+                    //     'kit_no' => $this->po,
+                    //     'surat_jalan' => $this->surat_jalan,
+                    //     'pallet_no' => $this->paletCode,
+                    //     'material_no' => $data->material,
+                    //     'picking_qty' => $qty,
+                    //     'locate' => $data->location_cd,
+                    //     'trucking_id' => $data->trucking_id,
+                    //     'user_id' => $this->userId,
+                    //     'status' => 0,
+                    //     'line_c' => $data->line_c,
+                    //     'locate' => $prop_ori['location'] ?? null,
+                    //     'setup_by' => $prop_ori['setup_by'],
+                    // ]);
                 }
             }
         }
