@@ -81,8 +81,9 @@ class PurchaseOrderIn extends Component
     }
     public function materialNoScan()
     {
-        // parsing  PCL-L24-1077 / S0 150 381036060115T2108P6001  / XHN3  / 210824 / 2 / ANDIK
-        // parsing  PCL-L24-1077 / S03603815100101602108P6001  / YD30  / 210824 / 2 / ANDIK
+        // parsing  PCL-L24-1077 / S04803815100101502108P6001  / YD30  / 210824 / 2 / ANDIK
+        // parsing  PCL-L24-1077 / S0360381510010160999999999  / YD30 / 210824 / 2 / ANDIK
+        // parsing  PCL-L24-1077 / S0020390024030050T999999999  / XD45  / 210824 / 2 / ANDIK
         $qr = $this->material_no;
         $split = explode("/", $this->material_no);
         if(count($split) < 2){
@@ -140,8 +141,12 @@ class PurchaseOrderIn extends Component
 
                 $tempCount->where('line_c', $reqData['lineNew']);
             }
+            if(!$tempCount->exists()){
+                $this->material_no=null;
+                DB::table('WH_rcv_QRHistory')->where('QR',$reqData['qr'])->delete();
+                return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "Material Tidak ada"]);
+            }
             $data = $tempCount->first();
-
             $counter = $data->counter + $reqData['qty'];
 
 
@@ -372,6 +377,13 @@ class PurchaseOrderIn extends Component
         if ($checkASSY) {
             $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi', $this->paletCode)->first();
 
+            // insert
+            DB::table('WH_rcv_QRHistory')->where('user_id',$this->userId)->update([
+                'status'=>1,
+                'PO'=>$this->po,
+                'surat_jalan'=>$this->surat_jalan,
+                'palet_iwpi'=>$this->paletCode,
+            ]);
             if ($dataPaletRegister) {
                 $generator = new BarcodeGeneratorPNG();
                 $barcode = $generator->getBarcode($dataPaletRegister->palet_no, $generator::TYPE_CODE_128);
