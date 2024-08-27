@@ -118,6 +118,7 @@
                     </thead>
                     <tbody>
                         @foreach ($listMaterial as $product)
+
                             <tr class=" border rounded dark:border-gray-700 ">
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -139,7 +140,7 @@
                         @endforeach
                     </tbody>
                 </table>
-                {{-- {{ $productsInPalet->links() }} --}}
+                {{ $listMaterial->links() }}
 
             </div>
 
@@ -173,7 +174,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($listMaterialScan as $v)
+                        @foreach ($sudahScan as $v)
                             @php
                                 if ($v->total == $v->counter && $v->qty_more == 0) {
                                     $ket = 'OK CONFIRM';
@@ -218,6 +219,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                {{$sudahScan->links()}}
             </div>
 
         </div>

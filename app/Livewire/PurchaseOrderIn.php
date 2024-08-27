@@ -12,19 +12,22 @@ use App\Models\abnormalMaterial;
 use App\Models\PaletRegister;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 use stdClass;
 
 class PurchaseOrderIn extends Component
 {
-    public $userId, $po, $listMaterial = [], $listMaterialScan, $listKitNo = [], $sws_code, $statusLoading;
+    use WithPagination;
+    public $userId, $po,  $listMaterialScan, $listKitNo = [], $sws_code, $statusLoading;
     public $searchPo;
     public $paletCode, $palet, $noPalet;
     public $surat_jalan;
     public $material_no;
     public $input_setup_by;
     public $suratJalanDisable = false, $paletDisable = false, $poDisable = false;
+    public $getall = [];
 
     public function mount()
     {
@@ -74,6 +77,56 @@ class PurchaseOrderIn extends Component
             $this->suratJalanDisable = true;
             $this->paletDisable = true;
             $this->poDisable = true;
+
+
+            $joinCondition = function ($join) {
+                $join->on('a.material_no', '=', 'b.material_no')
+                    ->on('a.kit_no', '=', 'b.kit_no')
+                    ->where('b.pallet_no', $this->paletCode);
+            };
+            $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty', 'scanned_time'];
+
+            if ($this->input_setup_by == "PO COT") {
+                $joinCondition = function ($join) {
+                    $join->on('a.material_no', '=', 'b.material_no')
+                        ->on('a.kit_no', '=', 'b.kit_no')
+                        ->on('a.line_c', '=', 'b.line_c')
+                        ->where('b.pallet_no', $this->paletCode);
+                };
+            }
+
+            $productsQuery = DB::table('material_setup_mst_supplier as a')
+                ->where('a.kit_no', $this->po)
+                ->selectRaw('a.material_no, a.picking_qty, count(a.picking_qty) as pax, a.kit_no, b.picking_qty as stock_in, a.line_c, a.setup_by')
+                ->leftJoin('material_in_stock as b', $joinCondition)
+                ->groupBy($groupByColumns)
+                ->orderByDesc('scanned_time')
+                ->orderBy('a.material_no');
+            $getall = $productsQuery->get();
+            foreach ($getall as $value) {
+                try {
+                    $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
+                    DB::beginTransaction();
+                    $insert = [
+                        'material' => $value->material_no,
+                        'palet' => $this->po,
+                        'userID' => $this->userId,
+                        'sisa' => $total,
+                        'total' => $total,
+                        'pax' => $value->pax,
+                        'flag' => 1,
+                        'prop_ori' => json_encode(['setup_by' => $value->setup_by]),
+                        'line_c' => $value->line_c,
+                    ];
+
+
+                    tempCounter::create($insert);
+                    DB::commit();
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                }
+            }
+
             return $this->dispatch('materialFocus');
         } else {
             return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'Please input Palet first, to avoid inaccurate data']);
@@ -83,39 +136,33 @@ class PurchaseOrderIn extends Component
     {
         // parsing  PCL-L24-1077 / S04803815100101502108P6001  / YD30  / 210824 / 2 / ANDIK
         // parsing  PCL-L24-1077 / S0360381510010160999999999  / YD30 / 210824 / 2 / ANDIK
-        // parsing  PCL-L24-1077 / S0020390024030050T999999999  / XD45  / 210824 / 2 / ANDIK
         $qr = $this->material_no;
         $split = explode("/", $this->material_no);
-        if(count($split) < 2){
-            $this->material_no=null;
+        if (count($split) < 2) {
+            $this->material_no = null;
             return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'Material number not found']);
         }
-        $qtyParse = substr($split[1],3,3);
+        $qtyParse = substr($split[1], 3, 3);
 
-        $hapus9huruf = substr(trim($split[1]),-9);
-        $hapusdepan = substr(trim($split[1]),0,5); 
-        $parse1= str_replace($hapusdepan,"",trim($split[1]));
-        $material_noParse = str_replace($hapus9huruf,"",$parse1);
+        $hapus9huruf = substr(trim($split[1]), -9);
+        $hapusdepan = substr(trim($split[1]), 0, 5);
+        $parse1 = str_replace($hapusdepan, "", trim($split[1]));
+        $material_noParse = str_replace($hapus9huruf, "", $parse1);
 
         $lineParse = trim($split[2]);
-        
-        
+
+
         $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $material_noParse)->select('sws_code')->first();
         if ($supplierCode) {
             $this->sws_code = $supplierCode->sws_code;
             // $getTempCounterData = DB::table('temp_counters')->where('palet', $this->po)->where('material', $this->material_no);
 
 
-            $mat_mst = DB::table('material_mst')
-                ->select(['iss_min_lot', 'loc_cd'])
-                ->where('matl_no', $this->sws_code)->first();
-            // $check_lineNsetup = DB::table('material_setup_mst_supplier')->select(['line_c', 'setup_by', 'picking_qty'])->where('kit_no', $this->po)->where('material_no', $this->sws_code)->get()->toArray();
-
-            $dataInsert=[
-                'qty'=>$qtyParse,
-                'lineNew'=>$lineParse,
-                'location'=>'ASSY',
-                'qr'=>$qr
+            $dataInsert = [
+                'qty' => $qtyParse,
+                'lineNew' => $lineParse,
+                'location' => 'ASSY',
+                'qr' => $qr
             ];
             $this->insertNew($dataInsert, true);
         }
@@ -125,13 +172,12 @@ class PurchaseOrderIn extends Component
     #[On('insertNew')]
     public function insertNew(array $reqData = null, $update = false)
     {
-        $insert = DB::select('EXEC sp_WH_rcv_QRConvert ?,?',["$reqData[qr]",$this->userId]);
-        if($insert[0]->status !== '1'){
-            $this->material_no=null;
+        $insert = DB::select('EXEC sp_WH_rcv_QRConvert ?,?', ["$reqData[qr]", $this->userId]);
+        if ($insert[0]->status !== '1') {
+            $this->material_no = null;
             return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => $insert[0]->status]);
-       
         }
-        
+
         if ($update && $reqData !== null) {
             $tempCount = DB::table('temp_counters')
                 ->where('material', $this->sws_code)
@@ -141,9 +187,9 @@ class PurchaseOrderIn extends Component
 
                 $tempCount->where('line_c', $reqData['lineNew']);
             }
-            if(!$tempCount->exists()){
-                $this->material_no=null;
-                DB::table('WH_rcv_QRHistory')->where('QR',$reqData['qr'])->delete();
+            if (!$tempCount->exists()) {
+                $this->material_no = null;
+                DB::table('WH_rcv_QRHistory')->where('QR', $reqData['qr'])->delete();
                 return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "Material Tidak ada"]);
             }
             $data = $tempCount->first();
@@ -173,7 +219,7 @@ class PurchaseOrderIn extends Component
                 ->when(!empty($reqData['lineNew']), fn($q) => $q->where('line_c', $reqData['lineNew']))
                 ->update([
                     'scanned_time' => $scannedTime,
-                    'being_used' => 1
+                    'being_used' => $this->userId
                 ]);
 
             if ($data->total < $data->counter || $data->sisa <= 0) {
@@ -217,11 +263,9 @@ class PurchaseOrderIn extends Component
                         'scanned_time' => $scannedTime,
                     ];
                 }
-                
+
                 $tempCount->update($updateData);
             }
-          
-
         }
         $this->material_no = null;
     }
@@ -378,11 +422,11 @@ class PurchaseOrderIn extends Component
             $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi', $this->paletCode)->first();
 
             // insert
-            DB::table('WH_rcv_QRHistory')->where('user_id',$this->userId)->update([
-                'status'=>1,
-                'PO'=>$this->po,
-                'surat_jalan'=>$this->surat_jalan,
-                'palet_iwpi'=>$this->paletCode,
+            DB::table('WH_rcv_QRHistory')->where('user_id', $this->userId)->update([
+                'status' => 1,
+                'PO' => $this->po,
+                'surat_jalan' => $this->surat_jalan,
+                'palet_iwpi' => $this->paletCode,
             ]);
             if ($dataPaletRegister) {
                 $generator = new BarcodeGeneratorPNG();
@@ -432,7 +476,7 @@ class PurchaseOrderIn extends Component
         $this->searchPo = null;
         $this->noPalet = null;
         $this->paletCode = null;
-        $this->listMaterial = [];
+        // $this->listMaterial = [];
         $this->listMaterialScan = [];
         DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
         $this->dispatch('SJFocus');
@@ -441,95 +485,58 @@ class PurchaseOrderIn extends Component
     public function render()
     {
         $this->paletCode = $this->palet . "-" . $this->noPalet;
-        if ($this->po != null) {
 
+
+        $joinCondition = function ($join) {
+            $join->on('a.material_no', '=', 'b.material_no')
+                ->on('a.kit_no', '=', 'b.kit_no')
+                ->where('b.pallet_no', $this->paletCode);
+        };
+        $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty', 'scanned_time'];
+
+        if ($this->input_setup_by == "PO COT") {
             $joinCondition = function ($join) {
                 $join->on('a.material_no', '=', 'b.material_no')
                     ->on('a.kit_no', '=', 'b.kit_no')
+                    ->on('a.line_c', '=', 'b.line_c')
                     ->where('b.pallet_no', $this->paletCode);
             };
-            $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty', 'scanned_time'];
-
-            if ($this->input_setup_by == "PO COT") {
-                $joinCondition = function ($join) {
-                    $join->on('a.material_no', '=', 'b.material_no')
-                        ->on('a.kit_no', '=', 'b.kit_no')
-                        ->on('a.line_c', '=', 'b.line_c')
-                        ->where('b.pallet_no', $this->paletCode);
-                };
-            }
-
-            $productsQuery = DB::table('material_setup_mst_supplier as a')
-                ->where('a.kit_no', $this->po)
-                ->selectRaw('a.material_no, a.picking_qty, count(a.picking_qty) as pax, a.kit_no, b.picking_qty as stock_in, a.line_c, a.setup_by')
-                ->leftJoin('material_in_stock as b', $joinCondition)
-                ->groupBy($groupByColumns)
-                ->orderByDesc('scanned_time')
-                ->orderBy('a.material_no');
-
-
-
-            $getall = $productsQuery->get();
-            $materialNos = $getall->pluck('material_no')->all();
-
-            $getTempCounterData = DB::table('temp_counters')
-                ->select(['material', 'line_c','userID'])
-                ->where('palet', $this->po)
-                ->whereIn('material', $materialNos);
-            $collecTempCounter = collect($getTempCounterData->get());
-            // $existingMaterial = $getTempCounterData->pluck('material')->all();
-            // $existingLine = $getTempCounterData->pluck('line_c')->all();
-            
-            foreach ($getall as $value) {
-                $checkUserScan = $collecTempCounter->where('material',$value->material_no)->where('userID',$this->userId)->first();
-                
-
-                // $materialExists = in_array($value->material_no, $existingMaterial);
-                // $lineExists = in_array($value->line_c, $existingLine);
-                if (!$checkUserScan) {
-
-                    try {
-                        $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
-                        DB::beginTransaction();
-                        $insert = [
-                            'material' => $value->material_no,
-                            'palet' => $this->po,
-                            'userID' => $this->userId,
-                            'sisa' => $total,
-                            'total' => $total,
-                            'pax' => $value->pax,
-                            'flag' => 1,
-                            'prop_ori' => json_encode(['setup_by' => $value->setup_by]),
-                            'line_c' => $value->line_c,
-                        ];
-
-
-                        tempCounter::create($insert);
-                        DB::commit();
-                    } catch (\Throwable $th) {
-                        DB::rollBack();
-                    }
-                }
-            }
-
-
-            $scannedCounter = DB::table('temp_counters as a')
-                ->leftJoin('material_mst as b', 'a.material', '=', 'b.matl_no')
-                ->where('palet', $this->po)
-                ->select('a.*', 'b.loc_cd as location_cd')
-                ->where('userID', $this->userId)
-                ->orderByDesc('scanned_time')
-                ->orderBy('material')
-                ->get();
-            // dump($scannedCounter);
-
-
-            $this->dispatch('paletFocus');
-
-            $this->listMaterial = $getall;
-            $this->listMaterialScan = $scannedCounter;
         }
 
-        return view('livewire.purchase-order-in');
+        $productsQuery = DB::table('material_setup_mst_supplier as a')
+            ->where('a.kit_no', $this->po)
+            ->selectRaw('a.material_no, a.picking_qty, count(a.picking_qty) as pax, a.kit_no, b.picking_qty as stock_in, a.line_c, a.setup_by')
+            ->leftJoin('material_in_stock as b', $joinCondition)
+            ->groupBy($groupByColumns)
+            ->orderByDesc('scanned_time')
+            ->orderBy('a.material_no');
+
+
+
+
+
+        $tempQuery = DB::table('temp_counters as a')
+            ->leftJoin('material_mst as b', 'a.material', '=', 'b.matl_no')
+            ->where('palet', $this->po)
+            ->select('a.*', 'b.loc_cd as location_cd')
+            ->where('userID', $this->userId)
+            ->orderByDesc('scanned_time')
+            ->orderBy('material');
+
+        $listMaterial = $productsQuery->paginate(20);
+        $sudahScan = $tempQuery->paginate(20);
+        // dump($scannedCounter)
+
+
+        $this->dispatch('paletFocus');
+
+
+        return view(
+            'livewire.purchase-order-in',
+            [
+                'sudahScan' => $sudahScan,
+                'listMaterial' => $listMaterial,
+            ]
+        );
     }
 }
