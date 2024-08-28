@@ -113,7 +113,7 @@
                     </div>
                     <!-- Modal body -->
                     <div class="p-2">
-                        @if (count($listDetail) > 0)
+                        @if (count($listMaterialDetail) > 0)
                         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
@@ -131,20 +131,20 @@
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @foreach ($listDetail as $d)
+                            <tbody >
+                                @foreach ($listMaterialDetail as $d)
                                     <tr class=" border rounded dark:border-gray-700 ">
                                         <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                             {{ $loop->iteration }}</th>
                 
                                         <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                            {{ $d->material_no }}
+                                            {{ $d->material }}
                                         </th>
                                         <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                             {{ $d->pack }}
                                         </th>
                                         <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                            {{ $d->total_qty }}
+                                            {{ $d->counter }}
                                         </th>
                                     </tr>
                                 @endforeach
@@ -154,6 +154,8 @@
                     </div>
                     <!-- Modal footer -->
                     <div class="flex items-center justify-end p-2 border-t border-gray-200 rounded-b dark:border-gray-600">
+                        <button type="button" wire:click="print('{{ $no_palet_modal}}')"
+                            class="py-2 px-3 ms-3 text-sm font-medium focus:outline-none bg-blue-500 text-white rounded-lg border border-gray-200 hover:bg-blue-200 hover:text-black focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Print</button>
                         <button data-modal-hide="static-modal" type="button"
                             class="py-2 px-3 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
                     </div>
