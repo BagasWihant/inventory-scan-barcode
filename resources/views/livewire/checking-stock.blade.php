@@ -21,9 +21,9 @@
     @if ($mode == 'cnc')
         {{-- <x-receiving-report-cnc :listPalet="$listPalet" :listMaterial="$listMaterial" :receivingData="$receivingData" /> --}}
         @livewire('components.receiving-report-cnc')
-        
     @elseif($mode == 'sup')
-        <x-receiving-report-supplier :listPalet="$listPalet" :listMaterial="$listMaterial" :receivingData="$receivingData" :listPaletNoSup="$listPaletNoSup" />
+        @livewire('components.receiving-report-supplier')
+        {{-- <x-receiving-report-supplier :listPalet="$listPalet" :listMaterial="$listMaterial" :receivingData="$receivingData" :listPaletNoSup="$listPaletNoSup" /> --}}
     @endif
 </div>
 
