@@ -142,11 +142,12 @@ class PurchaseOrderIn extends Component
             $this->material_no = null;
             return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'Material number not found']);
         }
-        $qtyParse = substr($split[1], 3, 3);
-
-        $hapus9huruf = substr(trim($split[1]), -9);
-        $hapusdepan = substr(trim($split[1]), 0, 5);
-        $parse1 = str_replace($hapusdepan, "", trim($split[1]));
+        $split1 = trim(str_replace(" ","",$split[1]));
+        $qtyParse = substr($split1, 1, 4);
+        
+        $hapus9huruf = substr($split1, -9);
+        $hapusdepan = substr($split1, 0, 5);
+        $parse1 = str_replace($hapusdepan, "", $split1);
         $material_noParse = str_replace($hapus9huruf, "", $parse1);
 
         $lineParse = trim($split[2]);
