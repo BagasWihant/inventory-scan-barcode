@@ -7,41 +7,86 @@ use Livewire\Component;
 
 class ReceivingReportSupplier extends Component
 {
-    public $kitNo, $paletNo, $materialCodeSupp, $dateStart, $dateEnd, $suratJalan;
+    public $kitNo, $paletNo, $materialCode, $dateStart, $dateEnd, $suratJalan;
     public $listPalet = [], $listPaletNoSup = [], $listMaterial = [], $receivingData = [], $listSuratJalan = [];
-    public $clearButton = false;
+    public $clearButton = false, $suratJalanDisable = false, $kitNoDisable = false, $paletNoDisable = false,$materialCodeDisable=false;
 
     public function updated($prop)
     {
         switch ($prop) {
             case 'kitNo':
 
-                $this->kitNo = substr($this->kitNo, 0, 10);
-
-                $distinc = DB::table('material_in_stock')->select('material_no')->where('kit_no', $this->kitNo)->distinct();
-                $this->listMaterial = $distinc->pluck('material_no')->all();
-
-                $distinc = DB::table('material_in_stock')->select('pallet_no')->where('kit_no', $this->kitNo)->distinct();
-                $this->listPaletNoSup = $distinc->pluck('pallet_no')->all();
+                $distinc = DB::table('material_in_stock')
+                    ->where('kit_no', 'like', '%' . $this->kitNo . '%')
+                    ->when($this->suratJalan, function ($query) {
+                        return $query->where('surat_jalan', $this->suratJalan);
+                    })
+                    ->select('kit_no as pallet_no')->distinct()->limit(10);
+                $this->listPalet = $distinc->pluck('pallet_no')->all();
                 break;
 
             case 'paletNo':
-                $this->materialCodeSupp = "";
 
-                $distinc = DB::table('material_in_stock')->select('material_no')->where('kit_no', $this->kitNo)->where('pallet_no', $this->paletNo)->distinct();
-                $this->listMaterial = $distinc->pluck('material_no')->all();
+                $distinc = DB::table('material_in_stock')->select('pallet_no')
+                ->where('kit_no', $this->kitNo)
+                ->where('pallet_no', 'like', '%' . $this->paletNo . '%')
+                ->distinct()->limit(10);
+                $this->listPaletNoSup = $distinc->pluck('pallet_no')->all();
+
                 break;
             case 'suratJalan':
-                $distinc = DB::table('material_in_stock')
-                    ->where('kit_no', '!=', '')
-                    ->where('surat_jalan', $this->suratJalan)
-                    ->select('kit_no as pallet_no')->distinct();
-                $this->listPalet = $distinc->pluck('pallet_no')->all();
+                $distincSJ = DB::table('material_in_stock')
+                    ->where('surat_jalan', 'like', '%' . $this->suratJalan . '%')
+                    ->select('surat_jalan')->distinct()->limit(10);
+                $this->listSuratJalan = $distincSJ->pluck('surat_jalan')->all();
+
+                break;
+            case 'materialCode':
+               
+                $distinc = DB::table('material_in_stock')->select('material_no')
+                ->where('kit_no', $this->kitNo)
+                ->where('pallet_no', $this->paletNo)
+                ->where('material_no', 'like', '%' . $this->materialCode . '%')
+                ->distinct()->limit(10);
+                $this->listMaterial = $distinc->pluck('material_no')->all();
+
                 break;
             default:
                 return;
                 break;
         }
+    }
+
+    public function chooseSuratJalan($palet)
+    {
+        $this->suratJalan = $palet;
+        $this->suratJalanDisable = true;
+        $this->clearButton = true;
+        $this->listSuratJalan =  'kosong';
+    }
+
+    public function chooseKitNo($kit)
+    {
+        $this->kitNo = $kit;
+        $this->kitNoDisable = true;
+        $this->clearButton = true;
+        $this->suratJalanDisable = true;
+        $this->listPalet = 'kosong';
+    }
+
+
+    public function choosePalet($palet) {
+        $this->paletNo = $palet;
+        $this->paletNoDisable = true;
+        $this->clearButton = true;
+        $this->listPaletNoSup = 'kosong';
+    }
+
+    public function chooseMaterial($mat) {
+        $this->materialCode = $mat;
+        $this->materialCodeDisable = true;
+        $this->clearButton = true;
+        $this->listMaterial = 'kosong';
     }
 
     public function showData()
@@ -58,7 +103,7 @@ class ReceivingReportSupplier extends Component
             $this->dateStart ?? '',
             $this->dateEnd ?? "",
             $this->paletNo ?? "",
-            $this->materialCodeSupp ?? "",
+            $this->materialCode ?? "",
         ];
 
         $this->receivingData = DB::select('EXEC sp_Receiving_report_supplier ?,?,?,?,?,?', $data);
@@ -67,24 +112,18 @@ class ReceivingReportSupplier extends Component
     public function resetData()
     {
         $this->receivingData = [];
-        $this->materialCodeSupp = "";
+        $this->materialCode = "";
         $this->dateStart = "";
         $this->paletNo = "";
         $this->kitNo = "";
         $this->suratJalan = "";
         $this->dateEnd = "";
         $this->clearButton = false;
-        $this->mount();
+        $this->suratJalanDisable = false;
+        $this->kitNoDisable = false;
+        $this->paletNoDisable = false;
     }
 
-    public function mount()
-    {
-        $distinc = DB::table('material_in_stock')->where('kit_no', '!=', '')->select('kit_no as pallet_no')->distinct();
-        $this->listPalet = $distinc->pluck('pallet_no')->all();
-
-        $distincSJ = DB::table('material_in_stock')->where('surat_jalan', '!=', '')->select('surat_jalan')->distinct();
-        $this->listSuratJalan = $distincSJ->pluck('surat_jalan')->all();
-    }
 
     public function render()
     {

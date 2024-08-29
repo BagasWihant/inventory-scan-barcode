@@ -7,19 +7,48 @@ use Livewire\Component;
 
 class ReceivingReportCnc extends Component
 {
-    public $searchPalet, $listPalet = [], $listMaterial = [], $receivingData = [], $materialCode, $dateEnd, $dateStart,$inputDisable = false;
+    public $searchPalet, $listPalet = [], $listMaterial = [], $receivingData = [], $materialCode, $dateEnd, $dateStart, $inputDisable = false;
+    public $truckingId, $listTruck = [], $truckingDisable = false, $paletDisable = false;
 
-    public function paletChange()
+    public function updated($prop)
     {
-        $this->listPalet =  DB::table('material_setup_mst_CNC_KIAS2')->distinct()->select('pallet_no')->where('pallet_no', 'like', "%$this->searchPalet%")->limit(10)->get();
+        switch ($prop) {
+            case 'truckingId':
+                if (strlen($this->truckingId) >= 2) {
+                    $distinc = DB::table('material_in_stock')
+                        ->where('trucking_id', 'like', '%' . $this->truckingId . '%')
+                        ->select('trucking_id')->distinct()->limit(10);
+                    $this->listTruck = $distinc->pluck('trucking_id')->all();
+                }
+                break;
+            case 'searchPalet':
+                if (strlen($this->searchPalet) >= 2) {
+                    $distinc = DB::table('material_in_stock')
+                    ->where('trucking_id', $this->truckingId )
+                    ->where('pallet_no', 'like', '%' . $this->searchPalet . '%')
+                    ->select('pallet_no')->distinct()->limit(10);
+                    $this->listPalet = $distinc->get();
+                }
+                break;
+        }
     }
     public function choosePalet($palet)
     {
+        $this->truckingDisable = true;
         $this->inputDisable = true;
+        $this->paletDisable = true;
         $this->searchPalet = $palet;
         $this->listPalet = 'kosong';
         $this->listMaterial = DB::table('material_setup_mst_CNC_KIAS2')->select('material_no')->where('pallet_no', $this->searchPalet)->distinct()->get();
         //  = $distinc->pluck('material_no')->all();
+    }
+
+    public function chooseTrucking($truck)
+    {
+        $this->truckingId = $truck;
+        $this->inputDisable = true;
+        $this->truckingDisable = true;
+        $this->listTruck = 'kosong';
     }
     public function resetData()
     {
@@ -29,6 +58,7 @@ class ReceivingReportCnc extends Component
         $this->materialCode = "";
         $this->dateStart = "";
         $this->dateEnd = "";
+        $this->truckingId = "";
     }
     public function showData()
     {

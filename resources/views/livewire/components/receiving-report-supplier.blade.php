@@ -1,57 +1,110 @@
 <div>
-    <div class="flex  md:grid-cols-10 gap-3 w-full pb-6">
+    <div class="flex gap-3 w-full pb-6">
 
         <div class="w-full">
-            <label for="large-input"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Surat Jalan
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Surat Jalan
             </label>
-            <select id="countries" wire:model.live="suratJalan"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                <option selected value="">All</option>
-                @foreach ($listSuratJalan as $p)
-                    <option value="{{ $p }}">{{ $p }}</option>
-                @endforeach
-            </select>
+            <input wire:model.live.debounce="suratJalan" type="text" autocomplete="off"
+                @if ($suratJalanDisable) disabled @endif
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
+            <div class="">
+                <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
+                    wire:target="suratJalan">Searching</div>
+                <div wire:loading.remove class="rounded-lg bg-slate-50 shadow absolute">
+
+                    @if (strlen($suratJalan) >= 2 && $listSuratJalan != 'kosong')
+                        @forelse ($listSuratJalan as $p)
+                            <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
+                                wire:click="chooseSuratJalan('{{ $p }}')">{{ $p }}
+                            </div>
+                        @empty
+                            <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
+                        @endforelse
+                    @endif
+                </div>
+            </div>
         </div>
 
         <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Kit
                 No</label>
-            <select id="kitno" wire:model.live="kitNo"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                <option selected>Choose Kit No</option>
-                @foreach ($listPalet as $p)
-                    <option value="{{ $p }}">{{ $p }}</option>
-                @endforeach
-            </select>
+
+            <input wire:model.live.debounce="kitNo" type="text" autocomplete="off"
+                @if ($kitNoDisable) disabled @endif
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+
+            <div class="">
+                <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
+                    wire:target="kitNo">Searching</div>
+                <div wire:loading.remove class="rounded-lg bg-slate-50 shadow absolute">
+
+                    @if (strlen($kitNo) >= 2 && $listPalet != 'kosong')
+                        @forelse ($listPalet as $p)
+                            <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
+                                wire:click="chooseKitNo('{{ $p }}')">{{ $p }}
+                            </div>
+                        @empty
+                            <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
+                        @endforelse
+                    @endif
+                </div>
+            </div>
+
         </div>
 
         <div class="w-full">
-            <label for="large-input"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Palet No
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Palet No
             </label>
-            <select id="countries" wire:model.live="paletNo"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                <option selected value="">All</option>
-                @foreach ($listPaletNoSup as $p)
-                    <option value="{{ $p }}">{{ $p }}</option>
-                @endforeach
-            </select>
+
+            <input wire:model.live.debounce="paletNo" type="text" autocomplete="off"
+                @if ($paletNoDisable) disabled @endif
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+
+            <div class="">
+                <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
+                    wire:target="paletNo">Searching</div>
+                <div wire:loading.remove class="rounded-lg bg-slate-50 shadow absolute">
+
+                    @if (strlen($paletNo) >= 2 && $listPaletNoSup != 'kosong')
+                        @forelse ($listPaletNoSup as $p)
+                            <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
+                                wire:click="choosePalet('{{ $p }}')">{{ $p }}
+                            </div>
+                        @empty
+                            <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
+                        @endforelse
+                    @endif
+                </div>
+            </div>
 
         </div>
         <div class="w-full">
-            <label for="large-input"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material
                 Code
             </label>
-            <select id="countries" wire:model="materialCodeSupp"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                <option selected value="">All</option>
-                @foreach ($listMaterial as $p)
-                    <option value="{{ $p }}">{{ $p }}</option>
-                @endforeach
-            </select>
+
+            <input wire:model.live.debounce="materialCode" type="text" autocomplete="off"
+                @if ($materialCodeDisable) disabled @endif
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+
+            <div class="">
+                <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
+                    wire:target="materialCode">Searching</div>
+                <div wire:loading.remove class="rounded-lg bg-slate-50 shadow absolute">
+
+                    @if (strlen($materialCode) >= 2 && $listMaterial != 'kosong')
+                        @forelse ($listMaterial as $p)
+                            <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
+                                wire:click="chooseMaterial('{{ $p }}')">{{ $p }}
+                            </div>
+                        @empty
+                            <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
+                        @endforelse
+                    @endif
+                </div>
+            </div>
+
 
         </div>
 
