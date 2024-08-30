@@ -64,7 +64,7 @@ class PurchaseOrderIn extends Component
     }
     public function choosePo($po = null)
     {
-        if ($this->paletCode !== '-') {
+        if ($this->palet !== null && $this->surat_jalan !== null &&$this->noPalet !== null) {
             DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
 
             $getSetupby = DB::table('material_setup_mst_supplier')->select('setup_by')->where('kit_no', $po)->first();
@@ -129,7 +129,7 @@ class PurchaseOrderIn extends Component
 
             return $this->dispatch('materialFocus');
         } else {
-            return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'Please input Palet first, to avoid inaccurate data']);
+            return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'Please fill all input to avoid inaccurate data']);
         }
     }
     public function materialNoScan()
