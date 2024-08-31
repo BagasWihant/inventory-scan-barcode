@@ -14,8 +14,8 @@
         <div class="w-1/6">
             <select wire:model.live="status" class="p-2 text-gray-900 border border-gray-300 rounded-lg  ">
                 <option value="-">Status</option>
-                <option value="1">Supply</option>
-                <option value="0">Belum Supply</option>
+                <option value="supply">Supply</option>
+                <option value="not">Belum Supply</option>
             </select>
         </div>
 

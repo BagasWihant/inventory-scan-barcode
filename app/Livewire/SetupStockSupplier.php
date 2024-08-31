@@ -16,7 +16,7 @@ use function PHPUnit\Framework\isNull;
 
 class SetupStockSupplier extends Component
 {
-    public $searchPalet, $listPallet, $input_setup_by, $scan_date_modal, $no_palet_modal,$status;
+    public $searchPalet, $listPallet, $input_setup_by, $scan_date_modal, $no_palet_modal,$status=null;
     public  $listMaterialDetail = [], $paletData;
     public $paletDisable = false;
 
@@ -45,8 +45,9 @@ class SetupStockSupplier extends Component
     {
         $listPalet = DB::table('palet_registers')->where('is_done', 1)
             ->when($this->searchPalet, fn($q) => $q->where('palet_no', 'like', '%' . $this->searchPalet . '%'))
-            ->when($this->status, fn($q) => $q->where('status',  $this->status ))
+            ->when($this->status, fn($q) => $q->where('status',  $this->status == 'supply' ? 1 : 0 ))
             ->paginate(25);
+        
         return view('livewire.setup-stock-supplier', ['listMaterial' => $listPalet]);
     }
 }
