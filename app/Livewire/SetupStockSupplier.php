@@ -12,23 +12,24 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
 
+use function PHPUnit\Framework\isNull;
+
 class SetupStockSupplier extends Component
 {
-    public $searchPalet, $listPallet, $input_setup_by, $scan_date_modal, $no_palet_modal;
-    public $listMaterial = [], $listMaterialDetail=[], $paletData;
+    public $searchPalet, $listPallet, $input_setup_by, $scan_date_modal, $no_palet_modal,$status;
+    public  $listMaterialDetail = [], $paletData;
     public $paletDisable = false;
 
-
-    public function detail($palet)
+     public function detail($palet)
     {
         $this->listMaterialDetail = DB::table('palet_register_details as a')->where('palet_no', $palet)
-        ->selectRaw('material_no as material,sum(a.qty) as counter,count(*) as pack, material_name as matl_nm')->groupBy(['material_no', 'material_name'])->get();
+            ->selectRaw('material_no as material,sum(a.qty) as counter,count(*) as pack, material_name as matl_nm')->groupBy(['material_no', 'material_name'])->get();
         $this->no_palet_modal = $palet;
         $this->paletData = PaletRegister::where('palet_no', $palet)->first();
         $this->scan_date_modal = date('d-m-Y H:i:s', strtotime($this->paletData->created_at));
     }
-   
-    
+
+
     public function print()
     {
 
@@ -42,8 +43,10 @@ class SetupStockSupplier extends Component
     }
     public function render()
     {
-        $this->listMaterial = PaletRegister::where('is_done', 1)->get();
-
-        return view('livewire.setup-stock-supplier');
+        $listPalet = DB::table('palet_registers')->where('is_done', 1)
+            ->when($this->searchPalet, fn($q) => $q->where('palet_no', 'like', '%' . $this->searchPalet . '%'))
+            ->when($this->status, fn($q) => $q->where('status',  $this->status ))
+            ->paginate(25);
+        return view('livewire.setup-stock-supplier', ['listMaterial' => $listPalet]);
     }
 }

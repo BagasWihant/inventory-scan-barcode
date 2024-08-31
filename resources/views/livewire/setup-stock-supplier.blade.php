@@ -6,6 +6,20 @@
             class=" text-base text-white block bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-bold rounded-lg px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">Buat
             Pallet Baru</a>
     </div> --}}
+    <div class="flex gap-5">
+        <div class="w-1/6">
+            <input wire:model.live.debounce="searchPalet" type="text" autocomplete="off" placeholder="Search Palet"
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+        </div>
+        <div class="w-1/6">
+            <select wire:model.live="status" class="p-2 text-gray-900 border border-gray-300 rounded-lg  ">
+                <option value="-">Status</option>
+                <option value="1">Supply</option>
+                <option value="0">Belum Supply</option>
+            </select>
+        </div>
+
+    </div>
 
     <div wire:loading.flex
         class=" fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
@@ -88,7 +102,7 @@
                 @endforeach
             </tbody>
         </table>
-
+        {{ $listMaterial->links() }}
         <div id="static-modal" data-modal-backdrop="static" tabindex="-1" aria-hidden="true" wire:ignore.self
             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
             <div class="relative p-4 w-full max-w-2xl max-h-full">
@@ -97,8 +111,8 @@
                     <!-- Modal header -->
                     <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
                         <div class="flex justify-between w-full font-bold">
-                            <p class="font-bold">{{$no_palet_modal}}</p>
-                            <strong class=" ">{{$scan_date_modal}} </strong>
+                            <p class="font-bold">{{ $no_palet_modal }}</p>
+                            <strong class=" ">{{ $scan_date_modal }} </strong>
                         </div>
                         <button type="button"
                             class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
@@ -114,47 +128,53 @@
                     <!-- Modal body -->
                     <div class="p-2">
                         @if (count($listMaterialDetail) > 0)
-                        <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3">
-                                        No
-                                    </th>
-                                    <th scope="col" class="px-6 py-3">
-                                        Material no
-                                    </th>
-                                    <th scope="col" class="px-6 py-3">
-                                        Pack
-                                    </th>
-                                    <th scope="col" class="px-6 py-3">
-                                        Total Qty
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody >
-                                @foreach ($listMaterialDetail as $d)
-                                    <tr class=" border rounded dark:border-gray-700 ">
-                                        <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                            {{ $loop->iteration }}</th>
-                
-                                        <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                            {{ $d->material }}
+                            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                                <thead
+                                    class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3">
+                                            No
                                         </th>
-                                        <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                            {{ $d->pack }}
+                                        <th scope="col" class="px-6 py-3">
+                                            Material no
                                         </th>
-                                        <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                            {{ $d->counter }}
+                                        <th scope="col" class="px-6 py-3">
+                                            Pack
+                                        </th>
+                                        <th scope="col" class="px-6 py-3">
+                                            Total Qty
                                         </th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach ($listMaterialDetail as $d)
+                                        <tr class=" border rounded dark:border-gray-700 ">
+                                            <th scope="row"
+                                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                {{ $loop->iteration }}</th>
+
+                                            <th scope="row"
+                                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                {{ $d->material }}
+                                            </th>
+                                            <th scope="row"
+                                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                {{ $d->pack }}
+                                            </th>
+                                            <th scope="row"
+                                                class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                {{ $d->counter }}
+                                            </th>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         @endif
                     </div>
                     <!-- Modal footer -->
-                    <div class="flex items-center justify-end p-2 border-t border-gray-200 rounded-b dark:border-gray-600">
-                        <button type="button" wire:click="print('{{ $no_palet_modal}}')"
+                    <div
+                        class="flex items-center justify-end p-2 border-t border-gray-200 rounded-b dark:border-gray-600">
+                        <button type="button" wire:click="print('{{ $no_palet_modal }}')"
                             class="py-2 px-3 ms-3 text-sm font-medium focus:outline-none bg-blue-500 text-white rounded-lg border border-gray-200 hover:bg-blue-200 hover:text-black focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Print</button>
                         <button data-modal-hide="static-modal" type="button"
                             class="py-2 px-3 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
