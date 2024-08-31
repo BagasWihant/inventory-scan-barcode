@@ -10,15 +10,17 @@ use App\Models\PaletRegisterDetail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
-use function PHPUnit\Framework\isNull;
 
 class SetupStockSupplier extends Component
 {
+    use WithPagination;
     public $searchPalet, $listPallet, $input_setup_by, $scan_date_modal, $no_palet_modal,$status=null;
     public  $listMaterialDetail = [], $paletData;
     public $paletDisable = false;
+
 
      public function detail($palet)
     {
@@ -47,7 +49,6 @@ class SetupStockSupplier extends Component
             ->when($this->searchPalet, fn($q) => $q->where('palet_no', 'like', '%' . $this->searchPalet . '%'))
             ->when($this->status, fn($q) => $q->where('status',  $this->status == 'supply' ? 1 : 0 ))
             ->paginate(25);
-        
         return view('livewire.setup-stock-supplier', ['listMaterial' => $listPalet]);
     }
 }
