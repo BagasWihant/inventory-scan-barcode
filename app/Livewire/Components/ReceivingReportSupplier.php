@@ -2,14 +2,16 @@
 
 namespace App\Livewire\Components;
 
+use App\Exports\ReceivingReportCNCExcel;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReceivingReportSupplier extends Component
 {
     public $kitNo, $paletNo, $materialCode, $dateStart, $dateEnd, $suratJalan;
     public $listPalet = [], $listPaletNoSup = [], $listMaterial = [], $receivingData = [], $listSuratJalan = [];
-    public $clearButton = false, $suratJalanDisable = false, $kitNoDisable = false, $paletNoDisable = false,$materialCodeDisable=false;
+    public $clearButton = false, $suratJalanDisable = false, $kitNoDisable = false, $paletNoDisable = false,$materialCodeDisable=false,$exportDisable=false;
 
     public function updated($prop)
     {
@@ -91,6 +93,8 @@ class ReceivingReportSupplier extends Component
 
     public function showData()
     {
+        $this->exportDisable = true;
+
         $this->clearButton = true;
         if (!$this->dateStart && !$this->dateEnd) {
             $this->dateStart = '2023-01-01';
@@ -122,8 +126,27 @@ class ReceivingReportSupplier extends Component
         $this->suratJalanDisable = false;
         $this->kitNoDisable = false;
         $this->paletNoDisable = false;
+        $this->exportDisable = false;
+
     }
 
+    public function export($type)
+    {
+        switch ($type) {
+            case 'xls':
+                $data = [
+                    'data' => collect($this->receivingData),
+                    'type' => "Supplier",
+                ];
+                // dump($data);
+                return Excel::download(new ReceivingReportCNCExcel($data), "Receiving Report_" . date('YmdHis') . ".xls", \Maatwebsite\Excel\Excel::XLSX);
+                break;
+
+            default:
+                # code...
+                break;
+        }
+    }
 
     public function render()
     {

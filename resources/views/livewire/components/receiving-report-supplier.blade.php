@@ -138,15 +138,24 @@
         </div>
     </div>
 
-    @if ($clearButton)
-        <button wire:click="resetData()"
-            class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-white rounded-lg group bg-red-600">
-            <span class="relative px-5 py-2 transition-all ease-in duration-75 rounded-md group-hover:bg-opacity-0">
-                Clear Searching
-            </span>
-        </button>
-    @endif
-
+    <div class="flex justify-between">
+        @if ($clearButton)
+            <button wire:click="resetData()"
+                class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-white rounded-lg group bg-red-600">
+                <span class="relative px-5 py-2 transition-all ease-in duration-75 rounded-md group-hover:bg-opacity-0">
+                    Clear Searching
+                </span>
+            </button>
+        @endif
+        @if ($exportDisable)
+            <button wire:click="export('xls')"
+                class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-white rounded-lg group bg-green-600">
+                <span class="relative px-5 py-2 transition-all ease-in duration-75 rounded-md group-hover:bg-opacity-0">
+                    Export Excel
+                </span>
+            </button>
+        @endif
+    </div>
 
     @if (count($receivingData) > 0)
         <div class=" grid ">

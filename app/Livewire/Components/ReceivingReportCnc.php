@@ -2,13 +2,15 @@
 
 namespace App\Livewire\Components;
 
+use App\Exports\ReceivingReportCNCExcel;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReceivingReportCnc extends Component
 {
     public $searchPalet, $listPalet = [], $listMaterial = [], $receivingData = [], $materialCode, $dateEnd, $dateStart, $inputDisable = false;
-    public $truckingId, $listTruck = [], $truckingDisable = false, $paletDisable = false;
+    public $truckingId, $listTruck = [], $truckingDisable = false, $paletDisable = false, $exportDisable = false;
 
     public function updated($prop)
     {
@@ -24,9 +26,9 @@ class ReceivingReportCnc extends Component
             case 'searchPalet':
                 if (strlen($this->searchPalet) >= 2) {
                     $distinc = DB::table('material_in_stock')
-                    ->where('trucking_id', $this->truckingId )
-                    ->where('pallet_no', 'like', '%' . $this->searchPalet . '%')
-                    ->select('pallet_no')->distinct()->limit(10);
+                        ->where('trucking_id', $this->truckingId)
+                        ->where('pallet_no', 'like', '%' . $this->searchPalet . '%')
+                        ->select('pallet_no')->distinct()->limit(10);
                     $this->listPalet = $distinc->get();
                 }
                 break;
@@ -53,6 +55,7 @@ class ReceivingReportCnc extends Component
     public function resetData()
     {
         $this->inputDisable = false;
+        $this->exportDisable = false;
         $this->receivingData = [];
         $this->searchPalet = "";
         $this->materialCode = "";
@@ -66,6 +69,7 @@ class ReceivingReportCnc extends Component
             $this->dateStart = '2023-01-01';
             $this->dateEnd = date('Y-m-d');
         }
+        $this->exportDisable = true;
 
         $this->receivingData = DB::select('EXEC sp_Receiving_report ?,?,?,?,?,?,?', [
             'detail',
@@ -76,6 +80,22 @@ class ReceivingReportCnc extends Component
             $this->materialCode ?? "",
             '',
         ]);
+    }
+    public function export($type)
+    {
+        switch ($type) {
+            case 'xls':
+                $data = [
+                    'data' => collect($this->receivingData),
+                    'type' => "CNC"
+                ];
+                return Excel::download(new ReceivingReportCNCExcel($data), "Receiving Report_" . date('YmdHis') . ".xls", \Maatwebsite\Excel\Excel::XLSX);
+                break;
+
+            default:
+                # code...
+                break;
+        }
     }
     public function render()
     {
