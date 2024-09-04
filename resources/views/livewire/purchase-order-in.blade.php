@@ -1,7 +1,7 @@
 <div>
     <div class="flex gap-4">
 
-        <div class="flex flex-col w-full">
+        <div class="flex flex-col w-1/4">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Surat Jalan
             </label>
             <input wire:model.live="surat_jalan" type="text" @if ($suratJalanDisable) disabled @endif
@@ -10,22 +10,7 @@
 
         </div>
 
-        <div class="flex flex-col w-full">
-
-            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Palet
-            </label>
-            <div class="w-full flex ">
-                <select id="section" name="section" value="{{ old('section') }}" wire:model.change="palet"
-                    class="p-2 border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300">
-                    <option value="">Choose Code</option>
-                    <option value="L">L</option>
-                </select>
-                <input wire:model.live="noPalet" type="text"
-                    class="block w-full p-2 text-gray-700 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-            </div>
-        </div>
-
-        <div class="w-full">
+        <div class="w-1/3">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PO
             </label>
             <input wire:model="searchPo" wire:keydown.debounce.300ms="poChange" type="text" id="produkBarcode"
@@ -58,7 +43,32 @@
                 class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-100 text-base">
         </div>
 
-        <div class="w-full">
+        <div class="w-1/4">
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white ">Location
+            </label>
+            <select
+                class="w-full p-2 text-gray-900 border border-gray-300 rounded-lg @if ($lokasiDisable) bg-gray-100 @endif  text-base"
+                wire:model.live="lokasi" @if ($lokasiDisable) disabled @endif>
+                <option value="-">Location</option>
+                <option value="ASSY">ASSY</option>
+                <option value="CNC">CNC</option>
+            </select>
+        </div>
+        <div class="w-1/4">
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white ">Line Code
+            </label>
+            <select
+                class="w-full p-2 text-gray-900 border border-gray-300 rounded-lg @if ($lineCodeDisable) bg-gray-100 @endif  text-base"
+                wire:model.live="line_code" @if ($lineCodeDisable) disabled @endif>
+                <option value="-">Line C</option>
+                @foreach ($line_code_list as $line)
+                    <option value="{{ $line }}">{{ $line }} </option>
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="w-1/2">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No
             </label>
             <input wire:model="material_no" wire:keydown.debounce.150ms="materialNoScan" type="text"
@@ -118,7 +128,6 @@
                     </thead>
                     <tbody>
                         @foreach ($listMaterial as $product)
-
                             <tr class=" border rounded dark:border-gray-700 ">
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -219,7 +228,7 @@
                         @endforeach
                     </tbody>
                 </table>
-                {{$sudahScan->links()}}
+                {{ $sudahScan->links() }}
             </div>
 
         </div>
