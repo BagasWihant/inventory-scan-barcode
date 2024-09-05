@@ -406,9 +406,10 @@
         });
         $wire.on('confirmation', (event) => {
             Swal.fire({
-                title: "Apakah ingin scan dengan surat jalan yang sama ?",
+                title: "Scan dengan Surat Jalan dan PO yang sama ?",
                 showDenyButton: true,
                 showCancelButton: true,
+                showCancelButton:false,
                 confirmButtonText: "Ya",
                 denyButtonText: `Tidak`
             }).then((result) => {
