@@ -154,7 +154,7 @@ class PurchaseOrderIn extends Component
             $split = explode("//", $qrtrim);
             if (count($split) < 2) {
                 $this->material_no = null;
-                return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'Material number not found']);
+                return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'QR Code not valid']);
             }
             $split1 = explode("-", $split[0]);
 
@@ -338,7 +338,6 @@ class PurchaseOrderIn extends Component
     }
     public function confirm()
     {
-
         $fixProduct = DB::table('temp_counters')
             ->leftJoin('delivery_mst as d', 'temp_counters.palet', '=', 'd.pallet_no')
             // ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
@@ -347,12 +346,30 @@ class PurchaseOrderIn extends Component
             ->select('temp_counters.*', 'd.trucking_id', 'b.loc_cd as location_cd', 'matl_nm')
             ->where('userID', $this->userId)
             ->where('flag', 1)
+            ->where('temp_counters.line_c', $this->line_code)
             ->where('palet', $this->po)
             ->orderByDesc('scanned_time');
 
         // remove data in abnormal_materials
         $dd = abnormalMaterial::where(['pallet_no' => $this->paletCode, 'kit_no' => $this->po,])->delete();
 
+        // GENERATE PALET CODE
+        $getConfig = DB::table('WH_config')->select('value')->whereIn('config',['PalletCodeInStock','PeriodInStock'])->get();
+        // $ym = date('ym');
+        $ym = '2410';
+        
+        $PalletCodeInStock = (int)$getConfig[0]->value +1;
+        if($getConfig[1]->value != $ym){
+            $PalletCodeInStock = 1;
+            DB::table('WH_config')->where('config','PeriodInStock')->update(['value'=>$ym]);
+        }
+
+
+        $generatePaletCode = str_pad($PalletCodeInStock,4,'0',STR_PAD_LEFT);
+        $this->paletCode = 'L-'.$ym.'-'.$generatePaletCode;
+
+        DB::table('WH_config')->where('config','PalletCodeInStock')->update(['value'=>$PalletCodeInStock]);
+        
         $loopData = $fixProduct->get();
         $collectionTempCounter = collect($loopData);
         // $checkASSY = tempCounter::where('userID', $this->userId)
@@ -502,7 +519,6 @@ class PurchaseOrderIn extends Component
 
     public function resetPage()
     {
-
         // reset scanned time in material supplier
         DB::table('material_setup_mst_supplier')->where('kit_no', $this->po)->where('being_used', 1)
             ->update([
@@ -538,8 +554,6 @@ class PurchaseOrderIn extends Component
         if ($type == 0) {
             $this->dispatch('materialFocus');
             $this->line_code = null;
-            $this->lokasiDisable = false;
-            $this->lokasi = null;
             $this->material_no = null;
             $this->reset = false;
             $this->listMaterialScan = [];

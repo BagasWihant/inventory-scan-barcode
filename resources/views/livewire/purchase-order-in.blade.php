@@ -54,13 +54,13 @@
                     <option value="CNC">CNC</option>
                 </select>
             </div>
+            <div class="w-1/4">
+                <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white ">Line Code
+                </label>
+                <input wire:model.live="line_code" disabled
+                    class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-100 text-base">
+            </div>
         @endif
-        <div class="w-1/4">
-            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white ">Line Code
-            </label>
-            <input wire:model.live="line_code" disabled
-                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-100 text-base">
-        </div>
 
         <div class="w-1/2">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No
@@ -409,7 +409,7 @@
                 title: "Scan dengan Surat Jalan dan PO yang sama ?",
                 showDenyButton: true,
                 showCancelButton: true,
-                showCancelButton:false,
+                showCancelButton: false,
                 confirmButtonText: "Ya",
                 denyButtonText: `Tidak`
             }).then((result) => {
