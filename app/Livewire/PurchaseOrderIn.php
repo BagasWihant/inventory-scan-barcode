@@ -49,6 +49,7 @@ class PurchaseOrderIn extends Component
         switch ($prop) {
             case 'lokasi':
                 $this->lokasiDisable = true;
+                $this->dispatch('materialFocus');
                 break;
 
             default:
@@ -79,7 +80,7 @@ class PurchaseOrderIn extends Component
             $this->po = $po;
             $this->searchPo = $po;
             $this->listKitNo = [];
-            
+
             $this->reset = true;
             $this->suratJalanDisable = true;
             $this->paletDisable = true;
@@ -142,9 +143,10 @@ class PurchaseOrderIn extends Component
     }
     public function materialNoScan()
     {
-        if(!$this->lokasi && $this->input_setup_by == "PO COT"){
+        if (!$this->lokasi && $this->input_setup_by == "PO COT") {
             return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'Please choose Location']);
         }
+
         $qr = $this->material_no;
         $qrtrim = trim(str_replace(" ", "", $this->material_no));
         if (strpos($qrtrim, "//")) {
@@ -174,6 +176,11 @@ class PurchaseOrderIn extends Component
             $material_noParse = str_replace($hrfBkg, "", $hapusdepan);
 
             $lineParse = trim($split[2]);
+
+            if ($this->line_code != null && $this->line_code != $lineParse) {
+                $this->material_no = null;
+                return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'PO atau Linecode berbbeda']);
+            }
         }
 
 
@@ -189,7 +196,7 @@ class PurchaseOrderIn extends Component
                 'location' => $this->lokasi,
                 'qr' => $qr
             ];
-            $this->insertNew($dataInsert, true);
+            $this->insertNew($dataInsert);
         }
         $this->material_no = null;
     }
@@ -197,14 +204,7 @@ class PurchaseOrderIn extends Component
     #[On('insertNew')]
     public function insertNew($reqData = null, $update = false)
     {
-        $insert = DB::select('EXEC sp_WH_rcv_QRConvert2 ?,?', ["$reqData[qr]", $this->userId]);
-        if ($insert[0]->status !== '1') {
-            $this->material_no = null;
-            return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => $insert[0]->status]);
-        }
-        $this->line_code = $reqData['lineNew'];
-
-        if ($update && $reqData !== null) {
+        if ($reqData !== null) {
             $tempCount = DB::table('temp_counters')
                 ->where('material', $this->sws_code)
                 ->where('userID', $this->userId)
@@ -215,12 +215,25 @@ class PurchaseOrderIn extends Component
 
             if (!$tempCount->exists()) {
                 $this->material_no = null;
-                DB::table('WH_rcv_QRHistory')->where('QR', $reqData['qr'])->delete();
                 return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "Material Tidak ada"]);
             }
+
+            if(DB::table('WH_rcv_QRHistory')->where('QR',$reqData['qr'])->exists()){
+                return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "QR sudah pernah discan"]);
+            }
+
+            DB::table('WH_rcv_QRHistory')->insert([
+                'QR' => $reqData['qr'],
+                'user_id' => $this->userId,
+                'status' => 0,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+
+            $this->line_code = $reqData['lineNew'];
+
+
             $data = $tempCount->first();
             $counter = $data->counter + $reqData['qty'];
-
 
             $sisa = $data->sisa - $reqData['qty'];
             // save location on modal to prop_ori
@@ -466,7 +479,7 @@ class PurchaseOrderIn extends Component
                     'line_c' => $dataPaletRegister->line_c
                 ];
                 $this->dispatch('confirmation');
-                
+
                 // $this->dispatch('alert', ['title' => 'Succes', 'time' => 5000, 'icon' => 'succes', 'text' => 'ASSY material saved succesfully']);
                 return Excel::download(new ReceivingSupplierReport($dataPrint), "Receiving ASSY_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
             } else {
@@ -475,12 +488,12 @@ class PurchaseOrderIn extends Component
                 // $this->resetPage();
             }
         }
-        
+
         $dataPrint = [
             'data' => $loopData,
             'palet_no' => $this->paletCode,
         ];
-        
+
         // $this->resetPage();
         // $this->dispatch('alert', ['time' => 5000, 'icon' => 'success', 'title' => 'Other ASSY material saved succesfully']);
         $this->dispatch('confirmation');
@@ -520,19 +533,17 @@ class PurchaseOrderIn extends Component
     }
 
     #[On('resetConfirm')]
-    public function resetConfirm($type) {
-        if($type == 0){
+    public function resetConfirm($type)
+    {
+        if ($type == 0) {
             $this->dispatch('materialFocus');
             $this->line_code = null;
             $this->lokasiDisable = false;
             $this->lokasi = null;
             $this->material_no = null;
             $this->reset = false;
-            $this->mcs = false;
-            $this->input_setup_by = null;
-        $this->listMaterialScan = [];
-
-        }else{
+            $this->listMaterialScan = [];
+        } else {
             $this->resetPage();
         }
     }
@@ -565,7 +576,6 @@ class PurchaseOrderIn extends Component
             ->leftJoin('material_mst as b', 'a.material', '=', 'b.matl_no')
             ->where('palet', $this->po)
             ->where('line_c', $this->line_code)
-            ->where('counter', '>', 0)
             ->select('a.*', 'b.loc_cd as location_cd')
             ->where('userID', $this->userId)
             ->orderByDesc('scanned_time')
