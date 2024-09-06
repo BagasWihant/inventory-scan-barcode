@@ -154,7 +154,8 @@ class PurchaseOrderIn extends Component
             $split = explode("//", $qrtrim);
             if (count($split) < 2) {
                 $this->material_no = null;
-                return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'QR Code not valid']);
+                return;
+                // $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'QR Code not valid']);
             }
             $split1 = explode("-", $split[0]);
 
@@ -165,7 +166,8 @@ class PurchaseOrderIn extends Component
             $split = explode("/", $qrtrim);
             if (count($split) < 2) {
                 $this->material_no = null;
-                return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'Material number not found']);
+                return;
+                // $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'Material number not found']);
             }
             $qtyParse = substr($split[1], 1, 4);
 
@@ -218,19 +220,22 @@ class PurchaseOrderIn extends Component
                 return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "Material Tidak ada"]);
             }
 
-            if(DB::table('WH_rcv_QRHistory')->where('QR',$reqData['qr'])->exists()){
+            if (DB::table('WH_rcv_QRHistory')->where('QR', $reqData['qr'])->where(function ($q) {
+                $q->where('user_id', $this->userId)->orWhere('status', 1);
+            })->exists()) {
                 return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "QR sudah pernah discan"]);
             }
+            // PCL-L24-1607 / S0200381510010150          2108P6002  / yd30  / 210824 / 2 / ANDIK
+            $this->line_code = $reqData['lineNew'];
 
             DB::table('WH_rcv_QRHistory')->insert([
                 'QR' => $reqData['qr'],
                 'user_id' => $this->userId,
+                'PO' => $this->po,
+                'line_code' => $this->line_code,
                 'status' => 0,
                 'created_at' => date('Y-m-d H:i:s')
             ]);
-
-            $this->line_code = $reqData['lineNew'];
-
 
             $data = $tempCount->first();
             $counter = $data->counter + $reqData['qty'];
@@ -354,22 +359,22 @@ class PurchaseOrderIn extends Component
         $dd = abnormalMaterial::where(['pallet_no' => $this->paletCode, 'kit_no' => $this->po,])->delete();
 
         // GENERATE PALET CODE
-        $getConfig = DB::table('WH_config')->select('value')->whereIn('config',['PalletCodeInStock','PeriodInStock'])->get();
+        $getConfig = DB::table('WH_config')->select('value')->whereIn('config', ['PalletCodeInStock', 'PeriodInStock'])->get();
         // $ym = date('ym');
         $ym = '2410';
-        
-        $PalletCodeInStock = (int)$getConfig[0]->value +1;
-        if($getConfig[1]->value != $ym){
+
+        $PalletCodeInStock = (int)$getConfig[0]->value + 1;
+        if ($getConfig[1]->value != $ym) {
             $PalletCodeInStock = 1;
-            DB::table('WH_config')->where('config','PeriodInStock')->update(['value'=>$ym]);
+            DB::table('WH_config')->where('config', 'PeriodInStock')->update(['value' => $ym]);
         }
 
 
-        $generatePaletCode = str_pad($PalletCodeInStock,4,'0',STR_PAD_LEFT);
-        $this->paletCode = 'L-'.$ym.'-'.$generatePaletCode;
+        $generatePaletCode = str_pad($PalletCodeInStock, 4, '0', STR_PAD_LEFT);
+        $this->paletCode = 'L-' . $ym . '-' . $generatePaletCode;
 
-        DB::table('WH_config')->where('config','PalletCodeInStock')->update(['value'=>$PalletCodeInStock]);
-        
+        DB::table('WH_config')->where('config', 'PalletCodeInStock')->update(['value' => $PalletCodeInStock]);
+
         $loopData = $fixProduct->get();
         $collectionTempCounter = collect($loopData);
         // $checkASSY = tempCounter::where('userID', $this->userId)
@@ -478,12 +483,14 @@ class PurchaseOrderIn extends Component
             $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi', $this->paletCode)->first();
 
             // insert
-            DB::table('WH_rcv_QRHistory')->where('user_id', $this->userId)->update([
-                'status' => 1,
-                'PO' => $this->po,
-                'surat_jalan' => $this->surat_jalan,
-                'palet_iwpi' => $this->paletCode,
-            ]);
+            DB::table('WH_rcv_QRHistory')
+                ->where('user_id', $this->userId)
+                ->where('line_code', $this->line_code)
+                ->where("PO", $this->po)->update([
+                    'status' => 1,
+                    'surat_jalan' => $this->surat_jalan,
+                    'palet_iwpi' => $this->paletCode,
+                ]);
             if ($dataPaletRegister) {
                 $generator = new BarcodeGeneratorPNG();
                 $barcode = $generator->getBarcode($dataPaletRegister->palet_no, $generator::TYPE_CODE_128);
