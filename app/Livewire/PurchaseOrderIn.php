@@ -391,7 +391,7 @@ class PurchaseOrderIn extends Component
         foreach ($loopData as $data) {
             $pax = $data->pax;
             $qty = $data->total / $pax;
-            $kelebihan = $data->qty_more;
+            // $kelebihan = $data->qty_more;
             $prop_ori = json_decode($data->prop_ori, true);
 
             if (!isset($prop_ori['setup_by'])) {
@@ -403,35 +403,36 @@ class PurchaseOrderIn extends Component
                 $prop_scan = json_decode($data->prop_scan, true);
                 $masuk = 1;
                 foreach ($prop_scan as $value) {
-                    if ($masuk <= $data->pax || $data->total > $data->counter) {
-                        itemIn::create([
-                            'pallet_no' => $this->paletCode,
-                            'material_no' => $data->material,
-                            'picking_qty' => $value,
-                            'locate' => $data->location_cd,
-                            'trucking_id' => $data->trucking_id,
+                    $kelebihan = $data->counter - abs($data->total);
+                    $masuk = $data->counter - $kelebihan;
+                    itemIn::create([
+                        'pallet_no' => $this->paletCode,
+                        'material_no' => $data->material,
+                        'picking_qty' => $data->total,
+                        'locate' => $data->location_cd,
+                        'trucking_id' => $data->trucking_id,
+                        'kit_no' => $this->po,
+                        'surat_jalan' => $this->surat_jalan,
+                        'user_id' => $this->userId,
+                        'line_c' => $data->line_c,
+                        'locate' => $prop_ori['location'] ?? null,
+                        'setup_by' => $prop_ori['setup_by'],
+                    ]);
+                    if ($kelebihan > 0) {
+                        abnormalMaterial::create([
                             'kit_no' => $this->po,
                             'surat_jalan' => $this->surat_jalan,
+                            'pallet_no' => $this->paletCode,
+                            'material_no' => $data->material,
+                            'picking_qty' => $kelebihan,
+                            'locate' => $data->location_cd,
+                            'trucking_id' => $data->trucking_id,
                             'user_id' => $this->userId,
+                            'status' => 1,
                             'line_c' => $data->line_c,
                             'locate' => $prop_ori['location'] ?? null,
                             'setup_by' => $prop_ori['setup_by'],
                         ]);
-                    } else {
-                        // abnormalMaterial::create([
-                        //     'kit_no' => $this->po,
-                        //     'surat_jalan' => $this->surat_jalan,
-                        //     'pallet_no' => $this->paletCode,
-                        //     'material_no' => $data->material,
-                        //     'picking_qty' => $value,
-                        //     'locate' => $data->location_cd,
-                        //     'trucking_id' => $data->trucking_id,
-                        //     'user_id' => $this->userId,
-                        //     'status' => 1,
-                        //     'line_c' => $data->line_c,
-                        //     'locate' => $prop_ori['location'] ?? null,
-                        //     'setup_by' => $prop_ori['setup_by'],
-                        // ]);
                     }
                     $masuk++;
                 }
