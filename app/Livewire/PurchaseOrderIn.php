@@ -560,6 +560,10 @@ class PurchaseOrderIn extends Component
     public function resetConfirm($type)
     {
         if ($type == 0) {
+            if ($this->input_setup_by == "PO MCS") {
+                DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
+                $this->choosePo($this->po);
+            }
             $this->dispatch('materialFocus');
             $this->line_code = null;
             $this->material_no = null;
