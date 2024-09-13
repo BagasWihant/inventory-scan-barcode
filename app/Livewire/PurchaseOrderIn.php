@@ -186,7 +186,7 @@ class PurchaseOrderIn extends Component
         }
 
 
-        $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $material_noParse)->select('sws_code')->first();
+        $supplierCode = DB::table('material_conversion_mst')->where('supplier_code',"like","%". $material_noParse ."%")->select('sws_code')->first();
         if ($supplierCode) {
             $this->sws_code = $supplierCode->sws_code;
             // $getTempCounterData = DB::table('temp_counters')->where('palet', $this->po)->where('material', $this->material_no);
