@@ -534,6 +534,7 @@ class PurchaseOrderIn extends Component
                 'being_used' => null,
             ]);
 
+        DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->where('palet',$this->po)->delete();
         $this->line_code = null;
         $this->lokasiDisable = false;
         $this->lokasi = null;
@@ -552,7 +553,6 @@ class PurchaseOrderIn extends Component
         $this->paletCode = null;
         // $this->listMaterial = [];
         $this->listMaterialScan = [];
-        DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
         $this->dispatch('SJFocus');
     }
 
