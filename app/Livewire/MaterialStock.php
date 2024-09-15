@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use App\Exports\InStockExport;
+use App\Exports\ExportDetailKartuStok;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithoutUrlPagination;
@@ -37,6 +38,12 @@ class MaterialStock extends Component
         $this->modalName = null;
         $this->modal = false;
     }
+
+    public function exportDetailExcel() {
+        return Excel::download(new ExportDetailKartuStok(collect($this->detailMaterial),$this->modalName), $this->modalName."-".date('Ymd').".xlsx", \Maatwebsite\Excel\Excel::XLSX);
+          
+    }
+
 
     public function render()
     {

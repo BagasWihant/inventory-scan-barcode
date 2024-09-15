@@ -135,7 +135,7 @@
             <!-- Modal content -->
             <div class="relative max-h-screen">
                 <!-- Modal header -->
-                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                <div class="flex items-center justify-between px-4 md:px-5 rounded-t dark:border-gray-600">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                         Detail Material {{ $modalName }}
                     </h3>
@@ -148,6 +148,9 @@
                         </svg>
                         <span class="sr-only">Close modal</span>
                     </button>
+                </div>
+                <div class="flex justify-start py-2">
+                    <button type="button" wire:click="exportDetailExcel" class="text-white bg-green-500 hover:bg-green-800 font-medium rounded-full text-sm px-3 py-1 text-center">Export Excel</button>
                 </div>
                 <div class="overflow-y-auto max-h-[568px]">
                     <!-- Modal body -->
@@ -180,15 +183,15 @@
                         </thead>
                         <tbody wire:ignore.self>
                             @forelse ($detailMaterial as $d)
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                <tr class="bg-white dark:bg-gray-800 dark:border-gray-700">
                                     <td class="px-6 py-4">
                                         {{ $d->Tgl }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        {{ $d->Trucking }}
+                                        {{ $d->Trucking ?? "-" }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        {{ $d->Receive }}
+                                        {{ $d->Receive ?? "-" }}
                                     </td>
                                     <td class="px-6 py-4">
                                         {{ $d->{'Qty IN'} }}
@@ -197,10 +200,10 @@
                                         {{ $d->{'Qty Out'} }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        {{ $d->Supply }}
+                                        {{ $d->Supply ??'-' }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        {{ $d->Qty }}
+                                        {{ $d->Qty ?? '-'}}
                                     </td>
                                 </tr>
                             @empty
