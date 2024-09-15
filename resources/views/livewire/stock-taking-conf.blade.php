@@ -23,10 +23,17 @@
 
         <div class="">
 
-            @if ($confirm)
-                <button type="button" id="showForm" wire:click="konfirmasi"
+            @if ($confirmKIAS)
+                <button type="button" id="showForm" wire:click="konfirmasiKias"
                     class="text-white bg-gradient-to-r from-green-500 to-teal-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
-                    Confirmation
+                    KIAS Confirm
+                </button>
+            @endif
+            
+            @if ($confirmDireksi)
+                <button type="button" id="showForm" wire:click="konfirmasiDireksi"
+                    class="text-white bg-gradient-to-r from-blue-700 to-teal-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
+                    Confirm Direksi
                 </button>
             @endif
         </div>
