@@ -220,11 +220,12 @@ class PurchaseOrderIn extends Component
                 return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "Material Tidak ada"]);
             }
 
-            if (DB::table('WH_rcv_QRHistory')->where('QR', $reqData['qr'])->where(function ($q) {
+            if ($this->input_setup_by=="PO COT" && DB::table('WH_rcv_QRHistory')->where('QR', $reqData['qr'])->where(function ($q) {
                 $q->where('user_id', $this->userId)->orWhere('status', 1);
             })->exists()) {
                 return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "QR sudah pernah discan"]);
             }
+
             // PCL-L24-1607 / S0200381510010150          2108P6002  / yd30  / 210824 / 2 / ANDIK
             $this->line_code = $reqData['lineNew'];
 
@@ -479,6 +480,7 @@ class PurchaseOrderIn extends Component
 
         DB::table('WH_rcv_QRHistory')
             ->where('user_id', $this->userId)
+            ->where('palet_iwpi', null)
             ->when($this->input_setup_by == "PO COT" && $this->lokasi == 'ASSY', function ($q) {
                 $q->where('line_code', $this->line_code);
             })
@@ -559,6 +561,8 @@ class PurchaseOrderIn extends Component
     #[On('resetConfirm')]
     public function resetConfirm($type)
     {
+        tempCounter::where('userID', $this->userId)
+            ->where('palet', $this->po)->update(['prop_scan' => null]);
         if ($type == 0) {
             if ($this->input_setup_by == "PO MCS") {
                 DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
