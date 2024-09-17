@@ -186,7 +186,7 @@ class PurchaseOrderIn extends Component
         }
 
 
-        $supplierCode = DB::table('material_conversion_mst')->where('supplier_code',"like","%". $material_noParse ."%")->select('sws_code')->first();
+        $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', "like", "%" . $material_noParse . "%")->select('sws_code')->first();
         if ($supplierCode) {
             $this->sws_code = $supplierCode->sws_code;
             // $getTempCounterData = DB::table('temp_counters')->where('palet', $this->po)->where('material', $this->material_no);
@@ -233,6 +233,7 @@ class PurchaseOrderIn extends Component
                 'user_id' => $this->userId,
                 'PO' => $this->po,
                 'line_code' => $this->line_code,
+                'material_no' => $this->sws_code,
                 'status' => 0,
                 'created_at' => date('Y-m-d H:i:s')
             ]);
@@ -321,23 +322,18 @@ class PurchaseOrderIn extends Component
         $decodePropOri = json_decode($data->prop_ori, true);
         $tmp['setup_by'] = $decodePropOri['setup_by'];
         $newPropOri = json_encode($tmp);
-        if (isset($req[2]) && $req[2] == 'PO MCS') {
-            $dataUpdate =  [
-                'sisa' => $data->total,
-                'counter' => 0,
-                'qty_more' => 0,
-                'prop_scan' => null,
-                'line_c' => null
-            ];
-        } else {
-            $dataUpdate =  [
-                'sisa' => $data->total,
-                'counter' => 0,
-                'qty_more' => 0,
-                'prop_scan' => null,
-                'prop_ori' => $newPropOri
-            ];
-        }
+        $dataUpdate = [
+            'sisa' => $data->total,
+            'counter' => 0,
+            'qty_more' => 0,
+            'prop_scan' => null,
+            'prop_ori' => isset($req[2]) && $req[2] == 'PO MCS' ? $data->prop_ori : $newPropOri,
+        ];
+
+        DB::table('WH_rcv_QRHistory')->where('material_no', $this->sws_code)
+            ->where('PO', $this->po)
+            ->where('user_id', $this->userId)->delete();
+
         $qryUPdate->update($dataUpdate);
         $this->dispatch('SJFocus');
     }
@@ -401,24 +397,12 @@ class PurchaseOrderIn extends Component
             if ($data->prop_scan != null) {
 
                 $prop_scan = json_decode($data->prop_scan, true);
-                $masuk = 1;
+                $totalScanPerMaterial = count($prop_scan);
+                $iteration = 1;
+                $kelebihan = $data->counter - abs($data->total);
+                $sisaTerakhir = 0;
                 foreach ($prop_scan as $value) {
-                    $kelebihan = $data->counter - abs($data->total);
-                    $masuk = $data->counter - $kelebihan;
-                    itemIn::create([
-                        'pallet_no' => $this->paletCode,
-                        'material_no' => $data->material,
-                        'picking_qty' => $data->total,
-                        'locate' => $data->location_cd,
-                        'trucking_id' => $data->trucking_id,
-                        'kit_no' => $this->po,
-                        'surat_jalan' => $this->surat_jalan,
-                        'user_id' => $this->userId,
-                        'line_c' => $data->line_c,
-                        'locate' => $prop_ori['location'] ?? null,
-                        'setup_by' => $prop_ori['setup_by'],
-                    ]);
-                    if ($kelebihan > 0) {
+                    if ($kelebihan > 0 && $iteration == $totalScanPerMaterial) {
                         abnormalMaterial::create([
                             'kit_no' => $this->po,
                             'surat_jalan' => $this->surat_jalan,
@@ -433,13 +417,27 @@ class PurchaseOrderIn extends Component
                             'locate' => $prop_ori['location'] ?? null,
                             'setup_by' => $prop_ori['setup_by'],
                         ]);
+                        $sisaTerakhir = $value - $kelebihan;
                     }
-                    $masuk++;
+                    itemIn::create([
+                        'pallet_no' => $this->paletCode,
+                        'material_no' => $data->material,
+                        'picking_qty' => $sisaTerakhir > 0 ? $sisaTerakhir : $value,
+                        'locate' => $data->location_cd,
+                        'trucking_id' => $data->trucking_id,
+                        'kit_no' => $this->po,
+                        'surat_jalan' => $this->surat_jalan,
+                        'user_id' => $this->userId,
+                        'line_c' => $data->line_c,
+                        'locate' => $prop_ori['location'] ?? null,
+                        'setup_by' => $prop_ori['setup_by'],
+                    ]);
+                    $iteration++;
                 }
                 // kurang
                 if ($data->total > $data->counter) {
-                    $count = $data->pax - $masuk;
-                    $kurangnya = $data->total - $data->counter;
+                    // $count = $data->pax - $masuk;
+                    // $kurangnya = $data->total - $data->counter;
                     // abnormalMaterial::create([
                     //     'pallet_no' => $this->paletCode,
                     //     'kit_no' => $this->po,
@@ -480,15 +478,15 @@ class PurchaseOrderIn extends Component
         }
 
         DB::table('WH_rcv_QRHistory')
-        ->where('user_id', $this->userId)
-        ->when($this->input_setup_by== "PO COT" && $this->lokasi =='ASSY',function ($q) {
-            $q->where('line_code', $this->line_code);
-        })
-        ->where("PO", $this->po)->update([
-            'status' => 1,
-            'surat_jalan' => $this->surat_jalan,
-            'palet_iwpi' => $this->paletCode,
-        ]);
+            ->where('user_id', $this->userId)
+            ->when($this->input_setup_by == "PO COT" && $this->lokasi == 'ASSY', function ($q) {
+                $q->where('line_code', $this->line_code);
+            })
+            ->where("PO", $this->po)->update([
+                'status' => 1,
+                'surat_jalan' => $this->surat_jalan,
+                'palet_iwpi' => $this->paletCode,
+            ]);
         // JIKA ASSY
         if ($this->lokasi == 'ASSY') {
             $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi', $this->paletCode)->first();
@@ -536,7 +534,7 @@ class PurchaseOrderIn extends Component
                 'being_used' => null,
             ]);
 
-        DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->where('palet',$this->po)->delete();
+        DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->where('palet', $this->po)->delete();
         $this->line_code = null;
         $this->lokasiDisable = false;
         $this->lokasi = null;
