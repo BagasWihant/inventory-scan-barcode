@@ -275,6 +275,11 @@
 
 @script
     <script>
+        const notif = new Audio("{{ asset('assets/sound.wav')}}")
+        $wire.on('playSound', () => {
+            console.log('play');
+            notif.play();
+        });
         $wire.on('SJFocus', (event) => {
             setTimeout(function() {
                 $("#surat_jalan").focus()

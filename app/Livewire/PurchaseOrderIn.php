@@ -143,6 +143,7 @@ class PurchaseOrderIn extends Component
     }
     public function materialNoScan()
     {
+        $this->dispatch('playSound');
         if (!$this->lokasi && $this->input_setup_by == "PO COT") {
             return $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => 'Please choose Location']);
         }
