@@ -32,7 +32,8 @@ class User extends Authenticatable
         'Plant',
         'section_id',
         'app',
-        'nick'
+        'nick',
+        'direksi'
     ];
 
     /**

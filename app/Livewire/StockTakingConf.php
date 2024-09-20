@@ -13,11 +13,13 @@ use Spatie\LaravelIgnition\Recorders\DumpRecorder\Dump;
 
 class StockTakingConf extends Component
 {
-    public $data, $queryStock, $userID, $confirmDireksi, $sto, $search, $confirmKIAS;
+    public $data, $queryStock, $userID, $confirmDireksi, $sto, $search, $confirmKIAS,$direksi;
 
     public function mount()
     {
-        $this->userID = auth()->user()->id;
+        $user = auth()->user();
+        $this->userID = $user->id;
+        $this->direksi = $user->direksi;
     }
 
     public function konfirmasiKias()
@@ -93,7 +95,7 @@ class StockTakingConf extends Component
         if($this->sto){
             if ($this->sto->confirm == '0') {
                 $this->confirmKIAS = true;
-            } else if ($this->sto->confirm == '1') {
+            } else if ($this->sto->confirm == '1' && $this->direksi == '1') {
                 $this->confirmDireksi = true;
             } 
         }

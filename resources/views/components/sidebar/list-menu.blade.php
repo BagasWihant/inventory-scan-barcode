@@ -40,12 +40,14 @@
                 ],
                 [
                     'url' => route('instock'),
+                    'direksi' => '',
                     'label' => 'Material Stock',
                     'icon' =>
                         '<svg class="w-5 h-5" fill="#000000" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 612 612" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <path d="M545.325,500.685H66.675c-30.737,0-55.657,24.92-55.657,55.657c0,30.737,24.92,55.657,55.657,55.657h478.65 c30.737,0,55.657-24.92,55.657-55.657C600.982,525.604,576.062,500.685,545.325,500.685z"></path> <path d="M129.753,464.922c30.737,0,55.657-24.92,55.657-55.657v-212.61c0-30.737-24.92-55.657-55.657-55.657 s-55.657,24.92-55.657,55.657v212.61C74.095,440.002,99.016,464.922,129.753,464.922z"></path> <path d="M306.002,464.922c30.737,0,55.657-24.92,55.657-55.657V126.157c0-30.737-24.92-55.657-55.657-55.657 s-55.657,24.92-55.657,55.657v283.108C250.345,440.002,275.263,464.922,306.002,464.922z"></path> <path d="M482.245,464.922c30.737,0,55.655-24.92,55.655-55.657V55.657C537.903,24.92,512.984,0,482.245,0 c-30.737,0-55.657,24.92-55.657,55.657v353.607C426.588,440.002,451.508,464.922,482.245,464.922z"></path> </g> </g> </g></svg>',
                 ],
                 [
                     'url' => route('checking'),
+                    'direksi' => '',
                     'label' => 'Receiving Report',
                     'icon' =>
                         '<svg class="w-5 h-5" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>report-linechart</title> <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <g id="add" fill="#000000" transform="translate(42.666667, 85.333333)"> <path d="M341.333333,1.42108547e-14 L426.666667,85.3333333 L426.666667,341.333333 L3.55271368e-14,341.333333 L3.55271368e-14,1.42108547e-14 L341.333333,1.42108547e-14 Z M330.666667,42.6666667 L42.6666667,42.6666667 L42.6666667,298.666667 L384,298.666667 L384,96 L330.666667,42.6666667 Z M106.666667,85.3333333 L106.666333,217.591333 L167.724208,141.269742 L232.938667,173.866667 L280.864376,130.738196 L295.135624,146.595138 L236.398693,199.458376 L173.589333,168.064 L120.324333,234.666333 L341.333333,234.666667 L341.333333,256 L85.3333333,256 L85.3333333,85.3333333 L106.666667,85.3333333 Z" id="Combined-Shape"> </path> </g> </g> </g></svg>',
@@ -72,6 +74,7 @@
                 [
                     'url' => route('result.stock.taking'),
                     'label' => 'Stock Taking Result',
+                    'direksi'=>'',
                     'icon' =>
                         '<svg class="w-5 h-5" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g fill="none"> <path d="M22 142.576h10.702M22 114.712h10.702M22 22v148h148M21.995 32.934h10.702m-10.702 27.32h10.702M21.995 87.356h10.702" style="fill:#000000;fill-opacity:0;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:6;stroke-dasharray:none;paint-order:stroke fill markers" fill="none"></path> <path d="M68.842 128.695a10.782 10.782 0 0 1-10.781 10.781 10.782 10.782 0 0 1-10.782-10.781 10.782 10.782 0 0 1 10.782-10.782 10.782 10.782 0 0 1 10.781 10.782zM95.06 76.358A10.782 10.782 0 0 1 84.277 87.14a10.782 10.782 0 0 1-10.782-10.782 10.782 10.782 0 0 1 10.782-10.782 10.782 10.782 0 0 1 10.781 10.782Zm43.576 36.396a10.782 10.782 0 0 1-10.782 10.781 10.782 10.782 0 0 1-10.781-10.781 10.782 10.782 0 0 1 10.781-10.782 10.782 10.782 0 0 1 10.782 10.782zm21.604-73.396a10.782 10.782 0 0 1-10.782 10.782 10.782 10.782 0 0 1-10.782-10.782 10.782 10.782 0 0 1 10.782-10.781 10.782 10.782 0 0 1 10.781 10.781z" style="fill-opacity:0;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:6;paint-order:stroke fill markers"></path> <path d="m64.38 118.198 14.117-31.362m15.08-2.424 24.333 21.124m13.668-4.067 15.53-52.393" style="fill:#000000;fill-opacity:0;stroke:#000000;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:6;stroke-dasharray:none;paint-order:stroke fill markers" fill="none"></path> </g> </g></svg>',
                 ],
@@ -79,12 +82,14 @@
                     'url' => route('conf.stock.taking'),
                     'label' => 'Stock Taking Confirmation',
                     'admin' => '',
+                    'direksi' => '',
                     'icon' =>
                         '<svg class="w-5 h-5" fill="#000000" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 492 492" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <path d="M484.088,292.46c-5.1-5.128-11.968-8.076-19.156-8.076l0.172,0.036H330.588c-14.832,0-26.864,12.308-26.864,27.132v22.788 c0,7.16,2.784,13.908,7.88,19c5.088,5.092,11.836,7.9,18.992,7.9l39.088,0.004c-32.072,34.348-76.7,53.888-123.708,53.888 c-93.256,0-169.132-75.876-169.132-169.132S152.716,76.868,245.972,76.868c69.824,0,133.388,43.836,158.172,109.084 c5.636,14.82,20.076,24.784,35.924,24.784c4.66,0,9.248-0.852,13.636-2.52c19.808-7.52,29.796-29.76,22.268-49.568 C439.932,63.772,347.504,0.024,245.976,0.024C110.344,0.024,0,110.368,0,246s110.184,245.976,245.816,245.976 c62.608,0,123.232-24.64,169.336-67.9v21.796c0,14.832,12.392,26.824,27.22,26.824h22.792c14.828,0,26.836-11.992,26.836-26.824 V311.648C492,304.468,489.204,297.548,484.088,292.46z"></path> </g> </g> <g> <g> <path d="M361.06,179.392l-11.068-11.072c-2.86-2.86-6.676-4.436-10.744-4.436s-7.884,1.58-10.736,4.436L221.228,275.604 l-64.792-64.792c-2.86-2.86-6.676-4.436-10.736-4.436c-4.068,0-7.88,1.58-10.74,4.436l-11.08,11.068 c-5.912,5.92-5.912,15.56,0,21.48l86.612,86.604c2.856,2.856,6.668,4.432,10.736,4.432s7.88-1.58,10.812-4.512l129.02-129.02 C366.984,194.944,366.984,185.312,361.06,179.392z"></path> </g> </g> </g></svg>',
                 ],
                 [
                     'url' => route('report.stock.taking'),
                     'label' => 'Report Stock Taking',
+                    'direksi' => '',
                     'admin' => '',
                     'icon' =>
                         '<svg class="w-5 h-5" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>report-text</title> <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <g id="add" fill="#000000" transform="translate(42.666667, 85.333333)"> <path d="M341.333333,1.42108547e-14 L426.666667,85.3333333 L426.666667,341.333333 L3.55271368e-14,341.333333 L3.55271368e-14,1.42108547e-14 L341.333333,1.42108547e-14 Z M330.666667,42.6666667 L42.6666667,42.6666667 L42.6666667,298.666667 L384,298.666667 L384,96 L330.666667,42.6666667 Z M149.333333,234.666667 L149.333333,266.666667 L85.3333333,266.666667 L85.3333333,234.666667 L149.333333,234.666667 Z M341.333333,234.666667 L341.333333,266.666667 L192,266.666667 L192,234.666667 L341.333333,234.666667 Z M149.333333,170.666667 L149.333333,202.666667 L85.3333333,202.666667 L85.3333333,170.666667 L149.333333,170.666667 Z M341.333333,170.666667 L341.333333,202.666667 L192,202.666667 L192,170.666667 L341.333333,170.666667 Z M149.333333,106.666667 L149.333333,138.666667 L85.3333333,138.666667 L85.3333333,106.666667 L149.333333,106.666667 Z M341.333333,106.666667 L341.333333,138.666667 L192,138.666667 L192,106.666667 L341.333333,106.666667 Z" id="Combined-Shape"> </path> </g> </g> </g></svg>',
@@ -94,7 +99,7 @@
         [
             'url' => route('create_palet'),
             'label' => 'Create New Pallet',
-            'hidden' =>true,
+            'hidden' => true,
         ],
     ];
 @endphp
@@ -145,9 +150,61 @@
                     </svg>
                 </button>
                 <ul id="dropdown-example{{ $loop->iteration }}" class="hidden py-2 space-y-2 pl-2 text-sm">
-                    @foreach ($m['child'] as $ch)
-                        @if (isset($ch['admin']))
-                            @if (auth()->user()->Role_ID == '3' || auth()->user()->Admin == '1')
+                    @if (auth()->user()->direksi == '1')
+                        @foreach ($m['child'] as $ch)
+                            @if (isset($ch['direksi']))
+
+                                <li>
+                                    <a href="{{ $ch['url'] }}"
+                                        class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 group @if (url()->current() === $ch['url']) bg-gray-400 dark:bg-gray-500 @endif">
+                                        @if (isset($ch['icon']))
+                                            <div class="!w-5 !h-5">{!! $ch['icon'] !!}</div>
+                                        @else
+                                            <div class="w-5 h-5">
+                                                <svg class=" text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                    fill="currentColor" viewBox="0 0 22 21">
+                                                    <path
+                                                        d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
+                                                    <path
+                                                        d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
+                                                </svg>
+
+                                            </div>
+                                        @endif
+                                        <span class="ms-3">{{ $ch['label'] }}</span>
+                                    </a>
+                                </li>
+
+                            @endif
+                        @endforeach
+                    @else
+                        @foreach ($m['child'] as $ch)
+                            @if (isset($ch['admin']))
+                                @if (auth()->user()->Role_ID == '3' || auth()->user()->Admin == '1')
+                                    <li>
+                                        <a href="{{ $ch['url'] }}"
+                                            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 group @if (url()->current() === $ch['url']) bg-gray-400 dark:bg-gray-500 @endif">
+                                            @if (isset($ch['icon']))
+                                                <div class="!w-5 !h-5">{!! $ch['icon'] !!}</div>
+                                            @else
+                                                <div class="w-5 h-5">
+                                                    <svg class=" text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                                        aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                        fill="currentColor" viewBox="0 0 22 21">
+                                                        <path
+                                                            d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
+                                                        <path
+                                                            d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
+                                                    </svg>
+
+                                                </div>
+                                            @endif
+                                            <span class="ms-3">{{ $ch['label'] }}</span>
+                                        </a>
+                                    </li>
+                                @endif
+                            @else
                                 <li>
                                     <a href="{{ $ch['url'] }}"
                                         class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 group @if (url()->current() === $ch['url']) bg-gray-400 dark:bg-gray-500 @endif">
@@ -170,30 +227,8 @@
                                     </a>
                                 </li>
                             @endif
-                        @else
-                            <li>
-                                <a href="{{ $ch['url'] }}"
-                                    class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 group @if (url()->current() === $ch['url']) bg-gray-400 dark:bg-gray-500 @endif">
-                                    @if (isset($ch['icon']))
-                                        <div class="!w-5 !h-5">{!! $ch['icon'] !!}</div>
-                                    @else
-                                        <div class="w-5 h-5">
-                                            <svg class=" text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                                                aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                fill="currentColor" viewBox="0 0 22 21">
-                                                <path
-                                                    d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
-                                                <path
-                                                    d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
-                                            </svg>
-
-                                        </div>
-                                    @endif
-                                    <span class="ms-3">{{ $ch['label'] }}</span>
-                                </a>
-                            </li>
-                        @endif
-                    @endforeach
+                        @endforeach
+                    @endif
                 </ul>
             @else
                 @if (!isset($m['hidden']))

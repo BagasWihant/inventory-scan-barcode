@@ -187,7 +187,7 @@ class PurchaseOrderIn extends Component
         }
 
 
-        $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', "like", "%" . $material_noParse . "%")->select('sws_code')->first();
+        $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $material_noParse)->select('sws_code')->first();
         if ($supplierCode) {
             $this->sws_code = $supplierCode->sws_code;
             // $getTempCounterData = DB::table('temp_counters')->where('palet', $this->po)->where('material', $this->material_no);
@@ -200,6 +200,8 @@ class PurchaseOrderIn extends Component
                 'qr' => $qr
             ];
             $this->insertNew($dataInsert);
+        }else{
+            $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => DB::table('material_conversion_mst')->where('supplier_code', $material_noParse)->select('sws_code')->toRawSql()]);
         }
         $this->material_no = null;
     }
@@ -218,7 +220,7 @@ class PurchaseOrderIn extends Component
 
             if (!$tempCount->exists()) {
                 $this->material_no = null;
-                return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "Material Tidak ada"]);
+                return $this->dispatch('alert', ['title' => 'Warning', 'time' => 400000, 'icon' => 'warning', 'text' => $tempCount->toRawSql()]);
             }
 
             if ($this->input_setup_by=="PO COT" && DB::table('WH_rcv_QRHistory')->where('QR', $reqData['qr'])->where(function ($q) {
