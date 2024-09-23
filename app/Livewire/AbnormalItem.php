@@ -12,20 +12,26 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class AbnormalItem extends Component
 {
-    public $dataCetak, $searchKey, $status,$userid;
+    public $dataCetak, $searchKey, $status='-',$userid,$isAdmin;
 
     public function __construct()
     {
-        $this->userid = auth()->user()->id;
+        $user = auth()->user();
+        $this->userid = $user->id;
+        $this->isAdmin = $user->Admin;
     }
     public function render()
     {
         $query = DB::table('abnormal_materials')
             ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax,trucking_id,locate,status')
-            ->where('user_id', $this->userid)
-            ->where('status', $this->status)
+            ->when($this->isAdmin == 0, function ($query) {
+                $query->where('user_id', $this->userid);
+            })
+            ->when($this->status != '-', function ($query) {
+                $query->where('status', $this->status);
+            })
             ->groupBy(['material_no', 'pallet_no', 'trucking_id', 'locate', 'status']);
-
+            
         $query->where(function ($query) {
             $query->where('pallet_no', 'like', "%$this->searchKey%")->orWhere('material_no', 'like', "%$this->searchKey%");
         });
@@ -88,11 +94,14 @@ class AbnormalItem extends Component
     public function savingToStock($req)
     {
         $dataDetail = DB::table('abnormal_materials')
-            ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax,locate,trucking_id')
-            ->groupBy(['material_no', 'pallet_no','locate','trucking_id'])
+            ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax,locate,trucking_id,line_c,setup_by,surat_jalan,kit_no')
+            ->groupBy(['material_no', 'pallet_no','locate','trucking_id','line_c','setup_by','surat_jalan','kit_no'])
             ->where('pallet_no', $req['pallet_no'])
-            ->where('user_id', $this->userid)
+            ->when($this->isAdmin == 0, function ($query) {
+                $query->where('user_id', $this->userid);
+            })
             ->where('material_no', $req['material_no']);
+            dump($dataDetail->toRawSql());
         $data = $dataDetail->first();
         $perpax = $req['qty'] / $data->pax;
         $picking_qty = round($perpax);
@@ -109,7 +118,11 @@ class AbnormalItem extends Component
                 'picking_qty' => $picking_qty,
                 'locate' => $data->locate,
                 'trucking_id' => $data->trucking_id,
-                'user_id' => $this->userid
+                'user_id' => $this->userid,
+                'line_c'=> $data->line_c,
+                'setup_by' => $data->setup_by,
+                'surat_jalan' => $data->surat_jalan,
+                'kit_no' => $data->kit_no
             ]);
         }
 
