@@ -88,42 +88,44 @@ class PurchaseOrderIn extends Component
 
             $joinCondition = function ($join) {
                 $join->on('a.material_no', '=', 'b.material_no')
-                    ->on('a.kit_no', '=', 'b.kit_no')
-                    ->where('b.pallet_no', $this->paletCode);
+                    ->on('a.kit_no', '=', 'b.kit_no');
+                    // ->where('b.pallet_no', $this->paletCode);
             };
-            $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty', 'scanned_time'];
+            $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty',  'scanned_time'];
 
             if ($this->input_setup_by == "PO COT") {
                 $this->mcs = true;
                 $joinCondition = function ($join) {
                     $join->on('a.material_no', '=', 'b.material_no')
                         ->on('a.kit_no', '=', 'b.kit_no')
-                        ->on('a.line_c', '=', 'b.line_c')
-                        ->where('b.pallet_no', $this->paletCode);
+                        ->on('a.line_c', '=', 'b.line_c');
+                        // ->where('b.pallet_no', $this->paletCode);
                 };
             }
 
             $productsQuery = DB::table('material_setup_mst_supplier as a')
                 ->where('a.kit_no', $this->po)
-                ->selectRaw('a.material_no, a.picking_qty, count(a.picking_qty) as pax, a.kit_no, b.picking_qty as stock_in, a.line_c, a.setup_by')
+                ->selectRaw('a.material_no, a.picking_qty, count(a.picking_qty) as pax, a.kit_no, sum(b.picking_qty) as stock_in, a.line_c, a.setup_by')
                 ->leftJoin('material_in_stock as b', $joinCondition)
                 ->groupBy($groupByColumns)
                 ->orderByDesc('scanned_time')
                 ->orderBy('a.material_no');
-
+dump($productsQuery->toRawSql());
             $getall = $productsQuery->get();
             foreach ($getall as $value) {
                 try {
-                    $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
+                    // $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
+                    $mroe = $value->stock_in > $value->picking_qty ? 1 : 0;
                     DB::beginTransaction();
                     $insert = [
                         'material' => $value->material_no,
                         'palet' => $this->po,
                         'userID' => $this->userId,
-                        'sisa' => $total,
-                        'total' => $total,
+                        'sisa' => $value->picking_qty,
+                        'total' => $value->picking_qty,
                         'pax' => $value->pax,
                         'flag' => 1,
+                        'qty_more' => $mroe,
                         'prop_ori' => json_encode(['setup_by' => $value->setup_by]),
                         'line_c' => $value->line_c,
                     ];
@@ -223,9 +225,7 @@ class PurchaseOrderIn extends Component
                 return $this->dispatch('alert', ['title' => 'Warning', 'time' => 400000, 'icon' => 'warning', 'text' => $tempCount->toRawSql()]);
             }
 
-            if ($this->input_setup_by=="PO COT" && DB::table('WH_rcv_QRHistory')->where('QR', $reqData['qr'])->where(function ($q) {
-                $q->where('user_id', $this->userId)->orWhere('status', 1);
-            })->exists()) {
+            if ($this->input_setup_by=="PO COT" && DB::table('WH_rcv_QRHistory')->where('QR', $reqData['qr'])->where('user_id', $this->userId)->where('status', 1)->exists()) {
                 return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "QR sudah pernah discan"]);
             }
 
@@ -360,8 +360,7 @@ class PurchaseOrderIn extends Component
 
         // GENERATE PALET CODE
         $getConfig = DB::table('WH_config')->select('value')->whereIn('config', ['PalletCodeInStock', 'PeriodInStock'])->get();
-        // $ym = date('ym');
-        $ym = '2410';
+        $ym = date('ym');
 
         $PalletCodeInStock = (int)$getConfig[0]->value + 1;
         if ($getConfig[1]->value != $ym) {
@@ -406,13 +405,14 @@ class PurchaseOrderIn extends Component
                 $kelebihan = $data->counter - abs($data->total);
                 $sisaTerakhir = 0;
                 foreach ($prop_scan as $value) {
-                    if ($kelebihan > 0 && $iteration == $totalScanPerMaterial) {
+                    if (($iteration == $totalScanPerMaterial) && ($kelebihan > 0 || $data->total < 0 ) ) {
+                        $picking_qty = $data->total < 0 ? $value : $kelebihan;
                         abnormalMaterial::create([
                             'kit_no' => $this->po,
                             'surat_jalan' => $this->surat_jalan,
                             'pallet_no' => $this->paletCode,
                             'material_no' => $data->material,
-                            'picking_qty' => $kelebihan,
+                            'picking_qty' => $picking_qty,
                             'locate' => $data->location_cd,
                             'trucking_id' => $data->trucking_id,
                             'user_id' => $this->userId,
@@ -421,21 +421,37 @@ class PurchaseOrderIn extends Component
                             'locate' => $prop_ori['location'] ?? null,
                             'setup_by' => $prop_ori['setup_by'],
                         ]);
-                        $sisaTerakhir = $value - $kelebihan;
+                        $sisaTerakhir = $value - $picking_qty;
+                        if($sisaTerakhir > 0){
+                            itemIn::create([
+                                'pallet_no' => $this->paletCode,
+                                'material_no' => $data->material,
+                                'picking_qty' => $sisaTerakhir,
+                                'locate' => $data->location_cd,
+                                'trucking_id' => $data->trucking_id,
+                                'kit_no' => $this->po,
+                                'surat_jalan' => $this->surat_jalan,
+                                'user_id' => $this->userId,
+                                'line_c' => $data->line_c,
+                                'locate' => $prop_ori['location'] ?? null,
+                                'setup_by' => $prop_ori['setup_by'],
+                            ]);
+                        }
+                    }else{
+                        itemIn::create([
+                            'pallet_no' => $this->paletCode,
+                            'material_no' => $data->material,
+                            'picking_qty' => $value,
+                            'locate' => $data->location_cd,
+                            'trucking_id' => $data->trucking_id,
+                            'kit_no' => $this->po,
+                            'surat_jalan' => $this->surat_jalan,
+                            'user_id' => $this->userId,
+                            'line_c' => $data->line_c,
+                            'locate' => $prop_ori['location'] ?? null,
+                            'setup_by' => $prop_ori['setup_by'],
+                        ]);
                     }
-                    itemIn::create([
-                        'pallet_no' => $this->paletCode,
-                        'material_no' => $data->material,
-                        'picking_qty' => $sisaTerakhir > 0 ? $sisaTerakhir : $value,
-                        'locate' => $data->location_cd,
-                        'trucking_id' => $data->trucking_id,
-                        'kit_no' => $this->po,
-                        'surat_jalan' => $this->surat_jalan,
-                        'user_id' => $this->userId,
-                        'line_c' => $data->line_c,
-                        'locate' => $prop_ori['location'] ?? null,
-                        'setup_by' => $prop_ori['setup_by'],
-                    ]);
                     $iteration++;
                 }
                 // kurang
@@ -588,17 +604,17 @@ class PurchaseOrderIn extends Component
 
         $joinCondition = function ($join) {
             $join->on('a.material_no', '=', 'b.material_no')
-                ->on('a.kit_no', '=', 'b.kit_no')
-                ->where('b.pallet_no', $this->paletCode);
+                ->on('a.kit_no', '=', 'b.kit_no');
+                // ->where('b.pallet_no', $this->paletCode);
         };
-        $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty', 'b.picking_qty', 'scanned_time'];
+        $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty',  'scanned_time'];
 
         if ($this->input_setup_by == "PO COT") {
             $joinCondition = function ($join) {
                 $join->on('a.material_no', '=', 'b.material_no')
                     ->on('a.kit_no', '=', 'b.kit_no')
-                    ->on('a.line_c', '=', 'b.line_c')
-                    ->where('b.pallet_no', $this->paletCode);
+                    ->on('a.line_c', '=', 'b.line_c');
+                    // ->where('b.pallet_no', $this->paletCode);
             };
         }
 
@@ -620,12 +636,13 @@ class PurchaseOrderIn extends Component
             ->where('a.kit_no', $this->po)
             ->where('a.line_c', $this->line_code)
 
-            ->selectRaw('a.material_no, a.picking_qty, count(a.picking_qty) as pax, a.kit_no, b.picking_qty as stock_in, a.line_c, a.setup_by')
+            ->selectRaw('a.material_no, a.picking_qty, count(a.picking_qty) as pax, a.kit_no, sum(b.picking_qty) as stock_in, a.line_c, a.setup_by')
             ->leftJoin('material_in_stock as b', $joinCondition)
             ->groupBy($groupByColumns)
             ->orderByDesc('scanned_time')
             ->orderBy('a.material_no');
 
+            // dump($productsQuery->toRawSql());
 
         $listMaterial = $productsQuery->paginate(20);
         $sudahScan = $tempQuery->paginate(20);
