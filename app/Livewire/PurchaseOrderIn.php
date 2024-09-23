@@ -110,22 +110,22 @@ class PurchaseOrderIn extends Component
                 ->groupBy($groupByColumns)
                 ->orderByDesc('scanned_time')
                 ->orderBy('a.material_no');
-dump($productsQuery->toRawSql());
+                
             $getall = $productsQuery->get();
             foreach ($getall as $value) {
                 try {
-                    // $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
-                    $mroe = $value->stock_in > $value->picking_qty ? 1 : 0;
+                    $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
+                    // $mroe = $value->stock_in >= $value->picking_qty ? 1 : 0;
                     DB::beginTransaction();
                     $insert = [
                         'material' => $value->material_no,
                         'palet' => $this->po,
                         'userID' => $this->userId,
-                        'sisa' => $value->picking_qty,
-                        'total' => $value->picking_qty,
+                        'sisa' => $total,
+                        'total' => $total,
                         'pax' => $value->pax,
                         'flag' => 1,
-                        'qty_more' => $mroe,
+                        // 'qty_more' => $mroe,
                         'prop_ori' => json_encode(['setup_by' => $value->setup_by]),
                         'line_c' => $value->line_c,
                     ];
