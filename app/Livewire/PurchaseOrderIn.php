@@ -131,7 +131,7 @@ class PurchaseOrderIn extends Component
                         ];
 
 
-                    tempCounter::create($insert);
+                        tempCounter::create($insert);
                     } catch (\Throwable $th) {
                         DB::rollBack();
                     }
@@ -388,7 +388,6 @@ class PurchaseOrderIn extends Component
         // if ($checkASSY && $checkNotASSY) {
         //     return $this->dispatch('alert', ['title' => 'Warning', 'time' => 5000, 'icon' => 'error', 'text' => 'Double location detected ASSY and CNC']);
         // }
-
         foreach ($loopData as $data) {
             $pax = $data->pax;
             $qty = $data->total / $pax;
@@ -415,13 +414,12 @@ class PurchaseOrderIn extends Component
                             'pallet_no' => $this->paletCode,
                             'material_no' => $data->material,
                             'picking_qty' => $picking_qty,
-                            'locate' => $data->location_cd,
                             'trucking_id' => $data->trucking_id,
                             'user_id' => $this->userId,
                             'status' => 1,
                             'line_c' => $data->line_c,
-                            'locate' => $prop_ori['location'] ?? null,
                             'setup_by' => $prop_ori['setup_by'],
+                            'locate' => $this->input_setup_by == 'PO MCS' ? $data->location_cd : ($prop_ori['location'] ?? ' '),
                         ]);
                         $sisaTerakhir = $value - $picking_qty;
                         if ($sisaTerakhir > 0) {
@@ -429,13 +427,12 @@ class PurchaseOrderIn extends Component
                                 'pallet_no' => $this->paletCode,
                                 'material_no' => $data->material,
                                 'picking_qty' => $sisaTerakhir,
-                                'locate' => $data->location_cd,
+                                'locate' => $this->input_setup_by == 'PO MCS' ? $data->location_cd : ($prop_ori['location'] ?? ' '),
                                 'trucking_id' => $data->trucking_id,
                                 'kit_no' => $this->po,
                                 'surat_jalan' => $this->surat_jalan,
                                 'user_id' => $this->userId,
                                 'line_c' => $data->line_c,
-                                'locate' => $prop_ori['location'] ?? null,
                                 'setup_by' => $prop_ori['setup_by'],
                             ]);
                         }
@@ -444,13 +441,12 @@ class PurchaseOrderIn extends Component
                             'pallet_no' => $this->paletCode,
                             'material_no' => $data->material,
                             'picking_qty' => $value,
-                            'locate' => $data->location_cd,
+                            'locate' => $this->input_setup_by == 'PO MCS' ? $data->location_cd : ($prop_ori['location'] ?? ' '),
                             'trucking_id' => $data->trucking_id,
                             'kit_no' => $this->po,
                             'surat_jalan' => $this->surat_jalan,
                             'user_id' => $this->userId,
                             'line_c' => $data->line_c,
-                            'locate' => $prop_ori['location'] ?? null,
                             'setup_by' => $prop_ori['setup_by'],
                         ]);
                     }
@@ -536,7 +532,7 @@ class PurchaseOrderIn extends Component
                     'data' => $loopData,
                     'issue_date' => '-',
                     'line_c' => '-',
-                    'palet_no'=>'-'
+                    'palet_no' => '-'
                 ];
                 return Excel::download(new ReceivingSupplierReport($dataPrint), "Receiving ASSY_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
 
@@ -590,8 +586,10 @@ class PurchaseOrderIn extends Component
     #[On('resetConfirm')]
     public function resetConfirm($type)
     {
+
         tempCounter::where('userID', $this->userId)
-            ->where('palet', $this->po)->update(['prop_scan' => null]);
+            ->where('palet', $this->po)->delete();
+        $this->choosePo($this->po);
         if ($type == 0) {
             if ($this->input_setup_by == "PO MCS") {
                 DB::table('temp_counters')->where('userID', $this->userId)->where('flag', 1)->delete();
@@ -652,7 +650,7 @@ class PurchaseOrderIn extends Component
             ->orderByDesc('scanned_time')
             ->orderBy('a.material_no');
 
-            // dump($productsQuery->toRawSql());
+        // dump($productsQuery->toRawSql());
 
         $listMaterial = $productsQuery->paginate(20);
         $sudahScan = $tempQuery->paginate(20);
