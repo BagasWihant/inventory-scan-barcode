@@ -89,7 +89,7 @@ class PurchaseOrderIn extends Component
             $joinCondition = function ($join) {
                 $join->on('a.material_no', '=', 'b.material_no')
                     ->on('a.kit_no', '=', 'b.kit_no');
-                    // ->where('b.pallet_no', $this->paletCode);
+                // ->where('b.pallet_no', $this->paletCode);
             };
             $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty',  'scanned_time'];
 
@@ -99,7 +99,7 @@ class PurchaseOrderIn extends Component
                     $join->on('a.material_no', '=', 'b.material_no')
                         ->on('a.kit_no', '=', 'b.kit_no')
                         ->on('a.line_c', '=', 'b.line_c');
-                        // ->where('b.pallet_no', $this->paletCode);
+                    // ->where('b.pallet_no', $this->paletCode);
                 };
             }
 
@@ -110,33 +110,35 @@ class PurchaseOrderIn extends Component
                 ->groupBy($groupByColumns)
                 ->orderByDesc('scanned_time')
                 ->orderBy('a.material_no');
-                
-            $getall = $productsQuery->get();
-            foreach ($getall as $value) {
-                try {
-                    $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
-                    // $mroe = $value->stock_in >= $value->picking_qty ? 1 : 0;
-                    DB::beginTransaction();
-                    $insert = [
-                        'material' => $value->material_no,
-                        'palet' => $this->po,
-                        'userID' => $this->userId,
-                        'sisa' => $total,
-                        'total' => $total,
-                        'pax' => $value->pax,
-                        'flag' => 1,
-                        // 'qty_more' => $mroe,
-                        'prop_ori' => json_encode(['setup_by' => $value->setup_by]),
-                        'line_c' => $value->line_c,
-                    ];
+
+            DB::beginTransaction();
+            $productsQuery->chunk(300, function ($products) {
+                foreach ($products as $value) {
+                    try {
+                        $total = $value->stock_in > 0 ? $value->picking_qty - $value->stock_in : $value->picking_qty;
+                        // $mroe = $value->stock_in >= $value->picking_qty ? 1 : 0;
+                        $insert = [
+                            'material' => $value->material_no,
+                            'palet' => $this->po,
+                            'userID' => $this->userId,
+                            'sisa' => $total,
+                            'total' => $total,
+                            'pax' => $value->pax,
+                            'flag' => 1,
+                            // 'qty_more' => $mroe,
+                            'prop_ori' => json_encode(['setup_by' => $value->setup_by]),
+                            'line_c' => $value->line_c,
+                        ];
 
 
                     tempCounter::create($insert);
-                    DB::commit();
-                } catch (\Throwable $th) {
-                    DB::rollBack();
+                    } catch (\Throwable $th) {
+                        DB::rollBack();
+                    }
                 }
-            }
+            });
+            DB::commit();
+
 
             return $this->dispatch('materialFocus');
         } else {
@@ -202,7 +204,7 @@ class PurchaseOrderIn extends Component
                 'qr' => $qr
             ];
             $this->insertNew($dataInsert);
-        }else{
+        } else {
             $this->dispatch('alert', ['title' => 'Warning', 'time' => 3500, 'icon' => 'warning', 'text' => DB::table('material_conversion_mst')->where('supplier_code', $material_noParse)->select('sws_code')->toRawSql()]);
         }
         $this->material_no = null;
@@ -225,7 +227,7 @@ class PurchaseOrderIn extends Component
                 return $this->dispatch('alert', ['title' => 'Warning', 'time' => 400000, 'icon' => 'warning', 'text' => $tempCount->toRawSql()]);
             }
 
-            if ($this->input_setup_by=="PO COT" && DB::table('WH_rcv_QRHistory')->where('QR', $reqData['qr'])->where('user_id', $this->userId)->where('status', 1)->exists()) {
+            if ($this->input_setup_by == "PO COT" && DB::table('WH_rcv_QRHistory')->where('QR', $reqData['qr'])->where('user_id', $this->userId)->where('status', 1)->exists()) {
                 return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "QR sudah pernah discan"]);
             }
 
@@ -405,7 +407,7 @@ class PurchaseOrderIn extends Component
                 $kelebihan = $data->counter - abs($data->total);
                 $sisaTerakhir = 0;
                 foreach ($prop_scan as $value) {
-                    if (($iteration == $totalScanPerMaterial) && ($kelebihan > 0 || $data->total < 0 ) ) {
+                    if (($iteration == $totalScanPerMaterial) && ($kelebihan > 0 || $data->total < 0)) {
                         $picking_qty = $data->total < 0 ? $value : $kelebihan;
                         abnormalMaterial::create([
                             'kit_no' => $this->po,
@@ -422,7 +424,7 @@ class PurchaseOrderIn extends Component
                             'setup_by' => $prop_ori['setup_by'],
                         ]);
                         $sisaTerakhir = $value - $picking_qty;
-                        if($sisaTerakhir > 0){
+                        if ($sisaTerakhir > 0) {
                             itemIn::create([
                                 'pallet_no' => $this->paletCode,
                                 'material_no' => $data->material,
@@ -437,7 +439,7 @@ class PurchaseOrderIn extends Component
                                 'setup_by' => $prop_ori['setup_by'],
                             ]);
                         }
-                    }else{
+                    } else {
                         itemIn::create([
                             'pallet_no' => $this->paletCode,
                             'material_no' => $data->material,
@@ -605,7 +607,7 @@ class PurchaseOrderIn extends Component
         $joinCondition = function ($join) {
             $join->on('a.material_no', '=', 'b.material_no')
                 ->on('a.kit_no', '=', 'b.kit_no');
-                // ->where('b.pallet_no', $this->paletCode);
+            // ->where('b.pallet_no', $this->paletCode);
         };
         $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty',  'scanned_time'];
 
@@ -614,7 +616,7 @@ class PurchaseOrderIn extends Component
                 $join->on('a.material_no', '=', 'b.material_no')
                     ->on('a.kit_no', '=', 'b.kit_no')
                     ->on('a.line_c', '=', 'b.line_c');
-                    // ->where('b.pallet_no', $this->paletCode);
+                // ->where('b.pallet_no', $this->paletCode);
             };
         }
 
