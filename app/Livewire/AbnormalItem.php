@@ -9,10 +9,14 @@ use App\Exports\InStockExport;
 use Illuminate\Support\Facades\DB;
 use App\Exports\InStockExportExcel;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ReceivingSupplierReport;
+use App\Models\PaletRegister;
+use Illuminate\Support\Facades\Storage;
+use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class AbnormalItem extends Component
 {
-    public $dataCetak, $searchKey, $status='-',$userid,$isAdmin;
+    public $dataCetak, $searchKey, $status = '-', $userid, $isAdmin;
 
     public function __construct()
     {
@@ -31,7 +35,7 @@ class AbnormalItem extends Component
                 $query->where('status', $this->status);
             })
             ->groupBy(['material_no', 'pallet_no', 'trucking_id', 'locate', 'status']);
-            
+
         $query->where(function ($query) {
             $query->where('pallet_no', 'like', "%$this->searchKey%")->orWhere('material_no', 'like', "%$this->searchKey%");
         });
@@ -50,9 +54,7 @@ class AbnormalItem extends Component
         ]);
     }
 
-    public function statusChange()
-    {
-    }
+    public function statusChange() {}
 
     public function konfirmasi($id)
     {
@@ -68,7 +70,7 @@ class AbnormalItem extends Component
             'pallet_no' => $data->pallet_no,
             'material_no' => $data->material_no,
             'qty' => $data->qty,
-            'pax' => $data->pax
+            'pax' => $data->pax,
         ];
         $this->dispatch('modalConfirm', $res);
     }
@@ -77,7 +79,7 @@ class AbnormalItem extends Component
     public function kembalikan($req)
     {
         $split = explode("|", $req);
-                
+
         DB::table('abnormal_materials')
             ->where('pallet_no', $split[0])
             ->where('material_no', $split[1])
@@ -93,33 +95,27 @@ class AbnormalItem extends Component
     #[On('savingToStock')]
     public function savingToStock($req)
     {
-        $dataDetail = DB::table('abnormal_materials')
-            ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax,locate,trucking_id,line_c,setup_by,surat_jalan,kit_no')
-            ->groupBy(['material_no', 'pallet_no','locate','trucking_id','line_c','setup_by','surat_jalan','kit_no'])
+        $dataDetail = DB::table('abnormal_materials as a')
+            ->leftJoin('material_mst as b', 'a.material_no', '=', 'b.matl_no')
+
+            ->select('pallet_no', 'material_no as material', 'b.matl_nm', 'picking_qty as counter', 'locate', 'trucking_id', 'line_c', 'setup_by', 'surat_jalan', 'kit_no')
             ->where('pallet_no', $req['pallet_no'])
             ->when($this->isAdmin == 0, function ($query) {
                 $query->where('user_id', $this->userid);
             })
             ->where('material_no', $req['material_no']);
-            dump($dataDetail->toRawSql());
-        $data = $dataDetail->first();
-        $perpax = $req['qty'] / $data->pax;
-        $picking_qty = round($perpax);
-        $total = $req['qty'];
-        for ($i = 0; $i < $req['pax']; $i++) {
-            if ($total > $picking_qty) {
-                $total = $total - $picking_qty;
-            }else{
-                $picking_qty = $total;
-            }
+            
+        $detail = $dataDetail->get();
+        foreach ($detail as $data) {
+            $data->counter  = (int) $data->counter;
             itemIn::create([
                 'pallet_no' => $data->pallet_no,
-                'material_no' => $data->material_no,
-                'picking_qty' => $picking_qty,
+                'material_no' => $data->material,
+                'picking_qty' => $data->counter,
                 'locate' => $data->locate,
                 'trucking_id' => $data->trucking_id,
                 'user_id' => $this->userid,
-                'line_c'=> $data->line_c,
+                'line_c' => $data->line_c,
                 'setup_by' => $data->setup_by,
                 'surat_jalan' => $data->surat_jalan,
                 'kit_no' => $data->kit_no
@@ -131,13 +127,27 @@ class AbnormalItem extends Component
             ->where('material_no', $req['material_no'])
             ->where('user_id', $this->userid)
             ->delete();
-        
-        return $this->dispatch('notif', [
+
+        $this->dispatch('notif', [
             'icon' => 'success',
             'title' => 'Success save to stock',
         ]);
+        $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi', $data->pallet_no)->latest()->first();
+        if ($dataPaletRegister) {
+            $generator = new BarcodeGeneratorPNG();
+            $barcode = $generator->getBarcode($dataPaletRegister->palet_no, $generator::TYPE_CODE_128);
+            Storage::put('public/barcodes/' . $dataPaletRegister->palet_no . '.png', $barcode);
+            $dataPrint = [
+                'data' => $detail,
+                'palet_no' => $dataPaletRegister->palet_no,
+                'issue_date' => $dataPaletRegister->issue_date,
+                'line_c' => $dataPaletRegister->line_c,
+                'abnormal'=>true,
+            ];
+            return Excel::download(new ReceivingSupplierReport($dataPrint), "Receiving kelebihan ASSY_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+        }
 
-        // dump($data, $req);
+        
     }
 
 

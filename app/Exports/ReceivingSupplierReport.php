@@ -132,7 +132,7 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
                 $lastRow = $this->count + 8;
 
                 $sign1 = $lastRow + 3;
-                $sheet->setCellValue('D'.$sign1-1, "   ");
+                $sheet->setCellValue('D' . $sign1 - 1, "   ");
                 // $sheet->setCellValue('D'.$lastRow+1, "   ");
 
                 $sheet->setCellValue('D' . $sign1, " Created by");
@@ -151,8 +151,7 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
                 $event->sheet->getDelegate()->getStyle("F" . $sign1 . ":F" . $sign1 + 5)->applyFromArray($border);
 
                 $sheet->getDelegate()->getStyle('D' . $sign1 . ':F' . $sign1)->getFont()->setBold(true);
-                $event->sheet->getDelegate()->getStyle('A1:F'.$sign1)->getFont()->setSize(18);
-
+                $event->sheet->getDelegate()->getStyle('A1:F' . $sign1)->getFont()->setSize(18);
             }
         ];
     }
@@ -163,9 +162,15 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
         $drawing = new Drawing();
         $drawing->setName('Logo');
         $drawing->setDescription('This is my logo');
-        $drawing->setPath(public_path('storage/barcodes/' . $this->palet_no . '.png'));
-        $drawing->setHeight(60);
-        $drawing->setWidth(350);
+        if ($this->palet_no != '-') {
+            $drawing->setPath(public_path('storage/barcodes/' . $this->palet_no . '.png'));
+            $drawing->setHeight(60);
+            $drawing->setWidth(350);
+        } else {
+            $drawing->setPath(public_path('no-qr.png'));
+            $drawing->setHeight(30);
+            $drawing->setWidth(175);
+        }
         $drawing->setCoordinates('D4');
         return $drawing;
     }

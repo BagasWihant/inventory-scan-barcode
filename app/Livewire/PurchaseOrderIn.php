@@ -532,6 +532,14 @@ class PurchaseOrderIn extends Component
                 return Excel::download(new ReceivingSupplierReport($dataPrint), "Receiving ASSY_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
             } else {
                 $this->dispatch('confirmation');
+                $dataPrint = [
+                    'data' => $loopData,
+                    'issue_date' => '-',
+                    'line_c' => '-',
+                    'palet_no'=>'-'
+                ];
+                return Excel::download(new ReceivingSupplierReport($dataPrint), "Receiving ASSY_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+
                 // return $this->dispatch('alert', ['title' => 'Succes', 'time' => 5000, 'icon' => 'succes', 'text' => 'material saved succesfully without palet']);
                 // $this->resetPage();
             }
