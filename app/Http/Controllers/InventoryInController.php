@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class InventoryInController extends Controller
@@ -13,26 +14,29 @@ class InventoryInController extends Controller
     public function index()
     {
         return view('pages.list-product');
-        
     }
 
-    public function materialRegistrasi() {
+    public function materialRegistrasi()
+    {
         return view('pages.materialRegis');
     }
     public function po()
     {
         return view('pages.po');
     }
-    
-    public function abnormal() {
+
+    public function abnormal()
+    {
         return view('pages.abnormal-item');
     }
-    
 
-    public function instock() {
+
+    public function instock()
+    {
         return view('pages.material-instock');
     }
-    public function checking() {
+    public function checking()
+    {
         return view('pages.checking-stock');
     }
     public function detail()
@@ -44,27 +48,43 @@ class InventoryInController extends Controller
         return view('pages.prepare-taking');
     }
 
-    public function inputStockTaking(){
+    public function inputStockTaking()
+    {
         return view('pages.input-taking');
     }
-    public function resultStockTaking(){
+    public function resultStockTaking()
+    {
         return view('pages.result-taking');
     }
-    
-    public function confStockTaking(){
+
+    public function confStockTaking()
+    {
         return view('pages.taking-conf');
     }
 
-    public function reportStockTaking(){
+    public function reportStockTaking()
+    {
         return view('pages.report-taking');
     }
 
-    public function register_palet() {
-     return view('pages.setup-stock-supplier');   
+    public function register_palet()
+    {
+        return view('pages.setup-stock-supplier');
     }
 
-    public function create_palet() {
+    public function create_palet()
+    {
         return view('pages.create-new-palet');
     }
 
+    public function menu_sup($nik)
+    {
+
+        $uss = User::where('nik', $nik)->select('id')->first();
+        if (!$uss) {
+            return abort(404);
+        }
+        $id = $uss->id;
+        return view('pages.single.menu-recv-sup', compact('id'));
+    }
 }

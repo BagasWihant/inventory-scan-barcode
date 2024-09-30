@@ -30,4 +30,8 @@ Route::middleware('auth')->group(function () {
     });
 });
 
+Route::controller(InventoryInController::class)->group(function(){
+    Route::get('nik/{nik}/recv_sup/', 'menu_sup')->name('inventory.menu_sup');
+});
+
 require __DIR__ . '/auth.php';
