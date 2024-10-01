@@ -74,7 +74,7 @@
                 [
                     'url' => route('result.stock.taking'),
                     'label' => 'Stock Taking Result',
-                    'direksi'=>'',
+                    'direksi' => '',
                     'icon' =>
                         '<svg class="w-5 h-5" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g fill="none"> <path d="M22 142.576h10.702M22 114.712h10.702M22 22v148h148M21.995 32.934h10.702m-10.702 27.32h10.702M21.995 87.356h10.702" style="fill:#000000;fill-opacity:0;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:6;stroke-dasharray:none;paint-order:stroke fill markers" fill="none"></path> <path d="M68.842 128.695a10.782 10.782 0 0 1-10.781 10.781 10.782 10.782 0 0 1-10.782-10.781 10.782 10.782 0 0 1 10.782-10.782 10.782 10.782 0 0 1 10.781 10.782zM95.06 76.358A10.782 10.782 0 0 1 84.277 87.14a10.782 10.782 0 0 1-10.782-10.782 10.782 10.782 0 0 1 10.782-10.782 10.782 10.782 0 0 1 10.781 10.782Zm43.576 36.396a10.782 10.782 0 0 1-10.782 10.781 10.782 10.782 0 0 1-10.781-10.781 10.782 10.782 0 0 1 10.781-10.782 10.782 10.782 0 0 1 10.782 10.782zm21.604-73.396a10.782 10.782 0 0 1-10.782 10.782 10.782 10.782 0 0 1-10.782-10.782 10.782 10.782 0 0 1 10.782-10.781 10.782 10.782 0 0 1 10.781 10.781z" style="fill-opacity:0;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:6;paint-order:stroke fill markers"></path> <path d="m64.38 118.198 14.117-31.362m15.08-2.424 24.333 21.124m13.668-4.067 15.53-52.393" style="fill:#000000;fill-opacity:0;stroke:#000000;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:6;stroke-dasharray:none;paint-order:stroke fill markers" fill="none"></path> </g> </g></svg>',
                 ],
@@ -100,6 +100,13 @@
             'url' => route('create_palet'),
             'label' => 'Create New Pallet',
             'hidden' => true,
+        ],
+        [
+            'url' => 'http://172.16.250.5/it/',
+            'label' => 'File Manager',
+            'new_tab' => '',
+            'icon' =>
+                '<svg class="w-5 h-5" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M0 0h48v48H0z" fill="none"></path> <g id="Shopicon"> <path d="M25.662,19.651C26.402,19.877,27.187,20,28,20c4.418,0,8-3.582,8-8s-3.582-8-8-8c-2.212,0-4.214,0.898-5.662,2.349 C21.598,6.123,20.814,6,20,6c-4.418,0-8,3.582-8,8s3.582,8,8,8C22.212,22,24.214,21.102,25.662,19.651z M28,8c2.206,0,4,1.794,4,4 s-1.794,4-4,4c-2.206,0-4-1.794-4-4S25.795,8,28,8z M16,14c0-2.206,1.794-4,4-4c0.088,0,0.169,0.02,0.256,0.026 C20.095,10.658,20,11.317,20,12c0,2.079,0.8,3.967,2.1,5.389C21.488,17.77,20.773,18,20,18C17.795,18,16,16.206,16,14z"></path> <path d="M30,24c-5.952,0-10.813,1.913-12.9,4.777c-1.05-0.914-1.862-1.813-2.3-2.379c-1.986-2.643-5.754-3.181-8.4-1.198 c-2.646,1.984-3.185,5.753-1.199,8.4C5.519,34.025,13.131,44,24,44h20V32C44,27.439,37.981,24,30,24z M8.4,31.2 c-0.662-0.882-0.482-2.139,0.397-2.8c0.36-0.27,0.783-0.399,1.201-0.399c0.608,0,1.207,0.274,1.596,0.791 C11.647,28.864,17.026,36,24,36h8v-2l0,0v-2h-8c-1.229,0-2.46-0.385-3.61-0.962C21.518,29.573,25.025,28,30,28 c6.104,0,10,2.369,10,4v8h-2H24C15.107,40,8.669,31.559,8.4,31.2z"></path> </g> </g></svg>',
         ],
     ];
 @endphp
@@ -155,7 +162,7 @@
                             @if (isset($ch['direksi']))
 
                                 <li>
-                                    <a href="{{ $ch['url'] }}"
+                                    <a href="{{ $ch['url'] }}" {{ isset($ch['new_tab']) ? 'target="_blank"' : '' }}
                                         class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 group @if (url()->current() === $ch['url']) bg-gray-400 dark:bg-gray-500 @endif">
                                         @if (isset($ch['icon']))
                                             <div class="!w-5 !h-5">{!! $ch['icon'] !!}</div>
@@ -184,6 +191,7 @@
                                 @if (auth()->user()->Role_ID == '3' || auth()->user()->Admin == '1')
                                     <li>
                                         <a href="{{ $ch['url'] }}"
+                                            {{ isset($ch['new_tab']) ? 'target="_blank"' : '' }}
                                             class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 group @if (url()->current() === $ch['url']) bg-gray-400 dark:bg-gray-500 @endif">
                                             @if (isset($ch['icon']))
                                                 <div class="!w-5 !h-5">{!! $ch['icon'] !!}</div>
@@ -207,7 +215,9 @@
                             @else
                                 <li>
                                     <a href="{{ $ch['url'] }}"
+                                        {{ isset($ch['new_tab']) ? 'target="_blank"' : 'bagas' }}
                                         class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 group @if (url()->current() === $ch['url']) bg-gray-400 dark:bg-gray-500 @endif">
+
                                         @if (isset($ch['icon']))
                                             <div class="!w-5 !h-5">{!! $ch['icon'] !!}</div>
                                         @else
@@ -232,7 +242,7 @@
                 </ul>
             @else
                 @if (!isset($m['hidden']))
-                    <a href="{{ $m['url'] }}" wire:navigate
+                    <a href="{{ $m['url'] }}" {{ isset($m['new_tab']) ? 'target="_blank"' : 'wire:navigate'}}
                         class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group @if (url()->current() === $m['url']) bg-gray-400 dark:bg-gray-500 @endif">
                         <svg class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
                             aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
