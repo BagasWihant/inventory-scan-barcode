@@ -11,11 +11,20 @@
             <input wire:model.live.debounce="searchPalet" type="text" autocomplete="off" placeholder="Search Palet"
                 class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
         </div>
-        <div class="w-1/6">
+        <div class="">
             <select wire:model.live="status" class="p-2 text-gray-900 border border-gray-300 rounded-lg  ">
                 <option value="-">Status</option>
                 <option value="supply">Supply</option>
                 <option value="not">Belum Supply</option>
+            </select>
+        </div>
+        <div class="">
+            <select wire:model.live="lokasi" class="p-2 text-gray-900 border border-gray-300 rounded-lg  ">
+                <option value="-">Lokasi</option>
+                <option value="V-01">V-01</option>
+                <option value="V-02">V-02</option>
+                <option value="V-03">V-03</option>
+                <option value="V-04">V-04</option>
             </select>
         </div>
 
@@ -62,6 +71,9 @@
                         No Pallet
                     </th>
                     <th scope="col" class="px-6 py-3">
+                        Lokasi
+                    </th>
+                    <th scope="col" class="px-6 py-3">
                         Line C
                     </th>
                     <th scope="col" class="px-6 py-3">
@@ -85,6 +97,9 @@
                             {{ $product->palet_no }}
                         </th>
                         <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            {{ $product->lokasi }}
+                        </th>
+                        <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                             {{ $product->line_c }}
                         </th>
                         <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -95,28 +110,32 @@
                         </th>
                         <th scope="row" class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                             <button class="bg-blue-500  text-white font-bold py-2 px-4 rounded-lg"
-                                data-modal-target="static-modal" data-modal-toggle="static-modal"
-                                wire:click="detail('{{ $product->palet_no }}')">Detail</button>
+                                wire:click="editLokasi('{{ $product->palet_no }}')">Edit Lokasi</button>
+                            <button class="bg-blue-500  text-white font-bold py-2 px-4 rounded-lg"
+                                onclick="openModal('{{ $product->palet_no }}')">Detail</button>
                         </th>
                     </tr>
                 @endforeach
             </tbody>
         </table>
         {{ $listMaterial->links() }}
-        <div id="static-modal" data-modal-backdrop="static" tabindex="-1" aria-hidden="true" wire:ignore.self
-            class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-            <div class="relative p-4 w-full max-w-2xl max-h-full">
+
+
+        <div id="overlayModal" tabindex="-1" aria-hidden="true" wire:ignore.self
+            class="max-h-screen bg-slate-200/60 backdrop-filter backdrop-blur-sm overflow-hiden hidden fixed top-0 right-0 left-0 z-10 justify-center items-center w-full md:inset-0 h-screen ">
+            <div wire:ignore.self
+                class="relative p-4 opacity-0 transform -translate-y-full scale-150 bg-white rounded-xl shadow-lg  transition-transform duration-200"
+                id="modal">
                 <!-- Modal content -->
-                <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                <div class="relative max-h-screen">
                     <!-- Modal header -->
-                    <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                    <div class="flex items-center justify-between px-4 md:px-5 rounded-t dark:border-gray-600">
                         <div class="flex justify-between w-full font-bold">
                             <p class="font-bold">{{ $no_palet_modal }}</p>
                             <strong class=" ">{{ $scan_date_modal }} </strong>
                         </div>
-                        <button type="button"
-                            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                            data-modal-hide="static-modal">
+                        <button onclick="closeModal()" type="button"
+                            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
                             <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                                 fill="none" viewBox="0 0 14 14">
                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
@@ -125,8 +144,13 @@
                             <span class="sr-only">Close modal</span>
                         </button>
                     </div>
-                    <!-- Modal body -->
-                    <div class="p-2">
+                    <div class="flex justify-start py-2">
+                        <button type="button" wire:click="exportDetailExcel"
+                            class="text-white bg-green-500 hover:bg-green-800 font-medium rounded-full text-sm px-3 py-1 text-center">Export
+                            Excel</button>
+                    </div>
+                    <div class="overflow-y-auto max-h-[568px]">
+                        <!-- Modal body -->
                         @if (count($listMaterialDetail) > 0)
                             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                                 <thead
@@ -171,24 +195,98 @@
                             </table>
                         @endif
                     </div>
-                    <!-- Modal footer -->
+
                     <div
                         class="flex items-center justify-end p-2 border-t border-gray-200 rounded-b dark:border-gray-600">
                         <button type="button" wire:click="print('{{ $no_palet_modal }}')"
                             class="py-2 px-3 ms-3 text-sm font-medium focus:outline-none bg-blue-500 text-white rounded-lg border border-gray-200 hover:bg-blue-200 hover:text-black focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Print</button>
-                        <button data-modal-hide="static-modal" type="button"
+                        <button onclick="closeModal()"
                             class="py-2 px-3 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
                     </div>
                 </div>
+
             </div>
         </div>
     @endif
 </div>
+<script>
+    const modal_overlay = document.querySelector('#overlayModal');
+    const modal = document.querySelector('#modal');
+    const modalCl = modal.classList
+    const overlayCl = modal_overlay
 
+    function openModal(palet) {
+        @this.detail(palet)
+
+        overlayCl.classList.remove('hidden')
+        overlayCl.classList.add('flex');
+        setTimeout(() => {
+            modalCl.remove('opacity-0')
+            modalCl.remove('-translate-y-full')
+            modalCl.remove('scale-150')
+        }, 500);
+
+    }
+
+    function closeModal() {
+        modalCl.add('-translate-y-full')
+        setTimeout(() => {
+            modalCl.add('opacity-0')
+            modalCl.add('scale-150')
+            overlayCl.classList.add('hidden')
+        }, 500);
+    }
+</script>
 @script
     <script>
-        $wire.on('detailShow', (event) => {
-            Swal
+        $wire.on('swalEditLokasi', (event) => {
+            html = `<select id="lokasiEdit" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option ${event[0].data.lokasi == '' ? 'selected' : ''} selected>Pilih Lokasi</option>
+                        <option ${event[0].data.lokasi == 'V-01' ? 'selected' : ''} value="V-01">V-01</option>
+                        <option ${event[0].data.lokasi == 'V-02' ? 'selected' : ''} value="V-02">V-02</option>
+                        <option ${event[0].data.lokasi == 'V-03' ? 'selected' : ''} value="V-03">V-03</option>
+                        <option ${event[0].data.lokasi == 'V-04' ? 'selected' : ''} value="V-04">V-04</option>
+                    </select>`
+
+            Swal.fire({
+                title: "Update Lokasi",
+                showDenyButton: true,
+                showCancelButton: true,
+                showCancelButton: false,
+                confirmButtonText: "Update",
+                denyButtonText: `Tidak`,
+                html: html,
+                preConfirm: () => {
+                    return [
+                        document.getElementById("lokasiEdit").value,
+                    ];
+                }
+            }).then((result) => {
+                /* Read more about isConfirmed, isDenied below */
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Your work has been saved",
+                        showConfirmButton: false,
+                        timer: 1100
+                    });
+                    $wire.dispatch('savingUpdateLokasi', {
+                        lokasi: result.value[0]
+                    })
+                } else if (result.isDenied) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Batal",
+                        showConfirmButton: false,
+                        timer: 1100
+                    });
+                }
+            });
+        })
+        $wire.on('showModal', () => {
+            // const el = document.getElementById("static-modal")
+            // const modal = new Modal(el);
+            // modal.show()
         })
     </script>
 @endscript
