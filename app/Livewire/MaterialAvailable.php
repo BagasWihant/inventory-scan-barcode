@@ -103,37 +103,4 @@ class MaterialAvailable extends Component
 
         return view('livewire.material-available', compact('listData'));
     }
-
-    private function getQuantityOutSubquery()
-    {
-        return "
-            (SELECT SUM(te.Qty) AS qty, te.part_number
-            FROM (
-                SELECT SUM(qty_mc) AS Qty, part_number
-                FROM siws_materialrequest.dbo.dtl_transaction
-                WHERE " . $this->filterTanggal('transaction_date') . $this->filterMaterial('part_number') . "
-                GROUP BY part_number
-
-                UNION ALL
-
-                SELECT SUM(qty) AS Qty, c.material_no AS part_number 
-                FROM Setup_dtl c
-                LEFT JOIN Setup_mst b ON b.id = c.setup_id 
-                WHERE b.finished_at IS NOT NULL
-                    AND " . $this->filterTanggal('c.created_at') . $this->filterMaterial('c.material_no') . "
-                GROUP BY c.material_no
-            ) te 
-            GROUP BY te.part_number
-        ) AS qo";
-    }
-
-    private function filterTanggal($field)
-    {
-        return "CONVERT(date, {$field}) BETWEEN ? AND ?";
-    }
-
-    private function filterMaterial($field)
-    {
-        return $this->searchMat ? " AND {$field} = ?" : "";
-    }
 }
