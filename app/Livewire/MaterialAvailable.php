@@ -53,7 +53,7 @@ class MaterialAvailable extends Component
     }
     public function render()
     {
-        $qdate1 = "where convert(date,pick_date) between '$this->dateStart' and '$this->dateEnd'";
+        $qdate1 = "where convert(date,transaction_date) between '$this->dateStart' and '$this->dateEnd'";
         $qdate2 = "and convert(date,c.created_at) between '$this->dateStart' and '$this->dateEnd'";
 
         $query =  DB::table('material_in_stock AS mis')
