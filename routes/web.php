@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
         Route::get('result-taking', 'resultStockTaking')->name('result.stock.taking')->withoutMiddleware('isPrepareStockTaking');
         Route::get('conf-taking', 'confStockTaking')->name('conf.stock.taking')->withoutMiddleware('isPrepareStockTaking');
         Route::get('report-taking', 'reportStockTaking')->name('report.stock.taking')->withoutMiddleware('isPrepareStockTaking');
+        Route::get('material-available', 'materialAvailable')->name('material.available')->withoutMiddleware('isPrepareStockTaking');
     });
 });
 

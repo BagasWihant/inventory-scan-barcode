@@ -77,6 +77,10 @@ class InventoryInController extends Controller
         return view('pages.create-new-palet');
     }
 
+    public function materialAvailable() {
+        return view('pages.material-available');
+    }
+
     public function menu_sup($nik)
     {
 
