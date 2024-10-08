@@ -31,14 +31,14 @@ class MaterialAvailable extends Component
         $this->listMaterial = [];
     }
 
-    public function resetFilter() {
+    public function resetFilter()
+    {
         $this->matDisable   = false;
         $this->searchMat = null;
         $this->listMaterial = [];
         $this->resetBtn = false;
         $this->dateStart = null;
         $this->dateEnd = null;
-
     }
     public function showData()
     {
@@ -48,13 +48,31 @@ class MaterialAvailable extends Component
             $this->dateEnd = date('Y-m-d');
         }
 
-        // $this->listData = $query->paginate(19);
-        // collect($query)->paginate(12);
     }
     public function render()
     {
-        $qdate1 = "where convert(date,transaction_date) between '$this->dateStart' and '$this->dateEnd'";
-        $qdate2 = "and convert(date,c.created_at) between '$this->dateStart' and '$this->dateEnd'";
+        $dateRange = [$this->dateStart, $this->dateEnd];
+
+        $subQuery = DB::table(function ($query) use ($dateRange) {
+            $query->select(DB::raw('SUM(qty_mc) AS Qty'), 'part_number')
+                ->from('siws_materialrequest.dbo.dtl_transaction')
+                ->whereBetween(DB::raw('CONVERT(date, transaction_date)'), $dateRange)
+                ->when($this->searchMat, function ($q) {
+                    $q->where('part_number', $this->searchMat);
+                })
+                ->groupBy('part_number')
+                ->unionAll(
+                    DB::table('Setup_dtl AS c')
+                        ->select(DB::raw('SUM(qty) AS Qty'), DB::raw('c.material_no AS part_number'))
+                        ->leftJoin('Setup_mst AS b', 'b.id', '=', 'c.setup_id')
+                        ->whereNotNull('b.finished_at')
+                        ->when($this->searchMat, function ($q) {
+                            $q->where('c.material_no', $this->searchMat);
+                        })
+                        ->whereBetween(DB::raw('CONVERT(date, c.created_at)'), $dateRange)
+                        ->groupBy('c.material_no')
+                );
+        },'te')->select(DB::raw('SUM(Qty) AS qty'), 'part_number')->groupBy('part_number');
 
         $query =  DB::table('material_in_stock AS mis')
             ->select(
@@ -66,41 +84,56 @@ class MaterialAvailable extends Component
                 DB::raw('sum(mst.qty) as qty_now'),
                 'mst.loc_cd'
             )
-            ->leftJoin(
-                DB::raw("(SELECT SUM(te.Qty) AS qty,te.part_number
-                FROM (SELECT SUM(qty_mc) AS Qty, part_number
-                    FROM siws_materialrequest.dbo.dtl_transaction $qdate1
-                    GROUP BY part_number
-
-                    UNION ALL
-
-                    SELECT SUM(qty) AS Qty, c.material_no AS part_number 
-                    FROM Setup_dtl c
-                    LEFT JOIN Setup_mst b ON b.id = c.setup_id 
-                    WHERE b.finished_at IS NOT NULL $qdate2
-                    GROUP BY c.material_no
-                ) te GROUP BY te.part_number) AS qo"),
-                'mis.material_no',
-                '=',
-                'qo.part_number'
-            )
+            ->leftJoinSub($subQuery, 'qo', function ($join) {
+                $join->on('mis.material_no', '=', 'qo.part_number');
+            })
             ->leftJoin('material_mst as mst', 'mis.material_no', 'mst.matl_no')
-            ->whereRaw('convert(date,mis.created_at) between ? and ?', [$this->dateStart, $this->dateEnd])
+            ->whereRaw('convert(date,mis.created_at) between ? and ?', $dateRange)
             ->when($this->searchMat, function ($q) {
                 $q->where('mis.material_no', $this->searchMat);
             })
-            ->whereNot('mst.loc_cd', 'ASSY')
-            ->groupBy(
-                'mis.material_no',
-                'mst.loc_cd'
-            )->orderBy('mis.material_no');
-
+            ->where('mst.loc_cd', '!=', 'ASSY')
+            ->groupBy('mis.material_no', 'mst.loc_cd')
+            ->orderBy('mis.material_no');
         $listData = [];
-        if ($this->dateStart && $this->dateEnd) {
+        if ($this->dateStart && $this->dateEnd && $this->resetBtn) {
             $listData = $query->paginate(20);
         }
 
 
         return view('livewire.material-available', compact('listData'));
+    }
+
+    private function getQuantityOutSubquery()
+    {
+        return "
+            (SELECT SUM(te.Qty) AS qty, te.part_number
+            FROM (
+                SELECT SUM(qty_mc) AS Qty, part_number
+                FROM siws_materialrequest.dbo.dtl_transaction
+                WHERE " . $this->filterTanggal('transaction_date') . $this->filterMaterial('part_number') . "
+                GROUP BY part_number
+
+                UNION ALL
+
+                SELECT SUM(qty) AS Qty, c.material_no AS part_number 
+                FROM Setup_dtl c
+                LEFT JOIN Setup_mst b ON b.id = c.setup_id 
+                WHERE b.finished_at IS NOT NULL
+                    AND " . $this->filterTanggal('c.created_at') . $this->filterMaterial('c.material_no') . "
+                GROUP BY c.material_no
+            ) te 
+            GROUP BY te.part_number
+        ) AS qo";
+    }
+
+    private function filterTanggal($field)
+    {
+        return "CONVERT(date, {$field}) BETWEEN ? AND ?";
+    }
+
+    private function filterMaterial($field)
+    {
+        return $this->searchMat ? " AND {$field} = ?" : "";
     }
 }
