@@ -6,53 +6,60 @@
         <div class="flex justify-between py-6">
 
             <div class="flex  gap-4">
-            <div class="">
-                <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Date
-                </label>
-                <div class="flex items-center">
-                    <div class="relative" wire:ignore>
+                <div class="">
+                    <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Date
+                    </label>
+                    <div class="flex items-center">
+                        <div class="relative" wire:ignore>
 
-                        <input id="dtstart" type="date" wire:model="dateStart" onfocus="this.showPicker()"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="Select date start">
-                    </div>
-                    <span class="mx-2 text-gray-500">to</span>
-                    <div class="relative" wire:ignore>
-                        <input id="dtend" type="date" wire:model="dateEnd" onfocus="this.showPicker()"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="Select date end">
-                    </div>
-                </div>
-            </div>
-            <div class="">
-                <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material
-                    No
-                </label>
-                <input wire:model="searchMat" wire:keydown.debounce.300ms="matChange" type="text"
-                    @if ($matDisable) disabled @endif autocomplete="off"
-                    class="@if ($matDisable) bg-gray-100 @endif block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-
-                <div class="absolute">
-                    <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
-                        wire:target="matChange">Searching</div>
-                    <div wire:loading.remove class="rounded-lg bg-slate-50 shadow">
-
-                        @if (strlen($searchMat) >= 3 && !$matDisable)
-                            @forelse ($listMaterial as $p)
-                                <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
-                                    wire:click="chooseMat('{{ $p->material }}')">{{ $p->material }}
-                                </div>
-                            @empty
-                                <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
-                            @endforelse
-                        @endif
+                            <input id="dtstart" type="date" wire:model="dateStart" onfocus="this.showPicker()"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="Select date start">
+                        </div>
+                        <span class="mx-2 text-gray-500">to</span>
+                        <div class="relative" wire:ignore>
+                            <input id="dtend" type="date" wire:model="dateEnd" onfocus="this.showPicker()"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="Select date end">
+                        </div>
                     </div>
                 </div>
+                <div class="">
+                    <label for="large-input"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material
+                        No
+                    </label>
+                    <input wire:model="searchMat" wire:keydown.debounce.300ms="matChange" type="text"
+                        @if ($matDisable) disabled @endif autocomplete="off"
+                        class="@if ($matDisable) bg-gray-100 @endif block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
-            </div>
+                    <div class="absolute">
+                        <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
+                            wire:target="matChange">Searching</div>
+                        <div wire:loading.remove class="rounded-lg bg-slate-50 shadow">
+
+                            @if (strlen($searchMat) >= 3 && !$matDisable)
+                                @forelse ($listMaterial as $p)
+                                    <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
+                                        wire:click="chooseMat('{{ $p->material }}')">{{ $p->material }}
+                                    </div>
+                                @empty
+                                    <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
+                                @endforelse
+                            @endif
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <div class=" justify-end">
+            <div class="flex items-center gap-3">
+                @if ($resetBtn)
+                    <button wire:click="resetFilter()"
+                        class="px-4 py-2  overflow-hidden text-sm font-medium text-slate-100 rounded-lg group bg-red-600">
+                        Reset
+                    </button>
+                @endif
                 <button wire:click="showData()"
                     class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-cyan-500 to-blue-500 group-hover:from-cyan-500 group-hover:to-blue-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
                     <span
@@ -71,11 +78,11 @@
                             Material Code
                         </div>
                     </th>
-                    <th scope="col" class="px-6 py-3">
+                    {{-- <th scope="col" class="px-6 py-3">
                         <div class="flex items-center">
                             Tanggal
                         </div>
-                    </th>
+                    </th> --}}
                     <th scope="col" class="px-6 py-3">
                         <div class="flex items-center">
                             Lokasi
@@ -109,9 +116,9 @@
                         <td class="px-6 py-4">
                             {{ $d->material_no }}
                         </td>
-                        <td class="px-6 py-4">
+                        {{-- <td class="px-6 py-4">
                             {{ $d->tgl }}
-                        </td>
+                        </td> --}}
                         <td class="px-6 py-4">
                             {{ $d->loc_cd }}
                         </td>

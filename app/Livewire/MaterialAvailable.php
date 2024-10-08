@@ -10,17 +10,18 @@ class MaterialAvailable extends Component
 {
     use WithPagination;
     public $dateStart, $dateEnd, $searchMat, $matDisable = false, $listMaterial = [];
+    public $resetBtn = false;
 
 
     public function matChange()
     {
         if (strlen($this->searchMat) >= 3) {
-            $this->listMaterial = DB::table('material_in_stock')->distinct()
+            $this->listMaterial = DB::table('material_in_stock as  mis')->distinct()
                 ->select('material_no as material')
+                ->leftJoin('material_mst as mst', 'mis.material_no', 'mst.matl_no')
+                ->whereNot('mst.loc_cd', "ASSY")
                 ->where('material_no', 'like', '%' . $this->searchMat . '%')->limit(15)
                 ->get();
-
-            // dd($this->listMaterial);
         }
     }
     public function chooseMat($val)
@@ -28,11 +29,20 @@ class MaterialAvailable extends Component
         $this->matDisable   = true;
         $this->searchMat = $val;
         $this->listMaterial = [];
+    }
+
+    public function resetFilter() {
+        $this->matDisable   = false;
+        $this->searchMat = null;
+        $this->listMaterial = [];
+        $this->resetBtn = false;
+        $this->dateStart = null;
+        $this->dateEnd = null;
 
     }
     public function showData()
     {
-
+        $this->resetBtn = true;
         if (!$this->dateStart && !$this->dateEnd) {
             $this->dateStart = '2024-07-01';
             $this->dateEnd = date('Y-m-d');
@@ -49,7 +59,7 @@ class MaterialAvailable extends Component
         $query =  DB::table('material_in_stock AS mis')
             ->select(
                 'mis.material_no',
-                DB::raw('MIN(mis.created_at) as tgl'),
+                // DB::raw('MIN(mis.created_at) as tgl'),
                 DB::raw('SUM(mis.picking_qty) AS qty_in'),
                 DB::raw('COALESCE(SUM(qo.qty), 0) AS qty_out'),
                 DB::raw('(SUM(mis.picking_qty) - COALESCE ( SUM ( qo.qty ), 0 )) as qty_balance'),
@@ -79,13 +89,18 @@ class MaterialAvailable extends Component
             ->when($this->searchMat, function ($q) {
                 $q->where('mis.material_no', $this->searchMat);
             })
+            ->whereNot('mst.loc_cd', 'ASSY')
             ->groupBy(
                 'mis.material_no',
                 'mst.loc_cd'
             )->orderBy('mis.material_no');
-        // $this->listData = $query;
-        // dump($query->paginate(10));
-        // $listData = $this->listData;
-        return view('livewire.material-available', ['listData' => $query->paginate(19)]);
+
+        $listData = [];
+        if ($this->dateStart && $this->dateEnd) {
+            $listData = $query->paginate(20);
+        }
+
+
+        return view('livewire.material-available', compact('listData'));
     }
 }
