@@ -47,57 +47,73 @@ class MaterialAvailable extends Component
             $this->dateStart = '2024-07-01';
             $this->dateEnd = date('Y-m-d');
         }
-
     }
     public function render()
     {
-        $dateRange = [$this->dateStart, $this->dateEnd];
 
-        $subQuery = DB::table(function ($query) use ($dateRange) {
-            $query->select(DB::raw('SUM(qty_mc) AS Qty'), 'part_number')
-                ->from('siws_materialrequest.dbo.dtl_transaction')
-                ->whereBetween(DB::raw('CONVERT(date, transaction_date)'), $dateRange)
-                ->when($this->searchMat, function ($q) {
-                    $q->where('part_number', $this->searchMat);
-                })
-                ->groupBy('part_number')
-                ->unionAll(
-                    DB::table('Setup_dtl AS c')
-                        ->select(DB::raw('SUM(qty) AS Qty'), DB::raw('c.material_no AS part_number'))
-                        ->leftJoin('Setup_mst AS b', 'b.id', '=', 'c.setup_id')
-                        ->whereNotNull('b.finished_at')
-                        ->when($this->searchMat, function ($q) {
-                            $q->where('c.material_no', $this->searchMat);
-                        })
-                        ->whereBetween(DB::raw('CONVERT(date, c.created_at)'), $dateRange)
-                        ->groupBy('c.material_no')
-                );
-        },'te')->select(DB::raw('SUM(Qty) AS qty'), 'part_number')->groupBy('part_number');
+        $listData = [];
+        $startDate = $this->dateStart;
+        $endDate = $this->dateEnd;
+        $materialNo = $this->searchMat;
 
-        $query =  DB::table('material_in_stock AS mis')
+        $result = DB::query()
+            ->fromSub(function ($query) use ($startDate, $endDate, $materialNo) {
+                $query->from('material_in_stock as mis')
+                    ->select(
+                        'mis.material_no',
+                        DB::raw('SUM(mis.picking_qty) as total_picking_qty'),
+                        DB::raw('MIN(CONVERT(DATE, mis.created_at)) as first_created_at')
+                    )
+                    ->whereBetween(DB::raw('CONVERT(DATE, mis.created_at)'), [$startDate, $endDate])
+                    ->when($materialNo, function ($sub) use ($materialNo) {
+                     $sub->where( 'mis.material_no', $materialNo); 
+                    })
+                    ->groupBy('mis.material_no');
+            }, 'MaterialInStock')
+            ->leftJoinSub(function ($query) use ($startDate, $endDate, $materialNo) {
+                $query->fromSub(function ($subQuery) use ($startDate, $endDate, $materialNo) {
+                    $subQuery->from('siws_materialrequest.dbo.dtl_transaction')
+                        ->select('part_number', DB::raw('SUM(qty_mc) as Qty'))
+                        ->whereBetween(DB::raw('CONVERT(DATE, transaction_date)'), [$startDate, $endDate])
+                        ->when($materialNo, function ($sub) use ($materialNo) {
+                            $sub->where( 'part_number', $materialNo); 
+                           })
+                        ->groupBy('part_number')
+                        ->union(
+                            DB::table('Setup_dtl as c')
+                                ->leftJoin('Setup_mst as b', 'b.id', '=', 'c.setup_id')
+                                ->select('c.material_no as part_number', DB::raw('SUM(c.qty) as Qty'))
+                                ->whereNotNull('b.finished_at')
+                                ->whereBetween(DB::raw('CONVERT(DATE, c.created_at)'), [$startDate, $endDate])
+                                ->when($materialNo, function ($sub) use ($materialNo) {
+                                    $sub->where( 'c.material_no', $materialNo); 
+                                   })
+                                ->groupBy('c.material_no')
+                        );
+                }, 'combined_qty_out')
+                    ->select('part_number', DB::raw('SUM(Qty) as qty'))
+                    ->groupBy('part_number');
+            }, 'QuantityOut', 'MaterialInStock.material_no', '=', 'QuantityOut.part_number')
+            ->leftJoin('material_mst as mst', 'MaterialInStock.material_no', '=', 'mst.matl_no')
             ->select(
-                'mis.material_no',
-                // DB::raw('MIN(mis.created_at) as tgl'),
-                DB::raw('SUM(mis.picking_qty) AS qty_in'),
-                DB::raw('COALESCE(SUM(qo.qty), 0) AS qty_out'),
-                DB::raw('(SUM(mis.picking_qty) - COALESCE ( SUM ( qo.qty ), 0 )) as qty_balance'),
-                DB::raw('sum(mst.qty) as qty_now'),
+                'MaterialInStock.material_no',
+                DB::raw('MaterialInStock.total_picking_qty as qty_in'),
+                DB::raw('COALESCE(QuantityOut.qty, 0) as qty_out'),
+                DB::raw('(MaterialInStock.total_picking_qty - COALESCE(QuantityOut.qty, 0)) as qty_balance'),
+                DB::raw('SUM(mst.qty) as qty_now'),
                 'mst.loc_cd'
             )
-            ->leftJoinSub($subQuery, 'qo', function ($join) {
-                $join->on('mis.material_no', '=', 'qo.part_number');
-            })
-            ->leftJoin('material_mst as mst', 'mis.material_no', 'mst.matl_no')
-            ->whereRaw('convert(date,mis.created_at) between ? and ?', $dateRange)
-            ->when($this->searchMat, function ($q) {
-                $q->where('mis.material_no', $this->searchMat);
-            })
             ->where('mst.loc_cd', '!=', 'ASSY')
-            ->groupBy('mis.material_no', 'mst.loc_cd')
-            ->orderBy('mis.material_no');
-        $listData = [];
+            ->groupBy(
+                'MaterialInStock.material_no',
+                'MaterialInStock.total_picking_qty',
+                'QuantityOut.qty',
+                'mst.loc_cd'
+            )
+            ->orderBy('MaterialInStock.material_no');
+
         if ($this->dateStart && $this->dateEnd && $this->resetBtn) {
-            $listData = $query->paginate(20);
+            $listData = $result->paginate(20);
         }
 
 
