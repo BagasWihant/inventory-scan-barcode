@@ -28,7 +28,6 @@ class MaterialAvailable extends Component
     }
     public function chooseMat($val)
     {
-        $this->matDisable   = true;
         $this->searchMat = $val;
         $this->listMaterial = [];
     }
@@ -44,6 +43,7 @@ class MaterialAvailable extends Component
     }
     public function showData()
     {
+        $this->matDisable   = true;
         $this->resetBtn = true;
         if (!$this->dateStart && !$this->dateEnd) {
             $this->dateStart = '2024-07-01';
@@ -79,7 +79,9 @@ class MaterialAvailable extends Component
                     ->whereBetween(DB::raw('CONVERT(DATE, mis.created_at)'), [$startDate, $endDate])
                     ->when($materialNo, function ($sub) use ($materialNo) {
                         $sub->where('mis.material_no', $materialNo);
-                    })->where('mis.locate', '!=', 'ASSY')
+                    })->where(function ($sub) {
+                        $sub->where('mis.locate', '!=', 'ASSY')->orWhereNull('locate');
+                    })
                     ->groupBy('mis.material_no');
             }, 'MaterialInStock')
             ->leftJoinSub(function ($query) use ($startDate, $endDate, $materialNo) {
