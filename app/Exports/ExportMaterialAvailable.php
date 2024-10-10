@@ -1,74 +1,55 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Exports;
 
-use App\Exports\ExportMaterialAvailable;
+use App\Models\itemIn;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
-use Livewire\Component;
-use Livewire\WithPagination;
-use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Concerns\FromView;
+use Maatwebsite\Excel\Events\AfterSheet;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use Maatwebsite\Excel\Concerns\WithDrawings;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\FromQuery;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 
-class MaterialAvailable extends Component
+class ExportMaterialAvailable implements FromQuery, WithEvents, WithCustomStartCell, WithColumnWidths, WithHeadings
 {
-    use WithPagination;
-    public $dateStart, $dateEnd, $searchMat, $matDisable = false, $listMaterial = [];
-    public $resetBtn = false;
-
-
-    public function matChange()
+    public $data, $count, $dateStart, $dateEnd, $searchMat;
+    public function __construct($dt)
     {
-        if (strlen($this->searchMat) >= 3) {
-            $this->listMaterial = DB::table('material_in_stock as  mis')->distinct()
-                ->select('material_no as material')
-                ->leftJoin('material_mst as mst', 'mis.material_no', 'mst.matl_no')
-                ->whereNot('mst.loc_cd', "ASSY")
-                ->where('material_no', 'like', '%' . $this->searchMat . '%')->limit(15)
-                ->get();
-        }
-    }
-    public function chooseMat($val)
-    {
-        $this->matDisable   = true;
-        $this->searchMat = $val;
-        $this->listMaterial = [];
+        $this->dateStart = $dt[0];
+        $this->dateEnd = $dt[1];
+        $this->searchMat = $dt[2];
     }
 
-    public function resetFilter()
+    public function startCell(): string
     {
-        $this->matDisable   = false;
-        $this->searchMat = null;
-        $this->listMaterial = [];
-        $this->resetBtn = false;
-        $this->dateStart = null;
-        $this->dateEnd = null;
-    }
-    public function showData()
-    {
-        $this->resetBtn = true;
-        if (!$this->dateStart && !$this->dateEnd) {
-            $this->dateStart = '2024-07-01';
-            $this->dateEnd = date('Y-m-d');
-        }
+        return 'A5';
     }
 
-    public function export()
+    public function columnWidths(): array
     {
-        $data = [
-            $this->dateStart,
-            $this->dateEnd,
-            $this->searchMat
+        return [
+            'A' => 20,
+            'B' => 25,
+            'C' => 15,
+            'D' => 15,
+            'E' => 15,
+            'F' => 15,
         ];
-        return Excel::download(new ExportMaterialAvailable($data),"Material Available ". date('YmdHis') . ".xslx", \Maatwebsite\Excel\Excel::XLSX);
     }
-    public function render()
-    {
 
-        $listData = [];
+    public function query()
+    {
         $startDate = $this->dateStart;
         $endDate = $this->dateEnd;
         $materialNo = $this->searchMat;
-
-        $result = DB::query()
+        return DB::query()
             ->fromSub(function ($query) use ($startDate, $endDate, $materialNo) {
                 $query->from('material_in_stock as mis')
                     ->select(
@@ -123,12 +104,56 @@ class MaterialAvailable extends Component
                 'mst.loc_cd'
             )
             ->orderBy('MaterialInStock.material_no');
+    }
+    public function headings(): array
+    {
+        return [
+            'Material Code',
+            'Qty In',
+            'Qty Out',
+            'Qty Balance',
+            'Qty Now',
+            'Lokasi',
+        ];
+    }
 
-        if ($this->dateStart && $this->dateEnd && $this->resetBtn) {
-            $listData = $result->paginate(20);
-        }
+
+    /**
+     * @return array
+     */
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet;
+
+                $sheet->mergeCells('A1:F2');
+                $sheet->setCellValue('A1', "MATERIAL AVAILABLE");
+                $sheet->setCellValue('A3', "Per Tanggal : " . date('d-m-Y H:i'));
+                $sheet->getDelegate()->getStyle('A1:F2')->getFont()->setSize(20);
+                $sheet->getDelegate()->getStyle('A1:F3')->getFont()->setBold(true);
 
 
-        return view('livewire.material-available', compact('listData'));
+
+                $styleArray = [
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    ],
+                ];
+
+                $border = [
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color' => ['argb' => '000000'],
+                        ],
+                    ],
+                ];
+
+                $cellRange = 'A1:F' . $this->count + 5; // All headers
+                $event->sheet->getDelegate()->getStyle($cellRange)->applyFromArray($styleArray);
+                $event->sheet->getDelegate()->getStyle("A5:F" . $this->count + 5)->applyFromArray($border);
+            }
+        ];
     }
 }
