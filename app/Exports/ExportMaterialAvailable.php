@@ -2,18 +2,12 @@
 
 namespace App\Exports;
 
-use App\Models\itemIn;
-use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\FromView;
+use App\Livewire\MaterialAvailable;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use Maatwebsite\Excel\Concerns\WithDrawings;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\FromQuery;
-use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 
@@ -49,61 +43,9 @@ class ExportMaterialAvailable implements FromQuery, WithEvents, WithCustomStartC
         $startDate = $this->dateStart;
         $endDate = $this->dateEnd;
         $materialNo = $this->searchMat;
-        return DB::query()
-            ->fromSub(function ($query) use ($startDate, $endDate, $materialNo) {
-                $query->from('material_in_stock as mis')
-                    ->select(
-                        'mis.material_no',
-                        DB::raw('SUM(mis.picking_qty) as total_picking_qty'),
-                        DB::raw('MIN(CONVERT(DATE, mis.created_at)) as first_created_at')
-                    )
-                    ->whereBetween(DB::raw('CONVERT(DATE, mis.created_at)'), [$startDate, $endDate])
-                    ->when($materialNo, function ($sub) use ($materialNo) {
-                        $sub->where('mis.material_no', $materialNo);
-                    })->where('mis.locate', '!=', 'ASSY')
-                    ->groupBy('mis.material_no');
-            }, 'MaterialInStock')
-            ->leftJoinSub(function ($query) use ($startDate, $endDate, $materialNo) {
-                $query->fromSub(function ($subQuery) use ($startDate, $endDate, $materialNo) {
-                    $subQuery->from('siws_materialrequest.dbo.dtl_transaction')
-                        ->select('part_number', DB::raw('SUM(qty_mc) as Qty'))
-                        ->whereBetween(DB::raw('CONVERT(DATE, transaction_date)'), [$startDate, $endDate])
-                        ->when($materialNo, function ($sub) use ($materialNo) {
-                            $sub->where('part_number', $materialNo);
-                        })
-                        ->groupBy('part_number')
-                        ->union(
-                            DB::table('Setup_dtl as c')
-                                ->leftJoin('Setup_mst as b', 'b.id', '=', 'c.setup_id')
-                                ->select('c.material_no as part_number', DB::raw('SUM(c.qty) as Qty'))
-                                ->whereNotNull('b.finished_at')
-                                ->whereBetween(DB::raw('CONVERT(DATE, c.created_at)'), [$startDate, $endDate])
-                                ->when($materialNo, function ($sub) use ($materialNo) {
-                                    $sub->where('c.material_no', $materialNo);
-                                })
-                                ->groupBy('c.material_no')
-                        );
-                }, 'combined_qty_out')
-                    ->select('part_number', DB::raw('SUM(Qty) as qty'))
-                    ->groupBy('part_number');
-            }, 'QuantityOut', 'MaterialInStock.material_no', '=', 'QuantityOut.part_number')
-            ->leftJoin('material_mst as mst', 'MaterialInStock.material_no', '=', 'mst.matl_no')
-            ->select(
-                'MaterialInStock.material_no',
-                DB::raw('MaterialInStock.total_picking_qty as qty_in'),
-                DB::raw('COALESCE(QuantityOut.qty, 0) as qty_out'),
-                DB::raw('(MaterialInStock.total_picking_qty - COALESCE(QuantityOut.qty, 0)) as qty_balance'),
-                DB::raw('SUM(mst.qty) as qty_now'),
-                'mst.loc_cd'
-            )
-            ->where('mst.loc_cd', '!=', 'ASSY')
-            ->groupBy(
-                'MaterialInStock.material_no',
-                'MaterialInStock.total_picking_qty',
-                'QuantityOut.qty',
-                'mst.loc_cd'
-            )
-            ->orderBy('MaterialInStock.material_no');
+        
+        $query = new MaterialAvailable;
+        return $query->queryHandle($startDate,$endDate,$materialNo);
     }
     public function headings(): array
     {

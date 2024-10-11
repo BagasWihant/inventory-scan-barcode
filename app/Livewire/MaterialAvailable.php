@@ -29,7 +29,8 @@ class MaterialAvailable extends Component
     public function chooseMat($val)
     {
         $this->searchMat = $val;
-        $this->listMaterial = [];
+        $this->matChange();
+        // $this->listMaterial = [];
     }
 
     public function resetFilter()
@@ -58,7 +59,7 @@ class MaterialAvailable extends Component
             $this->dateEnd,
             $this->searchMat
         ];
-        return Excel::download(new ExportMaterialAvailable($data),"Material Available ". date('YmdHis') . ".xslx", \Maatwebsite\Excel\Excel::XLSX);
+        return Excel::download(new ExportMaterialAvailable($data),"Material Available ". date('YmdHis') . ".xlsx", \Maatwebsite\Excel\Excel::XLSX);
     }
     public function render()
     {
@@ -68,7 +69,18 @@ class MaterialAvailable extends Component
         $endDate = $this->dateEnd;
         $materialNo = $this->searchMat;
 
-        $result = DB::query()
+        $result = $this->queryHandle($startDate,$endDate,$materialNo);
+
+        if ($this->dateStart && $this->dateEnd && $this->resetBtn) {
+            $listData = $result->paginate(20);
+        }
+
+
+        return view('livewire.material-available', compact('listData'));
+    }
+
+    public function queryHandle($startDate,$endDate,$materialNo) {
+        return DB::query()
             ->fromSub(function ($query) use ($startDate, $endDate, $materialNo) {
                 $query->from('material_in_stock as mis')
                     ->select(
@@ -124,13 +136,6 @@ class MaterialAvailable extends Component
                 'QuantityOut.qty',
                 'mst.loc_cd'
             )
-            ->orderBy('MaterialInStock.material_no');
-
-        if ($this->dateStart && $this->dateEnd && $this->resetBtn) {
-            $listData = $result->paginate(20);
-        }
-
-
-        return view('livewire.material-available', compact('listData'));
+            ->orderBy('mst.loc_cd');
     }
 }
