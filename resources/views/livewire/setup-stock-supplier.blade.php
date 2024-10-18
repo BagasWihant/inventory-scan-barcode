@@ -28,6 +28,14 @@
             </select>
         </div>
 
+        <div class="flex items-center gap-2">
+            <input wire:model.live="dateStart" type="date" autocomplete="off" 
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                -
+            <input wire:model.live="dateEnd" type="date" autocomplete="off"
+                class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+      
+        </div>
     </div>
 
     <div wire:loading.flex

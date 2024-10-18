@@ -21,6 +21,7 @@ class SetupStockSupplier extends Component
     public $searchPalet, $listPallet, $input_setup_by, $scan_date_modal, $no_palet_modal,$status=null,$lokasi='-';
     public  $listMaterialDetail = [], $paletData,$palet,$updateQ;
     public $paletDisable = false;
+    public $dateStart,$dateEnd;
 
 
      public function detail($palet)
@@ -64,6 +65,8 @@ class SetupStockSupplier extends Component
             ->when($this->searchPalet, fn($q) => $q->where('palet_no', 'like', '%' . $this->searchPalet . '%'))
             ->when($this->status, fn($q) => $q->where('status',  $this->status == 'supply' ? 1 : 0 ))
             ->when($this->lokasi != '-', fn($q) => $q->where('lokasi',  $this->lokasi))
+            ->when($this->dateStart, fn($q) => $q->where('issue_date','>=',$this->dateStart))
+            ->when($this->dateEnd, fn($q) => $q->where('issue_date','<=',$this->dateEnd))
             ->paginate(25);
         return view('livewire.setup-stock-supplier', ['listMaterial' => $listPalet]);
     }
