@@ -35,4 +35,6 @@ Route::controller(InventoryInController::class)->group(function(){
     Route::get('nik/{nik}/recv_sup/', 'menu_sup')->name('inventory.menu_sup');
 });
 
+Route::get('standar-kerja',fn() => view('pages.single.menu-standar-kerja'));
+
 require __DIR__ . '/auth.php';
