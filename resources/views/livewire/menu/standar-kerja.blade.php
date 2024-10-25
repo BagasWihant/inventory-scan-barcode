@@ -1,3 +1,5 @@
+@section('title', 'Portal Kerja')
+
 <div class="">
 
     <div id="accordion-collapse" data-accordion="collapse">
