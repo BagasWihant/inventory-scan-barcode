@@ -81,6 +81,10 @@ class InventoryInController extends Controller
         return view('pages.material-available');
     }
 
+    public function supplyAssy() {
+        return view('pages.supply-assy');
+    }
+
     public function menu_sup($nik)
     {
 
