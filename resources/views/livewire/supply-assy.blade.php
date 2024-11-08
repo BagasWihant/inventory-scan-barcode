@@ -10,12 +10,14 @@
             </div>
             <div class="flex-col">
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Line</label>
-                <select type="text" wire:model="line" @if ($topInputLock) disabled @endif
+                <input type="text" wire:model.live="line" disabled 
+                class=" bg-gray-200  border border-gray-300 text-gray-900 text-sm rounded-lg ">
+                {{-- <select type="text" wire:model="line" @if ($topInputLock) disabled @endif
                     class="@if ($topInputLock) bg-gray-200 @else bg-gray-50 @endif  border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     @foreach ($lines as $line)
                         <option value="{{ $line->line_c }}">{{ $line->line_c }}</option>
                     @endforeach
-                </select>
+                </select> --}}
             </div>
         </div>
 
@@ -67,9 +69,8 @@
                             <ul>
                                 @foreach ($collectPallet as $list)
                                     <li class="border-b border-gray-400 rounded-lg">
-                                        <span
-                                            x-on:click="$wire.set('noPallet', '{{ $list }}');
-                                    $wire.set('optionPalletShow', false);"
+                                        <span {{-- x-on:click="$wire.set('noPallet', '{{ $list }}');
+                                    $wire.set('optionPalletShow', false);" --}} wire:click="setPallet('{{ $list }}')"
                                             class="hover:bg-gray-300 rounded-lg flex items-center transition ease-in-out duration-150 px-3 py-3">{{ $list }}
                                         </span>
                                     </li>
@@ -94,7 +95,7 @@
                                 <ul>
                                     @foreach ($collectMaterial as $list)
                                         <li class="border-b border-gray-400 rounded-lg">
-                                            <span wire:click="setMaterialNo('{{$list}}')"
+                                            <span wire:click="setMaterialNo('{{ $list }}')"
                                                 class="hover:bg-gray-300 rounded-lg flex items-center transition ease-in-out duration-150 px-3 py-3">{{ $list }}
                                             </span>
                                         </li>

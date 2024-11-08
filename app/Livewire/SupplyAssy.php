@@ -17,26 +17,25 @@ class SupplyAssy extends Component
         // dd($prop,$value);
         switch ($prop) {
             case 'partial':
-                $value ? $this->inputMaterialNo = true : $this->inputMaterialNo = false;
                 $this->dataTable = [];
+                if($value){
+                    $this->inputMaterialNo = true;
+                    if($this->materialNo) $this->setMaterialNo($this->materialNo);
+                } else{
+                    $this->inputMaterialNo = false;
+                    if($this->noPallet) $this->setPallet($this->noPallet);
+                }
                 break;
-            case 'date':
-                $this->lines = DB::table('palet_registers')->where('issue_date', $value)->select('line_c')->groupBy('line_c')->get();
-                break;
+                
 
 
             case 'noPallet':
-                // $arrNoPalet = collect($this->collectPallet)->toArray();
+                $this->optionPalletShow = true;
+
                 $this->collectPallet = DB::table('palet_registers')
                     ->where('issue_date', $this->date)
-                    ->where('line_c', $this->line)
                     ->where('palet_no', 'like', "%$value%")
                     ->select('palet_no')->get()->pluck('palet_no');
-                if (!$this->partial) {
-                    $this->dataTable = DB::table('palet_register_details')->where('palet_no', $value)->get();
-                }
-
-
 
                 break;
             case 'materialNo':
@@ -57,6 +56,21 @@ class SupplyAssy extends Component
                 break;
         }
     }
+
+    public function setPallet($value)
+    {
+        $this->noPallet = $value;
+        $this->materialNo = null;
+        $this->optionMaterialShow = true;
+        $this->optionPalletShow = false;
+
+        $this->line = DB::table('palet_registers')
+            ->where('issue_date', $this->date)
+            ->where('palet_no', $value)
+            ->select('line_c')->first()->line_c;
+        $this->dataTable = DB::table('palet_register_details')->where('palet_no', $value)->get();
+    }
+
     public function setMaterialNo($value)
     {
         $this->optionMaterialShow = false;
@@ -69,7 +83,9 @@ class SupplyAssy extends Component
         $this->topInputLock = true;
         $this->btnSetup = true;
 
-        $this->collectPallet = DB::table('palet_registers')->where('issue_date', $this->date)->where('line_c', $this->line)->select('palet_no')->get()->pluck('palet_no');
+        $this->collectPallet = DB::table('palet_registers')
+            ->where('issue_date', $this->date)
+            ->select('palet_no')->get()->pluck('palet_no');
     }
 
     public function setupDone()
