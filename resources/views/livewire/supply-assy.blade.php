@@ -63,24 +63,7 @@
                     {{-- @focus="isVisible = true" @keydown.escape.window = "isVisible = false" @keydown="isVisible = true"
                 @keydown.shift.tab="isVisible = false" --}}>
 
-                @if ($optionPalletShow)
-                    <div class="absolute z-50 bg-gray-50 text-xs rounded-lg shadow-lg w-[13.5em] mt-1">
-                        @if (count($collectPallet) > 0)
-                            <ul>
-                                @foreach ($collectPallet as $list)
-                                    <li class="border-b border-gray-400 rounded-lg">
-                                        <span {{-- x-on:click="$wire.set('noPallet', '{{ $list }}');
-                                    $wire.set('optionPalletShow', false);" --}} wire:click="setPallet('{{ $list }}')"
-                                            class="hover:bg-gray-300 rounded-lg flex items-center transition ease-in-out duration-150 px-3 py-3">{{ $list }}
-                                        </span>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @else
-                            <div class="px-3 py-3">No results for "{{ $noPallet }}"</div>
-                        @endif
-                    </div>
-                @endif
+                
             </div>
             @if ($inputMaterialNo)
                 <div class="flex-col">
@@ -89,23 +72,6 @@
                         class=" bg-gray-50  border border-gray-300 text-gray-900 text-sm rounded-lg "
                         placeholder="Material No">
 
-                    @if ($optionMaterialShow)
-                        <div class="absolute z-50 bg-gray-50 text-xs rounded-lg shadow-lg w-[13.5em] mt-1">
-                            @if (count($collectMaterial) > 0)
-                                <ul>
-                                    @foreach ($collectMaterial as $list)
-                                        <li class="border-b border-gray-400 rounded-lg">
-                                            <span wire:click="setMaterialNo('{{ $list }}')"
-                                                class="hover:bg-gray-300 rounded-lg flex items-center transition ease-in-out duration-150 px-3 py-3">{{ $list }}
-                                            </span>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <div class="px-3 py-3">No results for "{{ $materialNo }}"</div>
-                            @endif
-                        </div>
-                    @endif
 
                 </div>
             @endif

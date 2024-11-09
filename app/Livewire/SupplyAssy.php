@@ -14,41 +14,23 @@ class SupplyAssy extends Component
 
     public function updating($prop, $value)
     {
-        // dd($prop,$value);
         switch ($prop) {
             case 'partial':
                 $this->dataTable = [];
-                if($value){
+                if ($value) {
                     $this->inputMaterialNo = true;
-                    if($this->materialNo) $this->setMaterialNo($this->materialNo);
-                } else{
+                    if ($this->materialNo) $this->setMaterialNo($this->materialNo);
+                } else {
                     $this->inputMaterialNo = false;
-                    if($this->noPallet) $this->setPallet($this->noPallet);
+                    if ($this->noPallet) $this->setPallet($this->noPallet);
                 }
                 break;
-                
-
 
             case 'noPallet':
-                $this->optionPalletShow = true;
-
-                $this->collectPallet = DB::table('palet_registers')
-                    ->where('issue_date', $this->date)
-                    ->where('palet_no', 'like', "%$value%")
-                    ->select('palet_no')->get()->pluck('palet_no');
-
+                $this->setPallet($value);
                 break;
             case 'materialNo':
-                $this->optionMaterialShow = true;
-                if ($this->noPallet && $this->partial) {
-                    $this->collectMaterial = DB::table('palet_register_details')
-                        ->where('palet_no', $this->noPallet)
-                        ->where('material_no', 'like', "%$value%")
-                        ->select('material_no')->get()->pluck('material_no');
-                } else {
-                    $this->dispatch('notification', ['title' => "Mohon isi No Palet", 'icon' => 'error']);
-                }
-
+                $this->setMaterialNo($value);
                 break;
 
             default:
@@ -57,24 +39,18 @@ class SupplyAssy extends Component
         }
     }
 
-    public function setPallet($value)
+    private function setPallet($value)
     {
-        $this->noPallet = $value;
-        $this->materialNo = null;
-        $this->optionMaterialShow = true;
-        $this->optionPalletShow = false;
 
         $this->line = DB::table('palet_registers')
             ->where('issue_date', $this->date)
             ->where('palet_no', $value)
-            ->select('line_c')->first()->line_c;
+            ->select('line_c')->first()?->line_c;
         $this->dataTable = DB::table('palet_register_details')->where('palet_no', $value)->get();
     }
 
-    public function setMaterialNo($value)
+    private function setMaterialNo($value)
     {
-        $this->optionMaterialShow = false;
-        $this->materialNo = $value;
         $this->dataTable = DB::table('palet_register_details')->where('palet_no', $this->noPallet)->where('material_no', $value)->get();
     }
 
