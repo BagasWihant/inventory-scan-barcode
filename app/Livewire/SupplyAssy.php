@@ -48,11 +48,13 @@ class SupplyAssy extends Component
             ->select(['line_c', 'supply_date'])->first();
 
         if ($paletRegister) {
-            if($paletRegister->supply_date){
+            if ($paletRegister->supply_date) {
                 $this->btnSetupDone = false;
             }
         } else {
+            $this->dataTable = [];
             $this->dispatch('notification', ['title' => "No Palet tidak ada", 'icon' => 'error']);
+            return;
         }
 
         $this->line = $paletRegister?->line_c;
@@ -82,35 +84,36 @@ class SupplyAssy extends Component
                 ->where('palet_no', $this->noPallet)
                 ->where('issue_date', $this->date)
                 ->update([
-                    'supply_date' => now()
+                    'supply_date' => now(),
+                    'status' => 1
                 ]);
 
             DB::table('palet_register_details')
                 ->where('palet_no', $this->noPallet)
                 ->update(['qty_supply' => DB::raw('qty')]);
 
-                $listData = DB::table('palet_register_details')
+            $listData = DB::table('palet_register_details')
                 ->where('palet_no', $this->noPallet)
                 ->get();
-            $this->dataTable = $listData; 
+            $this->dataTable = $listData;
 
             $setupMstId = DB::table('Setup_mst')->insertGetId([
-                'issue_dt'=>now(),
-                'line_cd'=>$this->noPallet,
-                'created_at'=>now(),
-                'created_by'=>auth()->user()->username
+                'issue_dt' => now(),
+                'line_cd' => $this->line,
+                'created_at' => now(),
+                'created_by' => auth()->user()->username
             ]);
 
             foreach ($listData as $data) {
                 DB::table('Setup_dtl')->insert([
-                    'setup_id'=>$setupMstId,
-                    'material_no'=>$data->material_no,
-                    'qty'=>$data->qty,
-                    'created_at'=>now(),
-                    'pallet_no'=>$data->palet_no
+                    'setup_id' => $setupMstId,
+                    'material_no' => $data->material_no,
+                    'qty' => $data->qty,
+                    'created_at' => now(),
+                    'pallet_no' => $data->palet_no
                 ]);
             }
-            
+
 
             $this->btnSetupDone = false;
 
