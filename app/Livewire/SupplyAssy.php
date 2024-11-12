@@ -8,7 +8,7 @@ use Livewire\Component;
 class SupplyAssy extends Component
 {
     public $date, $line, $partial = false, $noPallet, $materialNo;
-    public $topInputLock = false, $btnSetup = false, $inputMaterialNo = false, $optionPalletShow = true, $optionMaterialShow = true;
+    public $topInputLock = false, $btnSetup = false, $inputMaterialNo = false, $optionPalletShow = true, $optionMaterialShow = true, $btnSetupDone = true;
     public $lines = [], $dataTable = [];
     public $collectPallet = [], $collectMaterial = [];
 
@@ -42,10 +42,20 @@ class SupplyAssy extends Component
     private function setPallet($value)
     {
 
-        $this->line = DB::table('palet_registers')
+        $paletRegister = DB::table('palet_registers')
             ->where('issue_date', $this->date)
             ->where('palet_no', $value)
-            ->select('line_c')->first()?->line_c;
+            ->select(['line_c', 'supply_date'])->first();
+
+        if ($paletRegister) {
+            if($paletRegister->supply_date){
+                $this->btnSetupDone = false;
+            }
+        } else {
+            $this->dispatch('notification', ['title' => "No Palet tidak ada", 'icon' => 'error']);
+        }
+
+        $this->line = $paletRegister?->line_c;
         $this->dataTable = DB::table('palet_register_details')->where('palet_no', $value)->get();
     }
 
@@ -66,13 +76,60 @@ class SupplyAssy extends Component
 
     public function setupDone()
     {
-        dd($this->partial);
+        DB::beginTransaction();
+        try {
+            DB::table('palet_registers')
+                ->where('palet_no', $this->noPallet)
+                ->where('issue_date', $this->date)
+                ->update([
+                    'supply_date' => now()
+                ]);
+
+            DB::table('palet_register_details')
+                ->where('palet_no', $this->noPallet)
+                ->update(['qty_supply' => DB::raw('qty')]);
+
+                $listData = DB::table('palet_register_details')
+                ->where('palet_no', $this->noPallet)
+                ->get();
+            $this->dataTable = $listData; 
+
+            $setupMstId = DB::table('Setup_mst')->insertGetId([
+                'issue_dt'=>now(),
+                'line_cd'=>$this->noPallet,
+                'created_at'=>now(),
+                'created_by'=>auth()->user()->username
+            ]);
+
+            foreach ($listData as $data) {
+                DB::table('Setup_dtl')->insert([
+                    'setup_id'=>$setupMstId,
+                    'material_no'=>$data->material_no,
+                    'qty'=>$data->qty,
+                    'created_at'=>now(),
+                    'pallet_no'=>$data->palet_no
+                ]);
+            }
+            
+
+            $this->btnSetupDone = false;
+
+            DB::commit();
+            $this->dispatch('notification', ['title' => "Supply Disimpan", 'icon' => 'success']);
+        } catch (\Exception $e) {
+            DB::rollback();
+            $this->dispatch('notification', ['title' => $e->getMessage(), 'icon' => 'error']);
+        }
     }
 
     public function batal()
     {
         $this->topInputLock = false;
         $this->btnSetup = false;
+        $this->btnSetupDone = true;
+        $this->noPallet = null;
+        $this->date = null;
+        $this->line = null;
         $this->optionPalletShow = true;
         $this->optionMaterialShow = true;
         $this->dataTable = [];

@@ -28,13 +28,15 @@
                     Setup
                 </button>
             @else
+                @if($btnSetupDone)
                 <button type="button" id="showForm" wire:click="setupDone"
                     class="text-white bg-gradient-to-r from-green-600 to-green-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
                     Selesai Setup
                 </button>
+                @endif
                 <button type="button" id="showForm" wire:click="batal"
                     class="text-white bg-gradient-to-r from-red-600 to-red-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
-                    Batal
+                    Clear
                 </button>
             @endif
         </div>
@@ -93,7 +95,7 @@
                         Qty
                     </th>
                     <th scope="col" class="px-6 py-3">
-                        -
+                        Supply
                     </th>
                     <th scope="col" class="px-6 py-3">
                         -
@@ -115,7 +117,7 @@
                             {{ $data->qty }}
                         </td>
                         <td class="px-6 py-4">
-                            --
+                            {{$data->qty_supply}}
                         </td>
                         <td class="px-6 py-4">
                             --
