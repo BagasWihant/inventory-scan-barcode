@@ -58,12 +58,16 @@ class SupplyAssy extends Component
         }
 
         $this->line = $paletRegister?->line_c;
-        $this->dataTable = DB::table('palet_register_details')->where('palet_no', $value)->get();
+        $this->dataTable = DB::table('palet_register_details as p')->where('palet_no', $value)
+        ->leftJoin('material_mst as m','p.material_no','=','m.matl_no')->select(['m.matl_nm','material_no','p.qty','qty_supply'])
+        ->get();
     }
 
     private function setMaterialNo($value)
     {
-        $this->dataTable = DB::table('palet_register_details')->where('palet_no', $this->noPallet)->where('material_no', $value)->get();
+        $this->dataTable = DB::table('palet_register_details as p')->where('palet_no', $this->noPallet)->where('material_no', $value)
+        ->leftJoin('material_mst as m','p.material_no','=','m.matl_no')->select(['m.matl_nm','material_no','p.qty','qty_supply'])
+        ->get();
     }
 
     public function setup()
@@ -92,8 +96,8 @@ class SupplyAssy extends Component
                 ->where('palet_no', $this->noPallet)
                 ->update(['qty_supply' => DB::raw('qty')]);
 
-            $listData = DB::table('palet_register_details')
-                ->where('palet_no', $this->noPallet)
+            $listData = DB::table('palet_register_details as p')->where('palet_no', $this->noPallet)
+            ->leftJoin('material_mst as m','p.material_no','=','m.matl_no')->select(['m.matl_nm','material_no','p.qty','qty_supply'])
                 ->get();
             $this->dataTable = $listData;
 
