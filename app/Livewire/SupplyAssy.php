@@ -7,12 +7,17 @@ use Livewire\Component;
 
 class SupplyAssy extends Component
 {
-    public $date, $line, $partial = false, $noPallet, $materialNo;
-    public $topInputLock = false, $btnSetup = false, $inputMaterialNo = false, $optionPalletShow = true, $optionMaterialShow = true, $btnSetupDone = true;
+    public $date, $line, $noPallet, $materialNo;
+    public $partial = false;
+    public $topInputLock = false, $btnSetup = false, $inputMaterialNo = false, $optionPalletShow = true, $optionMaterialShow = true, $btnSetupDone = false;
     public $lines = [], $dataTable = [];
     public $collectPallet = [], $collectMaterial = [];
 
-    public function updating($prop, $value)
+    public function mount()
+    {
+    }
+
+    public function updated($prop, $value)
     {
         switch ($prop) {
             case 'partial':
@@ -41,7 +46,6 @@ class SupplyAssy extends Component
 
     private function setPallet($value)
     {
-
         $paletRegister = DB::table('palet_registers')
             ->where('issue_date', $this->date)
             ->where('palet_no', $value)
@@ -57,17 +61,22 @@ class SupplyAssy extends Component
             return;
         }
 
+        $this->btnSetupDone = true;
         $this->line = $paletRegister?->line_c;
-        $this->dataTable = DB::table('palet_register_details as p')->where('palet_no', $value)
-        ->leftJoin('material_mst as m','p.material_no','=','m.matl_no')->select(['m.matl_nm','material_no','p.qty','qty_supply'])
-        ->get();
+        if (!$this->partial) {
+            $this->dataTable = DB::table('palet_register_details as p')->where('palet_no', $value)
+                ->leftJoin('material_mst as m', 'p.material_no', '=', 'm.matl_no')->select(['m.matl_nm', 'material_no', 'p.qty', 'qty_supply'])
+                ->get();
+        }
     }
 
     private function setMaterialNo($value)
     {
+
+        $this->btnSetupDone = true;
         $this->dataTable = DB::table('palet_register_details as p')->where('palet_no', $this->noPallet)->where('material_no', $value)
-        ->leftJoin('material_mst as m','p.material_no','=','m.matl_no')->select(['m.matl_nm','material_no','p.qty','qty_supply'])
-        ->get();
+            ->leftJoin('material_mst as m', 'p.material_no', '=', 'm.matl_no')->select(['m.matl_nm', 'material_no', 'p.qty', 'qty_supply'])
+            ->get();
     }
 
     public function setup()
@@ -78,6 +87,20 @@ class SupplyAssy extends Component
         $this->collectPallet = DB::table('palet_registers')
             ->where('issue_date', $this->date)
             ->select('palet_no')->get()->pluck('palet_no');
+    }
+
+    public function lockQtyMaterial($value)
+    {
+        try {
+            DB::table('palet_register_details')
+                ->where('palet_no', $this->noPallet)
+                ->where('material_no', $this->materialNo)
+                ->update(['qty_supply' => $value]);
+            $this->setMaterialNo($this->materialNo);
+            $this->dispatch('notification', ['title' => "Qty $this->materialNo locked", 'icon' => 'success']);
+        } catch (\Throwable $e) {
+            $this->dispatch('notification', ['title' => $e->getMessage(), 'icon' => 'error']);
+        }
     }
 
     public function setupDone()
@@ -94,10 +117,13 @@ class SupplyAssy extends Component
 
             DB::table('palet_register_details')
                 ->where('palet_no', $this->noPallet)
+                ->where(function ($q) {
+                    $q->where('qty_supply', null)->orWhere('qty_supply', "=", 0);
+                })
                 ->update(['qty_supply' => DB::raw('qty')]);
 
             $listData = DB::table('palet_register_details as p')->where('palet_no', $this->noPallet)
-            ->leftJoin('material_mst as m','p.material_no','=','m.matl_no')->select(['m.matl_nm','material_no','p.qty','qty_supply'])
+                ->leftJoin('material_mst as m', 'p.material_no', '=', 'm.matl_no')->select(['m.matl_nm', 'material_no', 'p.qty', 'qty_supply','p.palet_no'])
                 ->get();
             $this->dataTable = $listData;
 
@@ -118,8 +144,7 @@ class SupplyAssy extends Component
                 ]);
             }
 
-
-            $this->btnSetupDone = false;
+            $this->batal();
 
             DB::commit();
             $this->dispatch('notification', ['title' => "Supply Disimpan", 'icon' => 'success']);

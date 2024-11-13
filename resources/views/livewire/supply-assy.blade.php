@@ -10,14 +10,8 @@
             </div>
             <div class="flex-col">
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Line</label>
-                <input type="text" wire:model.live="line" disabled 
-                class=" bg-gray-200  border border-gray-300 text-gray-900 text-sm rounded-lg ">
-                {{-- <select type="text" wire:model="line" @if ($topInputLock) disabled @endif
-                    class="@if ($topInputLock) bg-gray-200 @else bg-gray-50 @endif  border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    @foreach ($lines as $line)
-                        <option value="{{ $line->line_c }}">{{ $line->line_c }}</option>
-                    @endforeach
-                </select> --}}
+                <input type="text" wire:model.live="line" disabled
+                    class=" bg-gray-200  border border-gray-300 text-gray-900 text-sm rounded-lg ">
             </div>
         </div>
 
@@ -28,11 +22,11 @@
                     Setup
                 </button>
             @else
-                @if($btnSetupDone)
-                <button type="button" id="showForm" wire:click="setupDone"
-                    class="text-white bg-gradient-to-r from-green-600 to-green-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
-                    Selesai Setup
-                </button>
+                @if ($btnSetupDone)
+                    <button type="button" id="showForm" wire:click="setupDone"
+                        class="text-white bg-gradient-to-r from-green-600 to-green-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
+                        Selesai Setup
+                    </button>
                 @endif
                 <button type="button" id="showForm" wire:click="batal"
                     class="text-white bg-gradient-to-r from-red-600 to-red-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
@@ -42,42 +36,41 @@
         </div>
     </div>
 
-    <div class="flex gap-4 mb-5">
-        <label class="inline-flex items-center me-5 cursor-pointer">
-            <input type="checkbox" value="1" wire:model.live="partial" class="sr-only peer" checked>
-            <div
-                class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600">
-            </div>
-            <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Partial</span>
-        </label>
-
-        @if ($topInputLock)
-            <div class="flex-col">
-                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">No Pallet</label>
-                <input wire:model.live.debounce.300ms="noPallet" type="text"
-                    class=" bg-gray-50  border border-gray-300 text-gray-900 text-sm rounded-lg "
-                    placeholder="No Pallet (Press '/' to focus)" x-ref="search"
-                    @keydown.window="
+    <div class="flex justify-between  mb-5">
+        <div class="flex gap-4">
+            @if ($topInputLock)
+                <label class="inline-flex items-center me-5 cursor-pointer">
+                    <input type="checkbox" value="partial" wire:model.live="partial" class="sr-only peer" checked>
+                    <div
+                        class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600">
+                    </div>
+                    <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Partial</span>
+                </label>
+                <div class="flex-col">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">No Pallet</label>
+                    <input wire:model.live.debounce.300ms="noPallet" type="text"
+                        class=" bg-gray-50  border border-gray-300 text-gray-900 text-sm rounded-lg "
+                        placeholder="No Pallet (Press '/' to focus)" x-ref="search"
+                        @keydown.window="
                 if (event.keyCode === 191) {
                     event.preventDefault();
                     $refs.search.focus();
-                }"
-                    {{-- @focus="isVisible = true" @keydown.escape.window = "isVisible = false" @keydown="isVisible = true"
-                @keydown.shift.tab="isVisible = false" --}}>
-
-                
-            </div>
-            @if ($inputMaterialNo)
-                <div class="flex-col">
-                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No</label>
-                    <input type="text" wire:model.live.debounce.300ms="materialNo"
-                        class=" bg-gray-50  border border-gray-300 text-gray-900 text-sm rounded-lg "
-                        placeholder="Material No">
+                }">
 
 
                 </div>
+                @if ($partial)
+                    <div class="flex-col">
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No</label>
+                        <input type="text" wire:model.live.debounce.300ms="materialNo"
+                            class=" bg-gray-50  border border-gray-300 text-gray-900 text-sm rounded-lg "
+                            placeholder="Material No">
+                    </div>
+                @endif
+
             @endif
-        @endif
+        </div>
+
 
     </div>
 
@@ -120,23 +113,58 @@
                             {{ $data->material_no }}
                         </th>
                         <td class="px-6 py-4">
-                            {{$data->matl_nm}}
+                            {{ $data->matl_nm }}
                         </td>
                         <td class="px-6 py-4">
                             {{ $data->qty }}
                         </td>
                         <td class="px-6 py-4">
-                            {{$data->qty_supply}}
+                            {{ $data->qty_supply }}
                         </td>
                         <td class="px-6 py-4 text-right">
-                            {{-- <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a> --}}
+                            @if ($partial)
+                                <button class="btn bg-yellow-400 text-white rounded-md p-2" onclick="editQty({{ $data->qty }})">Edit
+                                    Qty</button>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
     </div>
+    <script>
+        function editQty(oldVal) {
+            Swal.fire({
+                title: 'Edit Qty',
+                input: "number",
+                showDenyButton: true,
+                denyButtonText: `Don't save`
+            }).then((result) => {
+                /* Read more about isConfirmed, isDenied below */
+                if (result.isConfirmed) {
+                    if(result.value > oldVal){
+                        return Swal.fire({
+                            timer: 1000,
+                            title: "Qty tidak boleh lebih",
+                            icon: "error",
+                            showConfirmButton: false,
+                            timerProgressBar: true,
+                        });
+                    }
+                    @this.lockQtyMaterial(result.value)
 
+                } else if (result.isDenied) {
+                    return Swal.fire({
+                        timer: 1000,
+                        title: "Changes are not saved",
+                        icon: "info",
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
+                }
+            });
+        }
+    </script>
 </div>
 @script
     <script>
