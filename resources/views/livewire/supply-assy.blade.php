@@ -1,5 +1,5 @@
 <div class="max-w-7xl m-auto">
-    <div class="flex justify-between mb-3">
+    <div class="flex items-center mb-3 gap-8">
         <div class="flex gap-2">
             <div class="flex-col">
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Issue Date</label>
@@ -18,18 +18,18 @@
         <div class="">
             @if (!$btnSetup)
                 <button type="button" id="showForm" wire:click="setup"
-                    class="text-white bg-gradient-to-r from-teal-500 to-teal-600 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
+                    class="text-white bg-gradient-to-r from-teal-500 to-teal-600 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center">
                     Setup
                 </button>
             @else
                 @if ($btnSetupDone)
                     <button type="button" id="showForm" wire:click="setupDone"
-                        class="text-white bg-gradient-to-r from-green-600 to-green-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
+                        class="text-white bg-gradient-to-r from-green-600 to-green-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center">
                         Selesai Setup
                     </button>
                 @endif
                 <button type="button" id="showForm" wire:click="batal"
-                    class="text-white bg-gradient-to-r from-red-600 to-red-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
+                    class="text-white bg-gradient-to-r from-red-600 to-red-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center">
                     Clear
                 </button>
             @endif
