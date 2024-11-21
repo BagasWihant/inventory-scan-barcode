@@ -4,7 +4,7 @@
 
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
         <div class="flex justify-between">
-            <div class="flex gap-2 mb-2">
+            <div class="flex gap-2 mb-2 w-2/3">
                 <label for="simple-search" class="sr-only">Search</label>
                 <div class="relative w-full">
                     <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
@@ -18,11 +18,17 @@
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                         placeholder="Search here..." required />
                 </div>
-                <select id="countries" wire:model="status" wire:change="statusChange"
+                <select wire:model="status" wire:change="statusChange"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     <option selected value="-">Choose Status</option>
                     <option value="0">Kurang</option>
                     <option value="1">Kelebihan</option>
+                </select>
+                <select wire:model="location" wire:change="locationChange"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    <option selected value="-">Semua Location</option>
+                    <option value="ASSY">ASSY</option>
+                    <option value="CNC">CNC</option>
                 </select>
 
             </div>
@@ -41,8 +47,16 @@
                         Palet No
                     </th>
                     <th scope="col" class="px-6 py-3">
+                        Kit No
+                    </th>
+                    <th scope="col" class="px-6 py-3">
                         <div class="flex items-center">
                             Material No
+                        </div>
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        <div class="flex items-center">
+                            Line C
                         </div>
                     </th>
                     <th scope="col" class="px-6 py-3">
@@ -85,7 +99,13 @@
                             {{ $d->pallet_no }}
                         </th>
                         <td class="px-6 py-4">
+                            {{ $d->kit_no }}
+                        </td>
+                        <td class="px-6 py-4">
                             {{ $d->material_no }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {{ $d->line_c }}
                         </td>
                         <td class="px-6 py-4">
                             {{ $d->pax }}
@@ -110,7 +130,8 @@
                             <button type="button"
                                 wire:click="konfirmasi(`{{ $d->pallet_no . '|' . $d->material_no }}`)"
                                 class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Konfirmasi</button>
-                            <button type="button" id="btn-kembalikan" data-nya="{{ $d->pallet_no . '|' . $d->material_no }}"
+                            <button type="button" id="btn-kembalikan"
+                                data-nya="{{ $d->pallet_no . '|' . $d->material_no }}"
                                 class="text-white bg-gradient-to-r from-red-500  to-red-600 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Kembalikan</button>
 
                         </td>
@@ -136,7 +157,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     let data = $(this).data('nya');
-                    
+
                     $wire.dispatch('kembalikan', {
                         req: data
                     })
@@ -156,15 +177,31 @@
             });
         });
         $wire.on('modalConfirm', async (event) => {
-            await Swal.fire({
-                title: "Save to Warehouse",
-                html: `
+            let htmlVal;
+            if (event[0].line) {
+                htmlVal = `
                 <b>Total ${event[0].pax} pax</b><br>
                 <div class="flex flex-col">
                     <label for="qty" class=" text-left text-gray-900">Total Qty</label>
                     <input type="number" id="qty" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="qty">
                 </div>
-                `,
+                <div class="flex flex-col">
+                    <label for="lineC" class=" text-left text-gray-900">Line C</label>
+                    <input value="${event[0].line}" type="text" id="lineC" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Line C">
+                </div>
+                
+                `
+
+            } else {
+                htmlVal = `<b>Total ${event[0].pax} pax</b><br>
+                <div class="flex flex-col">
+                    <label for="qty" class=" text-left text-gray-900">Total Qty</label>
+                    <input type="number" id="qty" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="qty">
+                </div>`
+            }
+            await Swal.fire({
+                title: "Save to Warehouse",
+                html: `${htmlVal}`,
                 // inputValue: event[0].qty ?? 0,
                 // inputLabel: "Qty per pax",
                 // inputPlaceholder: "qty",
@@ -172,14 +209,17 @@
                 denyButtonText: `Don 't save`,
                 didOpen: function() {
                     $('#qty').val(event[0].qty)
+                    event[0].line && $('#lineC').val(event[0].line)
                 },
                 preConfirm: () => {
                     return [
                         document.getElementById("qty").value,
+                        event[0].line ? document.getElementById("lineC").value : '-'
                     ];
                 }
             }).then((result) => {
                 qty = parseInt(result.value[0])
+                lineC = result.value[1]
 
 
                 if (qty > event[0].qty) {
@@ -198,6 +238,7 @@
 
                     data = {
                         pax: event[0].pax,
+                        lineC: lineC,
                         qty: qty,
                         pallet_no: event[0].pallet_no,
                         material_no: event[0].material_no
