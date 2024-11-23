@@ -122,53 +122,59 @@ class AbnormalItem extends Component
                 $query->where('user_id', $this->userid);
             })
             ->where('material_no', $req['material_no']);
-
-        $detail = $dataDetail->get();
-        foreach ($detail as $data) {
-            $data->counter  = (int) $data->counter;
-            itemIn::create([
-                'pallet_no' => $data->pallet_no,
-                'material_no' => $data->material,
-                'picking_qty' => $data->counter,
-                'locate' => $data->locate,
-                'trucking_id' => $data->trucking_id,
-                'user_id' => $this->userid,
-                'line_c' => $req['lineC'] != '-' ? $req['lineC'] : $data->line_c,
-                'setup_by' => $data->setup_by,
-                'surat_jalan' => $data->surat_jalan,
-                'kit_no' => $data->kit_no
-            ]);
-        }
-
-        DB::table('abnormal_materials')
-            ->where('pallet_no', $req['pallet_no'])
-            ->where('material_no', $req['material_no'])
-            ->where('user_id', $this->userid)
-            ->delete();
-
-        $this->dispatch('notif', [
-            'icon' => 'success',
-            'title' => 'Success save to stock',
-        ]);
-        $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi', $data->pallet_no)->latest()->first();
-
-        if ($dataPaletRegister) {
-            if ($req['lineC'] != '-') {
-                $dataPaletRegister->issue_date = $req['issue_date'];
-                $dataPaletRegister->save();
+        try {
+            $detail = $dataDetail->get();
+            foreach ($detail as $data) {
+                $data->counter  = (int) $data->counter;
+                itemIn::create([
+                    'pallet_no' => $data->pallet_no . ($data->locate == 'ASSY' ? '-AM' : ''),
+                    'material_no' => $data->material,
+                    'picking_qty' => $data->counter,
+                    'locate' => $data->locate,
+                    'trucking_id' => $data->trucking_id,
+                    'user_id' => $this->userid,
+                    'line_c' => $req['lineC'] != '-' ? $req['lineC'] : $data->line_c,
+                    'setup_by' => $data->setup_by,
+                    'surat_jalan' => $data->surat_jalan,
+                    'kit_no' => $data->kit_no
+                ]);
             }
 
-            $generator = new BarcodeGeneratorPNG();
-            $barcode = $generator->getBarcode($dataPaletRegister->palet_no, $generator::TYPE_CODE_128);
-            Storage::put('public/barcodes/' . $dataPaletRegister->palet_no . '.png', $barcode);
-            $dataPrint = [
-                'data' => $detail,
-                'palet_no' => $dataPaletRegister->palet_no,
-                'issue_date' => $dataPaletRegister->issue_date,
-                'line_c' => $dataPaletRegister->line_c,
-                'abnormal' => true,
-            ];
-            return Excel::download(new ReceivingSupplierReport($dataPrint), "Receiving kelebihan ASSY_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+            DB::table('abnormal_materials')
+                ->where('pallet_no', $req['pallet_no'])
+                ->where('material_no', $req['material_no'])
+                ->where('user_id', $this->userid)
+                ->delete();
+
+            $this->dispatch('notif', [
+                'icon' => 'success',
+                'title' => 'Success save to stock',
+            ]);
+            $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi', $data->pallet_no)->latest()->first();
+
+            if ($dataPaletRegister) {
+                if ($req['lineC'] != '-') {
+                    $dataPaletRegister->issue_date = $req['issue_date'];
+                    $dataPaletRegister->save();
+                }
+
+                $generator = new BarcodeGeneratorPNG();
+                $barcode = $generator->getBarcode($dataPaletRegister->palet_no, $generator::TYPE_CODE_128);
+                Storage::put('public/barcodes/' . $dataPaletRegister->palet_no . '.png', $barcode);
+                $dataPrint = [
+                    'data' => $detail,
+                    'palet_no' => $dataPaletRegister->palet_no,
+                    'issue_date' => $dataPaletRegister->issue_date,
+                    'line_c' => $dataPaletRegister->line_c,
+                    'abnormal' => true,
+                ];
+                return Excel::download(new ReceivingSupplierReport($dataPrint), "Receiving kelebihan ASSY_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+            }
+        } catch (\Throwable $th) {
+            $this->dispatch('notif', [
+                'icon' => 'error',
+                'title' => $th->getMessage(),
+            ]);
         }
     }
 
