@@ -177,28 +177,26 @@
             });
         });
         $wire.on('modalConfirm', async (event) => {
-            let htmlVal;
-            if (event[0].line) {
-                htmlVal = `
-                <b>Total ${event[0].pax} pax</b><br>
-                <div class="flex flex-col">
+
+            const inputQty = `<div class="flex flex-col">
                     <label for="qty" class=" text-left text-gray-900">Total Qty</label>
-                    <input type="number" id="qty" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="qty">
-                </div>
+                    <input type="number" readonly id="qty" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="qty">
+                </div>`
+            const htmlVal = `
+                <b>Total ${event[0].pax} pax</b><br>
+                ${inputQty}
                 <div class="flex flex-col">
                     <label for="lineC" class=" text-left text-gray-900">Line C</label>
                     <input value="${event[0].line}" type="text" id="lineC" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Line C">
                 </div>
+                <div class="flex flex-col">
+                    <label for="dateIssue" class=" text-left text-gray-900">Issue Date</label>
+                    <input placeholder="dd-mm-yyyy" type="date" value="${event[0].date}" id="dateIssue" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Line C">
+                </div>
                 
                 `
 
-            } else {
-                htmlVal = `<b>Total ${event[0].pax} pax</b><br>
-                <div class="flex flex-col">
-                    <label for="qty" class=" text-left text-gray-900">Total Qty</label>
-                    <input type="number" id="qty" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="qty">
-                </div>`
-            }
+
             await Swal.fire({
                 title: "Save to Warehouse",
                 html: `${htmlVal}`,
@@ -214,12 +212,15 @@
                 preConfirm: () => {
                     return [
                         document.getElementById("qty").value,
-                        event[0].line ? document.getElementById("lineC").value : '-'
+                        document.getElementById("lineC").value,
+                        document.getElementById("dateIssue").value
+
                     ];
                 }
             }).then((result) => {
                 qty = parseInt(result.value[0])
                 lineC = result.value[1]
+                date = result.value[2]
 
 
                 if (qty > event[0].qty) {
@@ -241,7 +242,8 @@
                         lineC: lineC,
                         qty: qty,
                         pallet_no: event[0].pallet_no,
-                        material_no: event[0].material_no
+                        material_no: event[0].material_no,
+                        issue_date: date
                     }
                     $wire.dispatch('savingToStock', {
                         req: data

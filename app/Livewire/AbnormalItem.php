@@ -78,16 +78,19 @@ class AbnormalItem extends Component
                 'pax' => $data->pax,
                 'locate' => $data->locate,
                 'line' => $data->line_c,
+                'date' => date('Y-m-d')
             ];
+            $this->dispatch('modalConfirm', $res);
         } else {
             $res = [
                 'pallet_no' => $data->pallet_no,
                 'material_no' => $data->material_no,
                 'qty' => $data->qty,
                 'pax' => $data->pax,
+                'lineC' => '-'
             ];
+            $this->savingToStock($res);
         }
-        $this->dispatch('modalConfirm', $res);
     }
 
     #[On('kembalikan')]
@@ -136,7 +139,6 @@ class AbnormalItem extends Component
                 'kit_no' => $data->kit_no
             ]);
         }
-        dump($req['lineC'] ,$data->line_c);
 
         DB::table('abnormal_materials')
             ->where('pallet_no', $req['pallet_no'])
@@ -149,10 +151,12 @@ class AbnormalItem extends Component
             'title' => 'Success save to stock',
         ]);
         $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi', $data->pallet_no)->latest()->first();
-        
+
         if ($dataPaletRegister) {
-            $dataPaletRegister->issue_date = date('Y-m-d');
-            $dataPaletRegister->save();
+            if ($req['lineC'] != '-') {
+                $dataPaletRegister->issue_date = $req['issue_date'];
+                $dataPaletRegister->save();
+            }
 
             $generator = new BarcodeGeneratorPNG();
             $barcode = $generator->getBarcode($dataPaletRegister->palet_no, $generator::TYPE_CODE_128);
