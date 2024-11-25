@@ -150,7 +150,7 @@ class AbnormalItem extends Component
                 'icon' => 'success',
                 'title' => 'Success save to stock',
             ]);
-            $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi', $data->pallet_no)->latest()->first();
+            $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi', $data->pallet_no . ($data->locate == 'ASSY' ? '-AM' : ''))->latest()->first();
 
             if ($dataPaletRegister) {
                 if ($req['lineC'] != '-') {
