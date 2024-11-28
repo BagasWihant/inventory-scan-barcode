@@ -27,15 +27,14 @@ class ResultStockTaking extends Component
 
         if ($this->searchKey) $query->where('material_no', 'like', "%$this->searchKey%");
         if ($user->Role_ID != '3' && $user->Admin != '1') $query->where('user_id', $user->id);
-        
         $data = $query->get();
 
         $listMat = $data->pluck('material_no')->unique()->all();
 
-        $inStock = DB::table('material_in_stock')
-            ->select('material_no', 'locate', DB::raw('sum(picking_qty) as qty'))
-            ->whereIn('material_no', $listMat)
-            ->groupBy('material_no', 'locate')
+        $inStock = DB::table('material_mst')
+            ->select('matl_no as material_no', 'loc_cd as locate', 'qty')
+            ->whereIn('matl_no', $listMat)
+            // ->groupBy('matl_no', 'loc_cd')
             ->get();
         $countInStock = count($inStock);
 
