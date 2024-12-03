@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
@@ -13,6 +14,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadings, WithEvents, WithCustomStartCell, WithColumnWidths, WithDrawings
 {
@@ -163,6 +165,11 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
         $drawing->setName('Logo');
         $drawing->setDescription('This is my logo');
         if ($this->palet_no != '-') {
+            if (!file_exists(public_path('storage/barcodes/' . $this->palet_no . '.png'))) {
+                $generator = new BarcodeGeneratorPNG ();
+                $barcode = $generator->getBarcode($this->palet_no, $generator::TYPE_CODE_128);
+                Storage::put('public/barcodes/' . $this->palet_no . '.png', $barcode); 
+            }
             $drawing->setPath(public_path('storage/barcodes/' . $this->palet_no . '.png'));
             $drawing->setHeight(60);
             $drawing->setWidth(350);

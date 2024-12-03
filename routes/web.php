@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
         Route::get('material-available', 'materialAvailable')->name('material.available')->withoutMiddleware('isPrepareStockTaking');
         Route::get('supply-assy', 'supplyAssy')->name('supply.assy')->withoutMiddleware('isPrepareStockTaking');
     });
+    Route::get('material-request', fn() => view('pages.material-request'))->name('material.request');
 });
 
 Route::controller(InventoryInController::class)->group(function(){
