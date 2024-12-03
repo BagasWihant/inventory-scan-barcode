@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('material_requests', function (Blueprint $table) {
             $table->id();
-            $table->string('trasaksi_no',50)->index();
+            $table->string('transaksi_no',50)->index();
             $table->string('material_no',50)->index();
             $table->string('material_name',50);
             $table->char('type',1)->comment('0=reguler,1=urgent');
             $table->integer('request_qty');
-            $table->integer('request_user');
+            $table->string('request_user',50);
             $table->integer('bag_qty');
             $table->integer('iss_min_lot');
             $table->unsignedBigInteger('created_by');
