@@ -13,19 +13,24 @@ use Spatie\LaravelIgnition\Recorders\DumpRecorder\Dump;
 
 class StockTakingConf extends Component
 {
-    public $data, $queryStock, $userID, $confirm, $sto, $search;
+    public $data, $queryStock, $userID, $confirmDireksi, $sto, $search, $confirmKIAS,$direksi;
 
     public function mount()
     {
-        $this->userID = auth()->user()->id;
-        $this->sto = MenuOptions::where('status', '1')->first();
-        if ($this->sto) {
-            $this->confirm = true;
-        } else {
-            $this->confirm = false;
-        }
+        $user = auth()->user();
+        $this->userID = $user->id;
+        $this->direksi = $user->direksi;
     }
-    public function konfirmasi()
+
+    public function konfirmasiKias()
+    {
+        // Status 2 belum konfirmasi Direksi
+        $this->sto->update([
+            'confirm' => 1
+        ]);
+        $this->confirmKIAS = false;
+    }
+    public function konfirmasiDireksi()
     {
         $export = $this->data;
 
@@ -55,7 +60,8 @@ class StockTakingConf extends Component
                 'picking_qty' => $result_qty,
                 'locate' => $value->loc,
                 'user_id' => $this->userID,
-                'is_taking' => 9
+                'is_taking' => 9,
+                'line_c'=>'-'
             ]);
 
             DB::table('stock_takings')
@@ -67,10 +73,11 @@ class StockTakingConf extends Component
         }
 
         $this->sto->update([
-            'status' => 0
+            'status' => 0,
+            'confirm' => 2
         ]);
 
-        $this->confirm = false;
+        $this->confirmDireksi = false;
         return Excel::download(new StockTakingConfirm($export), "Confirmation Stock_" . $this->sto->id . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
@@ -82,6 +89,18 @@ class StockTakingConf extends Component
     }
     public function render()
     {
+        $this->sto = MenuOptions::where('status', '1')->first();
+        $this->confirmKIAS = false;
+        $this->confirmDireksi = false;
+        if($this->sto){
+            if ($this->sto->confirm == '0') {
+                $this->confirmKIAS = true;
+            } else if ($this->sto->confirm == '1' && $this->direksi == '1') {
+                $this->confirmDireksi = true;
+            } 
+        }
+
+
         $queryStock = DB::table('stock_takings')
             ->select('material_no', 'loc', 'qty', 'hitung', 'created_at', DB::raw('ROW_NUMBER() OVER (PARTITION BY material_no ORDER BY created_at DESC) AS lastest_rank'))
             ->where('qty', ">", '0')
@@ -91,7 +110,7 @@ class StockTakingConf extends Component
 
         $getqryLatest = $queryStock->get();
         $data = $getqryLatest->where('lastest_rank', 1);
-        
+
 
         $listMat = $data->pluck('material_no')->unique()->all();
 
@@ -101,12 +120,12 @@ class StockTakingConf extends Component
             ->whereIn('material_no', $listMat)
             ->groupBy('material_no', 'locate')
             ->get();
-            
+
         $countInStock = count($inStock);
         foreach ($data as $st) {
             if ($countInStock > 0) {
                 $found = false;
-                foreach ($inStock as $value) {                    
+                foreach ($inStock as $value) {
                     if ($st->material_no == $value->material_no) {
                         $st->locsys = $value->locate;
                         $st->qtysys = $value->qty;
@@ -115,14 +134,14 @@ class StockTakingConf extends Component
                         elseif ($res > 0) $st->plus = $res;
                         $found = true;
                         break;
-                    } 
+                    }
                 }
 
                 if (!$found) {
                     $st->locsys = 'NOT FOUND';
                     $st->qtysys = 0;
                     $res = $st->qty - 0;
-                    
+
                     if ($res < 0) $st->min = abs($res);
                     elseif ($res > 0) $st->plus = $res;
                 }

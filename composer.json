@@ -11,7 +11,8 @@
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.4",
         "maatwebsite/excel": "^3.1",
-        "mpdf/mpdf": "^8.2"
+        "mpdf/mpdf": "^8.2",
+        "picqer/php-barcode-generator": "^2.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

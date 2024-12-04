@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 
-class InStockExportExcel implements WithEvents, WithCustomStartCell, WithDrawings,FromCollection,WithHeadings,WithColumnWidths
+class InStockExportExcel implements WithEvents, WithCustomStartCell, FromCollection,WithHeadings,WithColumnWidths
 {
     public $data;
     public function __construct($dt)

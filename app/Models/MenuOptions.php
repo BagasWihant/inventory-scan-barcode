@@ -14,7 +14,8 @@ class MenuOptions extends Model
         'user_id',
         'status',
         'date_start',
-        'date_end'
+        'date_end',
+        'confirm'
     ];
 
 }
