@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('material_name',50);
             $table->char('type',1)->comment('0=reguler,1=urgent');
             $table->integer('request_qty');
-            $table->string('request_user',50);
+            $table->string('request_user',50)->nullable();
             $table->integer('bag_qty');
             $table->integer('iss_min_lot');
             $table->unsignedBigInteger('created_by');
