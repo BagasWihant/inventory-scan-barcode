@@ -11,18 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('material_requests', function (Blueprint $table) {
+        Schema::create('material_request', function (Blueprint $table) {
             $table->id();
             $table->string('transaksi_no',50)->index();
             $table->string('material_no',50)->index();
             $table->string('material_name',50);
             $table->char('type',1)->comment('0=reguler,1=urgent');
             $table->integer('request_qty');
-            $table->string('request_user',50)->nullable();
             $table->integer('bag_qty');
             $table->integer('iss_min_lot');
-            $table->unsignedBigInteger('created_by');
+            $table->string('iss_unit',50);
+            $table->unsignedBigInteger('user_id');
+            $table->string('user_request',50)->nullable();
             $table->char('status',1)->default(0);
+            $table->string('loc_cd',50)->nullable();
             $table->dateTime('proses_date')->nullable();
             $table->timestamps();
         });

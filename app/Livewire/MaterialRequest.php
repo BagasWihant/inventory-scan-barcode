@@ -40,7 +40,7 @@ class MaterialRequest extends Component
             return;
         }
 
-        $dataGroup = ModelsMaterialRequest::where('status', 0)->groupBy(['transaksi_no', 'created_at'])
+        $dataGroup = ModelsMaterialRequest::where('status', '0')->groupBy(['transaksi_no', 'created_at'])
             ->select(['transaksi_no', DB::raw('count(transaksi_no) as count'), 'created_at'])->orderBy('created_at')->get();
 
         $now = Carbon::now();
@@ -125,7 +125,8 @@ class MaterialRequest extends Component
                 'request_qty' => $this->requestQty,
                 'bag_qty' => $this->selectedData['bag_qty'],
                 'iss_min_lot' => $this->selectedData['iss_min_lot'],
-                'created_by' => auth()->user()->id,
+                'iss_unit' => $this->selectedData['iss_unit'],
+                'user_id' => auth()->user()->id,
                 'status' => '-',
             ]);
 
@@ -137,7 +138,7 @@ class MaterialRequest extends Component
     public function updateUserRequest($id)
     {
         ModelsMaterialRequest::where('id', $id)->update([
-            'request_user' => $this->userRequest
+            'user_request' => $this->userRequest
         ]);
         $this->loadTable('tableItem');
     }

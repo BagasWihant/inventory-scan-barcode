@@ -32,6 +32,7 @@
                                 x-data="{
                                     updateDetails(data) {
                                         $wire.set('selectedData', data);
+                                        $refs.requestQty.focus();
                                     }
                                 }" @click="updateDetails('{{ json_encode($res) }}')">
                                 {{ $res->matl_no }}
@@ -44,7 +45,7 @@
             </div>
 
             <div class="flex gap-4 my-1">
-                <input wire:model="requestQty" type="text" wire:keydown.enter="saveRequest" placeholder="Request Qty"
+                <input wire:model="requestQty" x-ref="requestQty" type="text" wire:keydown.enter="saveRequest" placeholder="Request Qty"
                     class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
                 <input wire:model="selectedData.bag_qty" readonly placeholder="Bag. Qty" type="text"
@@ -153,8 +154,8 @@
                         </td>
                         <td class="px-6 py-4" x-data="{
                             editedUser: false,
-                            value: '{{ $m->request_user }}',
-                            oldValue: '{{ $m->request_user }}'
+                            value: '{{ $m->user_request }}',
+                            oldValue: '{{ $m->user_request }}'
                         }" @click="editedUser = true">
                             <template x-if="editedUser">
                                 <input type="text" x-model="value" wire:model="userRequest"
@@ -172,7 +173,7 @@
                             </template>
 
                             <template x-if="!editedUser">
-                                <span @click="editedUser = true;">{{ $m->request_user }}</span>
+                                <span @click="editedUser = true;">{{ $m->user_request }}</span>
                             </template>
                         </td>
                     </tr>
