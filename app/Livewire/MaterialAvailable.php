@@ -13,6 +13,7 @@ class MaterialAvailable extends Component
     use WithPagination;
     public $dateStart, $dateEnd, $searchMat, $matDisable = false, $listMaterial = [];
     public $resetBtn = false;
+    public $shift;
 
 
     public function matChange()
@@ -41,6 +42,7 @@ class MaterialAvailable extends Component
         $this->resetBtn = false;
         $this->dateStart = null;
         $this->dateEnd = null;
+        $this->shift = null;
     }
     public function showData()
     {
@@ -57,9 +59,10 @@ class MaterialAvailable extends Component
         $data = [
             $this->dateStart,
             $this->dateEnd,
-            $this->searchMat
+            $this->searchMat,
+            $this->shift
         ];
-        return Excel::download(new ExportMaterialAvailable($data),"Material Available ". date('YmdHis') . ".xlsx", \Maatwebsite\Excel\Excel::XLSX);
+        return Excel::download(new ExportMaterialAvailable($data), "Material Available " . date('YmdHis') . ".xlsx", \Maatwebsite\Excel\Excel::XLSX);
     }
     public function render()
     {
@@ -68,8 +71,9 @@ class MaterialAvailable extends Component
         $startDate = $this->dateStart;
         $endDate = $this->dateEnd;
         $materialNo = $this->searchMat;
+        $shift = $this->shift;
 
-        $result = $this->queryHandle($startDate,$endDate,$materialNo);
+        $result = $this->queryHandle($startDate, $endDate, $materialNo, $shift);
 
         if ($this->dateStart && $this->dateEnd && $this->resetBtn) {
             $listData = $result->paginate(20);
@@ -79,9 +83,10 @@ class MaterialAvailable extends Component
         return view('livewire.material-available', compact('listData'));
     }
 
-    public function queryHandle($startDate,$endDate,$materialNo) {
-        return DB::query()
-            ->fromSub(function ($query) use ($startDate, $endDate, $materialNo) {
+    public function queryHandle($startDate, $endDate, $materialNo, $shift = null)
+    {
+        $complexQuery = DB::query()
+            ->fromSub(function ($query) use ($startDate, $endDate, $materialNo, $shift) {
                 $query->from('material_in_stock as mis')
                     ->select(
                         'mis.material_no',
@@ -93,16 +98,33 @@ class MaterialAvailable extends Component
                         $sub->where('mis.material_no', $materialNo);
                     })->where(function ($sub) {
                         $sub->where('mis.locate', '!=', 'ASSY')->orWhereNull('locate');
+                    })->when($shift, function ($sub) use ($shift) {
+                        if ($shift == 'day') {
+                            $sub->whereBetween(DB::raw('CONVERT(TIME,mis.created_at)'), ['07:00:00', '16:00:00']);
+                        } else {
+                            $sub->where(function ($sub2) {
+                                $sub2->where(DB::raw('CONVERT(TIME,mis.created_at)'), '>=', '18:30:00')->orWhere(DB::raw('CONVERT(TIME,mis.created_at)'), '<', '06:30:00');
+                            });
+                        }
                     })
                     ->groupBy('mis.material_no');
             }, 'MaterialInStock')
-            ->leftJoinSub(function ($query) use ($startDate, $endDate, $materialNo) {
-                $query->fromSub(function ($subQuery) use ($startDate, $endDate, $materialNo) {
+            ->leftJoinSub(function ($query) use ($startDate, $endDate, $materialNo, $shift) {
+                $query->fromSub(function ($subQuery) use ($startDate, $endDate, $materialNo, $shift) {
                     $subQuery->from('siws_materialrequest.dbo.dtl_transaction')
                         ->select('part_number', DB::raw('SUM(qty_mc) as Qty'))
                         ->whereBetween(DB::raw('CONVERT(DATE, transaction_date)'), [$startDate, $endDate])
                         ->when($materialNo, function ($sub) use ($materialNo) {
                             $sub->where('part_number', $materialNo);
+                        })
+                        ->when($shift, function ($sub) use ($shift) {
+                            if ($shift == 'day') {
+                                $sub->whereBetween(DB::raw('CONVERT(TIME,transaction_date)'), ['07:00:00', '16:00:00']);
+                            } else {
+                                $sub->where(function ($sub2) {
+                                    $sub2->where(DB::raw('CONVERT(TIME,transaction_date)'), '>=', '18:30:00')->orWhere(DB::raw('CONVERT(TIME,transaction_date)'), '<', '06:30:00');
+                                });
+                            }
                         })
                         ->groupBy('part_number')
                         ->union(
@@ -113,6 +135,15 @@ class MaterialAvailable extends Component
                                 ->whereBetween(DB::raw('CONVERT(DATE, c.created_at)'), [$startDate, $endDate])
                                 ->when($materialNo, function ($sub) use ($materialNo) {
                                     $sub->where('c.material_no', $materialNo);
+                                })
+                                ->when($shift, function ($sub) use ($shift) {
+                                    if ($shift == 'day') {
+                                        $sub->whereBetween(DB::raw('CONVERT(TIME,c.created_at)'), ['07:00:00', '16:00:00']);
+                                    } else {
+                                        $sub->where(function ($sub2) {
+                                            $sub2->where(DB::raw('CONVERT(TIME,c.created_at)'), '>=', '18:30:00')->orWhere(DB::raw('CONVERT(TIME,c.created_at)'), '<', '06:30:00');
+                                        });
+                                    }
                                 })
                                 ->groupBy('c.material_no')
                         );
@@ -137,5 +168,6 @@ class MaterialAvailable extends Component
                 'mst.loc_cd'
             )
             ->orderBy('mst.loc_cd');
+        return $complexQuery;
     }
 }
