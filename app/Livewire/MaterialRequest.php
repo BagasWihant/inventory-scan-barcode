@@ -32,35 +32,16 @@ class MaterialRequest extends Component
         'wr' => null,
     ];
 
-    private function loadTable($table = 'all')
+    private function loadTable()
     {
         $materialRequest = ModelsMaterialRequest::where('status', '-')->get();
-        if ($table == 'tableItem') {
-            $this->materialRequest = $materialRequest;
-            return;
-        }
-
-        $dataGroup = ModelsMaterialRequest::where('status', '0')->groupBy(['transaksi_no', 'created_at'])
-            ->select(['transaksi_no', DB::raw('count(transaksi_no) as count'), 'created_at'])->orderBy('created_at')->get();
-
-        $now = Carbon::now();
-        foreach ($dataGroup as $value) {
-            $start = Carbon::parse($value->created_at);
-            $value->time_request = $start->diffInMinutes($now);
-        }
-
-        if ($table == 'tableSum') {
-            $this->totalRequest['data'] = $dataGroup;
-        }
-        if ($table == 'all') {
-            $this->materialRequest = $materialRequest;
-            $this->totalRequest['data'] = $dataGroup;
-        }
+        $this->materialRequest = $materialRequest;
     }
 
     public function mount()
     {
         $this->loadTable();
+        $this->streamTableSum();
         $this->variablePage['timeNow'] = Carbon::now()->format('Y-m-d H:i:s');
         // GENERATE Number
         $getConfig = DB::table('WH_config')->select('config', 'value')
@@ -114,7 +95,7 @@ class MaterialRequest extends Component
     public function saveRequest()
     {
         if (!$this->type) {
-            return $this->dispatch('alert', [ 'time' => 2500, 'icon' => 'warning', 'title' => 'Please choose Type']);
+            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please choose Type']);
         }
         if ($this->searchMaterialNo && $this->materialNo != null) {
             ModelsMaterialRequest::create([
@@ -130,7 +111,7 @@ class MaterialRequest extends Component
                 'status' => '-',
             ]);
 
-            $this->loadTable('tableItem');
+            $this->loadTable();
             $this->resetField();
         }
     }
@@ -140,7 +121,7 @@ class MaterialRequest extends Component
         ModelsMaterialRequest::where('id', $id)->update([
             'user_request' => $this->userRequest
         ]);
-        $this->loadTable('tableItem');
+        $this->loadTable();
     }
 
     public function submitRequest()
@@ -152,13 +133,30 @@ class MaterialRequest extends Component
             ]);
         DB::table('WH_config')->where('config', 'materialRequestNW')->update(['value' => $this->variablePage['materialRequestNW']]);
         DB::table('WH_config')->where('config', 'materialRequestWR')->update(['value' => $this->variablePage['materialRequestWR']]);
-
+        
+        $this->streamTableSum();
         $this->loadTable();
+    }
+
+    public function streamTableSum()
+    {
+        $dataGroup = ModelsMaterialRequest::where('status', '0')->groupBy(['transaksi_no', 'created_at'])
+            ->select(['transaksi_no', DB::raw('count(transaksi_no) as count'), 'created_at'])->orderBy('created_at')->get();
+
+        $now = Carbon::now();
+        $totalQty = 0;
+        foreach ($dataGroup as $value) {
+            $start = Carbon::parse($value->created_at);
+            $value->time_request = $start->diffInMinutes($now);
+            $totalQty += $value->count;
+        }
+
+        $this->totalRequest['qty'] = $totalQty;
+        $this->totalRequest['data'] = $dataGroup;
     }
 
     public function render()
     {
-        $this->loadTable('tableSum');
         return view('livewire.material-request');
     }
 }

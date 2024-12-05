@@ -60,7 +60,7 @@
         </div>
         <div class="w-2/3 bg-gray-200 rounded-md">
             <strong class="flex justify-center">Total Qty Request<span>&nbsp;{{ $totalRequest['qty'] }}</span></strong>
-            <div class="relative overflow-y-auto shadow-md rounded-lg max-h-40">
+            <div wire:poll.4s="streamTableSum" class="relative overflow-y-auto shadow-md rounded-lg max-h-40">
                 <table class="w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400">
                     <thead class="text-xs sticky top-0 text-gray-700 bg-gray-200">
                         <tr>
