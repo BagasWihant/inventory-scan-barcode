@@ -65,7 +65,7 @@ class MaterialRequest extends Component
     {
         switch ($prop) {
             case 'materialNo':
-                $qrySearch = DB::table('material_mst')->where('matl_no', 'like', "%$val%")->select(['matl_no', 'iss_unit', 'bag_qty', 'iss_min_lot', 'matl_nm'])->limit(10)->get();
+                $qrySearch = DB::table('material_mst')->where('matl_no', 'like', "%$val%")->select(['matl_no', 'iss_unit', 'bag_qty', 'iss_min_lot', 'matl_nm','qty'])->limit(10)->get();
                 $countSearch = count($qrySearch);
                 if ($countSearch > 1) {
                     $this->searchMaterialNo = true;
@@ -97,6 +97,9 @@ class MaterialRequest extends Component
         if (!$this->type) {
             return $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please choose Type']);
         }
+        if ($this->selectedData['qty'] < $this->requestQty) {
+            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Maksimal qty : ' . $this->selectedData['qty']]);
+        }
         if ($this->searchMaterialNo && $this->materialNo != null) {
             ModelsMaterialRequest::create([
                 'transaksi_no' => (preg_match("/[a-z]/i", $this->materialNo)) ? $this->transactionNo['wr'] : $this->transactionNo['nw'],
@@ -114,6 +117,14 @@ class MaterialRequest extends Component
             $this->loadTable();
             $this->resetField();
         }
+    }
+
+    public function deleteItem($id)
+    {
+        ModelsMaterialRequest::where('id', $id)->delete();
+        $this->loadTable();
+        return $this->dispatch('alert', ['time' => 2500, 'icon' => 'success', 'title' => 'Material Telah di Hapus']);
+
     }
 
     public function updateUserRequest($id)
@@ -153,6 +164,12 @@ class MaterialRequest extends Component
 
         $this->totalRequest['qty'] = $totalQty;
         $this->totalRequest['data'] = $dataGroup;
+    }
+
+    public function cancelRequest(){
+        ModelsMaterialRequest::whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']])->where('status', '-')->delete();
+        $this->loadTable();
+        $this->resetField();
     }
 
     public function render()
