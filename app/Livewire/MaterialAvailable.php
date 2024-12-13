@@ -94,7 +94,7 @@ class MaterialAvailable extends Component
                     ->unionAll(
                         DB::table('material_in_stock AS mis')
                             ->selectRaw("mis.material_no, SUM(mis.picking_qty) AS total_picking_qty, '' AS first_created_at1, MIN(CONVERT(DATE, mis.created_at)) AS first_created_at2")
-                            ->whereBetween(DB::raw('CONVERT(DATE, mis.created_at)'), [$startDate, $endDate])
+                            // ->whereBetween(DB::raw('CONVERT(DATE, mis.created_at)'), [$startDate, $endDate])
                             ->when($materialNo, function ($sub) use ($materialNo) {
                                 $sub->where('mis.material_no', $materialNo);
                             })
@@ -102,13 +102,35 @@ class MaterialAvailable extends Component
                                 $query->where('mis.locate', '!=', 'ASSY')
                                     ->orWhereNull('mis.locate');
                             })
-                            ->when($shift, function ($sub) use ($shift) {
-                                if ($shift == 'day') {
-                                    $sub->whereBetween(DB::raw('CONVERT(TIME,mis.created_at)'), ['07:00:00', '16:00:00']);
-                                } else {
-                                    $sub->where(function ($sub2) {
-                                        $sub2->where(DB::raw('CONVERT(TIME,mis.created_at)'), '>=', '18:30:00')->orWhere(DB::raw('CONVERT(TIME,mis.created_at)'), '<', '06:30:00');
+                            // ->when($shift, function ($sub) use ($shift) {
+                            //     if ($shift == 'day') {
+                            //         $sub->whereBetween(DB::raw('CONVERT(TIME,mis.created_at)'), ['07:00:00', '16:00:00']);
+                            //     } else {
+                            //         $sub->where(function ($sub2) {
+                            //             $sub2->where(DB::raw('CONVERT(TIME,mis.created_at)'), '>=', '18:30:00')->orWhere(DB::raw('CONVERT(TIME,mis.created_at)'), '<', '06:30:00');
+                            //         });
+                            //     }
+                            // })
+                            ->when($shift, function ($sub) use ($shift, $startDate, $endDate) {
+
+                                if ($shift == 'night') {
+                                    $sub->where(function ($query) use ($startDate) {
+                                        $query->where(DB::raw("CONVERT(date, mis.created_at)"), $startDate)
+                                            ->where(DB::raw("CONVERT(time, mis.created_at)"), '>=', '18:30:00');
+                                    })->orWhere(function ($query) use ($endDate) {
+                                        $query->where(DB::raw("CONVERT(date, mis.created_at)"), $endDate)
+                                            ->where(DB::raw("CONVERT(time, mis.created_at)"), '<', '06:30:00');
                                     });
+                                } elseif ($shift == 'day') {
+                                    $sub->where(function ($query) use ($startDate) {
+                                        $query->where(DB::raw("CONVERT(date, mis.created_at)"), $startDate)
+                                            ->where(DB::raw("CONVERT(time, mis.created_at)"), '>=', '07:00:00');
+                                    })->orWhere(function ($query) use ($endDate) {
+                                        $query->where(DB::raw("CONVERT(date, mis.created_at)"), $endDate)
+                                            ->where(DB::raw("CONVERT(time, mis.created_at)"), '<',  '16:00:00');
+                                    });
+                                } else {
+                                    $sub->whereBetween(DB::raw('CONVERT(DATE, mis.created_at)'), [$startDate, $endDate]);
                                 }
                             })
                             ->groupBy('mis.material_no')
@@ -122,17 +144,29 @@ class MaterialAvailable extends Component
                 DB::table(function ($unionQuery) use ($startDate, $endDate, $materialNo, $shift) {
                     $unionQuery->from('siws_materialrequest.dbo.dtl_transaction')
                         ->selectRaw('part_number, SUM(qty_mc) AS Qty')
-                        ->whereBetween(DB::raw('CONVERT(DATE, transaction_date)'), [$startDate, $endDate])
                         ->when($materialNo, function ($sub) use ($materialNo) {
                             $sub->where('part_number', $materialNo);
                         })
-                        ->when($shift, function ($sub) use ($shift) {
-                            if ($shift == 'day') {
-                                $sub->whereBetween(DB::raw('CONVERT(TIME,transaction_date)'), ['07:00:00', '16:00:00']);
-                            } else {
-                                $sub->where(function ($sub2) {
-                                    $sub2->where(DB::raw('CONVERT(TIME,transaction_date)'), '>=', '18:30:00')->orWhere(DB::raw('CONVERT(TIME,transaction_date)'), '<', '06:30:00');
+                        ->when($shift, function ($sub) use ($shift, $startDate, $endDate) {
+
+                            if ($shift == 'night') {
+                                $sub->where(function ($query) use ($startDate) {
+                                    $query->where(DB::raw("CONVERT(date, transaction_date)"), $startDate)
+                                        ->where(DB::raw("CONVERT(time, transaction_date)"), '>=', '18:30:00');
+                                })->orWhere(function ($query) use ($endDate) {
+                                    $query->where(DB::raw("CONVERT(date, transaction_date)"), $endDate)
+                                        ->where(DB::raw("CONVERT(time, transaction_date)"), '<', '06:30:00');
                                 });
+                            } elseif ($shift == 'day') {
+                                $sub->where(function ($query) use ($startDate) {
+                                    $query->where(DB::raw("CONVERT(date, transaction_date)"), $startDate)
+                                        ->where(DB::raw("CONVERT(time, transaction_date)"), '>=', '07:00:00');
+                                })->orWhere(function ($query) use ($endDate) {
+                                    $query->where(DB::raw("CONVERT(date, transaction_date)"), $endDate)
+                                        ->where(DB::raw("CONVERT(time, transaction_date)"), '<',  '16:00:00');
+                                });
+                            } else {
+                                $sub->whereBetween(DB::raw('CONVERT(DATE, transaction_date)'), [$startDate, $endDate]);
                             }
                         })
                         ->groupBy('part_number')
@@ -141,14 +175,36 @@ class MaterialAvailable extends Component
                                 ->leftJoin('Setup_mst AS b', 'b.id', '=', 'c.setup_id')
                                 ->selectRaw('c.material_no AS part_number, SUM(c.qty) AS Qty')
                                 ->whereNotNull('b.finished_at')
-                                ->whereBetween(DB::raw('CONVERT(DATE, c.created_at)'), [$startDate, $endDate])
-                                ->when($shift, function ($sub) use ($shift) {
-                                    if ($shift == 'day') {
-                                        $sub->whereBetween(DB::raw('CONVERT(TIME,c.created_at)'), ['07:00:00', '16:00:00']);
-                                    } else {
-                                        $sub->where(function ($sub2) {
-                                            $sub2->where(DB::raw('CONVERT(TIME,c.created_at)'), '>=', '18:30:00')->orWhere(DB::raw('CONVERT(TIME,c.created_at)'), '<', '06:30:00');
+                                // ->whereBetween(DB::raw('CONVERT(DATE, c.created_at)'), [$startDate, $endDate])
+                                // ->when($shift, function ($sub) use ($shift) {
+                                //     if ($shift == 'day') {
+                                //         $sub->whereBetween(DB::raw('CONVERT(TIME,c.created_at)'), ['07:00:00', '16:00:00']);
+                                //     } else {
+                                //         $sub->where(function ($sub2) {
+                                //             $sub2->where(DB::raw('CONVERT(TIME,c.created_at)'), '>=', '18:30:00')->orWhere(DB::raw('CONVERT(TIME,c.created_at)'), '<', '06:30:00');
+                                //         });
+                                //     }
+                                // })
+                                ->when($shift, function ($sub) use ($shift, $startDate, $endDate) {
+
+                                    if ($shift == 'night') {
+                                        $sub->where(function ($query) use ($startDate) {
+                                            $query->where(DB::raw("CONVERT(date, c.created_at)"), $startDate)
+                                                ->where(DB::raw("CONVERT(time, c.created_at)"), '>=', '18:30:00');
+                                        })->orWhere(function ($query) use ($endDate) {
+                                            $query->where(DB::raw("CONVERT(date, c.created_at)"), $endDate)
+                                                ->where(DB::raw("CONVERT(time, c.created_at)"), '<', '06:30:00');
                                         });
+                                    } elseif ($shift == 'day') {
+                                        $sub->where(function ($query) use ($startDate) {
+                                            $query->where(DB::raw("CONVERT(date, c.created_at)"), $startDate)
+                                                ->where(DB::raw("CONVERT(time, c.created_at)"), '>=', '07:00:00');
+                                        })->orWhere(function ($query) use ($endDate) {
+                                            $query->where(DB::raw("CONVERT(date, c.created_at)"), $endDate)
+                                                ->where(DB::raw("CONVERT(time, c.created_at)"), '<',  '16:00:00');
+                                        });
+                                    } else {
+                                        $sub->whereBetween(DB::raw('CONVERT(DATE, transaction_date)'), [$startDate, $endDate]);
                                     }
                                 })
                                 ->groupBy('c.material_no')
@@ -169,7 +225,7 @@ class MaterialAvailable extends Component
             })
             ->selectRaw('MaterialInStock.material_no, (MaterialInStock.total_picking_qty - COALESCE(QuantityOut.qty, 0)) as qty_balance, MaterialInStock.total_picking_qty AS qty_in, COALESCE(QuantityOut.qty, 0) AS qty_out, SUM(mst.qty) AS qty_now, mst.loc_cd')
             ->groupBy('MaterialInStock.material_no', 'MaterialInStock.total_picking_qty', 'QuantityOut.qty', 'mst.loc_cd');
-
+            dd($complexQuery->toRawSql());
         return $complexQuery;
     }
 }
