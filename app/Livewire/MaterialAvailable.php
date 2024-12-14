@@ -72,8 +72,8 @@ class MaterialAvailable extends Component
         $endDate = $this->dateEnd;
         $materialNo = $this->searchMat;
         $shift = $this->shift;
-
-        $result = $this->queryHandle($startDate, $endDate, $materialNo, $shift);
+// dd($this);
+        $result = self::queryHandle($startDate, $endDate, $materialNo, $shift);
 
         if ($this->dateStart && $this->dateEnd && $this->resetBtn) {
             $listData = $result->paginate(20);
@@ -83,7 +83,7 @@ class MaterialAvailable extends Component
         return view('livewire.material-available', compact('listData'));
     }
 
-    public function queryHandle($startDate, $endDate, $materialNo, $shift = null)
+    public static function queryHandle($startDate, $endDate, $materialNo, $shift = null)
     {
         $complexQuery = DB::table(function ($subQuery1) use ($startDate, $endDate, $materialNo, $shift) {
             //  MaterialInStock
@@ -224,8 +224,9 @@ class MaterialAvailable extends Component
                     ->orWhere(DB::raw('COALESCE(QuantityOut.qty, 0)'), '<>', 0);
             })
             ->selectRaw('MaterialInStock.material_no, (MaterialInStock.total_picking_qty - COALESCE(QuantityOut.qty, 0)) as qty_balance, MaterialInStock.total_picking_qty AS qty_in, COALESCE(QuantityOut.qty, 0) AS qty_out, SUM(mst.qty) AS qty_now, mst.loc_cd')
-            ->groupBy('MaterialInStock.material_no', 'MaterialInStock.total_picking_qty', 'QuantityOut.qty', 'mst.loc_cd');
-            dd($complexQuery->toRawSql());
+            ->groupBy('MaterialInStock.material_no', 'MaterialInStock.total_picking_qty', 'QuantityOut.qty', 'mst.loc_cd')
+            ->orderBy('MaterialInStock.material_no');
+            
         return $complexQuery;
     }
 }

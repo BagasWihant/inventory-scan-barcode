@@ -46,8 +46,7 @@ class ExportMaterialAvailable implements FromQuery, WithEvents, WithCustomStartC
         $materialNo = $this->searchMat;
         $shift = $this->shift;
 
-        $query = new MaterialAvailable;
-        return $query->queryHandle($startDate, $endDate, $materialNo, $shift);
+        return MaterialAvailable::queryHandle($startDate, $endDate, $materialNo, $shift);
     }
     public function headings(): array
     {
