@@ -22,4 +22,9 @@ class MaterialRequest extends Model
         'status',
         'proses_date'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

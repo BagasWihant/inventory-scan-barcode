@@ -38,5 +38,6 @@ Route::controller(InventoryInController::class)->group(function(){
 });
 
 Route::get('standar-kerja',fn() => view('pages.single.menu-standar-kerja'));
+Route::get('monitoring-material-request',fn() => view('pages.single.monitoring-material-request'));
 
 require __DIR__ . '/auth.php';
