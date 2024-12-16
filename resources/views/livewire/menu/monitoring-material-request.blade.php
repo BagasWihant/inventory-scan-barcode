@@ -2,6 +2,14 @@
 
 <div class="max-w-7xl mx-auto">
     <div class="text-2xl font-extrabold text-center">Monitoring Material Request</div>
+    <div class="flex justify-between my-4">
+        <span>
+            <p>Refreshed At : <b> {{ date('d-m-Y H:i:s', strtotime($time)) }}</b></p>
+        </span>
+        <span>
+            <p>Total Transaksi Hari ini : <b> {{ $totalCount }}</b></p>
+        </span>
+    </div>
     <div class="relative overflow-x-auto shadow-md rounded-lg mt-7">
         <table class="w-full text-sm text-left rtl:text-right text-gray-700 ">
             <thead class="text-sm text-gray-900 font-bold uppercase bg-gray-50 ">
