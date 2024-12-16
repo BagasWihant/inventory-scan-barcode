@@ -13,12 +13,13 @@ use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 
 class ExportMaterialAvailable implements FromQuery, WithEvents, WithCustomStartCell, WithColumnWidths, WithHeadings
 {
-    public $data, $count, $dateStart, $dateEnd, $searchMat;
+    public $data, $count, $dateStart, $dateEnd, $searchMat, $shift;
     public function __construct($dt)
     {
         $this->dateStart = $dt[0];
         $this->dateEnd = $dt[1];
         $this->searchMat = $dt[2];
+        $this->shift = $dt[3];
     }
 
     public function startCell(): string
@@ -43,9 +44,9 @@ class ExportMaterialAvailable implements FromQuery, WithEvents, WithCustomStartC
         $startDate = $this->dateStart;
         $endDate = $this->dateEnd;
         $materialNo = $this->searchMat;
-        
-        $query = new MaterialAvailable;
-        return $query->queryHandle($startDate,$endDate,$materialNo);
+        $shift = $this->shift;
+
+        return MaterialAvailable::queryHandle($startDate, $endDate, $materialNo, $shift);
     }
     public function headings(): array
     {
