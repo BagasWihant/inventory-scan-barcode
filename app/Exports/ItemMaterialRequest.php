@@ -89,6 +89,8 @@ class ItemMaterialRequest implements FromCollection, WithEvents, WithCustomStart
 
                 $sheet->mergeCells('B1:I1');
                 $sheet->setCellValue('B1', "MATERIAL REQUEST");
+                $sheet->mergeCells('H2:I2');
+                $sheet->setCellValue('H2', "Print Date : ".date('d-m-Y H:i'));
 
                 $sheet->getDelegate()->getStyle('B1:I1')->getFont()->setSize(20);
                 $sheet->getDelegate()->getStyle('B1:I1')->getFont()->setBold(true);
@@ -116,6 +118,51 @@ class ItemMaterialRequest implements FromCollection, WithEvents, WithCustomStart
                 ];
                 $event->sheet->getDelegate()->getStyle("A5:I" . (5 + $this->count))->applyFromArray($border);
                 $event->sheet->getDelegate()->getStyle("A5:I" . (5 + $this->count))->applyFromArray($styleArray);
+
+
+                $lastRow = $this->count + 8;
+                for ($i = $this->count+6; $i <= $this->count+18; $i++) {
+                    $sheet->setCellValue('H' . $i, "   ");
+                }
+
+                $sign1 = $lastRow + 3;
+                $sheet->setCellValue('G' . $sign1 - 1, "   ");
+                // $sheet->setCellValue('D'.$lastRow+1, "   ");
+
+
+                $sheet->mergeCells('E' . $sign1 . ':F' . $sign1 );
+                $sheet->setCellValue('E' . $sign1, " Check by");
+                $sheet->mergeCells('E' . $sign1 + 1 . ':F' . $sign1 + 4);
+                $sheet->setCellValue('F' . $sign1 + 1, "  ");
+                $sheet->mergeCells('E' . $sign1 + 5 . ':F' . $sign1 + 5);
+                $sheet->mergeCells('E' . $sign1 + 6 . ':F' . $sign1 + 6);
+                $sheet->setCellValue('E' . $sign1 + 5, " Name :");
+                $sheet->setCellValue('E' . $sign1 + 6, " Date :");
+
+                $event->sheet->getDelegate()->getStyle("E" . $sign1 . ":F" . $sign1 + 6)->applyFromArray($border);
+
+                $sheet->mergeCells('G' . $sign1. ':H' . $sign1);
+                $sheet->setCellValue('G' . $sign1, " Prepared by");
+                $sheet->mergeCells('G' . $sign1 + 1 . ':H' . $sign1 + 4);
+                $sheet->setCellValue('G' . $sign1 + 1, "  ");
+
+                $sheet->mergeCells('G' . $sign1 + 5 . ':H' . $sign1 + 5);
+                $sheet->mergeCells('G' . $sign1 + 6 . ':H' . $sign1 + 6);
+                $sheet->setCellValue('G' . $sign1 + 5, " Name :");
+                $sheet->setCellValue('G' . $sign1 + 6, " Date :");
+
+                $event->sheet->getDelegate()->getStyle("G" . $sign1 . ":H" . $sign1 + 6)->applyFromArray($border);
+
+                $sheet->setCellValue('I' . $sign1, " Checked by");
+                $sheet->mergeCells('I' . $sign1 + 1 . ':I' . $sign1 + 4);
+                $sheet->setCellValue('I' . $sign1 + 1, "  ");
+                $sheet->setCellValue('I' . $sign1 + 5, " Name : ");
+                $sheet->setCellValue('I' . $sign1 + 6, " Date : ");
+                $event->sheet->getDelegate()->getStyle("I" . $sign1 . ":I" . $sign1 + 6)->applyFromArray($border);
+
+
+                $sheet->getDelegate()->getStyle('D' . $sign1 . ':I' . $sign1)->getFont()->setBold(true);
+                $event->sheet->getDelegate()->getStyle('A1:I' . $sign1)->getFont()->setSize(16);
             }
         ];
     }

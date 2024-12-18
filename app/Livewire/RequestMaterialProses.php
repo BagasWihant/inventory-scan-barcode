@@ -21,6 +21,14 @@ class RequestMaterialProses extends Component
         return Excel::download(new ItemMaterialRequest($dataPrint), "Request Material_" . $id . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
+    public function getMaterial($trx){
+        $dataPrint = MaterialRequest::where('transaksi_no', $trx)
+        ->leftJoin('material_mst as b', 'material_request.material_no', '=', 'b.matl_no')
+        ->select(['material_request.*', 'b.loc_cd'])->get()->toArray();
+
+        return [$trx,$dataPrint];
+    }
+
     public function render()
     {
         $data = MaterialRequest::where('status', '0')
