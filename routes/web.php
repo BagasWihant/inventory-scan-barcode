@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
         Route::get('supply-assy', 'supplyAssy')->name('supply.assy')->withoutMiddleware('isPrepareStockTaking');
     });
     Route::get('material-request', fn() => view('pages.material-request'))->name('material.request');
+    Route::get('material-request-proses', fn() => view('pages.material-request-proses'))->name('material.request-proses');
 });
 
 Route::controller(InventoryInController::class)->group(function(){
