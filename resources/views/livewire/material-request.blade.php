@@ -18,7 +18,8 @@
                             class="w-full py-4 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Urgent</label>
                     </div>
                 </div>
-                <button class="btn bg-red-500 shadow-md text-white px-2 py-1 rounded-lg text-sm" wire:click="resetField">Clear
+                <button class="btn bg-red-500 shadow-md text-white px-2 py-1 rounded-lg text-sm"
+                    wire:click="resetField">Clear
                     Input</button>
 
             </div>
@@ -30,8 +31,8 @@
                 <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
                     wire:target="materialNo">Searching</div>
                 <div wire:loading.remove class="rounded-lg bg-slate-50 shadow">
-
-                    @if (strlen($materialNo) >= 3 && count($selectedData) == 0)
+                    
+                    @if (strlen($materialNo) >= 3 && $searchMaterialNo == true)
                         @forelse ($resultSearchMaterial as $res)
                             <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
                                 x-data="{

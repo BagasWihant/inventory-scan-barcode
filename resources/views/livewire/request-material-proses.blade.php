@@ -83,7 +83,7 @@
                                             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material
                                             No.
                                         </label>
-                                        <input type="text" id="produkBarcode"
+                                        <input type="text" wire:model.live.debounce.500="materialScan"
                                             class=" block w-1/4 p-2 text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                     </div>
                                 </div>
@@ -104,19 +104,10 @@
                                                         Unit
                                                     </th>
                                                     <th scope="col" class="px-3 py-3">
-                                                        Qty
+                                                        Qty Request
                                                     </th>
                                                     <th scope="col" class="px-3 py-3">
-                                                        Qty Scan
-                                                    </th>
-                                                    <th scope="col" class="px-3 py-3">
-                                                        Remain
-                                                    </th>
-                                                    <th scope="col" class="px-3 py-3">
-                                                        Qty Pick
-                                                    </th>
-                                                    <th scope="col" class="px-3 py-3">
-                                                        Issue
+                                                        Qty Supply
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -126,11 +117,40 @@
                                                         <td class="px-3 py-2" x-text="data.material_no"></td>
                                                         <td class="px-3 py-2" x-text="data.material_name"></td>
                                                         <td class="px-3 py-2" x-text="data.iss_unit"></td>
-                                                        <td class="px-3 py-2" x-text="data.qty"></td>
-                                                        <td class="px-3 py-2" x-text="'-'"></td>
-                                                        <td class="px-3 py-2" x-text="'-'"></td>
-                                                        <td class="px-3 py-2" x-text="'-'"></td>
-                                                        <td class="px-3 py-2" x-text="'-'"></td>
+                                                        <td class="px-3 py-2" x-text="data.request_qty"></td>
+                                                        {{-- <td class="px-3 py-2" x-text="data.request_qty"></td> --}}
+                                                        <td class="px-6 py-4" x-data="{
+                                                            editedQty: false,
+                                                            value: data.request_qty,
+                                                            oldValue: data.request_qty,
+                                                            validateQty() {
+                                                                if (parseInt(this.value) > parseInt(this.oldValue)) {
+                                                                    alert('Qty supply melebihi request');
+                                                                    this.value = this.oldValue;
+                                                                }
+                                                            }
+                                                        }"
+                                                            @click="editedQty = true">
+                                                            <template x-if="editedQty">
+                                                                <input type="text" x-model="value"
+                                                                    placeholder="User Request"
+                                                                    @keydown.enter="
+                                                                        validateQty();
+                                                                        editedQty = false; 
+                                                                       "
+                                                                    @keydown.escape="
+                                                                           editedQty = false;
+                                                                           value = oldValue;
+                                                                       "
+                                                                    @focus="$event.target.select()" x-ref="input"
+                                                                    class="p-1 text-gray-900 border border-gray-300 bg-slate-200 rounded-lg text-xs">
+                                                            </template>
+
+                                                            <template x-if="!editedQty">
+                                                                <span @click="editedQty = true;"
+                                                                    x-text="value"></span>
+                                                            </template>
+                                                        </td>
                                                     </tr>
                                                 </template>
                                             </tbody>
