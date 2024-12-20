@@ -11,7 +11,30 @@ use Maatwebsite\Excel\Facades\Excel;
 class RequestMaterialProses extends Component
 {
     public $searchKey;
+    public $materialScan;
 
+    public function updated($prop,$val){
+
+        switch ($prop) {
+            case 'materialScan':
+                if (strtolower(substr($val, 0, 1)) == "c") {
+                    $tempSplit = explode(' ', $val);
+    
+                    if(strtolower(substr($val, 0, 1)) == "p") {
+                        $this->materialScan = substr($val, 1, 15);
+                    }else{
+                        $this->materialScan = substr($tempSplit[0], 23, 15);
+                    }
+                }
+                
+                break;
+            
+            default:
+                # code...
+                break;
+        }
+    }
+    
     public function print($id)
     {
         $dataPrint = MaterialRequest::where('transaksi_no', $id)
