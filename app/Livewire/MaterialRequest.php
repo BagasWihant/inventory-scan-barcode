@@ -38,15 +38,12 @@ class MaterialRequest extends Component
         $this->materialRequest = $materialRequest;
     }
 
-    public function mount()
+    private function generateNoTransaksi(): void
     {
-        $this->loadTable();
-        $this->streamTableSum();
-        $this->variablePage['timeNow'] = Carbon::now()->format('Y-m-d H:i:s');
-        // GENERATE Number
         $getConfig = DB::table('WH_config')->select('config', 'value')
             ->whereIn('config', ['materialRequestNW', 'materialRequestWR', 'periodRequest'])
             ->get()->keyBy('config');
+
         $ymd = date('Ymd');
         $this->variablePage['materialRequestWR'] = (int)$getConfig['materialRequestWR']->value + 1;
         $this->variablePage['materialRequestNW'] = (int)$getConfig['materialRequestNW']->value + 1;
@@ -61,23 +58,36 @@ class MaterialRequest extends Component
         $this->transactionNo['nw'] = "NW$ymd-" . str_pad($this->variablePage['materialRequestNW'], 4, '0', STR_PAD_LEFT);
     }
 
+    public function mount()
+    {
+        $this->loadTable();
+        $this->streamTableSum();
+        $this->generateNoTransaksi();
+        $this->variablePage['timeNow'] = Carbon::now()->format('Y-m-d H:i:s');
+    }
+
     public function updated($prop, $val)
     {
         switch ($prop) {
             case 'materialNo':
+                DB::enableQueryLog();
                 $qrySearch = DB::table('material_mst')
-                // ->where('matl_no', 'like', "%$val%")
-                ->whereRaw("REPLACE(matl_no, ' ', '') LIKE ?", ["%$val%"])
-                ->select(['matl_no', 'iss_unit', 'bag_qty', 'iss_min_lot', 'matl_nm','qty'])->limit(10)->get();
+                    // ->where('matl_no', 'like', "%$val%")
+                    ->whereRaw("REPLACE(matl_no, ' ', '') LIKE ?", ["%$val%"])
+                    ->select(['matl_no', 'iss_unit', 'bag_qty', 'iss_min_lot', 'matl_nm', 'qty'])->limit(10)->get();
                 $countSearch = count($qrySearch);
+
                 if ($countSearch > 1) {
                     $this->searchMaterialNo = true;
                     $this->resultSearchMaterial = $qrySearch;
+                } else {
+                    $this->resultSearchMaterial = [];
                 }
 
                 break;
 
             case 'selectedData':
+                $this->searchMaterialNo = false;
                 $this->selectedData = $val;
                 $this->materialNo = $this->selectedData['matl_no'];
                 break;
@@ -103,7 +113,8 @@ class MaterialRequest extends Component
         if ($this->selectedData['qty'] < $this->requestQty) {
             return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Maksimal qty : ' . $this->selectedData['qty']]);
         }
-        if ($this->searchMaterialNo && $this->materialNo != null) {
+
+        if (count($this->selectedData) > 1 && $this->materialNo != null) {
             ModelsMaterialRequest::create([
                 'transaksi_no' => (preg_match("/[a-z]/i", $this->materialNo)) ? $this->transactionNo['wr'] : $this->transactionNo['nw'],
                 'material_no' => $this->materialNo,
@@ -127,7 +138,6 @@ class MaterialRequest extends Component
         ModelsMaterialRequest::where('id', $id)->delete();
         $this->loadTable();
         return $this->dispatch('alert', ['time' => 2500, 'icon' => 'success', 'title' => 'Material Telah di Hapus']);
-
     }
 
     public function updateUserRequest($id)
@@ -140,16 +150,24 @@ class MaterialRequest extends Component
 
     public function submitRequest()
     {
+        $userRequstIsNull = ModelsMaterialRequest::whereNull('user_request')
+            ->whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']])->exists();
+        if($userRequstIsNull){
+            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Please fill all User Request ']);
+        }
+        
         ModelsMaterialRequest::whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']])
             ->update([
                 'status' => 0,
                 'created_at' => Carbon::now(),
             ]);
+
         DB::table('WH_config')->where('config', 'materialRequestNW')->update(['value' => $this->variablePage['materialRequestNW']]);
         DB::table('WH_config')->where('config', 'materialRequestWR')->update(['value' => $this->variablePage['materialRequestWR']]);
-        
+
         $this->streamTableSum();
         $this->loadTable();
+        $this->generateNoTransaksi();
     }
 
     public function streamTableSum()
@@ -169,7 +187,8 @@ class MaterialRequest extends Component
         $this->totalRequest['data'] = $dataGroup;
     }
 
-    public function cancelRequest(){
+    public function cancelRequest()
+    {
         ModelsMaterialRequest::whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']])->where('status', '-')->delete();
         $this->loadTable();
         $this->resetField();
