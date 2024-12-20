@@ -65,7 +65,10 @@ class MaterialRequest extends Component
     {
         switch ($prop) {
             case 'materialNo':
-                $qrySearch = DB::table('material_mst')->where('matl_no', 'like', "%$val%")->select(['matl_no', 'iss_unit', 'bag_qty', 'iss_min_lot', 'matl_nm','qty'])->limit(10)->get();
+                $qrySearch = DB::table('material_mst')
+                // ->where('matl_no', 'like', "%$val%")
+                ->whereRaw("REPLACE(matl_no, ' ', '') LIKE ?", ["%$val%"])
+                ->select(['matl_no', 'iss_unit', 'bag_qty', 'iss_min_lot', 'matl_nm','qty'])->limit(10)->get();
                 $countSearch = count($qrySearch);
                 if ($countSearch > 1) {
                     $this->searchMaterialNo = true;
@@ -75,7 +78,7 @@ class MaterialRequest extends Component
                 break;
 
             case 'selectedData':
-                $this->selectedData = json_decode($val, true);
+                $this->selectedData = $val;
                 $this->materialNo = $this->selectedData['matl_no'];
                 break;
             default:

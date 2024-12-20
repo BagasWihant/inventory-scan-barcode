@@ -23,7 +23,7 @@
 
             </div>
 
-            <input wire:model.live.debounce.400ms="materialNo" type="text" placeholder="Material No"
+            <input wire:model.live.debounce.500ms="materialNo" type="text" placeholder="Material No"
                 class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
             <div class="absolute z-10 w-1/4">
@@ -36,10 +36,11 @@
                             <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
                                 x-data="{
                                     updateDetails(data) {
+                                        console.log('a')
                                         $wire.set('selectedData', data);
                                         $refs.requestQty.focus();
                                     }
-                                }" @click="updateDetails('{{ json_encode($res) }}')">
+                                }" @click="updateDetails(@js($res))">
                                 {{ $res->matl_no }}
                             </div>
                         @empty
