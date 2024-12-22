@@ -89,11 +89,15 @@ class ItemMaterialRequest implements FromCollection, WithEvents, WithCustomStart
 
                 $sheet->mergeCells('B1:I1');
                 $sheet->setCellValue('B1', "MATERIAL REQUEST");
-                $sheet->mergeCells('H2:I2');
-                $sheet->setCellValue('H2', "Print Date : ".date('d-m-Y H:i'));
+                $sheet->mergeCells('A2:C2');
+                $sheet->setCellValue('A2', "Transaksi No : ".$this->data[0]->transaksi_no);
+                $sheet->mergeCells('A3:C3');
+                $sheet->setCellValue('A3', "Print Date   : ".date('d-m-Y H:i'));
+                $sheet->setCellValue('A4', " ");
+
 
                 $sheet->getDelegate()->getStyle('B1:I1')->getFont()->setSize(20);
-                $sheet->getDelegate()->getStyle('B1:I1')->getFont()->setBold(true);
+                $sheet->getDelegate()->getStyle('B1:I3')->getFont()->setBold(true);
 
                 $styleArray = [
                     'alignment' => [
