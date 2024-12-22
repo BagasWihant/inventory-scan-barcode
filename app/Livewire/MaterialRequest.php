@@ -152,15 +152,19 @@ class MaterialRequest extends Component
     {
         $userRequstIsNull = ModelsMaterialRequest::whereNull('user_request')
             ->whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']])->exists();
-        if($userRequstIsNull){
+        if ($userRequstIsNull) {
             return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Please fill all User Request ']);
         }
-        
-        ModelsMaterialRequest::whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']])
-            ->update([
-                'status' => 0,
-                'created_at' => Carbon::now(),
-            ]);
+        $updateStatus = ModelsMaterialRequest::whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']]);
+
+        if (!$updateStatus->exists()) {
+            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Submit Failed No. Transaksi berbeda (beda hari)']);
+        }
+
+        $updateStatus->update([
+            'status' => 0,
+            'created_at' => Carbon::now(),
+        ]);
 
         DB::table('WH_config')->where('config', 'materialRequestNW')->update(['value' => $this->variablePage['materialRequestNW']]);
         DB::table('WH_config')->where('config', 'materialRequestWR')->update(['value' => $this->variablePage['materialRequestWR']]);
