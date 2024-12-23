@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
         Route::get('material-available', 'materialAvailable')->name('material.available')->withoutMiddleware('isPrepareStockTaking');
         Route::get('supply-assy', 'supplyAssy')->name('supply.assy')->withoutMiddleware('isPrepareStockTaking');
     });
+    Route::get('stock-taking-cot', fn() => view('pages.stock-taking-cot'))->name('stock.taking.cot');
     Route::get('material-request', fn() => view('pages.material-request'))->name('material.request');
     Route::get('material-request-proses', fn() => view('pages.material-request-proses'))->name('material.request-proses');
 });
