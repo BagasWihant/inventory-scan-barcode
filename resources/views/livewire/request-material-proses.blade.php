@@ -141,7 +141,7 @@
 
                             <button @click="closeModal" type="button"
                                 class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
-                            <button type="button" wire:click="saveDetailScanned"
+                            <button type="button" @click="saveDetailScanned"
                                 class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-blue-500 rounded-lg border  hover:bg-blue-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Confirm</button>
                         </div>
                     </div>
@@ -151,7 +151,7 @@
 
         <div wire:loading.flex
             class=" fixed z-[99] bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
-            wire:target="materialScan" aria-label="Loading..." role="status">
+            wire:target="materialScan,saveDetailScanned" aria-label="Loading..." role="status">
             <svg class="h-20 w-20 animate-spin stroke-white " viewBox="0 0 256 256">
                 <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
                     stroke-linejoin="round" stroke-width="24"></line>
@@ -199,6 +199,20 @@
                         @this.materialScan = null;
                         @this.transaksiSelected = null;
                         this.showModal = false
+                    },
+                    saveDetailScanned() {
+                        @this.call('saveDetailScanned').then((data) => {
+                            if (data.success) {
+                                return this.showModal = false
+                            }
+                            return Swal.fire({
+                                timer: 2000,
+                                title: 'Ops, Something went wrong',
+                                icon: 'error',
+                                showConfirmButton: false,
+                                timerProgressBar: true,
+                            });
+                        })
                     }
                 }
             }

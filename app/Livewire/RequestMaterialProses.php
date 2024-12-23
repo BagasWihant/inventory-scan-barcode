@@ -226,6 +226,7 @@ class RequestMaterialProses extends Component
         }
         temp_request::where('transaksi_no', $this->transaksiNo)->delete();
         DB::commit();
+        return ['success' => true];
     }
     public function render()
     {
