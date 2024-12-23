@@ -11,7 +11,7 @@
         </span>
     </div>
     <div class="relative overflow-x-auto shadow-md rounded-lg mt-7">
-        <table class="w-full text-sm text-left rtl:text-right text-gray-700 ">
+        <table wire:poll.5s="refreshTable" class="w-full text-sm text-left rtl:text-right text-gray-700 ">
             <thead class="text-sm text-gray-900 font-bold uppercase bg-gray-50 ">
 
                 <tr>
@@ -109,5 +109,4 @@
             </tbody>
         </table>
     </div>
-    {{ $material->links() }}
 </div>
