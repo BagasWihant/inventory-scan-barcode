@@ -55,15 +55,15 @@ class RequestMaterialProses extends Component
         }
         $materialScanned = DB::table('material_conversion_mst as m')->where('supplier_code', $this->materialScan)
             ->leftJoin('material_mst as mst', 'm.sws_code', '=', 'mst.matl_no')
-            ->select('mst.iss_min_lot');
+            ->select(['mst.iss_min_lot','m.sws_code']);
         if ($materialScanned->exists()) {
 
             $item = $materialScanned->first();
             $tempTransaksiSelected = $this->transaksiSelected;
-            $scannedMaterial = $tempTransaksiSelected->filter(function ($sub) {
-                return $sub->material_no == $this->materialScan;
+            $scannedMaterial = $tempTransaksiSelected->filter(function ($sub) use ($item) {
+                return str_replace(' ', '', $sub->material_no) == str_replace(' ', '', $item->sws_code);
             })->first();
-
+            
             $checkingUser = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
                 ->select('user_id')->distinct()->first();
 
@@ -189,7 +189,7 @@ class RequestMaterialProses extends Component
                     ->on('material_request.material_no', '=', 'r.material_no');
             })
             ->select(['material_request.*', 'r.qty_supply'])->get();
-        
+
         MaterialRequest::where('material_request.transaksi_no', $this->transaksiNo)->update([
             'status' => '1',
             'proses_date' => now()
