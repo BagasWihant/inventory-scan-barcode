@@ -17,7 +17,6 @@ class StockTakingCot extends Component
     public $noSto;
     public $materialNo;
     public $noPalet;
-    public $btnSetupDone;
     public $partial;
     public $dataTable = [];
     public $selectedMaterial;
