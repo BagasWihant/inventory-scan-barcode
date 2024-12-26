@@ -72,11 +72,13 @@ class StockTakingCot extends Component
         $supplierCode = DB::table('material_setup_mst_supplier as m')
             ->where('supplier_code', $materialNoParse)
             ->leftJoin('material_conversion_mst as c', 'm.material_no', '=', 'c.sws_code')
-            ->select('m.line_c', 'm.material_no', 'picking_qty')->first();
+            ->leftJoin('material_mst as mst', 'm.material_no', '=', 'mst.matl_no')
+            ->select('m.line_c', 'm.material_no', 'picking_qty', 'mst.matl_nm')->first();
 
         ModelsStockTakingCot::create([
             'no_sto' => $this->noSto,
             'material_no' => $supplierCode->material_no,
+            'material_name' => $supplierCode->matl_nm,
             'line_code' => $supplierCode->line_c,
             'qty' => $qtyParse,
             'picking_qty' => $supplierCode->picking_qty,
@@ -94,15 +96,22 @@ class StockTakingCot extends Component
         if ($this->tglSto == null) {
             return $this->dispatch('notification', ['time' => 3500, 'icon' => 'warning', 'title' => 'Please choose date']);
         }
-        
-        $palet = DB::table('palet_register_details as d')->where('d.palet_no', $this->noPalet)
+
+        $palet = DB::table('palet_register_details as d')
             ->leftJoin('palet_registers as p', 'd.palet_no', '=', 'p.palet_no')
+            ->leftJoin('material_mst as m', 'd.material_no', '=', 'm.matl_no')
+            ->where('p.palet_no_iwpi', $this->noPalet)
             ->where('p.status', '1')->where('d.is_done', '1')
-            ->select('d.material_no', 'd.qty', 'd.material_name', 'p.line_c', 'd.palet_no')->get();
+            ->select('d.material_no', 'd.qty', 'd.material_name', 'p.line_c', 'd.palet_no', 'm.matl_nm')->get();
+
+        if (count($palet) == 0) {
+            return $this->dispatch('notification', ['time' => 2500, 'icon' => 'warning', 'title' => 'Palet belum selesai / tidak ada']);
+        }
         foreach ($palet as $item) {
             ModelsStockTakingCot::create([
                 'no_sto' => $this->noSto,
                 'material_no' => $item->material_no,
+                'material_name' => $item->matl_nm,
                 'line_code' => $item->line_c,
                 'qty' => $item->qty,
                 'palet_no' => $item->palet_no,
@@ -112,6 +121,13 @@ class StockTakingCot extends Component
         }
         $this->loadData();
         $this->noPalet = null;
+    }
+
+    public function deleteItem($id)
+    {
+        ModelsStockTakingCot::where('id', $id)->delete();
+        $this->loadData();
+        return ['success' => true];
     }
 
     public function changeLocation($newLocation)
@@ -129,12 +145,13 @@ class StockTakingCot extends Component
         ModelsStockTakingCot::where('no_sto', $this->noSto)->delete();
         $this->loadData();
     }
-    
-    public function saveAll() {
-        $data =ModelsStockTakingCot::where('no_sto', $this->noSto);
+
+    public function saveAll()
+    {
+        $data = ModelsStockTakingCot::where('no_sto', $this->noSto);
         $data->update(['status' => '1']);
-        DB::table('WH_config')->where('config', 'noStockCot')->select('config', 'value')->update(['value' => substr($this->noSto,8)]);
-        
+        DB::table('WH_config')->where('config', 'noStockCot')->select('config', 'value')->update(['value' => substr($this->noSto, 8)]);
+
 
         $this->mount();
         return Excel::download(new ExportStockTakingExcel($data->get()), "Stock Taking COT" . $this->noSto . "_" . date('YmdHis') . ".xlsx", \Maatwebsite\Excel\Excel::XLSX);

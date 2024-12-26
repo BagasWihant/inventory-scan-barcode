@@ -87,6 +87,9 @@
                         Material No
                     </th>
                     <th scope="col" class="px-6 py-3">
+                        Material Name
+                    </th>
+                    <th scope="col" class="px-6 py-3">
                         Qty
                     </th>
                     <th scope="col" class="px-6 py-3">
@@ -115,6 +118,9 @@
                             {{ $data->material_no }}
                         </td>
                         <td class="px-6 py-4">
+                            {{ $data->material_name }}
+                        </td>
+                        <td class="px-6 py-4">
                             {{ $data->qty }}
                         </td>
                         <td class="px-6 py-4">
@@ -125,7 +131,9 @@
                         </td>
                         <td class="px-6 py-4 text-right">
                             <button class="btn bg-yellow-400 text-white rounded-md p-2"
-                                @click="editLoc(@js($data))">Edit Location</button>
+                                @click="editLoc(@js($data))">Edit</button>
+                            <button class="btn bg-red-600 text-white rounded-md p-2"
+                                @click="deleteItem('{{ $data->id }}')">Delete</button>
                         </td>
                     </tr>
                 @endforeach
@@ -205,6 +213,31 @@
             this.showModal = true;
             @this.set('selectedMaterial', data)
         },
+        deleteItem(id) {
+            Swal.fire({
+                title: "Yakin Mengahpus data ini?",
+                showDenyButton: true,
+                confirmButtonText: "Ya",
+                denyButtonText: `Tidak`
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    @this.call('deleteItem', id).then((res) => {
+                        if (res.success) {
+                            Swal.fire({
+                                timer: 1500,
+                                title: 'Material Terhapus',
+                                icon: 'success',
+                                showConfirmButton: false,
+                                timerProgressBar: true,
+                            });
+                        }
+
+                    })
+                } else if (result.isDenied) {
+                    Swal.fire("Tidak menghapus data", "", "info");
+                }
+            });
+        },
         closeModal() {
             this.showModal = false
             @this.selectedMaterial = null
@@ -230,6 +263,13 @@
         }).then((res) => {
             if (res.isConfirmed) {
                 @this.call('clearData')
+                Swal.fire({
+                    timer: 1500,
+                    title: 'Data Terhapus',
+                    icon: 'success',
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
             }
         });
     }
