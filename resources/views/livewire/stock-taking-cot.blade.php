@@ -16,16 +16,12 @@
 
         <div class="flex">
 
-            @if ($btnSetupDone)
-                <button type="button" wire:click="saveSetup"
-                    class="text-white bg-gradient-to-r from-green-600 to-green-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center">
-                    Simpan Setup
+            @if (count($dataTable) > 0)
+                <button type="button" @click="clearData()"
+                    class="text-white bg-gradient-to-r from-red-600 to-red-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center">
+                    Clear Data
                 </button>
             @endif
-            <button type="button" @click="clearData()"
-                class="text-white bg-gradient-to-r from-red-600 to-red-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center">
-                Clear Data
-            </button>
         </div>
     </div>
 
@@ -67,12 +63,14 @@
             @endif
 
         </div>
-        <div class="">
-            <button type="button" @click="saveAll()"
-                class="text-white bg-gradient-to-r from-green-600 to-green-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center">
-                Save
-            </button>
-        </div>
+        @if (count($dataTable) > 0)
+            <div class="">
+                <button type="button" @click="saveAll()"
+                    class="text-white bg-gradient-to-r from-green-600 to-green-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all font-medium rounded-xl text-sm px-5 py-2.5 text-center">
+                    Save
+                </button>
+            </div>
+        @endif
     </div>
 
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg" x-data="tableManager()">
@@ -87,6 +85,9 @@
                     </th>
                     <th scope="col" class="px-6 py-3">
                         Material No
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Material Name
                     </th>
                     <th scope="col" class="px-6 py-3">
                         Qty
@@ -117,6 +118,9 @@
                             {{ $data->material_no }}
                         </td>
                         <td class="px-6 py-4">
+                            {{ $data->material_name }}
+                        </td>
+                        <td class="px-6 py-4">
                             {{ $data->qty }}
                         </td>
                         <td class="px-6 py-4">
@@ -127,7 +131,9 @@
                         </td>
                         <td class="px-6 py-4 text-right">
                             <button class="btn bg-yellow-400 text-white rounded-md p-2"
-                                @click="editLoc(@js($data))">Edit Location</button>
+                                @click="editLoc(@js($data))">Edit</button>
+                            <button class="btn bg-red-600 text-white rounded-md p-2"
+                                @click="deleteItem('{{ $data->id }}')">Delete</button>
                         </td>
                     </tr>
                 @endforeach
@@ -207,6 +213,31 @@
             this.showModal = true;
             @this.set('selectedMaterial', data)
         },
+        deleteItem(id) {
+            Swal.fire({
+                title: "Yakin Mengahpus data ini?",
+                showDenyButton: true,
+                confirmButtonText: "Ya",
+                denyButtonText: `Tidak`
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    @this.call('deleteItem', id).then((res) => {
+                        if (res.success) {
+                            Swal.fire({
+                                timer: 1500,
+                                title: 'Material Terhapus',
+                                icon: 'success',
+                                showConfirmButton: false,
+                                timerProgressBar: true,
+                            });
+                        }
+
+                    })
+                } else if (result.isDenied) {
+                    Swal.fire("Tidak menghapus data", "", "info");
+                }
+            });
+        },
         closeModal() {
             this.showModal = false
             @this.selectedMaterial = null
@@ -232,10 +263,17 @@
         }).then((res) => {
             if (res.isConfirmed) {
                 @this.call('clearData')
+                Swal.fire({
+                    timer: 1500,
+                    title: 'Data Terhapus',
+                    icon: 'success',
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
             }
         });
     }
-    const saveAll = () =>{
+    const saveAll = () => {
         Swal.fire({
             title: 'Save change data?',
             icon: 'warning',
