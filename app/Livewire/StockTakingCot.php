@@ -75,10 +75,11 @@ class StockTakingCot extends Component
             ->leftJoin('material_mst as mst', 'm.material_no', '=', 'mst.matl_no')
             ->select('m.line_c', 'm.material_no', 'picking_qty', 'mst.matl_nm')->first();
 
-        if ($this->checkDouble($supplierCode->material_no)) {
+        if ($this->checkDouble(materialNo: ['no' => $supplierCode->material_no, 'line' => $supplierCode->line_c])) {
             $this->materialNo = null;
             return $this->dispatch('notification', ['time' => 2500, 'icon' => 'warning', 'title' => 'Material sudah ada di list']);
         }
+        // dd('assad');
         ModelsStockTakingCot::create([
             'no_sto' => $this->noSto,
             'material_no' => $supplierCode->material_no,
@@ -96,6 +97,8 @@ class StockTakingCot extends Component
 
     public function noPaletScan()
     {
+        if($this->noPalet == null) return;
+        
         if ($this->tglSto == null) {
             return $this->dispatch('notification', ['time' => 3500, 'icon' => 'warning', 'title' => 'Please choose date']);
         }
@@ -108,13 +111,14 @@ class StockTakingCot extends Component
             ->select('d.material_no', 'd.qty', 'd.material_name', 'p.line_c', 'd.palet_no', 'm.matl_nm', 'p.lokasi')->get();
 
         if (count($palet) == 0) {
+            $this->noPalet = null;
             return $this->dispatch('notification', ['time' => 2500, 'icon' => 'warning', 'title' => 'Palet belum selesai / tidak ada']);
         }
+        if ($this->checkDouble(paletNo: $palet[0]->palet_no)) {
+            $this->noPalet = null;
+            return $this->dispatch('notification', ['time' => 2500, 'icon' => 'warning', 'title' => 'Material sudah ada di list']);
+        }
         foreach ($palet as $item) {
-            if ($this->checkDouble($item->material_no, $item->palet_no)) {
-                $this->noPalet = null;
-                return $this->dispatch('notification', ['time' => 2500, 'icon' => 'warning', 'title' => 'Material sudah ada di list']);
-            }
             ModelsStockTakingCot::create([
                 'no_sto' => $this->noSto,
                 'material_no' => $item->material_no,
@@ -176,13 +180,16 @@ class StockTakingCot extends Component
             ->where('status', '0')->get();
     }
 
-    private function checkDouble($materialNo, $paletNo = null)
+    private function checkDouble($materialNo = null, $paletNo = null)
     {
         return ModelsStockTakingCot::where('no_sto', $this->noSto)
-            ->where('material_no', $materialNo)
+            ->when($materialNo, function ($query) use ($materialNo) {
+                return $query->where('material_no',  $materialNo['no'])
+                    ->where('line_code',  $materialNo['line']);
+            })
             ->when($paletNo != null, function ($query) use ($paletNo) {
                 return $query->where('palet_no',  $paletNo);
-            })->where('status','0')
+            })->where(DB::raw('CONVERT(date, created_at)'), now()->format('Y-m-d'))
             ->exists();
     }
 }
