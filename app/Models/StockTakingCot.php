@@ -16,6 +16,7 @@ class StockTakingCot extends Model
         'issue_date',
         'palet_no',
         'location',
-        'status'
+        'status',
+        'material_name'
     ];
 }
