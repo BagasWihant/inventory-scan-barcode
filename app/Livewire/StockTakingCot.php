@@ -182,7 +182,7 @@ class StockTakingCot extends Component
             ->where('material_no', $materialNo)
             ->when($paletNo != null, function ($query) use ($paletNo) {
                 return $query->where('palet_no',  $paletNo);
-            })
+            })->where('status','0')
             ->exists();
     }
 }
