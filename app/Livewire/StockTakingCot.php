@@ -75,6 +75,10 @@ class StockTakingCot extends Component
             ->leftJoin('material_mst as mst', 'm.material_no', '=', 'mst.matl_no')
             ->select('m.line_c', 'm.material_no', 'picking_qty', 'mst.matl_nm')->first();
 
+        if ($this->checkDouble($supplierCode->material_no)) {
+            $this->materialNo = null;
+            return $this->dispatch('notification', ['time' => 2500, 'icon' => 'warning', 'title' => 'Material sudah ada di list']);
+        }
         ModelsStockTakingCot::create([
             'no_sto' => $this->noSto,
             'material_no' => $supplierCode->material_no,
@@ -88,7 +92,6 @@ class StockTakingCot extends Component
 
         $this->materialNo = null;
         $this->loadData();
-        $this->materialNo = null;
     }
 
     public function noPaletScan()
@@ -102,12 +105,16 @@ class StockTakingCot extends Component
             ->leftJoin('material_mst as m', 'd.material_no', '=', 'm.matl_no')
             ->where('p.palet_no', $this->noPalet)
             ->where('d.is_done', '1')
-            ->select('d.material_no', 'd.qty', 'd.material_name', 'p.line_c', 'd.palet_no', 'm.matl_nm','p.lokasi')->get();
+            ->select('d.material_no', 'd.qty', 'd.material_name', 'p.line_c', 'd.palet_no', 'm.matl_nm', 'p.lokasi')->get();
 
         if (count($palet) == 0) {
             return $this->dispatch('notification', ['time' => 2500, 'icon' => 'warning', 'title' => 'Palet belum selesai / tidak ada']);
         }
         foreach ($palet as $item) {
+            if ($this->checkDouble($item->material_no, $item->palet_no)) {
+                $this->noPalet = null;
+                return $this->dispatch('notification', ['time' => 2500, 'icon' => 'warning', 'title' => 'Material sudah ada di list']);
+            }
             ModelsStockTakingCot::create([
                 'no_sto' => $this->noSto,
                 'material_no' => $item->material_no,
@@ -167,5 +174,15 @@ class StockTakingCot extends Component
     {
         $this->dataTable = ModelsStockTakingCot::where('no_sto', $this->noSto)
             ->where('status', '0')->get();
+    }
+
+    private function checkDouble($materialNo, $paletNo = null)
+    {
+        return ModelsStockTakingCot::where('no_sto', $this->noSto)
+            ->where('material_no', $materialNo)
+            ->when($paletNo != null, function ($query) use ($paletNo) {
+                return $query->where('palet_no',  $paletNo);
+            })
+            ->exists();
     }
 }
