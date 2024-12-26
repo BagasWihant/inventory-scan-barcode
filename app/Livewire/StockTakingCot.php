@@ -101,8 +101,8 @@ class StockTakingCot extends Component
             ->leftJoin('palet_registers as p', 'd.palet_no', '=', 'p.palet_no')
             ->leftJoin('material_mst as m', 'd.material_no', '=', 'm.matl_no')
             ->where('p.palet_no', $this->noPalet)
-            ->where('p.status', '1')->where('d.is_done', '1')
-            ->select('d.material_no', 'd.qty', 'd.material_name', 'p.line_c', 'd.palet_no', 'm.matl_nm')->get();
+            ->where('d.is_done', '1')
+            ->select('d.material_no', 'd.qty', 'd.material_name', 'p.line_c', 'd.palet_no', 'm.matl_nm','p.lokasi')->get();
 
         if (count($palet) == 0) {
             return $this->dispatch('notification', ['time' => 2500, 'icon' => 'warning', 'title' => 'Palet belum selesai / tidak ada']);
@@ -115,6 +115,7 @@ class StockTakingCot extends Component
                 'line_code' => $item->line_c,
                 'qty' => $item->qty,
                 'palet_no' => $item->palet_no,
+                'location' => $item->lokasi,
                 'tgl_sto' => $this->tglSto,
                 'user_id' => $this->userId
             ]);
