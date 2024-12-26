@@ -100,7 +100,7 @@ class StockTakingCot extends Component
         $palet = DB::table('palet_register_details as d')
             ->leftJoin('palet_registers as p', 'd.palet_no', '=', 'p.palet_no')
             ->leftJoin('material_mst as m', 'd.material_no', '=', 'm.matl_no')
-            ->where('p.palet_no_iwpi', $this->noPalet)
+            ->where('p.palet_no', $this->noPalet)
             ->where('p.status', '1')->where('d.is_done', '1')
             ->select('d.material_no', 'd.qty', 'd.material_name', 'p.line_c', 'd.palet_no', 'm.matl_nm')->get();
 
