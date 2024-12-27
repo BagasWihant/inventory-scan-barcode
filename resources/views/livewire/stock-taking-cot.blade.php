@@ -149,7 +149,7 @@
                     <div class="relative bg-white rounded-t-lg shadow dark:bg-gray-700">
 
                         <div class="p-3">
-                            <b>Edit Lokasi {{ $selectedMaterial['material_no'] }}</b>
+                            <b>Edit {{ $selectedMaterial['material_no'] }}</b>
                         </div>
                     </div>
                     <div class="bg-white">
@@ -165,6 +165,8 @@
                                 <option @if ($selectedMaterial['location'] == 'V-04') selected @endif value="V-04">V-04</option>
                                 <option @if ($selectedMaterial['location'] == 'V-05') selected @endif value="V-05">V-05</option>
                             </select>
+                            <input type="text" x-ref="qty" value="{{ $selectedMaterial['qty'] }}" class="p-2 mt-3 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300" placeholder="Qty">
+                            <input type="text" x-ref="oldQty" value="{{ $selectedMaterial['qty'] }}" class="hidden">
                         </div>
                     </div>
                     <div
@@ -243,7 +245,18 @@
             @this.selectedMaterial = null
         },
         changeLocation() {
-            @this.call('changeLocation', this.$refs.location.value)
+            console.log(this.$refs.qty.value, this.$refs.oldQty.value);
+            
+            if(this.$refs.qty.value > this.$refs.oldQty.value){
+                return Swal.fire({
+                    timer: 1500,
+                    title: 'Qty Tidak Mencukupi',
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            }
+            @this.call('changeLocation', this.$refs.location.value, this.$refs.qty.value)
             Swal.fire({
                 timer: 1500,
                 title: 'Change Location Success',

@@ -142,12 +142,14 @@ class StockTakingCot extends Component
         return ['success' => true];
     }
 
-    public function changeLocation($newLocation)
+    public function changeLocation($newLocation,$qty)
     {
+        
         ModelsStockTakingCot::where('no_sto', $this->noSto)
             ->where('material_no', $this->selectedMaterial['material_no'])
             ->update([
-                'location' => $newLocation
+                'location' => $newLocation,
+                'qty' => $qty
             ]);
         $this->loadData();
     }
