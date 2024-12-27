@@ -54,6 +54,9 @@ class StockTakingCot extends Component
 
             $materialNoParse = $split1[0];
             $qtyParse = preg_replace('/[^0-9]/', '', $split1[2]);
+            $lineParse = "";
+            $kitNo  = "";
+
         } else {
             $split = explode("/", $qrtrim);
             if (count($split) < 2) {
@@ -67,24 +70,29 @@ class StockTakingCot extends Component
 
             $hapusdepan = str_replace($hrfDpn, "", $split[1]);
             $materialNoParse = str_replace($hrfBkg, "", $hapusdepan);
-        }
 
+            $lineParse = trim($split[2]);
+            $kitNo  = str_replace('-','',trim($split[0]));
+
+        }
         $supplierCode = DB::table('material_setup_mst_supplier as m')
             ->where('supplier_code', $materialNoParse)
+            ->where('kit_no',$kitNo)
+            ->where('line_c',$lineParse)
             ->leftJoin('material_conversion_mst as c', 'm.material_no', '=', 'c.sws_code')
             ->leftJoin('material_mst as mst', 'm.material_no', '=', 'mst.matl_no')
             ->select('m.line_c', 'm.material_no', 'picking_qty', 'mst.matl_nm')->first();
 
-        if ($this->checkDouble(materialNo: ['no' => $supplierCode->material_no, 'line' => $supplierCode->line_c])) {
+        if ($this->checkDouble(materialNo: ['no' => $supplierCode->material_no, 'line' => $lineParse])) {
             $this->materialNo = null;
             return $this->dispatch('notification', ['time' => 2500, 'icon' => 'warning', 'title' => 'Material sudah ada di list']);
         }
-        // dd('assad');
+        
         ModelsStockTakingCot::create([
             'no_sto' => $this->noSto,
             'material_no' => $supplierCode->material_no,
             'material_name' => $supplierCode->matl_nm,
-            'line_code' => $supplierCode->line_c,
+            'line_code' => $lineParse,
             'qty' => $qtyParse,
             'picking_qty' => $supplierCode->picking_qty,
             'tgl_sto' => $this->tglSto,
@@ -123,7 +131,7 @@ class StockTakingCot extends Component
                 'no_sto' => $this->noSto,
                 'material_no' => $item->material_no,
                 'material_name' => $item->matl_nm,
-                'line_code' => $item->line_c,
+                'line_code' => str_replace(' ', '', $item->line_c),
                 'qty' => $item->qty,
                 'palet_no' => $item->palet_no,
                 'location' => $item->lokasi,
