@@ -166,6 +166,7 @@ class RequestMaterialProses extends Component
 
         $this->transaksiNo = $trx;
         $this->materialScan = null;
+        return ['success' => true];
     }
 
     public function getData()
@@ -190,43 +191,53 @@ class RequestMaterialProses extends Component
             })
             ->select(['material_request.*', 'r.qty_supply'])->get();
 
-        MaterialRequest::where('material_request.transaksi_no', $this->transaksiNo)->update([
-            'status' => '1',
-            'proses_date' => now()
-        ]);
-        DB::beginTransaction();
-        foreach ($dataConfirm as $item) {
-            if ($item->qty_supply != $item->request_qty) {
-                DB::rollBack();
-                $this->getMaterial($this->transaksiNo);
-                return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Tidak bisa Confirm, Qty supply belum sesuai Qty request"]);
-            }
+        
+        try {
 
-            $idSetupMst = DB::table('Setup_mst')->insertGetId([
-                'issue_dt' => date('Y-m-d'),
-                'line_cd' => $this->transaksiNo,
+            DB::beginTransaction();
+            foreach ($dataConfirm as $item) {
+                if ($item->qty_supply != $item->request_qty) {
+                    DB::rollBack();
+                    $this->getMaterial($this->transaksiNo);
+                    return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Tidak bisa Confirm, Qty supply belum sesuai Qty request"]);
+                }
+
+                $idSetupMst = DB::table('Setup_mst')->insertGetId([
+                    'issue_dt' => date('Y-m-d'),
+                    'line_cd' => $this->transaksiNo,
+                    'status' => '1',
+                    'created_at' => now(),
+                    'created_by' => $this->userId,
+                    'finished_at' => now(),
+                ]);
+                DB::table('Setup_dtl')->insert([
+                    'setup_id' => $idSetupMst,
+                    'material_no' => $item->material_no,
+                    'qty' => $item->qty_supply,
+                    'created_at' => now(),
+                    'pallet_no' => $this->transaksiNo,
+                ]);
+                $matMst = DB::table('material_mst')->where('matl_no', $item->material_no);
+                $matMstData = $matMst->first();
+                $matMst->update([
+                    'qty' => $matMstData->qty - $item->qty_supply,
+                    'qty_OUT' => $matMstData->qty_OUT + $item->qty_supply
+                ]);
+            }
+            temp_request::where('transaksi_no', $this->transaksiNo)->delete();
+            DB::commit();
+            
+            MaterialRequest::where('material_request.transaksi_no', $this->transaksiNo)->update([
                 'status' => '1',
-                'created_at' => now(),
-                'created_by' => $this->userId,
-                'finished_at' => now(),
+                'proses_date' => now()
             ]);
-            DB::table('Setup_dtl')->insert([
-                'setup_id' => $idSetupMst,
-                'material_no' => $item->material_no,
-                'qty' => $item->qty_supply,
-                'created_at' => now(),
-                'pallet_no' => $this->transaksiNo,
-            ]);
-            $matMst = DB::table('material_mst')->where('matl_no', $item->material_no);
-            $matMstData = $matMst->first();
-            $matMst->update([
-                'qty' => $matMstData->qty - $item->qty_supply,
-                'qty_OUT' => $matMstData->qty_OUT + $item->qty_supply
-            ]);
+            
+            return ['success' => true];
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            $this->getMaterial($this->transaksiNo);
+            return ['success' => false, 'message' => $th->getMessage()];
         }
-        temp_request::where('transaksi_no', $this->transaksiNo)->delete();
-        DB::commit();
-        return ['success' => true];
     }
     public function render()
     {

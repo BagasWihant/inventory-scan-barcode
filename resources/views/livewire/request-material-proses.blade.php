@@ -55,11 +55,11 @@
             <!-- Main modal -->
             <div id="static-modal" data-modal-backdrop="static" tabindex="-1" aria-hidden="true" x-show="showModal"
                 x-cloak x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="scale-75 backdrop-blur-sm"
+                x-transition:enter-start="scale-90 backdrop-blur-sm"
                 x-transition:enter-end=" scale-100 backdrop-blur-md"
                 x-transition:leave="transition ease-in duration-200" x-transition:leave-start=" scale-100"
-                x-transition:leave-end="scale-75"
-                class="flex inset-0 backdrop-blur-md overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 max-h-full">
+                x-transition:leave-end="scale-90"
+                class="flex inset-0 sc backdrop-blur-md overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 max-h-full">
                 <div class="relative p-4 w-full max-w-7xl max-h-full">
                     <!-- Modal content -->
                     <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
@@ -123,8 +123,7 @@
                                                     <td class="px-3 py-2">{{ $data->material_name }}</td>
                                                     <td class="px-3 py-2">{{ $data->iss_unit }}</td>
                                                     <td class="px-3 py-2">{{ $data->request_qty }}</td>
-                                                    <td class="px-3 py-2" role="button"
-                                                        @click="modalQtyEdit(@js($data))">
+                                                    <td class="px-3 py-2" role="button">
                                                         {{ $data->qty_supply }}</td>
 
                                                 </tr>
@@ -176,23 +175,13 @@
             <span class="text-4xl font-medium text-white">{{ $statusLoading ?? 'Loading...' }}</span>
         </div>
         <script>
-            function modalQtyEdit(data) {
-                Swal.fire({
-                    timer: event[0].time,
-                    title: event[0].title,
-                    icon: event[0].icon,
-                    showConfirmButton: false,
-                    timerProgressBar: true,
-                });
-            }
-
             function tableManager() {
                 return {
                     showModal: false,
                     showMaterialDetails(trx) {
                         // Use Livewire to fetch only when needed
                         @this.call('getMaterial', trx).then((data) => {
-                            this.showModal = true
+                            if (data.success) this.showModal = true
                         });
                     },
                     closeModal() {
@@ -202,16 +191,18 @@
                     },
                     saveDetailScanned() {
                         @this.call('saveDetailScanned').then((data) => {
+                            console.log(data);
                             if (data.success) {
                                 return this.showModal = false
                             }
                             return Swal.fire({
-                                timer: 2000,
-                                title: 'Ops, Something went wrong',
+                                timer: 2500,
+                                title: data.message,
                                 icon: 'error',
                                 showConfirmButton: false,
                                 timerProgressBar: true,
                             });
+
                         })
                     }
                 }
