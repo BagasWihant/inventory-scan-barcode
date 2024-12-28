@@ -13,7 +13,7 @@ use Spatie\LaravelIgnition\Recorders\DumpRecorder\Dump;
 
 class StockTakingConf extends Component
 {
-    public $data, $queryStock, $userID, $confirmDireksi, $sto, $search, $confirmKIAS,$direksi;
+    public $data, $queryStock, $userID, $confirmDireksi, $sto, $search, $confirmKIAS, $direksi;
 
     public function mount()
     {
@@ -28,14 +28,9 @@ class StockTakingConf extends Component
         $this->sto->update([
             'confirm' => 1
         ]);
-        $this->confirmKIAS = false;
-    }
-    public function konfirmasiDireksi()
-    {
-        $export = $this->data;
-
-        foreach ($this->data as  $value) {
+        foreach ($this->data as $value) {
             $result_qty = $value->qty - $value->qtysys;
+
             RealStockTaking::create([
                 'sto_id' => $this->sto->id,
                 'user_id' => $this->userID,
@@ -46,6 +41,16 @@ class StockTakingConf extends Component
                 'qty_sto' => $value->qty,
                 'result_qty' => $result_qty,
             ]);
+        }
+        $this->confirmKIAS = false;
+    }
+    public function konfirmasiDireksi()
+    {
+        $export = $this->data;
+
+        foreach ($this->data as  $value) {
+            $result_qty = $value->qty - $value->qtysys;
+
 
             DB::table('material_in_stock')
                 ->where('material_no', $value->material_no)
@@ -61,7 +66,7 @@ class StockTakingConf extends Component
                 'locate' => $value->loc,
                 'user_id' => $this->userID,
                 'is_taking' => 9,
-                'line_c'=>'-'
+                'line_c' => '-'
             ]);
 
             DB::table('stock_takings')
@@ -92,12 +97,12 @@ class StockTakingConf extends Component
         $this->sto = MenuOptions::where('status', '1')->first();
         $this->confirmKIAS = false;
         $this->confirmDireksi = false;
-        if($this->sto){
+        if ($this->sto) {
             if ($this->sto->confirm == '0') {
                 $this->confirmKIAS = true;
             } else if ($this->sto->confirm == '1' && $this->direksi == '1') {
                 $this->confirmDireksi = true;
-            } 
+            }
         }
 
 
