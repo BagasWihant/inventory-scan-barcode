@@ -20,18 +20,19 @@ class MonitoringMaterialRequest extends Component
         $materialQuery = MaterialRequest::with('user')
             ->select([
                 DB::raw("STRING_AGG(material_no, ', ') WITHIN GROUP (ORDER BY material_no) AS material_no"),
-                DB::raw("STRING_AGG(user_request, ', ') WITHIN GROUP (ORDER BY material_no) AS user_request"),
+                // DB::raw("STRING_AGG(user_request, ', ') WITHIN GROUP (ORDER BY material_no) AS user_request"),
                 DB::raw('MAX(created_at) as created_at'),
                 DB::raw('MAX(proses_date) as proses_date'),
                 DB::raw('count(transaksi_no) as total_varian'),
                 "transaksi_no",
+                "user_request",
                 'user_id',
                 'status',
             ])
             ->where('status', '!=', '-')
             ->where(DB::raw('CONVERT(date, created_at)'), $this->time->format('Y-m-d'))
             ->orderBy('created_at', 'desc')
-            ->groupBy('transaksi_no', 'user_id', 'status', 'created_at');
+            ->groupBy('transaksi_no', 'user_id', 'status', 'created_at','user_request');
 
         $this->totalCount = MaterialRequest::where('status', '!=', '-')
             ->where(DB::raw('CONVERT(date, created_at)'), $this->time->format('Y-m-d'))

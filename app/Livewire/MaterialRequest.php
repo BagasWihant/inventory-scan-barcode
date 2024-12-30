@@ -18,6 +18,7 @@ class MaterialRequest extends Component
     public $materialRequest = [];
     public $editedUser = false;
     public $userRequest;
+    public $userRequestDisable = false;
     public $variablePage = [
         'materialRequestNW' => 0,
         'materialRequestWR' => 0,
@@ -107,6 +108,9 @@ class MaterialRequest extends Component
 
     public function saveRequest()
     {
+        if (!$this->userRequest) {
+            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please fill User Request']);
+        }
         if (!$this->type) {
             return $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please choose Type']);
         }
@@ -126,8 +130,10 @@ class MaterialRequest extends Component
                 'iss_unit' => $this->selectedData['iss_unit'],
                 'user_id' => auth()->user()->id,
                 'status' => '-',
+                'user_request' => $this->userRequest
             ]);
-
+            $this->dispatch('alert', ['time' => 2500, 'icon' => 'success', 'title' => 'Request Material Berhasil']);
+            $this->userRequestDisable = true;
             $this->loadTable();
             $this->resetField();
         }
@@ -140,13 +146,7 @@ class MaterialRequest extends Component
         return $this->dispatch('alert', ['time' => 2500, 'icon' => 'success', 'title' => 'Material Telah di Hapus']);
     }
 
-    public function updateUserRequest($id)
-    {
-        ModelsMaterialRequest::where('id', $id)->update([
-            'user_request' => $this->userRequest
-        ]);
-        $this->loadTable();
-    }
+   
 
     public function submitRequest()
     {
@@ -163,6 +163,7 @@ class MaterialRequest extends Component
 
         $updateStatus->update([
             'status' => 0,
+            'user_request' => $this->userRequest,
             'created_at' => Carbon::now(),
         ]);
 
@@ -171,6 +172,10 @@ class MaterialRequest extends Component
 
         $this->streamTableSum();
         $this->loadTable();
+        $this->userRequestDisable = false;
+        $this->userRequest = null;
+        $this->resetField();
+        $this->dispatch('alert', ['time' => 2500, 'icon' => 'success', 'title' => 'Request Material Berhasil']);
         $this->generateNoTransaksi();
     }
 
@@ -195,6 +200,8 @@ class MaterialRequest extends Component
     {
         ModelsMaterialRequest::whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']])->where('status', '-')->delete();
         $this->loadTable();
+        $this->userRequestDisable = false;
+        $this->userRequest = null;
         $this->resetField();
     }
 

@@ -17,21 +17,30 @@
                         <label for="bordered-radio-2"
                             class="w-full py-4 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Urgent</label>
                     </div>
+                    <input wire:model="userRequest" type="text" placeholder="User Request"
+                        @if ($userRequestDisable == true) disabled @endif
+                        class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+
+                    @if ($userRequestDisable == true)
+                        <button class="btn bg-yellow-500 shadow-md text-white p-1 rounded-lg text-xs text-nowrap"
+                            @click="@this.set('userRequestDisable', false)">Ganti User</button>
+                    @endif
                 </div>
                 <button class="btn bg-red-500 shadow-md text-white px-2 py-1 rounded-lg text-sm"
                     wire:click="resetField">Clear
                     Input</button>
 
             </div>
-
-            <input wire:model.live.debounce.500ms="materialNo" type="text" placeholder="Material No"
-                class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+            <div class="flex gap-3">
+                <input wire:model.live.debounce.500ms="materialNo" type="text" placeholder="Material No"
+                    class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+            </div>
 
             <div class="absolute z-10 w-1/4">
                 <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
                     wire:target="materialNo">Searching</div>
                 <div wire:loading.remove class="rounded-lg bg-slate-50 shadow">
-                    
+
                     @if (strlen($materialNo) >= 3 && $searchMaterialNo == true)
                         @forelse ($resultSearchMaterial as $res)
                             <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
@@ -135,9 +144,6 @@
                         Min Lot
                     </th>
                     <th scope="col" class="px-6 py-3">
-                        User Request
-                    </th>
-                    <th scope="col" class="px-6 py-3">
                     </th>
                 </tr>
             </thead>
@@ -164,30 +170,6 @@
                         <td class="px-6 py-4">
                             {{ $m->iss_min_lot }}
                         </td>
-                        <td class="px-6 py-4" x-data="{
-                            editedUser: false,
-                            value: '{{ $m->user_request }}',
-                            oldValue: '{{ $m->user_request }}'
-                        }" @click="editedUser = true">
-                            <template x-if="editedUser">
-                                <input type="text" x-model="value" wire:model="userRequest"
-                                    placeholder="User Request"
-                                    @keydown.enter="
-                                           editedUser = false; 
-                                           $wire.updateUserRequest('{{ $m->id }}');
-                                       "
-                                    @keydown.escape="
-                                           editedUser = false;
-                                           value = oldValue;
-                                       "
-                                    @focus="$event.target.select()" x-ref="input"
-                                    class="p-1 text-gray-900 border border-gray-300 bg-slate-200 rounded-lg text-xs">
-                            </template>
-
-                            <template x-if="!editedUser">
-                                <span @click="editedUser = true;">{{ $m->user_request }}</span>
-                            </template>
-                        </td>
                         <td class="px-6 py-4">
                             <button class="btn bg-red-500 shadow-md text-white p-2 rounded-lg text-xs"
                                 wire:click="deleteItem('{{ $m->id }}')">Hapus</button>
@@ -206,7 +188,7 @@
 
     <div wire:loading.flex
         class=" fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
-        wire:target="updateUserRequest,saveRequest" aria-label="Loading..." role="status">
+        wire:target="saveRequest" aria-label="Loading..." role="status">
         <svg class="h-20 w-20 animate-spin stroke-white " viewBox="0 0 256 256">
             <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
                 stroke-linejoin="round" stroke-width="24"></line>

@@ -69,8 +69,9 @@ class ExportStockTakingExcel implements FromCollection, WithMapping, WithHeading
                 $sheet->mergeCells("A1:" . $max_col . "1");
                 $sheet->setCellValue('A1', 'Stock Taking COT');
                 $sheet->mergeCells("A2:" . $max_col . "2");
+                $sheet->mergeCells("A3:B3");
                 $sheet->setCellValue('A2', 'Print date : ' . Carbon::now('Asia/Jakarta')->format('j F Y H:i:s'));
-                $sheet->setCellValue('A3', "   ");
+                $sheet->setCellValue('A3', "No  STO  : " . $this->data[0]->no_sto);
                 $sheet->getDelegate()->getStyle('A1:' . $max_col . '1')->getFont()->setSize(18)->setBold(true);
 
 
