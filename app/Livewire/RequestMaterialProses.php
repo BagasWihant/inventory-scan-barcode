@@ -55,7 +55,7 @@ class RequestMaterialProses extends Component
         }
         $materialScanned = DB::table('material_conversion_mst as m')->where('supplier_code', $this->materialScan)
             ->leftJoin('material_mst as mst', 'm.sws_code', '=', 'mst.matl_no')
-            ->select(['mst.iss_min_lot','m.sws_code']);
+            ->select(['mst.iss_min_lot', 'm.sws_code']);
         if ($materialScanned->exists()) {
 
             $item = $materialScanned->first();
@@ -63,7 +63,7 @@ class RequestMaterialProses extends Component
             $scannedMaterial = $tempTransaksiSelected->filter(function ($sub) use ($item) {
                 return str_replace(' ', '', $sub->material_no) == str_replace(' ', '', $item->sws_code);
             })->first();
-            
+
             $checkingUser = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
                 ->select('user_id')->distinct()->first();
 
@@ -89,9 +89,6 @@ class RequestMaterialProses extends Component
                 $this->tempRequest->update(['qty_supply' => $this->tempRequest->qty_supply + $qtySupply]);
                 $this->dispatch('alert', ['time' => 3500, 'icon' => 'success', 'title' => "Material Added"]);
             } else {
-                if ($qtySupply == 1) {
-                    return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
-                }
 
                 temp_request::create([
                     'transaksi_no' => $scannedMaterial->transaksi_no,
@@ -100,6 +97,12 @@ class RequestMaterialProses extends Component
                     'qty_supply' => $qtySupply,
                     'user_id' => $this->userId
                 ]);
+                $this->tempRequest = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
+                    ->where('material_no', $scannedMaterial->material_no)
+                    ->first();
+                if ($qtySupply == 1) {
+                    return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
+                }
                 $this->dispatch('alert', ['time' => 3500, 'icon' => 'success', 'title' => "Material Added"]);
             }
 
@@ -113,9 +116,8 @@ class RequestMaterialProses extends Component
         $tempTransaksiSelected = $this->transaksiSelected;
 
         $scannedMaterial = $tempTransaksiSelected->filter(function ($sub) {
-            return $sub->material_no == $this->materialScan;
+            return str_replace(' ', '', trim($sub->material_no)) == str_replace(' ', '', trim($this->materialScan));
         })->first();
-
 
         if ($this->tempRequest) {
             $qtySupply = $qty + $this->tempRequest->qty_supply;
@@ -191,7 +193,7 @@ class RequestMaterialProses extends Component
             })
             ->select(['material_request.*', 'r.qty_supply'])->get();
 
-        
+
         try {
 
             DB::beginTransaction();
@@ -226,12 +228,12 @@ class RequestMaterialProses extends Component
             }
             temp_request::where('transaksi_no', $this->transaksiNo)->delete();
             DB::commit();
-            
+
             MaterialRequest::where('material_request.transaksi_no', $this->transaksiNo)->update([
                 'status' => '1',
                 'proses_date' => now()
             ]);
-            
+
             return ['success' => true];
         } catch (\Throwable $th) {
             DB::rollBack();
