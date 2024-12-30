@@ -60,6 +60,7 @@ class RequestMaterialProses extends Component
 
             $item = $materialScanned->first();
             $tempTransaksiSelected = $this->transaksiSelected;
+            $this->materialScan = $item->sws_code;
             $scannedMaterial = $tempTransaksiSelected->filter(function ($sub) use ($item) {
                 return str_replace(' ', '', $sub->material_no) == str_replace(' ', '', $item->sws_code);
             })->first();
@@ -94,7 +95,7 @@ class RequestMaterialProses extends Component
                     'transaksi_no' => $scannedMaterial->transaksi_no,
                     'material_no' => $scannedMaterial->material_no,
                     'qty_request' => $scannedMaterial->request_qty,
-                    'qty_supply' => $qtySupply,
+                    'qty_supply' => 0,
                     'user_id' => $this->userId
                 ]);
                 $this->tempRequest = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
@@ -118,10 +119,10 @@ class RequestMaterialProses extends Component
         $scannedMaterial = $tempTransaksiSelected->filter(function ($sub) {
             return str_replace(' ', '', trim($sub->material_no)) == str_replace(' ', '', trim($this->materialScan));
         })->first();
-
+        
         if ($this->tempRequest) {
             $qtySupply = $qty + $this->tempRequest->qty_supply;
-
+            
             if ($qtySupply > $scannedMaterial->request_qty) {
                 $this->getMaterial($this->transaksiNo);
                 return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Qty supply $qtySupply melebihi Qty request $scannedMaterial->request_qty"]);
