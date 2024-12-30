@@ -90,20 +90,27 @@ class RequestMaterialProses extends Component
                 $this->tempRequest->update(['qty_supply' => $this->tempRequest->qty_supply + $qtySupply]);
                 $this->dispatch('alert', ['time' => 3500, 'icon' => 'success', 'title' => "Material Added"]);
             } else {
-
+               
+                if ($qtySupply == 1) {
+                    temp_request::create([
+                        'transaksi_no' => $scannedMaterial->transaksi_no,
+                        'material_no' => $scannedMaterial->material_no,
+                        'qty_request' => $scannedMaterial->request_qty,
+                        'qty_supply' => 0,
+                        'user_id' => $this->userId
+                    ]);
+                    $this->tempRequest = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
+                        ->where('material_no', $scannedMaterial->material_no)
+                        ->first();
+                    return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
+                }
                 temp_request::create([
                     'transaksi_no' => $scannedMaterial->transaksi_no,
                     'material_no' => $scannedMaterial->material_no,
                     'qty_request' => $scannedMaterial->request_qty,
-                    'qty_supply' => 0,
+                    'qty_supply' => $qtySupply,
                     'user_id' => $this->userId
                 ]);
-                $this->tempRequest = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
-                    ->where('material_no', $scannedMaterial->material_no)
-                    ->first();
-                if ($qtySupply == 1) {
-                    return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
-                }
                 $this->dispatch('alert', ['time' => 3500, 'icon' => 'success', 'title' => "Material Added"]);
             }
 
