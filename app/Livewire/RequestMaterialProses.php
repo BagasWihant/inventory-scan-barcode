@@ -190,7 +190,9 @@ class RequestMaterialProses extends Component
             ->orderByDesc('created_at')
             ->get();
     }
-
+    public function resetQty($id){
+        temp_request::where('id', $id)->update(['qty_supply' => 0]);
+    }
 
     public function saveDetailScanned()
     {

@@ -112,6 +112,9 @@
                                             <th scope="col" class="px-3 py-3">
                                                 Qty Supply
                                             </th>
+                                            <th>
+                                                
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -123,9 +126,11 @@
                                                     <td class="px-3 py-2">{{ $data->material_name }}</td>
                                                     <td class="px-3 py-2">{{ $data->iss_unit }}</td>
                                                     <td class="px-3 py-2">{{ $data->request_qty }}</td>
-                                                    <td class="px-3 py-2" role="button">
-                                                        {{ $data->qty_supply }}</td>
-
+                                                    <td class="px-3 py-2">{{ $data->qty_supply }}</td>
+                                                    @if ($data->qty_supply > 0 || $data->qty_supply != null) <td class="px-3 py-2">
+                                                        <button class="bg-yellow-600 px-4 py-2 text-white rounded-md" @click="resetQty('{{ $data->id }}')">Reset Qty</button>    
+                                                    </td> @endif
+                                                    
                                                 </tr>
                                             @endforeach
                                         @endif
@@ -179,7 +184,6 @@
                 return {
                     showModal: false,
                     showMaterialDetails(trx) {
-                        // Use Livewire to fetch only when needed
                         @this.call('getMaterial', trx).then((data) => {
                             if (data.success) this.showModal = true
                         });
@@ -204,6 +208,9 @@
                             });
 
                         })
+                    },
+                    resetQty(id){
+                        @this.call('resetQty',id)
                     }
                 }
             }
