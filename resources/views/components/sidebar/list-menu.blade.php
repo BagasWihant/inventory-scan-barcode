@@ -8,7 +8,7 @@
             'child' => [
                 [
                     'url' => route('materialRegistrasi'),
-                    'admin'=>'',
+                    'admin' => '',
                     'label' => 'Material Registrasi',
                     'icon' => '<svg class="w-5 h-5" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000">
                         <g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -18,21 +18,21 @@
                 [
                     'url' => route('inventory.index'),
                     'label' => 'Receiving Material CNC',
-                    'admin'=>'',
-                    'cnc'=>'',
+                    'admin' => '',
+                    'cnc' => '',
                     'icon' =>
                         '<svg class="w-5 h-5" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M0 0h48v48H0z" fill="none"></path> <g id="Shopicon"> <path d="M40,26.294V8c0-2.2-1.8-4-4-4H12C9.8,4,8,5.8,8,8v16.344C7.44,24.542,6.9,24.826,6.399,25.2 c-2.646,1.984-3.185,5.753-1.199,8.4C5.519,34.025,13.131,44,24,44h20V32C44,29.722,42.498,27.724,40,26.294z M8.4,31.2 c-0.662-0.882-0.482-2.139,0.397-2.8c0.36-0.27,0.783-0.399,1.201-0.399c0.608,0,1.207,0.274,1.596,0.791 C11.647,28.864,17.026,36,24,36h8v-2h0h0v-2h-8c-1.229,0-2.46-0.385-3.61-0.962C21.518,29.573,25.025,28,30,28 c6.104,0,10,2.369,10,4v8h-2H24C15.107,40,8.669,31.559,8.4,31.2z M26,8v4h-4V8H26z M18,8v8h12V8h6v16.728 C34.198,24.263,32.176,24,30,24c-5.952,0-10.813,1.913-12.9,4.777c-1.05-0.914-1.862-1.813-2.3-2.379 c-0.737-0.981-1.72-1.67-2.8-2.05V8H18z"></path> </g> </g></svg>',
                 ],
                 [
                     'url' => route('inventory.po'),
-                    'admin'=>'',
+                    'admin' => '',
                     'label' => 'Receiving Supplier',
                     'icon' =>
                         '<svg class="w-5 h-5" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M0 0h48v48H0z" fill="none"></path> <g id="Shopicon"> <path d="M25.662,19.651C26.402,19.877,27.187,20,28,20c4.418,0,8-3.582,8-8s-3.582-8-8-8c-2.212,0-4.214,0.898-5.662,2.349 C21.598,6.123,20.814,6,20,6c-4.418,0-8,3.582-8,8s3.582,8,8,8C22.212,22,24.214,21.102,25.662,19.651z M28,8c2.206,0,4,1.794,4,4 s-1.794,4-4,4c-2.206,0-4-1.794-4-4S25.795,8,28,8z M16,14c0-2.206,1.794-4,4-4c0.088,0,0.169,0.02,0.256,0.026 C20.095,10.658,20,11.317,20,12c0,2.079,0.8,3.967,2.1,5.389C21.488,17.77,20.773,18,20,18C17.795,18,16,16.206,16,14z"></path> <path d="M30,24c-5.952,0-10.813,1.913-12.9,4.777c-1.05-0.914-1.862-1.813-2.3-2.379c-1.986-2.643-5.754-3.181-8.4-1.198 c-2.646,1.984-3.185,5.753-1.199,8.4C5.519,34.025,13.131,44,24,44h20V32C44,27.439,37.981,24,30,24z M8.4,31.2 c-0.662-0.882-0.482-2.139,0.397-2.8c0.36-0.27,0.783-0.399,1.201-0.399c0.608,0,1.207,0.274,1.596,0.791 C11.647,28.864,17.026,36,24,36h8v-2l0,0v-2h-8c-1.229,0-2.46-0.385-3.61-0.962C21.518,29.573,25.025,28,30,28 c6.104,0,10,2.369,10,4v8h-2H24C15.107,40,8.669,31.559,8.4,31.2z"></path> </g> </g></svg>',
                 ],
                 [
                     'url' => route('register_palet'),
-                    'admin'=>'',
+                    'admin' => '',
                     'label' => 'Register Pallet',
                     'icon' =>
                         '<svg class="w-5 h-5" fill="#000000" viewBox="-2 0 32 32" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M26.530,31.994 C26.222,31.994 25.915,31.903 25.619,31.722 L2.000,17.205 L2.000,31.000 C2.000,31.553 1.552,32.000 1.000,32.000 C0.448,32.000 -0.000,31.553 -0.000,31.000 L-0.000,1.006 C-0.000,0.453 0.448,0.006 1.000,0.006 C1.552,0.006 2.000,0.453 2.000,1.006 L2.000,13.855 L25.628,0.248 C25.917,0.083 26.211,-0.000 26.507,-0.000 C27.372,-0.000 28.000,0.689 28.000,1.639 L28.000,30.367 C28.000,31.435 27.260,31.994 26.530,31.994 ZM3.097,15.531 L26.000,29.608 L26.000,2.341 L3.097,15.531 Z"></path> </g></svg>',
@@ -40,13 +40,13 @@
                 [
                     'url' => route('abnormal'),
                     'label' => 'Abnormal Material',
-                    'admin'=>'',
+                    'admin' => '',
                     'icon' =>
                         '<svg class="w-5 h-5" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M18.8832 4.69719C19.2737 4.30667 19.9069 4.30667 20.2974 4.69719L23.888 8.28778L27.469 4.7068C27.8595 4.31628 28.4927 4.31628 28.8832 4.7068C29.2737 5.09733 29.2737 5.73049 28.8832 6.12102L25.3022 9.702L28.7827 13.1825C29.1732 13.573 29.1732 14.2062 28.7827 14.5967C28.3922 14.9872 27.759 14.9872 27.3685 14.5967L23.888 11.1162L20.3979 14.6063C20.0074 14.9968 19.3743 14.9968 18.9837 14.6063C18.5932 14.2158 18.5932 13.5826 18.9837 13.1921L22.4738 9.702L18.8832 6.1114C18.4927 5.72088 18.4927 5.08771 18.8832 4.69719Z" fill="#000000"></path> <path fill-rule="evenodd" clip-rule="evenodd" d="M23.86 15.0513C24.0652 14.9829 24.2871 14.9829 24.4923 15.0513L39.2705 19.9765C39.4691 20.0336 39.6499 20.1521 39.783 20.323L43.7861 25.4612C43.9857 25.7173 44.0485 26.0544 43.9545 26.3652C43.8902 26.5779 43.7579 26.7602 43.5821 26.887L28.1827 32.0159L24.965 27.8858C24.7754 27.6424 24.4839 27.5001 24.1753 27.5004C23.8667 27.5007 23.5755 27.6434 23.3863 27.8871L20.186 32.0093L4.74236 26.8577C4.58577 26.7329 4.46805 26.5621 4.40853 26.3652C4.31456 26.0544 4.37733 25.7173 4.57688 25.4612L8.50799 20.4154C8.62826 20.2191 8.81554 20.0652 9.04466 19.9889L23.86 15.0513ZM35.8287 20.9376L24.1802 24.8197L12.5277 20.9362L24.1762 17.0541L35.8287 20.9376Z" fill="#000000"></path> <path d="M28.1442 34.1368L39.991 30.1911L39.9905 36.7628C39.9905 38.054 39.1642 39.2003 37.9392 39.6086L25.1762 43.863V31.4111L27.0393 33.8026C27.2997 34.1368 27.7423 34.2706 28.1442 34.1368Z" fill="#000000"></path> <path d="M23.1762 31.4191V43.863L10.4131 39.6086C9.18811 39.2003 8.36183 38.054 8.36175 36.7628L8.36132 30.1732L20.2251 34.1306C20.6277 34.2649 21.0712 34.1305 21.3314 33.7953L23.1762 31.4191Z" fill="#000000"></path> </g></svg>',
                 ],
                 [
                     'url' => route('instock'),
-                    'admin'=>'',
+                    'admin' => '',
                     'direksi' => '',
                     'label' => 'Material Stock',
                     'icon' =>
@@ -54,14 +54,14 @@
                 ],
                 [
                     'url' => route('checking'),
-                    'admin'=>'',
+                    'admin' => '',
                     'direksi' => '',
                     'label' => 'Receiving Report',
                     'icon' =>
                         '<svg class="w-5 h-5" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>report-linechart</title> <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <g id="add" fill="#000000" transform="translate(42.666667, 85.333333)"> <path d="M341.333333,1.42108547e-14 L426.666667,85.3333333 L426.666667,341.333333 L3.55271368e-14,341.333333 L3.55271368e-14,1.42108547e-14 L341.333333,1.42108547e-14 Z M330.666667,42.6666667 L42.6666667,42.6666667 L42.6666667,298.666667 L384,298.666667 L384,96 L330.666667,42.6666667 Z M106.666667,85.3333333 L106.666333,217.591333 L167.724208,141.269742 L232.938667,173.866667 L280.864376,130.738196 L295.135624,146.595138 L236.398693,199.458376 L173.589333,168.064 L120.324333,234.666333 L341.333333,234.666667 L341.333333,256 L85.3333333,256 L85.3333333,85.3333333 L106.666667,85.3333333 Z" id="Combined-Shape"> </path> </g> </g> </g></svg>',
                 ],
                 [
-                    'admin'=>'',
+                    'admin' => '',
                     'url' => route('material.available'),
                     'label' => 'Material Stock Available',
                     'icon' => '<svg class="w-5 h-5" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000">
@@ -79,19 +79,20 @@
                     'url' => route('prepare.stock.taking'),
                     'label' => 'Prepare Stock Taking',
                     'admin' => '',
+                    'default' => '',
                     'icon' =>
                         '<svg class="w-5 h-5" fill="#000000" viewBox="-2 0 32 32" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M26.530,31.994 C26.222,31.994 25.915,31.903 25.619,31.722 L2.000,17.205 L2.000,31.000 C2.000,31.553 1.552,32.000 1.000,32.000 C0.448,32.000 -0.000,31.553 -0.000,31.000 L-0.000,1.006 C-0.000,0.453 0.448,0.006 1.000,0.006 C1.552,0.006 2.000,0.453 2.000,1.006 L2.000,13.855 L25.628,0.248 C25.917,0.083 26.211,-0.000 26.507,-0.000 C27.372,-0.000 28.000,0.689 28.000,1.639 L28.000,30.367 C28.000,31.435 27.260,31.994 26.530,31.994 ZM3.097,15.531 L26.000,29.608 L26.000,2.341 L3.097,15.531 Z"></path> </g></svg>',
                 ],
                 [
                     'url' => route('input.stock.taking'),
-                    'admin'=>'',
+                    'admin' => '',
                     'label' => 'Input Stock Taking',
                     'icon' =>
                         '<svg class="w-5 h-5" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill="#000000" d="M12 6v-6h-8v6h-4v7h16v-7h-4zM7 12h-6v-5h2v1h2v-1h2v5zM5 6v-5h2v1h2v-1h2v5h-6zM15 12h-6v-5h2v1h2v-1h2v5z"></path> <path fill="#000000" d="M0 16h3v-1h10v1h3v-2h-16v2z"></path> </g></svg>',
                 ],
                 [
                     'url' => route('result.stock.taking'),
-                    'admin'=>'',
+                    'admin' => '',
                     'label' => 'Stock Taking Result',
                     'direksi' => '',
                     'icon' =>
@@ -102,6 +103,7 @@
                     'label' => 'Stock Taking Confirmation',
                     'admin' => '',
                     'direksi' => '',
+                    'default' => '',
                     'icon' =>
                         '<svg class="w-5 h-5" fill="#000000" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 492 492" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <path d="M484.088,292.46c-5.1-5.128-11.968-8.076-19.156-8.076l0.172,0.036H330.588c-14.832,0-26.864,12.308-26.864,27.132v22.788 c0,7.16,2.784,13.908,7.88,19c5.088,5.092,11.836,7.9,18.992,7.9l39.088,0.004c-32.072,34.348-76.7,53.888-123.708,53.888 c-93.256,0-169.132-75.876-169.132-169.132S152.716,76.868,245.972,76.868c69.824,0,133.388,43.836,158.172,109.084 c5.636,14.82,20.076,24.784,35.924,24.784c4.66,0,9.248-0.852,13.636-2.52c19.808-7.52,29.796-29.76,22.268-49.568 C439.932,63.772,347.504,0.024,245.976,0.024C110.344,0.024,0,110.368,0,246s110.184,245.976,245.816,245.976 c62.608,0,123.232-24.64,169.336-67.9v21.796c0,14.832,12.392,26.824,27.22,26.824h22.792c14.828,0,26.836-11.992,26.836-26.824 V311.648C492,304.468,489.204,297.548,484.088,292.46z"></path> </g> </g> <g> <g> <path d="M361.06,179.392l-11.068-11.072c-2.86-2.86-6.676-4.436-10.744-4.436s-7.884,1.58-10.736,4.436L221.228,275.604 l-64.792-64.792c-2.86-2.86-6.676-4.436-10.736-4.436c-4.068,0-7.88,1.58-10.74,4.436l-11.08,11.068 c-5.912,5.92-5.912,15.56,0,21.48l86.612,86.604c2.856,2.856,6.668,4.432,10.736,4.432s7.88-1.58,10.812-4.512l129.02-129.02 C366.984,194.944,366.984,185.312,361.06,179.392z"></path> </g> </g> </g></svg>',
                 ],
@@ -156,6 +158,7 @@
                     'url' => route('material.request-proses'),
                     'label' => 'Proses Material Request',
                     'admin' => '',
+                    'default' => '',
                     'cnc' => '',
                     'icon' =>
                         '<svg class="w-5 h-5" fill="#000000" viewBox="-2 0 32 32" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M26.530,31.994 C26.222,31.994 25.915,31.903 25.619,31.722 L2.000,17.205 L2.000,31.000 C2.000,31.553 1.552,32.000 1.000,32.000 C0.448,32.000 -0.000,31.553 -0.000,31.000 L-0.000,1.006 C-0.000,0.453 0.448,0.006 1.000,0.006 C1.552,0.006 2.000,0.453 2.000,1.006 L2.000,13.855 L25.628,0.248 C25.917,0.083 26.211,-0.000 26.507,-0.000 C27.372,-0.000 28.000,0.689 28.000,1.639 L28.000,30.367 C28.000,31.435 27.260,31.994 26.530,31.994 ZM3.097,15.531 L26.000,29.608 L26.000,2.341 L3.097,15.531 Z"></path> </g></svg>',
@@ -214,160 +217,27 @@
                     @if (auth()->user()->direksi == '1')
                         @foreach ($m['child'] as $ch)
                             @if (isset($ch['direksi']))
-
-                                <li>
-                                    <a href="{{ $ch['url'] }}" {{ isset($ch['new_tab']) ? 'target="_blank"' : '' }}
-                                        class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 group @if (url()->current() === $ch['url']) bg-gray-400 dark:bg-gray-500 @endif">
-                                        @if (isset($ch['icon']))
-                                            <div class="!w-5 !h-5">{!! $ch['icon'] !!}</div>
-                                        @else
-                                            <div class="w-5 h-5">
-                                                <svg class=" text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                    fill="currentColor" viewBox="0 0 22 21">
-                                                    <path
-                                                        d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
-                                                    <path
-                                                        d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
-                                                </svg>
-
-                                            </div>
-                                        @endif
-                                        <span class="ms-3">{{ $ch['label'] }}</span>
-                                    </a>
-                                </li>
-
+                                @include('components.sidebar._menu_item', $ch)
                             @endif
                         @endforeach
                     @else
                         @foreach ($m['child'] as $ch)
                             @if (isset($ch['admin']))
                                 @if (auth()->user()->Role_ID == '3' || auth()->user()->Admin == '1')
-                                    <li>
-                                        <a href="{{ $ch['url'] }}"
-                                            {{ isset($ch['new_tab']) ? 'target="_blank"' : '' }}
-                                            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 group @if (url()->current() === $ch['url']) bg-gray-400 dark:bg-gray-500 @endif">
-                                            @if (isset($ch['icon']))
-                                                <div class="!w-5 !h-5">{!! $ch['icon'] !!}</div>
-                                            @else
-                                                <div class="w-5 h-5">
-                                                    <svg class=" text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                                                        aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                        fill="currentColor" viewBox="0 0 22 21">
-                                                        <path
-                                                            d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
-                                                        <path
-                                                            d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
-                                                    </svg>
-
-                                                </div>
-                                            @endif
-                                            <span class="ms-3">{{ $ch['label'] }}</span>
-                                        </a>
-                                    </li>
-                                @endif
-                                
-                                @if (isset($ch['cnc']) && auth()->user()->section_id == '14')
-                                    <li>
-                                        <a href="{{ $ch['url'] }}"
-                                            {{ isset($ch['new_tab']) ? 'target="_blank"' : 'bagas' }}
-                                            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 group @if (url()->current() === $ch['url']) bg-gray-400 dark:bg-gray-500 @endif">
-
-                                            @if (isset($ch['icon']))
-                                                <div class="!w-5 !h-5">{!! $ch['icon'] !!}</div>
-                                            @else
-                                                <div class="w-5 h-5">
-                                                    <svg class=" text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                                                        aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                        fill="currentColor" viewBox="0 0 22 21">
-                                                        <path
-                                                            d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
-                                                        <path
-                                                            d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
-                                                    </svg>
-
-                                                </div>
-                                            @endif
-                                            <span class="ms-3">{{ $ch['label'] }}</span>
-                                        </a>
-                                    </li>
-                                @endif
-
-                                @if (auth()->user()->section_id != '14' && auth()->user()->Admin != '1')
-                                    <li>
-                                        <a href="{{ $ch['url'] }}"
-                                            {{ isset($ch['new_tab']) ? 'target="_blank"' : 'bagas' }}
-                                            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 group @if (url()->current() === $ch['url']) bg-gray-400 dark:bg-gray-500 @endif">
-
-                                            @if (isset($ch['icon']))
-                                                <div class="!w-5 !h-5">{!! $ch['icon'] !!}</div>
-                                            @else
-                                                <div class="w-5 h-5">
-                                                    <svg class=" text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                                                        aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                        fill="currentColor" viewBox="0 0 22 21">
-                                                        <path
-                                                            d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
-                                                        <path
-                                                            d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
-                                                    </svg>
-
-                                                </div>
-                                            @endif
-                                            <span class="ms-3">{{ $ch['label'] }}</span>
-                                        </a>
-                                    </li>
+                                    @include('components.sidebar._menu_item', $ch)
+                                @else
+                                    @if (isset($ch['cnc']) && auth()->user()->section_id == '14')
+                                        @include('components.sidebar._menu_item', $ch)
+                                    @elseif (auth()->user()->section_id != '14' && auth()->user()->Admin != '1' && !isset($ch['default']))
+                                        @include('components.sidebar._menu_item', $ch)
+                                    @endif
                                 @endif
                             @else
                                 @if (isset($ch['cnc']) && auth()->user()->section_id == '14')
-                                    <li>
-                                        <a href="{{ $ch['url'] }}"
-                                            {{ isset($ch['new_tab']) ? 'target="_blank"' : 'bagas' }}
-                                            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 group @if (url()->current() === $ch['url']) bg-gray-400 dark:bg-gray-500 @endif">
-
-                                            @if (isset($ch['icon']))
-                                                <div class="!w-5 !h-5">{!! $ch['icon'] !!}</div>
-                                            @else
-                                                <div class="w-5 h-5">
-                                                    <svg class=" text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                                                        aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                        fill="currentColor" viewBox="0 0 22 21">
-                                                        <path
-                                                            d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
-                                                        <path
-                                                            d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
-                                                    </svg>
-
-                                                </div>
-                                            @endif
-                                            <span class="ms-3">{{ $ch['label'] }}</span>
-                                        </a>
-                                    </li>
+                                    @include('components.sidebar._menu_item', $ch)
                                 @endif
-                                @if(auth()->user()->section_id != '14' && auth()->user()->Admin != '1')
-                                    <li>
-                                        <a href="{{ $ch['url'] }}"
-                                            {{ isset($ch['new_tab']) ? 'target="_blank"' : 'bagas' }}
-                                            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 group @if (url()->current() === $ch['url']) bg-gray-400 dark:bg-gray-500 @endif">
-
-                                            @if (isset($ch['icon']))
-                                                <div class="!w-5 !h-5">{!! $ch['icon'] !!}</div>
-                                            @else
-                                                <div class="w-5 h-5">
-                                                    <svg class=" text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                                                        aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                        fill="currentColor" viewBox="0 0 22 21">
-                                                        <path
-                                                            d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
-                                                        <path
-                                                            d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
-                                                    </svg>
-
-                                                </div>
-                                            @endif
-                                            <span class="ms-3">{{ $ch['label'] }}</span>
-                                        </a>
-                                    </li>
+                                @if (auth()->user()->section_id != '14' && auth()->user()->Admin != '1')
+                                    @include('components.sidebar._menu_item', $ch)
                                 @endif
                             @endif
                         @endforeach
