@@ -190,8 +190,8 @@ class RequestMaterialProses extends Component
             ->orderByDesc('created_at')
             ->get();
     }
-    public function resetQty($id){
-        temp_request::where('id', $id)->update(['qty_supply' => 0]);
+    public function resetQty($material){
+        temp_request::where('material_no', $material)->where('transaksi_no', $this->transaksiNo)->update(['qty_supply' => 0]);
     }
 
     public function saveDetailScanned()
@@ -205,13 +205,13 @@ class RequestMaterialProses extends Component
 
 
         try {
-
+            
             DB::beginTransaction();
             foreach ($dataConfirm as $item) {
                 if ($item->qty_supply != $item->request_qty) {
                     DB::rollBack();
                     $this->getMaterial($this->transaksiNo);
-                    return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Tidak bisa Confirm, Qty supply belum sesuai Qty request"]);
+                    return ['success' => false, 'message' =>"Tidak bisa Confirm, Qty supply belum sesuai Qty request"];
                 }
 
                 $idSetupMst = DB::table('Setup_mst')->insertGetId([
@@ -236,6 +236,7 @@ class RequestMaterialProses extends Component
                     'qty_OUT' => $matMstData->qty_OUT + $item->qty_supply
                 ]);
             }
+
             temp_request::where('transaksi_no', $this->transaksiNo)->delete();
             DB::commit();
 
@@ -243,12 +244,11 @@ class RequestMaterialProses extends Component
                 'status' => '1',
                 'proses_date' => now()
             ]);
-
             return ['success' => true];
         } catch (\Throwable $th) {
             DB::rollBack();
             $this->getMaterial($this->transaksiNo);
-            return ['success' => false, 'message' => $th->getMessage()];
+            return ['success' => false, 'title' => $th->getMessage()];
         }
     }
     public function render()

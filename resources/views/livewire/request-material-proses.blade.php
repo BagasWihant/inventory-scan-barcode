@@ -128,7 +128,7 @@
                                                     <td class="px-3 py-2">{{ $data->request_qty }}</td>
                                                     <td class="px-3 py-2">{{ $data->qty_supply }}</td>
                                                     @if ($data->qty_supply > 0 || $data->qty_supply != null) <td class="px-3 py-2">
-                                                        <button class="bg-yellow-600 px-4 py-2 text-white rounded-md" @click="resetQty('{{ $data->id }}')">Reset Qty</button>    
+                                                        <button class="bg-yellow-600 px-4 py-2 text-white rounded-md" @click="resetQty('{{ $data->material_no }}')">Reset Qty</button>    
                                                     </td> @endif
                                                     
                                                 </tr>
@@ -155,7 +155,7 @@
 
         <div wire:loading.flex
             class=" fixed z-[99] bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
-            wire:target="materialScan,saveDetailScanned" aria-label="Loading..." role="status">
+            wire:target="materialScan,saveDetailScanned,resetQty" aria-label="Loading..." role="status">
             <svg class="h-20 w-20 animate-spin stroke-white " viewBox="0 0 256 256">
                 <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
                     stroke-linejoin="round" stroke-width="24"></line>
@@ -209,8 +209,8 @@
 
                         })
                     },
-                    resetQty(id){
-                        @this.call('resetQty',id)
+                    resetQty(material){
+                        @this.call('resetQty',material)
                     }
                 }
             }
