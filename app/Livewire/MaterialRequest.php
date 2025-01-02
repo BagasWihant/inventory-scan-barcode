@@ -205,6 +205,11 @@ class MaterialRequest extends Component
         $this->resetField();
     }
 
+    public function cancelTransaksi($transaksiNo){
+        ModelsMaterialRequest::where('transaksi_no', $transaksiNo)->delete();
+        $this->streamTableSum();
+    }
+
     public function render()
     {
         return view('livewire.material-request');

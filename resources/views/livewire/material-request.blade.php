@@ -92,6 +92,9 @@
                             <th scope="col" class="px-6 py-3">
                                 Time Request
                             </th>
+                            <th class="px-6 py-3">
+                                
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -108,6 +111,9 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     {{ (int) $tr->time_request }} mnt
+                                </td>
+                                <td>
+                                    <button class="p-1 text-sm bg-red-500 rounded-xl text-white" wire:click="cancelTransaksi('{{ $tr->transaksi_no }}')">Cancel</button>
                                 </td>
                             </tr>
                         @endforeach
