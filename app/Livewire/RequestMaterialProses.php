@@ -192,6 +192,8 @@ class RequestMaterialProses extends Component
     }
     public function resetQty($material){
         temp_request::where('material_no', $material)->where('transaksi_no', $this->transaksiNo)->update(['qty_supply' => 0]);
+        $this->getMaterial($this->transaksiNo);
+
     }
 
     public function saveDetailScanned()
