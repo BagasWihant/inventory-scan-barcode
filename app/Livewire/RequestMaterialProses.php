@@ -159,7 +159,7 @@ class RequestMaterialProses extends Component
     {
         $dataPrint = MaterialRequest::where('transaksi_no', $id)
             ->leftJoin('material_mst as b', 'material_request.material_no', '=', 'b.matl_no')
-            ->select(['material_request.*', 'b.loc_cd'])->get();
+            ->select(['material_request.*', 'b.loc_cd',DB::raw('(b.iss_min_lot/request_qty) as pax')])->orderBy('b.loc_cd','asc')->get();
 
         return Excel::download(new ItemMaterialRequest($dataPrint), "Request Material_" . $id . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
@@ -218,10 +218,10 @@ class RequestMaterialProses extends Component
                 'finished_at' => now(),
             ]);
             foreach ($dataConfirm as $item) {
-                if ($item->qty_supply != $item->request_qty) {
+                if ($item->qty_supply > $item->request_qty || $item->qty_supply == 0 || $item->qty_supply == null) {
                     DB::rollBack();
                     $this->getMaterial($this->transaksiNo);
-                    return ['success' => false, 'message' =>"Tidak bisa Confirm, Qty supply belum sesuai Qty request"];
+                    return ['success' => false, 'message' =>"Tidak bisa Confirm, Qty supply lebih atau kosong"];
                 }
 
                 DB::table('Setup_dtl')->insert([
