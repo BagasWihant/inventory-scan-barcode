@@ -209,6 +209,14 @@ class RequestMaterialProses extends Component
         try {
             
             DB::beginTransaction();
+            $idSetupMst = DB::table('Setup_mst')->insertGetId([
+                'issue_dt' => date('Y-m-d'),
+                'line_cd' => $this->transaksiNo,
+                'status' => '1',
+                'created_at' => now(),
+                'created_by' => $this->userId,
+                'finished_at' => now(),
+            ]);
             foreach ($dataConfirm as $item) {
                 if ($item->qty_supply != $item->request_qty) {
                     DB::rollBack();
@@ -216,14 +224,6 @@ class RequestMaterialProses extends Component
                     return ['success' => false, 'message' =>"Tidak bisa Confirm, Qty supply belum sesuai Qty request"];
                 }
 
-                $idSetupMst = DB::table('Setup_mst')->insertGetId([
-                    'issue_dt' => date('Y-m-d'),
-                    'line_cd' => $this->transaksiNo,
-                    'status' => '1',
-                    'created_at' => now(),
-                    'created_by' => $this->userId,
-                    'finished_at' => now(),
-                ]);
                 DB::table('Setup_dtl')->insert([
                     'setup_id' => $idSetupMst,
                     'material_no' => $item->material_no,
