@@ -78,7 +78,7 @@ class MaterialRequest extends Component
                     ->select(['matl_no', 'iss_unit', 'bag_qty', 'iss_min_lot', 'matl_nm', 'qty'])->limit(10)->get();
                 $countSearch = count($qrySearch);
 
-                if ($countSearch > 1) {
+                if ($countSearch > 0) {
                     $this->searchMaterialNo = true;
                     $this->resultSearchMaterial = $qrySearch;
                 } else {
