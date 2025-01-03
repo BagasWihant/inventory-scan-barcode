@@ -160,7 +160,7 @@ class RequestMaterialProses extends Component
         $dataPrint = MaterialRequest::where('transaksi_no', $id)
             ->leftJoin('material_mst as b', 'material_request.material_no', '=', 'b.matl_no')
             ->select(['material_request.*', 'b.loc_cd', DB::raw('(b.iss_min_lot/request_qty) as pax')])->orderBy('b.loc_cd', 'asc')->get();
-
+        MaterialRequest::where('transaksi_no', $id)->update(['status' => '9']);
         return Excel::download(new ItemMaterialRequest($dataPrint), "Request Material_" . $id . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
@@ -182,7 +182,7 @@ class RequestMaterialProses extends Component
 
     public function getData()
     {
-        $this->data = MaterialRequest::where('status', '0')
+        $this->data = MaterialRequest::whereIn('status', ['0','9'])
             ->when($this->searchKey, function ($q) {
                 $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
             })
@@ -199,7 +199,8 @@ class RequestMaterialProses extends Component
     #[On('editQty')]
     public function editQty($data)
     {
-        temp_request::where('material_no', $data['material'])->where('transaksi_no', $this->transaksiNo)->update(['qty_supply' => $data['qty']]);
+        temp_request::where('material_no', $data['material'])->where('transaksi_no', $this->transaksiNo)->update(['qty_request' => $data['qty']]);
+        MaterialRequest::where('material_no', $data['material'])->where('transaksi_no', $this->transaksiNo)->update(['request_qty' => $data['qty']]);
         $this->getMaterial($this->transaksiNo);
         $this->dispatch('alert', ['time' => 1500, 'icon' => 'success', 'title' => "Qty Changed"]);
     }

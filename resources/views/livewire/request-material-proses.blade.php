@@ -24,7 +24,7 @@
                             Notes
                         </th>
                         <th scope="col" class="px-6 py-3">
-
+                            Status
                         </th>
                         <th scope="col" class="px-6 py-3">
                             Form
@@ -41,7 +41,13 @@
                             <td role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 {{ $d->type == 2 ? 'Urgent' : 'Reguler' }}
                             </td>
-                            <td></td>
+                            <td>
+                                @if($d->status == 9)
+                                Sudah di cetak
+                                @elseif($d->status == 0)
+                                Belum di cetak
+                                @endif
+                            </td>
                             <td>
                                 <button class="bg-blue-600 px-4 py-2 text-white rounded-md"
                                     wire:click="print('{{ $d->transaksi_no }}')">Print</button>
