@@ -83,12 +83,12 @@ class RequestMaterialProses extends Component
                 ->first();
 
             if ($this->tempRequest) {
-                if ($qtySupply == 1) {
+                // if ($qtySupply == 1) {
                     return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
-                }
+                // }
 
-                $this->tempRequest->update(['qty_supply' => $this->tempRequest->qty_supply + $qtySupply]);
-                $this->dispatch('alert', ['time' => 3500, 'icon' => 'success', 'title' => "Material Added"]);
+                // $this->tempRequest->update(['qty_supply' => $this->tempRequest->qty_supply + $qtySupply]);
+                // $this->dispatch('alert', ['time' => 3500, 'icon' => 'success', 'title' => "Material Added"]);
             } else {
                
                 // if ($qtySupply == 1) {
