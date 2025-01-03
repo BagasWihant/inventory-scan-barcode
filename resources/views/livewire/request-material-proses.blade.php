@@ -112,8 +112,11 @@
                                             <th scope="col" class="px-3 py-3">
                                                 Qty Supply
                                             </th>
+                                            <th scope="col" class="px-3 py-3">
+                                                Stock
+                                            </th>
                                             <th>
-                                                
+
                                             </th>
                                         </tr>
                                     </thead>
@@ -127,10 +130,18 @@
                                                     <td class="px-3 py-2">{{ $data->iss_unit }}</td>
                                                     <td class="px-3 py-2">{{ $data->request_qty }}</td>
                                                     <td class="px-3 py-2">{{ $data->qty_supply }}</td>
-                                                    @if ($data->qty_supply > 0 || $data->qty_supply != null) <td class="px-3 py-2">
-                                                        <button class="bg-yellow-600 px-4 py-2 text-white rounded-md" @click="resetQty('{{ $data->material_no }}')">Reset Qty</button>    
-                                                    </td> @endif
-                                                    
+                                                    <td class="px-3 py-2">{{ $data->stock }}</td>
+                                                    @if ($data->qty_supply > 0 || $data->qty_supply != null)
+                                                        <td class="px-3 py-2">
+                                                            <button
+                                                                class="bg-yellow-600 px-4 py-2 text-white rounded-md"
+                                                                @click="resetQty('{{ $data->material_no }}')">Reset</button>
+                                                            <button
+                                                                class="bg-yellow-200 px-4 py-2 text-black rounded-md"
+                                                                @click="editQty(@js($data))">Edit</button>
+                                                        </td>
+                                                    @endif
+
                                                 </tr>
                                             @endforeach
                                         @endif
@@ -209,9 +220,65 @@
 
                         })
                     },
-                    resetQty(material){
-                        @this.call('resetQty',material)
-                    }
+                    resetQty(material) {
+                        @this.call('resetQty', material)
+                    },
+                    editQty(data) {
+
+                        Swal.fire({
+                            title: `Edit Qty ${data.material_no}`,
+                            html: `<div class="flex flex-col">
+                                <strong>Qty</strong>
+                                <input id="editQty1" class="swal2-input">
+                            </div>`,
+                            showDenyButton: true,
+                            denyButtonText: `Don't save`,
+                            didOpen: () => {
+                                $('#editQty1').focus()
+                            },
+                            preConfirm: () => {
+                                return [
+                                    document.getElementById("editQty1").value,
+                                ];
+                            }
+
+                        }).then((result) => {
+                            qtyInput = parseInt(result.value[0])
+                            if (result.isConfirmed) {
+                                if (qtyInput > data.stock) {
+                                    return Swal.fire({
+                                        timer: 1500,
+                                        title: `Qty maksimal ${data.stock}`,
+                                        icon: "error",
+                                        timerProgressBar: true,
+                                    });
+                                }
+                                @this.call('editQty', {
+                                    material: data.material_no,
+                                    qty: qtyInput,
+                                }).then((data) => {
+
+                                });
+                                // return Swal.fire({
+                                //     timer: 2000,
+                                //     title: "Material Added",
+                                //     icon: "success",
+                                //     showConfirmButton: false,
+                                //     timerProgressBar: true,
+                                // });
+                            } else if (result.isDenied) {
+                                @this.getMaterial(event[0].trx)
+                                return Swal.fire({
+                                    timer: 1000,
+                                    title: "Changes are not saved",
+                                    icon: "info",
+                                    showConfirmButton: false,
+                                    timerProgressBar: true,
+                                });
+                            }
+                        });
+                    },
+
                 }
             }
         </script>

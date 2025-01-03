@@ -84,25 +84,25 @@ class RequestMaterialProses extends Component
 
             if ($this->tempRequest) {
                 // if ($qtySupply == 1) {
-                    return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
+                return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
                 // }
 
                 // $this->tempRequest->update(['qty_supply' => $this->tempRequest->qty_supply + $qtySupply]);
                 // $this->dispatch('alert', ['time' => 3500, 'icon' => 'success', 'title' => "Material Added"]);
             } else {
-               
+
                 // if ($qtySupply == 1) {
-                    temp_request::create([
-                        'transaksi_no' => $scannedMaterial->transaksi_no,
-                        'material_no' => $scannedMaterial->material_no,
-                        'qty_request' => $scannedMaterial->request_qty,
-                        'qty_supply' => 0,
-                        'user_id' => $this->userId
-                    ]);
-                    $this->tempRequest = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
-                        ->where('material_no', $scannedMaterial->material_no)
-                        ->first();
-                    return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
+                temp_request::create([
+                    'transaksi_no' => $scannedMaterial->transaksi_no,
+                    'material_no' => $scannedMaterial->material_no,
+                    'qty_request' => $scannedMaterial->request_qty,
+                    'qty_supply' => 0,
+                    'user_id' => $this->userId
+                ]);
+                $this->tempRequest = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
+                    ->where('material_no', $scannedMaterial->material_no)
+                    ->first();
+                return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
                 // }
                 // temp_request::create([
                 //     'transaksi_no' => $scannedMaterial->transaksi_no,
@@ -126,10 +126,10 @@ class RequestMaterialProses extends Component
         $scannedMaterial = $tempTransaksiSelected->filter(function ($sub) {
             return str_replace(' ', '', trim($sub->material_no)) == str_replace(' ', '', trim($this->materialScan));
         })->first();
-        
+
         if ($this->tempRequest) {
             $qtySupply = $qty + $this->tempRequest->qty_supply;
-            
+
             if ($qtySupply > $scannedMaterial->request_qty) {
                 $this->getMaterial($this->transaksiNo);
                 return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Qty supply $qtySupply melebihi Qty request $scannedMaterial->request_qty"]);
@@ -159,7 +159,7 @@ class RequestMaterialProses extends Component
     {
         $dataPrint = MaterialRequest::where('transaksi_no', $id)
             ->leftJoin('material_mst as b', 'material_request.material_no', '=', 'b.matl_no')
-            ->select(['material_request.*', 'b.loc_cd',DB::raw('(b.iss_min_lot/request_qty) as pax')])->orderBy('b.loc_cd','asc')->get();
+            ->select(['material_request.*', 'b.loc_cd', DB::raw('(b.iss_min_lot/request_qty) as pax')])->orderBy('b.loc_cd', 'asc')->get();
 
         return Excel::download(new ItemMaterialRequest($dataPrint), "Request Material_" . $id . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
@@ -171,7 +171,8 @@ class RequestMaterialProses extends Component
                 $join->on('material_request.transaksi_no', '=', 'r.transaksi_no')
                     ->on('material_request.material_no', '=', 'r.material_no');
             })
-            ->select(['material_request.*', 'r.qty_supply'])->get();
+            ->leftJoin('material_mst as b', 'material_request.material_no', '=', 'b.matl_no')
+            ->select(['material_request.*', 'r.qty_supply','b.qty as stock'])->get();
         $this->transaksiSelected = $dataPrint;
 
         $this->transaksiNo = $trx;
@@ -190,10 +191,17 @@ class RequestMaterialProses extends Component
             ->orderByDesc('created_at')
             ->get();
     }
-    public function resetQty($material){
+    public function resetQty($material)
+    {
         temp_request::where('material_no', $material)->where('transaksi_no', $this->transaksiNo)->update(['qty_supply' => 0]);
         $this->getMaterial($this->transaksiNo);
-
+    }
+    #[On('editQty')]
+    public function editQty($data)
+    {
+        temp_request::where('material_no', $data['material'])->where('transaksi_no', $this->transaksiNo)->update(['qty_supply' => $data['qty']]);
+        $this->getMaterial($this->transaksiNo);
+        $this->dispatch('alert', ['time' => 1500, 'icon' => 'success', 'title' => "Qty Changed"]);
     }
 
     public function saveDetailScanned()
@@ -207,7 +215,7 @@ class RequestMaterialProses extends Component
 
 
         try {
-            
+
             DB::beginTransaction();
             $idSetupMst = DB::table('Setup_mst')->insertGetId([
                 'issue_dt' => date('Y-m-d'),
@@ -221,7 +229,7 @@ class RequestMaterialProses extends Component
                 if ($item->qty_supply > $item->request_qty || $item->qty_supply == 0 || $item->qty_supply == null) {
                     DB::rollBack();
                     $this->getMaterial($this->transaksiNo);
-                    return ['success' => false, 'message' =>"Tidak bisa Confirm, Qty supply lebih atau kosong"];
+                    return ['success' => false, 'message' => "Tidak bisa Confirm, Qty supply lebih atau kosong"];
                 }
 
                 DB::table('Setup_dtl')->insert([
