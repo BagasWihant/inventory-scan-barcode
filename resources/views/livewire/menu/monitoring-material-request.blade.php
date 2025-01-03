@@ -73,7 +73,7 @@
                 </div>
                 @foreach ($material as $m)
                     <tr wire:key="material-request-{{ $loop->iteration }}"
-                        class="@if ($m->status == 0) bg-red-200  hover:bg-red-300  @else bg-green-200 hover:bg-green-300 @endif border-b">
+                        class="@if ($m->status == 0 || $m->status == 9) bg-red-200  hover:bg-red-300  @else bg-green-200 hover:bg-green-300 @endif border-b">
                         <th scope="row"
                             class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                             {{ $m->transaksi_no }}
@@ -94,10 +94,10 @@
                             {{ $m->total_varian }}
                         </td>
                         <td class="px-6 py-4">
-                            {{ $m->status == 0 ? 'Not Yet Processed' : 'Processed' }}
+                            {{ $m->status == 0 || $m->status == 9 ? 'Not Yet Processed' : 'Processed' }}
                         </td>
                         <td class="px-6 py-4">
-                            {{ $m->status == 0 ? 'Waiting Prosess' : 'Warehouse' }}
+                            {{ $m->status == 0 || $m->status == 9 ? 'Waiting Prosess' : 'Warehouse' }}
                         </td>
                         <td class="px-6 py-4">
                             @if ($m->proses_date)

@@ -183,7 +183,7 @@ class MaterialRequest extends Component
 
     public function streamTableSum()
     {
-        $dataGroup = ModelsMaterialRequest::where('status', '0')->groupBy(['transaksi_no', 'created_at'])
+        $dataGroup = ModelsMaterialRequest::whereIn('status', ['0','9'])->groupBy(['transaksi_no', 'created_at'])
             ->select(['transaksi_no', DB::raw('count(transaksi_no) as count'), 'created_at'])->orderBy('created_at')->get();
 
         $now = Carbon::now();
