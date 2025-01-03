@@ -32,11 +32,12 @@ class MonitoringMaterialRequest extends Component
             ->where('status', '!=', '-')
             ->where(DB::raw('CONVERT(date, created_at)'), $this->time->format('Y-m-d'))
             ->orderBy('created_at', 'desc')
-            ->groupBy('transaksi_no', 'user_id', 'status', 'created_at','user_request');
+            ->groupBy('transaksi_no', 'user_id', 'status', 'created_at', 'user_request');
 
         $this->totalCount = MaterialRequest::where('status', '!=', '-')
             ->where(DB::raw('CONVERT(date, created_at)'), $this->time->format('Y-m-d'))
-            ->count();
+            ->distinct()
+            ->count('transaksi_no');
 
         $this->material = $materialQuery->get();
     }
