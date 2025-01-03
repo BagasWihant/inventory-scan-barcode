@@ -54,6 +54,8 @@ class MaterialRequest extends Component
             $this->variablePage['materialRequestWR'] = 1;
             DB::table('WH_config')->where('config', 'periodRequest')->update(['value' => $ymd]);
         }
+        DB::table('WH_config')->where('config', 'materialRequestNW')->update(['value' => $this->variablePage['materialRequestNW']]);
+        DB::table('WH_config')->where('config', 'materialRequestWR')->update(['value' => $this->variablePage['materialRequestWR']]);
 
         $this->transactionNo['wr'] = "WR$ymd-" . str_pad($this->variablePage['materialRequestWR'], 4, '0', STR_PAD_LEFT);
         $this->transactionNo['nw'] = "NW$ymd-" . str_pad($this->variablePage['materialRequestNW'], 4, '0', STR_PAD_LEFT);
