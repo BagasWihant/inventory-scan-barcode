@@ -35,7 +35,7 @@ class MaterialRequest extends Component
 
     private function loadTable()
     {
-        $materialRequest = ModelsMaterialRequest::where('status', '-')->get();
+        $materialRequest = ModelsMaterialRequest::where('status', '-')->where('user_id', auth()->user()->id)->get();
         $this->materialRequest = $materialRequest;
     }
 
@@ -168,9 +168,6 @@ class MaterialRequest extends Component
             'user_request' => $this->userRequest,
             'created_at' => Carbon::now(),
         ]);
-
-        DB::table('WH_config')->where('config', 'materialRequestNW')->update(['value' => $this->variablePage['materialRequestNW']]);
-        DB::table('WH_config')->where('config', 'materialRequestWR')->update(['value' => $this->variablePage['materialRequestWR']]);
 
         $this->streamTableSum();
         $this->loadTable();
