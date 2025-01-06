@@ -31,8 +31,9 @@ class AbnormalItem extends Component
             ->when($this->isAdmin == 0, function ($query) {
                 $query->where('user_id', $this->userid);
             })
-            ->when($this->status != '-', function ($query) {
-                $query->where('status', $this->status);
+            ->when( function ($query) {
+                if($this->status != '-') $query->where('status', $this->status);
+                else $query->whereIn('status', ['0','1']);
             })
             ->when($this->location != '-', function ($query) {
                 $query->where('locate', $this->location);
@@ -102,7 +103,9 @@ class AbnormalItem extends Component
             ->where('pallet_no', $split[0])
             ->where('material_no', $split[1])
             ->where('user_id', $this->userid)
-            ->delete();
+            ->update([
+                'status'=>'8'
+            ]);
 
         return $this->dispatch('notif', [
             'icon' => 'success',
@@ -139,12 +142,14 @@ class AbnormalItem extends Component
                     'kit_no' => $data->kit_no
                 ]);
             }
-
+            // status 9 untuk sudah konfirmasi
             DB::table('abnormal_materials')
                 ->where('pallet_no', $req['pallet_no'])
                 ->where('material_no', $req['material_no'])
                 ->where('user_id', $this->userid)
-                ->delete();
+                ->update([
+                    'status'=>'9'
+                ]);
 
             $this->dispatch('notif', [
                 'icon' => 'success',
