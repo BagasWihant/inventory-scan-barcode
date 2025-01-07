@@ -42,10 +42,10 @@
                                 {{ $d->type == 2 ? 'Urgent' : 'Reguler' }}
                             </td>
                             <td>
-                                @if($d->status == 9)
-                                Sudah di cetak
+                                @if ($d->status == 9)
+                                    Sudah di cetak
                                 @elseif($d->status == 0)
-                                Belum di cetak
+                                    Belum di cetak
                                 @endif
                             </td>
                             <td>
@@ -241,6 +241,11 @@
                             denyButtonText: `Don't save`,
                             didOpen: () => {
                                 $('#editQty1').focus()
+                                $('#editQty1').on('keydown', (e) => {
+                                if (e.key == 'Enter') {
+                                    Swal.clickConfirm();
+                                }
+                            })
                             },
                             preConfirm: () => {
                                 return [
@@ -311,6 +316,11 @@
                         denyButtonText: `Don't save`,
                         didOpen: () => {
                             $('#swal-input1').focus()
+                            $('#swal-input1').on('keydown', (e) => {
+                                if (e.key == 'Enter') {
+                                    Swal.clickConfirm();
+                                }
+                            })
                         },
                         preConfirm: () => {
                             return [
