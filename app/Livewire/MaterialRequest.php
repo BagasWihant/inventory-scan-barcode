@@ -35,7 +35,10 @@ class MaterialRequest extends Component
 
     private function loadTable()
     {
-        $materialRequest = ModelsMaterialRequest::where('status', '-')->where('user_id', auth()->user()->id)->get();
+        $materialRequest = ModelsMaterialRequest::where('status', '-')
+        ->where('user_id', auth()->user()->id)
+        ->whereIn('transaksi_no', $this->transactionNo)
+        ->get();
         $this->materialRequest = $materialRequest;
     }
 

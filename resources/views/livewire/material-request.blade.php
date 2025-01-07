@@ -5,17 +5,17 @@
 
             <div class="flex justify-between flex-shrink-0">
                 <div class="flex gap-4">
-                    <div class="flex items-center px-2 border border-gray-200 rounded dark:border-gray-700">
-                        <input id="bordered-radio-1" type="radio" value="1" wire:model="type"
+                    <div class="flex items-center px-2 rounded">
+                        <input id="bordered-radio-1" type="radio" value="1" wire:model="type" @if ($userRequestDisable == true) disabled @endif
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="bordered-radio-1"
-                            class="w-full py-4 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Reguler</label>
+                            class="w-full py-4 ms-2 text-sm font-medium @if ($userRequestDisable == true)  text-gray-600 @else  text-gray-900  @endif dark:text-gray-300">Reguler</label>
                     </div>
-                    <div class="flex items-center px-2 border border-gray-200 rounded dark:border-gray-700">
-                        <input checked id="bordered-radio-2" type="radio" value="2" wire:model="type"
+                    <div class="flex items-center px-2 rounded ">
+                        <input checked id="bordered-radio-2" type="radio" value="2" wire:model="type" @if ($userRequestDisable == true) disabled @endif
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="bordered-radio-2"
-                            class="w-full py-4 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Urgent</label>
+                            class="w-full py-4 ms-2 text-sm font-medium @if ($userRequestDisable == true)  text-gray-600 @else  text-gray-900  @endif dark:text-gray-300">Urgent</label>
                     </div>
                     <input wire:model="userRequest" type="text" placeholder="User Request"
                         @if ($userRequestDisable == true) disabled @endif
@@ -23,7 +23,7 @@
 
                     @if ($userRequestDisable == true)
                         <button class="btn bg-yellow-500 shadow-md text-white p-1 rounded-lg text-xs text-nowrap"
-                            @click="@this.set('userRequestDisable', false)">Ganti User</button>
+                            @click="@this.set('userRequestDisable', false)">Ganti User & Type</button>
                     @endif
                 </div>
                 <button class="btn bg-red-500 shadow-md text-white px-2 py-1 rounded-lg text-sm"
