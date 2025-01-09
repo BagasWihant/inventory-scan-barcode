@@ -56,12 +56,14 @@ class ReceivingReportCnc extends Component
     {
         $this->inputDisable = false;
         $this->exportDisable = false;
+        $this->paletDisable = false;
+        $this->truckingDisable = false;
         $this->receivingData = [];
         $this->searchPalet = "";
         $this->materialCode = "";
         $this->dateStart = "";
         $this->dateEnd = "";
-        $this->truckingId = "";
+        $this->truckingId = null;
     }
     public function showData()
     {

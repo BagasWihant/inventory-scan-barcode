@@ -12,7 +12,7 @@
                     wire:target="truckingId">Searching</div>
                 <div wire:loading.remove class="rounded-lg bg-slate-50 shadow absolute">
 
-                    @if (strlen($truckingId) >= 2 && $listTruck != 'kosong')
+                    @if (strlen($truckingId) >= 2 && $listTruck != 'kosong' && $inputDisable)
                         @forelse ($listTruck as $p)
                             <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
                                 wire:click="chooseTrucking('{{ $p }}')">{{ $p }}
