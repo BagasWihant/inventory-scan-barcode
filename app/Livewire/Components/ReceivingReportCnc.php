@@ -11,7 +11,7 @@ class ReceivingReportCnc extends Component
 {
     public $searchPalet, $listPalet = [], $listMaterial = [], $receivingData = [], $materialCode, $dateEnd, $dateStart, $inputDisable = false;
     public $truckingId, $listTruck = [], $truckingDisable = false, $paletDisable = false, $exportDisable = false;
-
+    public $issue_dt;
     public function updated($prop)
     {
         switch ($prop) {
@@ -26,7 +26,10 @@ class ReceivingReportCnc extends Component
             case 'searchPalet':
                 if (strlen($this->searchPalet) >= 2) {
                     $distinc = DB::table('material_in_stock')
-                        ->where('trucking_id', $this->truckingId)
+                        ->when(
+                            $this->truckingId,
+                            fn($q) => $q->where('trucking_id', $this->truckingId)
+                        )
                         ->where('pallet_no', 'like', '%' . $this->searchPalet . '%')
                         ->select('pallet_no')->distinct()->limit(10);
                     $this->listPalet = $distinc->get();
@@ -73,7 +76,7 @@ class ReceivingReportCnc extends Component
         }
         $this->exportDisable = true;
 
-        $this->receivingData = DB::select('EXEC sp_Receiving_report ?,?,?,?,?,?,?', [
+        $this->receivingData = DB::select('EXEC sp_Receiving_report ?,?,?,?,?,?,?,?', [
             'detail',
             $this->searchPalet ?? "",
             $this->dateStart ?? '',
@@ -81,6 +84,7 @@ class ReceivingReportCnc extends Component
             '',
             $this->materialCode ?? "",
             '',
+            $this->issue_dt
         ]);
     }
     public function export($type)

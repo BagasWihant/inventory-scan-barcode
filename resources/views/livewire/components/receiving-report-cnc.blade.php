@@ -4,7 +4,8 @@
         <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Trucking ID
             </label>
-            <input wire:model.live="truckingId" type="text" autocomplete="off"  @if ($truckingDisable) disabled @endif
+            <input wire:model.live="truckingId" type="text" autocomplete="off"
+                @if ($truckingDisable) disabled @endif
                 class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
             <div class="">
@@ -29,7 +30,8 @@
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Palet
                 Code
             </label>
-            <input wire:model.live="searchPalet" type="text" autocomplete="off"  @if ($paletDisable) disabled @endif
+            <input wire:model.live="searchPalet" type="text" autocomplete="off"
+                @if ($paletDisable) disabled @endif
                 class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg   text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
             <div class="">
@@ -66,6 +68,18 @@
 
         </div>
 
+        <div class="w-full">
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Issue Date
+            </label>
+            <div class="flex items-center">
+                <div class="relative" wire:ignore>
+
+                    <input id="dtstart" type="date" wire:model="issue_dt" onfocus="this.showPicker()"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        placeholder="Select date start">
+                </div>
+            </div>
+        </div>
         <div class="w-full">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Date
             </label>
