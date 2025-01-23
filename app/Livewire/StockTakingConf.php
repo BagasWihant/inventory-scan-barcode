@@ -41,6 +41,15 @@ class StockTakingConf extends Component
                 'qty_sto' => $value->qty,
                 'result_qty' => $result_qty,
             ]);
+            itemIn::create([
+                'pallet_no' => "STO-" . $this->sto->id,
+                'material_no' => $value->material_no,
+                'picking_qty' => $result_qty,
+                'locate' => $value->loc,
+                'user_id' => $this->userID,
+                'is_taking' => 9,
+                'line_c' => '-'
+            ]);
         }
         $this->confirmKIAS = false;
     }
@@ -59,15 +68,15 @@ class StockTakingConf extends Component
                     'is_taking' => 2
                 ]);
 
-            itemIn::create([
-                'pallet_no' => "STO-" . $this->sto->id,
-                'material_no' => $value->material_no,
-                'picking_qty' => $result_qty,
-                'locate' => $value->loc,
-                'user_id' => $this->userID,
-                'is_taking' => 9,
-                'line_c' => '-'
-            ]);
+                // itemIn::create([
+                //     'pallet_no' => "STO-" . $this->sto->id,
+                //     'material_no' => $value->material_no,
+                //     'picking_qty' => $result_qty,
+                //     'locate' => $value->loc,
+                //     'user_id' => $this->userID,
+                //     'is_taking' => 9,
+                //     'line_c' => '-'
+                // ]);
 
             DB::table('stock_takings')
                 ->where('is_taking', 0)
