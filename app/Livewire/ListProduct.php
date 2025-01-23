@@ -126,7 +126,7 @@ class ListProduct extends Component
                 }else{
                     $this->produkBarcode = substr($tempSplit[0], 23, 15);
                 }
-                dd($this->produkBarcode);
+                // dd($this->produkBarcode);
             }
             
             $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->produkBarcode)->select('sws_code')->first();
@@ -344,9 +344,37 @@ class ListProduct extends Component
             if ($data->prop_scan != null) {
 
                 $prop_scan = json_decode($data->prop_scan, true);
-                $masuk = 1;
+                $totalScan = count($prop_scan);
+                $totalScanMasuk = $totalScan - $data->qty_more;
+                $masuk = 1;$scanke=0;
                 foreach ($prop_scan as $value) {
-                    if ($masuk <= $data->pax || $data->total > $data->counter) {
+                    $scanke++;
+                    if($data->qty_more > 0){
+                        if($scanke > $totalScanMasuk && $data->sisa < 0){
+                            abnormalMaterial::create([
+                                'pallet_no' => $this->paletBarcode,
+                                'material_no' => $data->material,
+                                'picking_qty' => $value,
+                                'locate' => $data->location_cd,
+                                'trucking_id' => $data->trucking_id,
+                                'user_id' => $this->userId,
+                                'status' => 1
+                            ]);
+                            // dump('lebih 1 => '.$data->material);
+                        }else{
+                            itemIn::create([
+                                'pallet_no' => $this->paletBarcode,
+                                'material_no' => $data->material,
+                                'picking_qty' => $value,
+                                'locate' => $data->location_cd,
+                                'trucking_id' => $data->trucking_id,
+                                'user_id' => $this->userId
+                            ]);
+                            // dump('in ada scan lebih=> '.$data->material);
+                        }
+
+                    }else 
+                    if ($masuk <= $data->pax) {
                         itemIn::create([
                             'pallet_no' => $this->paletBarcode,
                             'material_no' => $data->material,
@@ -355,17 +383,8 @@ class ListProduct extends Component
                             'trucking_id' => $data->trucking_id,
                             'user_id' => $this->userId
                         ]);
-                    } else {
-                        abnormalMaterial::create([
-                            'pallet_no' => $this->paletBarcode,
-                            'material_no' => $data->material,
-                            'picking_qty' => $value,
-                            'locate' => $data->location_cd,
-                            'trucking_id' => $data->trucking_id,
-                            'user_id' => $this->userId,
-                            'status' => 1
-                        ]);
-                    }
+                        // dump('in => '.$data->material);
+                    } 
                     $masuk++;
                 }
                 // kurang
@@ -381,11 +400,13 @@ class ListProduct extends Component
                         'user_id' => $this->userId,
                         'status' => 0
                     ]);
+                    // dump('kurang1 => '.$data->material);
                 }
             } else {
                 $belumIsiSamaSekali = $data->sisa / $data->pax;
                 for ($i = 0; $i < $data->pax; $i++) {
                     # code...
+                    // dump('kurang 2=> '.$data->material);
                     abnormalMaterial::create([
                         'pallet_no' => $this->paletBarcode,
                         'material_no' => $data->material,
