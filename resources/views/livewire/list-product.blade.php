@@ -57,7 +57,7 @@
         <span class="text-4xl font-medium text-white">Loading...</span>
     </div>
 
-    @if (count($productsInPalet) > 0 && count($scanned) > 0)
+    @if (count($productsInPalet) > 0 )
         <div class="grid grid-cols-2 row gap-4 overflow-x-auto sm:rounded-lg p-3 ">
             <div class="w-full">
 

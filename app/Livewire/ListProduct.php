@@ -23,6 +23,9 @@ class ListProduct extends Component
     public $userId, $products, $produkBarcode, $paletBarcode, $previousPaletBarcode, $sws_code, $qtyPerPax, $trucking_id, $paletInput = false;
 
     public $scannedCounter = [];
+    public $scanned = [];
+    public $productsInPalet = [];
+    public $props = [0, 'No Data'];
 
     public function mount()
     {
@@ -74,6 +77,7 @@ class ListProduct extends Component
                 $this->produkBarcode = null;
                 $more = $data->qty_more + 1;
                 $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more, 'prop_scan' => json_encode($new_prop_scan)]);
+                $this->refreshTemp();
                 return;
             } else {
 
@@ -84,6 +88,8 @@ class ListProduct extends Component
                 ]);
             }
         }
+
+        $this->refreshTemp();
         $this->produkBarcode = null;
     }
 
@@ -100,6 +106,7 @@ class ListProduct extends Component
                 $this->trucking_id = $truk->trucking_id;
                 $this->paletInput = true;
                 $this->previousPaletBarcode = $this->paletBarcode;
+                $this->refreshData();
             } else {
                 $this->paletBarcode = null;
             }
@@ -111,24 +118,24 @@ class ListProduct extends Component
 
     public function productBarcodeScan()
     {
-        if ($this->products->count() == 0) {
-            $this->produkBarcode = null;
-            return;
-        }
+        // if ($this->products->count() == 0) {
+        //     $this->produkBarcode = null;
+        //     return;
+        // }
 
         if (strlen($this->produkBarcode) > 2) {
 
-            if (strtolower(substr($this->paletBarcode, 0, 1)) == "c") {
-                $tempSplit = explode(' ', $this->produkBarcode);
+            // if (strtolower(substr($this->paletBarcode, 0, 1)) == "c") {
+            //     $tempSplit = explode(' ', $this->produkBarcode);
 
-                if(strtolower(substr($this->produkBarcode, 0, 1)) == "p") {
-                    $this->produkBarcode = substr($this->produkBarcode, 1, 15);
-                }else{
-                    $this->produkBarcode = substr($tempSplit[0], 23, 15);
-                }
-                // dd($this->produkBarcode);
-            }
-            
+            //     if(strtolower(substr($this->produkBarcode, 0, 1)) == "p") {
+            //         $this->produkBarcode = substr($this->produkBarcode, 1, 15);
+            //     }else{
+            //         $this->produkBarcode = substr($tempSplit[0], 23, 15);
+            //     }
+            //     // dd($this->produkBarcode);
+            // }
+
             $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->produkBarcode)->select('sws_code')->first();
             if ($supplierCode) {
                 $this->sws_code = $supplierCode->sws_code;
@@ -162,14 +169,17 @@ class ListProduct extends Component
 
 
                         if ($data->total < $data->counter || $data->sisa <= 0) {
+                            dump($data->total, $data->counter, $data->sisa);
 
                             $this->produkBarcode = null;
                             $more = $data->qty_more + 1;
                             $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more, 'prop_scan' => json_encode($new_prop_scan)]);
+                            $this->refreshTemp();
                             return;
                         }
 
                         $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'prop_scan' => json_encode($new_prop_scan)]);
+                        $this->refreshTemp();
                     }
                 } else {
 
@@ -193,6 +203,23 @@ class ListProduct extends Component
     }
 
     public function render()
+    {
+        return view('livewire.list-product');
+    }
+
+    private function refreshTemp()
+    {
+        $this->scanned = DB::table('temp_counters as a')
+            ->leftJoin('matloc_temp_CNCKIAS2 as b', 'a.material', '=', 'b.material_no')
+            ->where('palet', $this->paletBarcode)
+            ->select('a.*', 'b.location_cd')
+            ->where('userID', $this->userId)
+            ->orderByDesc('pax')
+            ->orderByDesc('material')
+            ->get();
+    }
+
+    private function refreshData()
     {
         $getScanned = DB::table('material_in_stock')->select('material_no')
             ->where('pallet_no', $this->paletBarcode)
@@ -260,29 +287,19 @@ class ListProduct extends Component
             }
         }
 
+        $this->refreshTemp();
 
-        $scannedCounter = DB::table('temp_counters as a')
-            ->leftJoin('matloc_temp_CNCKIAS2 as b', 'a.material', '=', 'b.material_no')
-            ->where('palet', $this->paletBarcode)
-            ->select('a.*', 'b.location_cd')
-            ->where('userID', $this->userId)
-            ->orderByDesc('pax')
-            ->orderByDesc('material')
-            ->get();
 
-        $props = [0, 'No Data'];
-        if ($getall->count() == 0 && count($getScanned) > 0 ) {
-            $props = [1, 'Scan Confirmed'];
-        }elseif($this->paletBarcode!=null){
-            $props = [1, 'No Data'];
+        if ($getall->count() == 0 && count($getScanned) > 0) {
+            $this->props = [1, 'Scan Confirmed'];
+        } elseif ($this->paletBarcode != null) {
+            $this->props = [1, 'No Data'];
         }
         $this->dispatch('paletFocus');
 
-        return view('livewire.list-product', [
-            'productsInPalet' => $getall,
-            'scanned' => $scannedCounter,
-            'props' => $props
-        ]);
+        $this->productsInPalet = $getall;
+        // $this->scanned = $scannedCounter;
+
     }
 
     public function resetPage()
@@ -298,6 +315,7 @@ class ListProduct extends Component
         $this->produkBarcode = null;
         $this->paletInput = false;
 
+        $this->refreshData();
         $this->dispatch('paletFocus');
     }
 
@@ -323,6 +341,8 @@ class ListProduct extends Component
                 'prop_scan' => null,
             ]);
         }
+
+        $this->refreshTemp();
         $this->dispatch('paletFocus');
     }
 
@@ -346,11 +366,16 @@ class ListProduct extends Component
                 $prop_scan = json_decode($data->prop_scan, true);
                 $totalScan = count($prop_scan);
                 $totalScanMasuk = $totalScan - $data->qty_more;
-                $masuk = 1;$scanke=0;
+
+                $scanke = 0;
+                $totalQtyScanned = 0;
                 foreach ($prop_scan as $value) {
                     $scanke++;
-                    if($data->qty_more > 0){
-                        if($scanke > $totalScanMasuk && $data->sisa < 0){
+
+                    $totalQtyScanned += $value;
+                    // jika qty more lebih dari 0
+                    if ($data->qty_more > 0) {
+                        if ($scanke > $totalScanMasuk && $data->sisa < 0) {
                             abnormalMaterial::create([
                                 'pallet_no' => $this->paletBarcode,
                                 'material_no' => $data->material,
@@ -361,7 +386,7 @@ class ListProduct extends Component
                                 'status' => 1
                             ]);
                             // dump('lebih 1 => '.$data->material);
-                        }else{
+                        } else {
                             itemIn::create([
                                 'pallet_no' => $this->paletBarcode,
                                 'material_no' => $data->material,
@@ -373,8 +398,8 @@ class ListProduct extends Component
                             // dump('in ada scan lebih=> '.$data->material);
                         }
 
-                    }else 
-                    if ($masuk <= $data->pax) {
+                        // kondisi jika qty more 0 dan scan kurang dari/sama dengan pax
+                    } else if ($scanke <= $data->pax && $data->qty_more == 0 && $data->sisa == 0) {
                         itemIn::create([
                             'pallet_no' => $this->paletBarcode,
                             'material_no' => $data->material,
@@ -384,8 +409,70 @@ class ListProduct extends Component
                             'user_id' => $this->userId
                         ]);
                         // dump('in => '.$data->material);
-                    } 
-                    $masuk++;
+
+                        // dan jika qty more 0 tapi sisa nya minus(material lebih )
+                    } else {
+                        // jika ini sekali scan sudah lebih
+                        if ($value > $data->total) {
+                            // yang masuk ke instock
+                            itemIn::create([
+                                'pallet_no' => $this->paletBarcode,
+                                'material_no' => $data->material,
+                                'picking_qty' => $data->total,
+                                'locate' => $data->location_cd,
+                                'trucking_id' => $data->trucking_id,
+                                'user_id' => $this->userId
+                            ]);
+
+                            // yang masuk ke abnormal
+                            $qtyLebih = $value - $data->total;
+
+                            abnormalMaterial::create([
+                                'pallet_no' => $this->paletBarcode,
+                                'material_no' => $data->material,
+                                'picking_qty' => $qtyLebih,
+                                'locate' => $data->location_cd,
+                                'trucking_id' => $data->trucking_id,
+                                'user_id' => $this->userId,
+                                'status' => 1
+                            ]);
+                        }
+                        // jika ini scan pertama kurang tapi kedua malah lebih
+                        // contoh qty 300, scan 1 = 200, scan 2 = 200
+                        else {
+                            if ($scanke == $totalScan) {
+                                $qtyLebih = $data->counter - $data->total;
+                                abnormalMaterial::create([
+                                    'pallet_no' => $this->paletBarcode,
+                                    'material_no' => $data->material,
+                                    'picking_qty' => $qtyLebih,
+                                    'locate' => $data->location_cd,
+                                    'trucking_id' => $data->trucking_id,
+                                    'user_id' => $this->userId,
+                                    'status' => 1
+                                ]);
+                                $qtyInstok = $value - $qtyLebih;
+                                itemIn::create([
+                                    'pallet_no' => $this->paletBarcode,
+                                    'material_no' => $data->material,
+                                    'picking_qty' => $qtyInstok,
+                                    'locate' => $data->location_cd,
+                                    'trucking_id' => $data->trucking_id,
+                                    'user_id' => $this->userId
+                                ]);
+                            } else {
+
+                                itemIn::create([
+                                    'pallet_no' => $this->paletBarcode,
+                                    'material_no' => $data->material,
+                                    'picking_qty' => $value,
+                                    'locate' => $data->location_cd,
+                                    'trucking_id' => $data->trucking_id,
+                                    'user_id' => $this->userId
+                                ]);
+                            }
+                        }
+                    }
                 }
                 // kurang
                 if ($data->total > $data->counter) {
@@ -423,7 +510,7 @@ class ListProduct extends Component
         $paletBarcode = $this->paletBarcode;
 
         $this->resetPage();
-
+        $this->refreshTemp();
         return Excel::download(new ScannedExport($b), "Scanned Items_" . $paletBarcode . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 }
