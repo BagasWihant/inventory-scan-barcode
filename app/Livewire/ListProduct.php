@@ -476,7 +476,7 @@ class ListProduct extends Component
                 }
                 // kurang
                 if ($data->total > $data->counter) {
-                    $count = $data->pax - $masuk;
+                    // $count = $data->pax - $masuk;
                     $kurangnya = $data->total - $data->counter;
                     abnormalMaterial::create([
                         'pallet_no' => $this->paletBarcode,
