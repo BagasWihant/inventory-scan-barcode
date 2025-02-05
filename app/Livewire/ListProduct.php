@@ -437,29 +437,51 @@ class ListProduct extends Component
                                 'status' => 1
                             ]);
                         }
-                        // jika ini scan pertama kurang tapi kedua malah lebih
-                        // contoh qty 300, scan 1 = 200, scan 2 = 200
                         else {
                             if ($scanke == $totalScan) {
                                 $qtyLebih = $data->counter - $data->total;
-                                abnormalMaterial::create([
-                                    'pallet_no' => $this->paletBarcode,
-                                    'material_no' => $data->material,
-                                    'picking_qty' => $qtyLebih,
-                                    'locate' => $data->location_cd,
-                                    'trucking_id' => $data->trucking_id,
-                                    'user_id' => $this->userId,
-                                    'status' => 1
-                                ]);
-                                $qtyInstok = $value - $qtyLebih;
-                                itemIn::create([
-                                    'pallet_no' => $this->paletBarcode,
-                                    'material_no' => $data->material,
-                                    'picking_qty' => $qtyInstok,
-                                    'locate' => $data->location_cd,
-                                    'trucking_id' => $data->trucking_id,
-                                    'user_id' => $this->userId
-                                ]);
+                                // jika ini scan pertama kurang tapi kedua malah lebih
+                                // contoh qty 300, scan 1 = 200, scan 2 = 200 (sisa -100)
+                                if($qtyLebih > 0 && $data->sisa < 0){
+                                    abnormalMaterial::create([
+                                        'pallet_no' => $this->paletBarcode,
+                                        'material_no' => $data->material,
+                                        'picking_qty' => $qtyLebih,
+                                        'locate' => $data->location_cd,
+                                        'trucking_id' => $data->trucking_id,
+                                        'user_id' => $this->userId,
+                                        'status' => 1
+                                    ]);
+                                    $qtyInstok = $value - $qtyLebih;
+                                    itemIn::create([
+                                        'pallet_no' => $this->paletBarcode,
+                                        'material_no' => $data->material,
+                                        'picking_qty' => $qtyInstok,
+                                        'locate' => $data->location_cd,
+                                        'trucking_id' => $data->trucking_id,
+                                        'user_id' => $this->userId
+                                    ]);
+                                }
+                                // contoh qty 150, scan 1 = 100 (sisa 50)
+                                else{
+                                    itemIn::create([
+                                        'pallet_no' => $this->paletBarcode,
+                                        'material_no' => $data->material,
+                                        'picking_qty' => $value,
+                                        'locate' => $data->location_cd,
+                                        'trucking_id' => $data->trucking_id,
+                                        'user_id' => $this->userId
+                                    ]);
+                                    abnormalMaterial::create([
+                                        'pallet_no' => $this->paletBarcode,
+                                        'material_no' => $data->material,
+                                        'picking_qty' => $data->sisa,
+                                        'locate' => $data->location_cd,
+                                        'trucking_id' => $data->trucking_id,
+                                        'user_id' => $this->userId,
+                                        'status' => 0
+                                    ]);
+                                }
                             } else {
 
                                 itemIn::create([
@@ -475,20 +497,20 @@ class ListProduct extends Component
                     }
                 }
                 // kurang
-                if ($data->total > $data->counter) {
-                    // $count = $data->pax - $masuk;
-                    $kurangnya = $data->total - $data->counter;
-                    abnormalMaterial::create([
-                        'pallet_no' => $this->paletBarcode,
-                        'material_no' => $data->material,
-                        'picking_qty' => $kurangnya,
-                        'locate' => $data->location_cd,
-                        'trucking_id' => $data->trucking_id,
-                        'user_id' => $this->userId,
-                        'status' => 0
-                    ]);
-                    // dump('kurang1 => '.$data->material);
-                }
+                // if ($data->total > $data->counter) {
+                //     // $count = $data->pax - $masuk;
+                //     $kurangnya = $data->total - $data->counter;
+                //     abnormalMaterial::create([
+                //         'pallet_no' => $this->paletBarcode,
+                //         'material_no' => $data->material,
+                //         'picking_qty' => $kurangnya,
+                //         'locate' => $data->location_cd,
+                //         'trucking_id' => $data->trucking_id,
+                //         'user_id' => $this->userId,
+                //         'status' => 0
+                //     ]);
+                //     // dump('kurang1 => '.$data->material);
+                // }
             } else {
                 $belumIsiSamaSekali = $data->sisa / $data->pax;
                 for ($i = 0; $i < $data->pax; $i++) {
