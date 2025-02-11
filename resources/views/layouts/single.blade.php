@@ -15,7 +15,7 @@
     <!-- Scripts -->
     <script src="{{ asset('assets/jquery.js') }}"></script>
     <script src="{{ asset('assets/select2.min.js') }}"></script>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js','resources/js/singlepage.js'])
 </head>
 
 <body class="font-sans antialiased" x-data="{ sidebarOpen: false }">

@@ -42,4 +42,18 @@ Route::controller(InventoryInController::class)->group(function(){
 Route::get('standar-kerja',fn() => view('pages.single.menu-standar-kerja'));
 Route::get('monitoring-material-request',fn() => view('pages.single.monitoring-material-request'));
 
+// untuk approval diluar inventory
+// sementara proses langsung
+Route::get('{id}',function($id){
+    return view('pages.approval.approval-karyawan',[
+        'type'=>'ini->'.$id,
+        'data'=>[
+            'section'=>'sections',
+            'position'=>'staff',
+            'qty'=>2,
+            'reason'=>'Lorem ipsum dolor sit, amet consectetur adipisicing elit. Similique ab incidunt repellendus pariatur dolorum a. Suscipit, nihil eius, nesciunt repellat placeat eligendi architecto eveniet id obcaecati sunt blanditiis, possimus perferendis.'
+        ]
+    ]);
+});
+
 require __DIR__ . '/auth.php';
