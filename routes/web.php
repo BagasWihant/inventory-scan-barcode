@@ -47,7 +47,9 @@ Route::get('monitoring-material-request',fn() => view('pages.single.monitoring-m
 Route::get('/Approval/{id}',function($id){
     return view('pages.approval.approval-karyawan',[
         'type'=>'ini->'.$id,
+        // contoh 0=diajukan,1=approve,2=reject
         'data'=>[
+            'status'=>'2',
             'section'=>'sections',
             'position'=>'staff',
             'qty'=>2,

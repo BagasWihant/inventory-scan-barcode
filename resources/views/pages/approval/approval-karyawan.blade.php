@@ -3,12 +3,20 @@
         <!-- top -->
         <div class="mb-14 flex justify-between ">
             <span class="text-xl font-bold">Doc Type : {{$type}} </span>
-            <div class="flex gap-10">
-                <span class="text-xl font-bold">Doc No : {{$type}} </span>
-                <span class="text-xl font-bold">{{now()->format('d-m-Y')}} </sp>
-            </div>
+
+            <span class="text-xl font-bold">Doc No : {{$type}} </span>
+            <span class="text-xl font-bold">Doc Date : {{now()->format('d-m-Y')}} </sp>
         </div>
         <!-- top -->
+        @if($data['status'] == 1)
+        <div class="text-center mb-14">
+            <span class="text-2xl font-bold text-green-600">Pengajuan ini sudah diajukan</span>
+        </div>
+        @elseif($data['status'] == 2)
+        <div class="text-center mb-14">
+            <span class="text-2xl font-bold text-red-600">Pengajuan ini direject</span>
+        </div>
+        @endif
         <div class="bg-slate-300 max-w-6xl p-4 rounded-xl shadow-md text-lg">
             <div class="flex gap-4 my-4">
                 <strong class="min-w-36">Section </strong>
@@ -33,6 +41,7 @@
         </div>
 
         <div class="my-14 flex justify-between" x-data="{ modal: false }">
+            @if ($data['status'] == 0)
 
             <button class="text-lg uppercase bg-gradient-to-br from-cyan-600 to-blue-700 text-white px-4 py-2 rounded-lg transition duration-500 ease-in-out hover:opacity-80 hover:backdrop-blur-md hover:scale-105">
                 Approve
@@ -66,6 +75,7 @@
                     </form>
                 </div>
             </div>
+            @endif
 
         </div>
     </div>
