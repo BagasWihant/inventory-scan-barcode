@@ -44,7 +44,7 @@ Route::get('monitoring-material-request',fn() => view('pages.single.monitoring-m
 
 // untuk approval diluar inventory
 // sementara proses langsung
-Route::get('{id}',function($id){
+Route::get('/Approval/{id}',function($id){
     return view('pages.approval.approval-karyawan',[
         'type'=>'ini->'.$id,
         'data'=>[
