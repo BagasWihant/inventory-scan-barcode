@@ -169,7 +169,6 @@ class ListProduct extends Component
 
 
                         if ($data->total < $data->counter || $data->sisa <= 0) {
-                            dump($data->total, $data->counter, $data->sisa);
 
                             $this->produkBarcode = null;
                             $more = $data->qty_more + 1;

@@ -93,49 +93,49 @@
             </thead>
             <tbody>
                 @foreach ($data as $d)
-                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                        <th scope="row"
-                            class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            {{ $d->pallet_no }}
-                        </th>
-                        <td class="px-6 py-4">
-                            {{ $d->kit_no }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ $d->material_no }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ $d->line_c }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ $d->pax }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ $d->qty }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ $d->trucking_id }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ $d->locate }}
-                        </td>
-                        <td class="px-6 py-4">
-                            @if ($d->status == 0)
-                                KURANG
-                            @elseif ($d->status == 1)
-                                KELEBIHAN
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                            <button type="button"
-                                wire:click="konfirmasi(`{{ $d->pallet_no . '|' . $d->material_no }}`)"
-                                class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Konfirmasi</button>
-                            <button type="button" id="btn-kembalikan"
-                                data-nya="{{ $d->pallet_no . '|' . $d->material_no }}"
-                                class="text-white bg-gradient-to-r from-red-500  to-red-600 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Kembalikan</button>
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                    <th scope="row"
+                        class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        {{ $d->pallet_no }}
+                    </th>
+                    <td class="px-6 py-4">
+                        {{ $d->kit_no }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ $d->material_no }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ $d->line_c }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ $d->pax }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ $d->qty }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ $d->trucking_id }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ $d->locate }}
+                    </td>
+                    <td class="px-6 py-4">
+                        @if ($d->status == 0)
+                        KURANG
+                        @elseif ($d->status == 1)
+                        KELEBIHAN
+                        @endif
+                    </td>
+                    <td class="px-6 py-4">
+                        <button type="button"
+                            wire:click="konfirmasi(`{{ $d->pallet_no . '|' . $d->material_no }}`)"
+                            class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Konfirmasi</button>
+                        <button type="button" id="btn-kembalikan"
+                            data-nya="{{ $d->pallet_no . '|' . $d->material_no }}"
+                            class="text-white bg-gradient-to-r from-red-500  to-red-600 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Kembalikan</button>
 
-                        </td>
-                    </tr>
+                    </td>
+                </tr>
                 @endforeach
             </tbody>
         </table>
@@ -169,45 +169,45 @@
 </div>
 
 @script
-    <script>
-        $('#btn-kembalikan').click(function() {
-            Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, delete it!",
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    let data = $(this).data('nya');
+<script>
+    $('#btn-kembalikan').click(function() {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let data = $(this).data('nya');
 
-                    $wire.dispatch('kembalikan', {
-                        req: data
-                    })
-                }
-            });
+                $wire.dispatch('kembalikan', {
+                    req: data
+                })
+            }
         });
-        $wire.on('searchFocus', (event) => {
-            $("#search").focus()
+    });
+    $wire.on('searchFocus', (event) => {
+        $("#search").focus()
+    });
+    $wire.on('notif', (event) => {
+        Swal.fire({
+            timer: 1000,
+            title: event[0].title,
+            icon: event[0].icon,
+            showConfirmButton: false,
+            timerProgressBar: true,
         });
-        $wire.on('notif', (event) => {
-            Swal.fire({
-                timer: 1000,
-                title: event[0].title,
-                icon: event[0].icon,
-                showConfirmButton: false,
-                timerProgressBar: true,
-            });
-        });
-        $wire.on('modalConfirm', async (event) => {
+    });
+    $wire.on('modalConfirm', async (event) => {
 
-            const inputQty = `<div class="flex flex-col">
+        const inputQty = `<div class="flex flex-col">
                     <label for="qty" class=" text-left text-gray-900">Total Qty</label>
                     <input type="number" readonly id="qty" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="qty">
                 </div>`
-            const htmlVal = `
+        const htmlVal = `
                 <b>Total ${event[0].pax} pax</b><br>
                 ${inputQty}
                 <div class="flex flex-col">
@@ -222,37 +222,103 @@
                 `
 
 
-            await Swal.fire({
-                title: "Save to Warehouse",
-                html: `${htmlVal}`,
-                // inputValue: event[0].qty ?? 0,
-                // inputLabel: "Qty per pax",
-                // inputPlaceholder: "qty",
-                showDenyButton: true,
-                denyButtonText: `Don 't save`,
-                didOpen: function() {
-                    $('#qty').val(event[0].qty)
-                    event[0].line && $('#lineC').val(event[0].line)
-                },
-                preConfirm: () => {
-                    return [
-                        document.getElementById("qty").value,
-                        document.getElementById("lineC").value,
-                        document.getElementById("dateIssue").value
+        await Swal.fire({
+            title: "Save to Warehouse",
+            html: `${htmlVal}`,
+            // inputValue: event[0].qty ?? 0,
+            // inputLabel: "Qty per pax",
+            // inputPlaceholder: "qty",
+            showDenyButton: true,
+            denyButtonText: `Don 't save`,
+            didOpen: function() {
+                $('#qty').val(event[0].qty)
+                event[0].line && $('#lineC').val(event[0].line)
+            },
+            preConfirm: () => {
+                return [
+                    document.getElementById("qty").value,
+                    document.getElementById("lineC").value,
+                    document.getElementById("dateIssue").value
 
-                    ];
+                ];
+            }
+        }).then((result) => {
+            qty = parseInt(result.value[0])
+            lineC = result.value[1]
+            date = result.value[2]
+
+
+            if (qty > event[0].qty) {
+                return Swal.fire({
+                    timer: 2200,
+                    html: `
+                        Max Qty is <b> ${event[0].qty} </b> your input is <b> ${qty} </b>`,
+                    title: "Invalid Input",
+                    icon: "error",
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            }
+
+            if (result.isConfirmed) {
+
+                data = {
+                    pax: event[0].pax,
+                    lineC: lineC,
+                    qty: qty,
+                    pallet_no: event[0].pallet_no,
+                    material_no: event[0].material_no,
+                    issue_date: date
                 }
-            }).then((result) => {
-                qty = parseInt(result.value[0])
-                lineC = result.value[1]
-                date = result.value[2]
+                $wire.dispatch('savingToStock', {
+                    req: data
+                })
+            } else if (result.isDenied) {
+                // $wire.dispatch('insertNew', {
+                //     save: false
+                // })
+                Swal.fire({
+                    timer: 1000,
+                    title: "Changes are not saved",
+                    icon: "info",
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            }
+        });
+    });
+
+    $wire.on('palletInput', (event) => {
+
+        const palet = `<div class="flex flex-col">
+                    <label for="modal_paletno" class=" text-left text-gray-900">Pallet No</label>
+                    <input type="text" maxlength="10" id="modal_paletno" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Pallet No">
+                </div>`
+        const htmlVal = `${palet}`
+        Swal.fire({
+            title: "Save to Warehouse",
+            html: `${htmlVal}`,
+            showDenyButton: true,
+            denyButtonText: `Don 't save`,
+            didOpen: function() {
+                $('#modal_paletno').val(event[0].pallet_no)
+            },
+            preConfirm: () => {
+                return [
+                    document.getElementById("modal_paletno").value,
+                ];
+            }
+        }).then((result) => {
+            let paletno = result.value[0]
 
 
-                if (qty > event[0].qty) {
+
+            if (result.isConfirmed) {
+                if (paletno == '' || paletno == null) {
                     return Swal.fire({
                         timer: 2200,
                         html: `
-                        Max Qty is <b> ${event[0].qty} </b> your input is <b> ${qty} </b>`,
+                           Mohon isi <b> Pallet No </b>`,
                         title: "Invalid Input",
                         icon: "error",
                         showConfirmButton: false,
@@ -260,32 +326,26 @@
                     });
                 }
 
-                if (result.isConfirmed) {
-
-                    data = {
-                        pax: event[0].pax,
-                        lineC: lineC,
-                        qty: qty,
-                        pallet_no: event[0].pallet_no,
-                        material_no: event[0].material_no,
-                        issue_date: date
-                    }
-                    $wire.dispatch('savingToStock', {
-                        req: data
-                    })
-                } else if (result.isDenied) {
-                    // $wire.dispatch('insertNew', {
-                    //     save: false
-                    // })
-                    Swal.fire({
-                        timer: 1000,
-                        title: "Changes are not saved",
-                        icon: "info",
-                        showConfirmButton: false,
-                        timerProgressBar: true,
-                    });
+                data = {
+                    pax: event[0].pax,
+                    lineC: event[0].line,
+                    pallet_no: event[0].pallet_no,
+                    material_no: event[0].material_no,
+                    palletNo_new: paletno
                 }
-            });
+                $wire.dispatch('savingToStock', {
+                    req: data
+                })
+            } else if (result.isDenied) {
+                Swal.fire({
+                    timer: 1000,
+                    title: "Changes are not saved",
+                    icon: "info",
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            }
         });
-    </script>
+    })
+</script>
 @endscript

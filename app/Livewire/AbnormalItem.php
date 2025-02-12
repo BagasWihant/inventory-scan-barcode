@@ -31,9 +31,9 @@ class AbnormalItem extends Component
             ->when($this->isAdmin == 0, function ($query) {
                 $query->where('user_id', $this->userid);
             })
-            ->when( function ($query) {
-                if($this->status != '-') $query->where('status', $this->status);
-                else $query->whereIn('status', ['0','1']);
+            ->when(function ($query) {
+                if ($this->status != '-') $query->where('status', $this->status);
+                else $query->whereIn('status', ['0', '1']);
             })
             ->when($this->location != '-', function ($query) {
                 $query->where('locate', $this->location);
@@ -83,14 +83,30 @@ class AbnormalItem extends Component
             ];
             $this->dispatch('modalConfirm', $res);
         } else {
-            $res = [
-                'pallet_no' => $data->pallet_no,
-                'material_no' => $data->material_no,
-                'qty' => $data->qty,
-                'pax' => $data->pax,
-                'lineC' => '-'
-            ];
-            $this->savingToStock($res);
+            // test sementara cek pakai huruf saja. jika masih ada bug kedepan, tambah cek ke tabel setupcnc
+            $cekHurufDepan = ['Y-', 'C-'];
+            if (in_array(substr($data->pallet_no, 0, 2), $cekHurufDepan)) {
+                $res = [
+                    'pallet_no' => $data->pallet_no,
+                    'material_no' => $data->material_no,
+                    'qty' => $data->qty,
+                    'pax' => $data->pax,
+                    'locate' => $data->locate,
+                    'line' => $data->line_c,
+                    'date' => date('Y-m-d')
+                ];
+                $this->dispatch('palletInput', $res);
+            } else {
+
+                $res = [
+                    'pallet_no' => $data->pallet_no,
+                    'material_no' => $data->material_no,
+                    'qty' => $data->qty,
+                    'pax' => $data->pax,
+                    'lineC' => '-'
+                ];
+                $this->savingToStock($res);
+            }
         }
     }
 
@@ -104,7 +120,7 @@ class AbnormalItem extends Component
             ->where('material_no', $split[1])
             ->where('user_id', $this->userid)
             ->update([
-                'status'=>'8'
+                'status' => '8'
             ]);
 
         return $this->dispatch('notif', [
@@ -113,13 +129,26 @@ class AbnormalItem extends Component
         ]);
     }
 
+    public function copyOldDataAndUpdate($id, $newPaletNo)
+    {
+        $dataMentah = DB::table('abnormal_materials')->where('id', $id)->first();
+
+        $data = (array) $dataMentah;
+        $data['pallet_no'] .= '~' . $data['id'];
+        $data['status'] = '2';
+
+        unset($data['id']);
+        
+        DB::table('abnormal_materials')->insert($data);
+        DB::table('abnormal_materials')->where('id', $id)->update(['pallet_no' => $newPaletNo]);
+    }
     #[On('savingToStock')]
     public function savingToStock($req)
     {
         $dataDetail = DB::table('abnormal_materials as a')
             ->leftJoin('material_mst as b', 'a.material_no', '=', 'b.matl_no')
 
-            ->select('pallet_no', 'material_no as material', 'b.matl_nm', 'picking_qty as counter', 'locate', 'trucking_id', 'line_c', 'setup_by', 'surat_jalan', 'kit_no')
+            ->select('a.id', 'pallet_no', 'material_no as material', 'b.matl_nm', 'picking_qty as counter', 'locate', 'trucking_id', 'line_c', 'setup_by', 'surat_jalan', 'kit_no')
             ->where('pallet_no', $req['pallet_no'])
             ->when($this->isAdmin == 0, function ($query) {
                 $query->where('user_id', $this->userid);
@@ -127,6 +156,13 @@ class AbnormalItem extends Component
             ->where('material_no', $req['material_no']);
         try {
             $detail = $dataDetail->get();
+            // untuk copy old data sebelum di ganti
+            if (isset($req['palletNo_new'])) {
+                $detail[0]->pallet_no = $req['palletNo_new'];
+                $req['pallet_no'] = $req['palletNo_new'];
+                $this->copyOldDataAndUpdate($detail[0]->id, $req['palletNo_new']);
+            }
+            
             foreach ($detail as $data) {
                 $data->counter  = (int) $data->counter;
                 itemIn::create([
@@ -148,7 +184,7 @@ class AbnormalItem extends Component
                 ->where('material_no', $req['material_no'])
                 ->where('user_id', $this->userid)
                 ->update([
-                    'status'=>'9'
+                    'status' => '9'
                 ]);
 
             $this->dispatch('notif', [
