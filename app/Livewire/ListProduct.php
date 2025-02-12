@@ -118,23 +118,23 @@ class ListProduct extends Component
 
     public function productBarcodeScan()
     {
-        // if ($this->products->count() == 0) {
-        //     $this->produkBarcode = null;
-        //     return;
-        // }
+        if ($this->products->count() == 0) {
+            $this->produkBarcode = null;
+            return;
+        }
 
         if (strlen($this->produkBarcode) > 2) {
 
-            // if (strtolower(substr($this->paletBarcode, 0, 1)) == "c") {
-            //     $tempSplit = explode(' ', $this->produkBarcode);
+            if (strtolower(substr($this->paletBarcode, 0, 1)) == "c") {
+                $tempSplit = explode(' ', $this->produkBarcode);
 
-            //     if(strtolower(substr($this->produkBarcode, 0, 1)) == "p") {
-            //         $this->produkBarcode = substr($this->produkBarcode, 1, 15);
-            //     }else{
-            //         $this->produkBarcode = substr($tempSplit[0], 23, 15);
-            //     }
-            //     // dd($this->produkBarcode);
-            // }
+                if(strtolower(substr($this->produkBarcode, 0, 1)) == "p") {
+                    $this->produkBarcode = substr($this->produkBarcode, 1, 15);
+                }else{
+                    $this->produkBarcode = substr($tempSplit[0], 23, 15);
+                }
+                // dd($this->produkBarcode);
+            }
 
             $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->produkBarcode)->select('sws_code')->first();
             if ($supplierCode) {
