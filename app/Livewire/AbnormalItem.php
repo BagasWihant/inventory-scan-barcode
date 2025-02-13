@@ -129,18 +129,27 @@ class AbnormalItem extends Component
         ]);
     }
 
-    public function copyOldDataAndUpdate($id, $newPaletNo)
+    public function copyOldDataAndUpdate($data, $newPaletNo): object
     {
-        $dataMentah = DB::table('abnormal_materials')->where('id', $id)->first();
+        $replaceData = [];
+        $sumQty = 0;
+        foreach ($data as $d) {
+            $dataMentah = DB::table('abnormal_materials')->where('id', $d->id)->first();
+            $replaceData = $dataMentah;
 
-        $data = (array) $dataMentah;
-        $data['pallet_no'] .= '~' . $data['id'];
-        $data['status'] = '2';
+            $sumQty += $dataMentah->picking_qty;
 
-        unset($data['id']);
-        
-        DB::table('abnormal_materials')->insert($data);
-        DB::table('abnormal_materials')->where('id', $id)->update(['pallet_no' => $newPaletNo]);
+            $loopData = (array) $dataMentah;
+            $loopData['pallet_no'] = $newPaletNo . '~' . $loopData['pallet_no'];
+            $loopData['status'] = '2';
+
+            unset($loopData['id']);
+
+            DB::table('abnormal_materials')->insert($loopData);
+            DB::table('abnormal_materials')->where('id', $d->id)->update(['pallet_no' => $newPaletNo]);
+        }
+        $replaceData->counter = $sumQty;
+        return $replaceData;
     }
     #[On('savingToStock')]
     public function savingToStock($req)
@@ -158,26 +167,37 @@ class AbnormalItem extends Component
             $detail = $dataDetail->get();
             // untuk copy old data sebelum di ganti
             if (isset($req['palletNo_new'])) {
-                $detail[0]->pallet_no = $req['palletNo_new'];
                 $req['pallet_no'] = $req['palletNo_new'];
-                $this->copyOldDataAndUpdate($detail[0]->id, $req['palletNo_new']);
+                $data = $this->copyOldDataAndUpdate($detail, $req['palletNo_new']);
             }
+
+            itemIn::create([
+                'pallet_no' => $data->pallet_no . ($data->locate == 'ASSY' ? '-AM' : ''),
+                'material_no' => $data->material_no,
+                'picking_qty' => $data->counter,
+                'locate' => $data->locate,
+                'trucking_id' => $data->trucking_id,
+                'user_id' => $this->userid,
+                'line_c' => $req['lineC'] != '-' ? $req['lineC'] : $data->line_c,
+                'setup_by' => $data->setup_by,
+                'surat_jalan' => $data->surat_jalan,
+                'kit_no' => $data->kit_no
+            ]);
+            // foreach ($detail as $data) {
+                // itemIn::create([
+                //     'pallet_no' => $data->pallet_no . ($data->locate == 'ASSY' ? '-AM' : ''),
+                //     'material_no' => $data->material,
+                //     'picking_qty' => $data->counter,
+                //     'locate' => $data->locate,
+                //     'trucking_id' => $data->trucking_id,
+                //     'user_id' => $this->userid,
+                //     'line_c' => $req['lineC'] != '-' ? $req['lineC'] : $data->line_c,
+                //     'setup_by' => $data->setup_by,
+                //     'surat_jalan' => $data->surat_jalan,
+                //     'kit_no' => $data->kit_no
+                // ]);
+            // }
             
-            foreach ($detail as $data) {
-                $data->counter  = (int) $data->counter;
-                itemIn::create([
-                    'pallet_no' => $data->pallet_no . ($data->locate == 'ASSY' ? '-AM' : ''),
-                    'material_no' => $data->material,
-                    'picking_qty' => $data->counter,
-                    'locate' => $data->locate,
-                    'trucking_id' => $data->trucking_id,
-                    'user_id' => $this->userid,
-                    'line_c' => $req['lineC'] != '-' ? $req['lineC'] : $data->line_c,
-                    'setup_by' => $data->setup_by,
-                    'surat_jalan' => $data->surat_jalan,
-                    'kit_no' => $data->kit_no
-                ]);
-            }
             // status 9 untuk sudah konfirmasi
             DB::table('abnormal_materials')
                 ->where('pallet_no', $req['pallet_no'])
