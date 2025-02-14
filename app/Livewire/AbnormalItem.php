@@ -148,6 +148,7 @@ class AbnormalItem extends Component
             DB::table('abnormal_materials')->insert($loopData);
             DB::table('abnormal_materials')->where('id', $d->id)->update(['pallet_no' => $newPaletNo]);
         }
+        $replaceData->pallet_no = $newPaletNo;
         $replaceData->counter = $sumQty;
         return $replaceData;
     }
