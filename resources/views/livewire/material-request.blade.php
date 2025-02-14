@@ -74,7 +74,7 @@
                 <input wire:model="selectedData.iss_unit" readonly placeholder="Unit" type="text"
                     class="block w-full p-2 text-gray-900 border border-gray-300 bg-slate-200 rounded-lg  text-base">
             </div>
-
+            <span class="text-red-600">Pastikan <strong>Request Qty</strong> sesuai dengan kelipatan <strong>Min. Lot</strong></span>
 
         </div>
         <div class="w-2/3 bg-gray-200 rounded-md">

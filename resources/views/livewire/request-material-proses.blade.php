@@ -97,7 +97,9 @@
                                 </div>
                             @endif
                         </div>
-
+                        <div class="text-center">
+                            <span class="text-red-600">Pastikan saat edit <strong>Qty</strong> sesuai dengan kelipatan <strong>Min. Lot</strong></span>
+                        </div>
                         <div class="p-3">
                             <div class="relative overflow-y-auto shadow-md rounded-lg my-4">
                                 <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -108,6 +110,9 @@
                                             </th>
                                             <th scope="col" class="px-3 py-3">
                                                 Material Name
+                                            </th>
+                                            <th scope="col" class="px-3 py-3">
+                                                Min Lot
                                             </th>
                                             <th scope="col" class="px-3 py-3">
                                                 Unit
@@ -133,6 +138,7 @@
                                                     class="@if ($data->request_qty == $data->qty_supply) bg-green-500 text-white @endif">
                                                     <td class="px-3 py-2">{{ $data->material_no }}</td>
                                                     <td class="px-3 py-2">{{ $data->material_name }}</td>
+                                                    <td class="px-3 py-2">{{ $data->iss_min_lot }}</td>
                                                     <td class="px-3 py-2">{{ $data->iss_unit }}</td>
                                                     <td class="px-3 py-2">{{ $data->request_qty }}</td>
                                                     <td class="px-3 py-2">{{ $data->qty_supply }}</td>
@@ -260,6 +266,15 @@
                                     return Swal.fire({
                                         timer: 1500,
                                         title: `Qty maksimal ${data.stock}`,
+                                        icon: "error",
+                                        timerProgressBar: true,
+                                    });
+                                }
+
+                                if (qtyInput % data.iss_min_lot !== 0) {
+                                    return Swal.fire({
+                                        timer: 1500,
+                                        title: `Qty tidak kelipatan dari Min Lot`,
                                         icon: "error",
                                         timerProgressBar: true,
                                     });

@@ -122,6 +122,9 @@ class MaterialRequest extends Component
         if ($this->selectedData['qty'] < $this->requestQty) {
             return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Maksimal qty : ' . $this->selectedData['qty']]);
         }
+        if ($this->requestQty % $this->selectedData['iss_min_lot'] !== 0) {
+            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Request Qty bukan kelipatan dari Min. Lot']);
+        }
 
         if (count($this->selectedData) > 1 && $this->materialNo != null) {
             ModelsMaterialRequest::create([
