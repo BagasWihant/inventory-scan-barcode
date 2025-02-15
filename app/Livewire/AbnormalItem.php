@@ -17,6 +17,7 @@ use Picqer\Barcode\BarcodeGeneratorPNG;
 class AbnormalItem extends Component
 {
     public $dataCetak, $searchKey, $status = '-', $userid, $isAdmin, $location = '-';
+    public $dateFilter;
 
     public function __construct()
     {
@@ -38,21 +39,22 @@ class AbnormalItem extends Component
             ->when($this->isAdmin == 0, function ($query) {
                 $query->where('user_id', $this->userid);
             })
-            ->when(function ($query) {
+            ->when($this->status, function ($query) {
                 if ($this->status != '-') $query->where('status', $this->status);
                 else $query->whereIn('status', ['0', '1']);
             })
             ->when($this->location != '-', function ($query) {
-                $query->where('locate', $this->location);
+                if($this->location != 'other') $query->where('locate', $this->location);
+                else $query->whereNotIn('locate', ['ASSY','CNC']);
+            })
+            ->when($this->searchKey, function ($query) {
+                $query->where('pallet_no', 'like', "%$this->searchKey%")
+                    ->orWhere('material_no', 'like', "%$this->searchKey%");
+            })
+            ->when($this->dateFilter, function ($query) {
+                $query->where(DB::raw("FORMAT([created_at],'yyyy-MM-dd')"), 'like', "%$this->dateFilter%");
             })
             ->groupBy(['material_no', 'pallet_no', 'trucking_id', 'locate', 'status', 'kit_no', 'line_c']);
-
-        $query->when($this->searchKey, function ($query) {
-
-            $query->where('pallet_no', 'like', "%$this->searchKey%")
-                ->orWhere('material_no', 'like', "%$this->searchKey%")
-                ->orWhere(DB::raw("FORMAT(created_at,'dd-MM-yyyy')"), 'like', "%$this->searchKey%");
-        });
 
         $data = $query->get();
         $dev['a'] = $query->toRawSql();

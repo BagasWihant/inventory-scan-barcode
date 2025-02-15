@@ -18,6 +18,7 @@
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                         placeholder="Search here..." required />
                 </div>
+                <input type="date" id="dtstart" wire:model.live="dateFilter" onfocus="this.showPicker()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" >
                 <select wire:model="status" wire:change="statusChange"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     <option selected value="-">Choose Status</option>
@@ -29,6 +30,7 @@
                     <option selected value="-">Semua Location</option>
                     <option value="ASSY">ASSY</option>
                     <option value="CNC">CNC</option>
+                    <option value="other">Other</option>
                 </select>
 
             </div>
@@ -134,7 +136,7 @@
                     <td class="px-6 py-4">
                         {{ \Carbon\Carbon::parse($d->created_at)->format('d-m-Y') }}
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="flex">
                         <button type="button"
                             wire:click="konfirmasi(`{{ $d->pallet_no . '|' . $d->material_no }}`)"
                             class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">Konfirmasi</button>
