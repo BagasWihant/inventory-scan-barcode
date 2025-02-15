@@ -8,6 +8,7 @@ use Livewire\Attributes\On;
 use App\Exports\InStockExport;
 use Illuminate\Support\Facades\DB;
 use App\Exports\InStockExportExcel;
+use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ReceivingSupplierReport;
 use App\Models\PaletRegister;
@@ -16,6 +17,7 @@ use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class AbnormalItem extends Component
 {
+    use WithPagination;
     public $dataCetak, $searchKey, $status = '-', $userid, $isAdmin, $location = '-';
     public $dateFilter;
 
@@ -56,18 +58,12 @@ class AbnormalItem extends Component
             })
             ->groupBy(['material_no', 'pallet_no', 'trucking_id', 'locate', 'status', 'kit_no', 'line_c']);
 
-        $data = $query->get();
-        $dev['a'] = $query->toRawSql();
-        $dev['k'] = $this->status;
-
+        $data = $query->paginate(20);
         if ($this->searchKey) $this->dispatch('searchFocus');
 
-        $this->dataCetak = $data;
-        return view('livewire.abnormal-item', [
-            'data' => $data,
-            'dev' => $dev,
+        $this->dataCetak = $data->items();
 
-        ]);
+        return view('livewire.abnormal-item', compact('data'));
     }
 
     public function statusChange() {}

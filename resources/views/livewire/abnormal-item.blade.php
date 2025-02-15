@@ -149,6 +149,9 @@
                 @endforeach
             </tbody>
         </table>
+        <div class="p-3">
+            {{ $data->links() }}
+        </div>
     </div>
     <div wire:loading.flex
         class=" fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
