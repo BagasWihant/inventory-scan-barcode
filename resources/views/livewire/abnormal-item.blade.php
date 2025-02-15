@@ -86,6 +86,11 @@
                     </th>
                     <th scope="col" class="px-6 py-3">
                         <div class="flex items-center">
+                            Created At
+                        </div>
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        <div class="flex items-center">
                             Aksi
                         </div>
                     </th>
@@ -125,6 +130,9 @@
                         @elseif ($d->status == 1)
                         KELEBIHAN
                         @endif
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ \Carbon\Carbon::parse($d->created_at)->format('d-m-Y') }}
                     </td>
                     <td class="px-6 py-4">
                         <button type="button"

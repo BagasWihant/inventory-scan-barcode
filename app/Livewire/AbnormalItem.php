@@ -27,7 +27,14 @@ class AbnormalItem extends Component
     public function render()
     {
         $query = DB::table('abnormal_materials')
-            ->selectRaw('pallet_no,material_no,sum(picking_qty) as qty, count(pallet_no) as pax,trucking_id,locate,status,kit_no,line_c')
+            ->selectRaw('pallet_no,
+                        material_no,
+                        sum(picking_qty) as qty,
+                        count(pallet_no) as pax,
+                        trucking_id,
+                        locate,status,
+                        kit_no,line_c,
+                        max(created_at) as created_at')
             ->when($this->isAdmin == 0, function ($query) {
                 $query->where('user_id', $this->userid);
             })
@@ -40,8 +47,11 @@ class AbnormalItem extends Component
             })
             ->groupBy(['material_no', 'pallet_no', 'trucking_id', 'locate', 'status', 'kit_no', 'line_c']);
 
-        $query->where(function ($query) {
-            $query->where('pallet_no', 'like', "%$this->searchKey%")->orWhere('material_no', 'like', "%$this->searchKey%");
+        $query->when($this->searchKey, function ($query) {
+
+            $query->where('pallet_no', 'like', "%$this->searchKey%")
+                ->orWhere('material_no', 'like', "%$this->searchKey%")
+                ->orWhere(DB::raw("FORMAT(created_at,'dd-MM-yyyy')"), 'like', "%$this->searchKey%");
         });
 
         $data = $query->get();
@@ -185,20 +195,20 @@ class AbnormalItem extends Component
                 'kit_no' => $data->kit_no
             ]);
             // foreach ($detail as $data) {
-                // itemIn::create([
-                //     'pallet_no' => $data->pallet_no . ($data->locate == 'ASSY' ? '-AM' : ''),
-                //     'material_no' => $data->material,
-                //     'picking_qty' => $data->counter,
-                //     'locate' => $data->locate,
-                //     'trucking_id' => $data->trucking_id,
-                //     'user_id' => $this->userid,
-                //     'line_c' => $req['lineC'] != '-' ? $req['lineC'] : $data->line_c,
-                //     'setup_by' => $data->setup_by,
-                //     'surat_jalan' => $data->surat_jalan,
-                //     'kit_no' => $data->kit_no
-                // ]);
+            // itemIn::create([
+            //     'pallet_no' => $data->pallet_no . ($data->locate == 'ASSY' ? '-AM' : ''),
+            //     'material_no' => $data->material,
+            //     'picking_qty' => $data->counter,
+            //     'locate' => $data->locate,
+            //     'trucking_id' => $data->trucking_id,
+            //     'user_id' => $this->userid,
+            //     'line_c' => $req['lineC'] != '-' ? $req['lineC'] : $data->line_c,
+            //     'setup_by' => $data->setup_by,
+            //     'surat_jalan' => $data->surat_jalan,
+            //     'kit_no' => $data->kit_no
+            // ]);
             // }
-            
+
             // status 9 untuk sudah konfirmasi
             DB::table('abnormal_materials')
                 ->where('pallet_no', $req['pallet_no'])
