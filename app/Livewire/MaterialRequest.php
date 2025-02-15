@@ -36,9 +36,9 @@ class MaterialRequest extends Component
     private function loadTable()
     {
         $materialRequest = ModelsMaterialRequest::where('status', '-')
-        ->where('user_id', auth()->user()->id)
-        ->whereIn('transaksi_no', $this->transactionNo)
-        ->get();
+            ->where('user_id', auth()->user()->id)
+            ->whereIn('transaksi_no', $this->transactionNo)
+            ->get();
         $this->materialRequest = $materialRequest;
     }
 
@@ -126,9 +126,20 @@ class MaterialRequest extends Component
             return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Request Qty bukan kelipatan dari Min. Lot']);
         }
 
+        $transaksiNoItem = (preg_match("/[a-z]/i", $this->materialNo)) ? $this->transactionNo['wr'] : $this->transactionNo['nw'];
+
+        $cekExist = ModelsMaterialRequest::where('transaksi_no', $transaksiNoItem)
+            ->where('material_no', $this->materialNo)->exists();
+
+        if ($cekExist) {
+            $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Material sudah di input']);
+            $this->resetField();
+            return ;
+        }
+        
         if (count($this->selectedData) > 1 && $this->materialNo != null) {
             ModelsMaterialRequest::create([
-                'transaksi_no' => (preg_match("/[a-z]/i", $this->materialNo)) ? $this->transactionNo['wr'] : $this->transactionNo['nw'],
+                'transaksi_no' => $transaksiNoItem,
                 'material_no' => $this->materialNo,
                 'material_name' => $this->selectedData['matl_nm'],
                 'type' => $this->type,
@@ -154,7 +165,7 @@ class MaterialRequest extends Component
         return $this->dispatch('alert', ['time' => 2500, 'icon' => 'success', 'title' => 'Material Telah di Hapus']);
     }
 
-   
+
 
     public function submitRequest()
     {
@@ -186,7 +197,7 @@ class MaterialRequest extends Component
 
     public function streamTableSum()
     {
-        $dataGroup = ModelsMaterialRequest::whereIn('status', ['0','9'])->groupBy(['transaksi_no', 'created_at'])
+        $dataGroup = ModelsMaterialRequest::whereIn('status', ['0', '9'])->groupBy(['transaksi_no', 'created_at'])
             ->select(['transaksi_no', DB::raw('count(transaksi_no) as count'), 'created_at'])->orderBy('created_at')->get();
 
         $now = Carbon::now();
@@ -210,7 +221,8 @@ class MaterialRequest extends Component
         $this->resetField();
     }
 
-    public function cancelTransaksi($transaksiNo){
+    public function cancelTransaksi($transaksiNo)
+    {
         ModelsMaterialRequest::where('transaksi_no', $transaksiNo)->delete();
         $this->streamTableSum();
     }
