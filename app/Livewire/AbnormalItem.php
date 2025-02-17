@@ -42,12 +42,15 @@ class AbnormalItem extends Component
                 $query->where('user_id', $this->userid);
             })
             ->when($this->status, function ($query) {
-                if ($this->status != '-') $query->where('status', $this->status);
-                else $query->whereIn('status', ['0', '1']);
+                if ($this->status != '-') {
+                    return $this->status === '00'
+                        ? $query->where('status', '0')
+                        : $query->where('status', $this->status);
+                } else $query->whereIn('status', ['0', '1']);
             })
             ->when($this->location != '-', function ($query) {
-                if($this->location != 'other') $query->where('locate', $this->location);
-                else $query->whereNotIn('locate', ['ASSY','CNC']);
+                if ($this->location != 'other') $query->where('locate', $this->location);
+                else $query->whereNotIn('locate', ['ASSY', 'CNC']);
             })
             ->when($this->searchKey, function ($query) {
                 $query->where('pallet_no', 'like', "%$this->searchKey%")
@@ -57,13 +60,13 @@ class AbnormalItem extends Component
                 $query->where(DB::raw("FORMAT([created_at],'yyyy-MM-dd')"), 'like', "%$this->dateFilter%");
             })
             ->groupBy(['material_no', 'pallet_no', 'trucking_id', 'locate', 'status', 'kit_no', 'line_c']);
-
+        $dev = $query->toRawSql();
         $data = $query->paginate(20);
         if ($this->searchKey) $this->dispatch('searchFocus');
 
         $this->dataCetak = $data->items();
 
-        return view('livewire.abnormal-item', compact('data'));
+        return view('livewire.abnormal-item', compact('data', 'dev'));
     }
 
     public function statusChange() {}
