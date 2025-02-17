@@ -116,6 +116,7 @@ class AbnormalItem extends Component
                     'pax' => $data->pax,
                     'lineC' => '-'
                 ];
+                
                 $this->savingToStock($res);
             }
         }
@@ -181,34 +182,38 @@ class AbnormalItem extends Component
             if (isset($req['palletNo_new'])) {
                 $req['pallet_no'] = $req['palletNo_new'];
                 $data = $this->copyOldDataAndUpdate($detail, $req['palletNo_new']);
+                itemIn::create([
+                    'pallet_no' => $data->pallet_no . ($data->locate == 'ASSY' ? '-AM' : ''),
+                    'material_no' => $data->material_no,
+                    'picking_qty' => $data->counter,
+                    'locate' => $data->locate,
+                    'trucking_id' => $data->trucking_id,
+                    'user_id' => $this->userid,
+                    'line_c' => $req['lineC'] != '-' ? $req['lineC'] : $data->line_c,
+                    'setup_by' => $data->setup_by,
+                    'surat_jalan' => $data->surat_jalan,
+                    'kit_no' => $data->kit_no
+                ]);
+            }else{
+                $sumQty = 0;
+                
+                foreach ($detail as $data) {
+                    $sumQty += $data->counter;
+                }
+                
+                itemIn::create([
+                    'pallet_no' => $data->pallet_no . ($data->locate == 'ASSY' ? '-AM' : ''),
+                    'material_no' => $data->material,
+                    'picking_qty' => $sumQty,
+                    'locate' => $data->locate,
+                    'trucking_id' => $data->trucking_id,
+                    'user_id' => $this->userid,
+                    'line_c' => $req['lineC'] != '-' ? $req['lineC'] : $data->line_c,
+                    'setup_by' => $data->setup_by,
+                    'surat_jalan' => $data->surat_jalan,
+                    'kit_no' => $data->kit_no
+                ]);
             }
-
-            itemIn::create([
-                'pallet_no' => $data->pallet_no . ($data->locate == 'ASSY' ? '-AM' : ''),
-                'material_no' => $data->material_no,
-                'picking_qty' => $data->counter,
-                'locate' => $data->locate,
-                'trucking_id' => $data->trucking_id,
-                'user_id' => $this->userid,
-                'line_c' => $req['lineC'] != '-' ? $req['lineC'] : $data->line_c,
-                'setup_by' => $data->setup_by,
-                'surat_jalan' => $data->surat_jalan,
-                'kit_no' => $data->kit_no
-            ]);
-            // foreach ($detail as $data) {
-            // itemIn::create([
-            //     'pallet_no' => $data->pallet_no . ($data->locate == 'ASSY' ? '-AM' : ''),
-            //     'material_no' => $data->material,
-            //     'picking_qty' => $data->counter,
-            //     'locate' => $data->locate,
-            //     'trucking_id' => $data->trucking_id,
-            //     'user_id' => $this->userid,
-            //     'line_c' => $req['lineC'] != '-' ? $req['lineC'] : $data->line_c,
-            //     'setup_by' => $data->setup_by,
-            //     'surat_jalan' => $data->surat_jalan,
-            //     'kit_no' => $data->kit_no
-            // ]);
-            // }
 
             // status 9 untuk sudah konfirmasi
             DB::table('abnormal_materials')
@@ -246,7 +251,7 @@ class AbnormalItem extends Component
         } catch (\Throwable $th) {
             $this->dispatch('notif', [
                 'icon' => 'error',
-                'title' => $th->getMessage(),
+                'title' => $th->getMessage().' -> '.$th->getLine(),
             ]);
         }
     }
