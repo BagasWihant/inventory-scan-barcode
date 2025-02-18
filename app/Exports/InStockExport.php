@@ -20,7 +20,7 @@ class InStockExport implements WithEvents, WithCustomStartCell, FromCollection, 
     public $data, $count;
     public function __construct($dt)
     {
-        $this->data = $dt;
+        $this->data = collect($dt);
         $this->count = count($dt);
     }
 
