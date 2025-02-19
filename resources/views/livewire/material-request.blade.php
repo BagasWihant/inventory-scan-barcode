@@ -34,7 +34,7 @@
                 },
                  handleSave() {
                     $wire.saveRequest(this.reqQty);
-                    handleCancel();
+                    this.handleCancel();
                 },
                 handleCancel() {
                     this.selectedData = null;
