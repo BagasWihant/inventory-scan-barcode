@@ -1,32 +1,73 @@
 <div class="max-w-7xl m-auto">
     <div class="flex gap-3">
         {{-- input --}}
-        <div class=" w-full">
+        <div class=" w-full"
+        x-data="{
+                reqQty: '',
+                selectedData: null,
+                multiply() {
+                    const minLot = this.selectedData.iss_min_lot;
+                    console.log(minLot,this.$refs.requestQty.value);
+                    if(minLot != 1 && this.$refs.requestQty.value > 99){
+                        Swal.fire({
+                            timer: 1500,
+                            title: 'Maks 99',
+                            icon: 'error',
+                            showConfirmButton: false,
+                            timerProgressBar: true,
+                        });
+                        this.$refs.requestQty.value = 99
+                    }
+                    if (this.$refs.requestQty) {
+                        const qtyy = this.$refs.requestQty.value;
+                        this.reqQty = minLot * qtyy;
+                    }
+                },
+                updateDetails(data) {
+                    $wire.set('selectedData', data);
+                    this.selectedData = data;
+                    this.$nextTick(() => {
+                        if (this.$refs.requestQty) {
+                            this.$refs.requestQty.focus();
+                        }
+                    });
+                },
+                 handleSave() {
+                    $wire.saveRequest(this.reqQty);
+                    handleCancel();
+                },
+                handleCancel() {
+                    this.selectedData = null;
+                    this.reqQty = '';
+                    this.$refs.requestQty.value = '';
+                }
+            }"
+        >
 
             <div class="flex justify-between flex-shrink-0">
                 <div class="flex gap-4">
                     <div class="flex items-center px-2 rounded">
-                        <input id="bordered-radio-1" type="radio" value="1" wire:model="type" @if ($userRequestDisable == true) disabled @endif
+                        <input id="bordered-radio-1" type="radio" value="1" wire:model="type" @if ($userRequestDisable==true) disabled @endif
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="bordered-radio-1"
                             class="w-full py-4 ms-2 text-sm font-medium @if ($userRequestDisable == true)  text-gray-600 @else  text-gray-900  @endif dark:text-gray-300">Reguler</label>
                     </div>
                     <div class="flex items-center px-2 rounded ">
-                        <input checked id="bordered-radio-2" type="radio" value="2" wire:model="type" @if ($userRequestDisable == true) disabled @endif
+                        <input checked id="bordered-radio-2" type="radio" value="2" wire:model="type" @if ($userRequestDisable==true) disabled @endif
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="bordered-radio-2"
                             class="w-full py-4 ms-2 text-sm font-medium @if ($userRequestDisable == true)  text-gray-600 @else  text-gray-900  @endif dark:text-gray-300">Urgent</label>
                     </div>
                     <input wire:model="userRequest" type="text" placeholder="User Request"
-                        @if ($userRequestDisable == true) disabled @endif
+                        @if ($userRequestDisable==true) disabled @endif
                         class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
                     @if ($userRequestDisable == true)
-                        <button class="btn bg-yellow-500 shadow-md text-white p-1 rounded-lg text-xs text-nowrap"
-                            @click="@this.set('userRequestDisable', false)">Ganti User & Type</button>
+                    <button class="btn bg-yellow-500 shadow-md text-white p-1 rounded-lg text-xs text-nowrap"
+                        @click="@this.set('userRequestDisable', false)">Ganti User & Type</button>
                     @endif
                 </div>
-                <button class="btn bg-red-500 shadow-md text-white px-2 py-1 rounded-lg text-sm"
+                <button class="btn bg-red-500 shadow-md text-white px-2 py-1 rounded-lg text-sm" @click="handleCancel"
                     wire:click="resetField">Clear
                     Input</button>
 
@@ -42,32 +83,25 @@
                 <div wire:loading.remove class="rounded-lg bg-slate-50 shadow">
 
                     @if (strlen($materialNo) >= 3 && $searchMaterialNo == true)
-                        @forelse ($resultSearchMaterial as $res)
-                            <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
-                                x-data="{
-                                    updateDetails(data) {
-                                        console.log('a')
-                                        $wire.set('selectedData', data);
-                                        $refs.requestQty.focus();
-                                    }
-                                }" @click="updateDetails(@js($res))">
-                                {{ $res->matl_no }}
-                            </div>
-                        @empty
-                            <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
-                        @endforelse
+                    @forelse ($resultSearchMaterial as $res)
+                    <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button" @click="updateDetails(@js($res))">
+                        {{ $res->matl_no }}
+                    </div>
+                    @empty
+                    <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
+                    @endforelse
                     @endif
                 </div>
             </div>
 
             <div class="flex gap-4 my-1">
-                <input wire:model="requestQty" x-ref="requestQty" type="text" wire:keydown.enter="saveRequest"
-                    placeholder="Request Qty"
+                <input x-ref="requestQty" type="text" @keydown.enter="handleSave" x-on:input="multiply()"
+                    placeholder="Input Pax"
                     class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
+                <input x-model="reqQty" :class="reqQty ? 'bg-green-100' : 'bg-red-300'" readonly placeholder="Request Qty" type="text"
+                    class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg  text-base">
                 <input wire:model="selectedData.qty" readonly placeholder="Qty" type="text"
-                    class="block w-full p-2 text-gray-900 border border-gray-300 bg-slate-200 rounded-lg  text-base">
-                <input wire:model="selectedData.bag_qty" readonly placeholder="Bag. Qty" type="text"
                     class="block w-full p-2 text-gray-900 border border-gray-300 bg-slate-200 rounded-lg  text-base">
                 <input wire:model="selectedData.iss_min_lot" readonly placeholder="Min. Lot" type="text"
                     class="block w-full p-2 text-gray-900 border border-gray-300 bg-slate-200 rounded-lg  text-base">
@@ -93,29 +127,29 @@
                                 Time Request
                             </th>
                             <th class="px-6 py-3">
-                                
+
                             </th>
                         </tr>
                     </thead>
                     <tbody>
 
                         @foreach ($totalRequest['data'] as $tr)
-                            <tr wire:key="material-request-{{ $loop->iteration }}"
-                                class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                <th scope="row"
-                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $tr->transaksi_no }}
-                                </th>
-                                <td class="px-6 py-4">
-                                    {{ $tr->count }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    {{ (int) $tr->time_request }} mnt
-                                </td>
-                                <td>
-                                    <button class="p-1 text-sm bg-red-500 rounded-xl text-white" wire:click="cancelTransaksi('{{ $tr->transaksi_no }}')">Cancel</button>
-                                </td>
-                            </tr>
+                        <tr wire:key="material-request-{{ $loop->iteration }}"
+                            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                            <th scope="row"
+                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {{ $tr->transaksi_no }}
+                            </th>
+                            <td class="px-6 py-4">
+                                {{ $tr->count }}
+                            </td>
+                            <td class="px-6 py-4">
+                                {{ (int) $tr->time_request }} mnt
+                            </td>
+                            <td>
+                                <button class="p-1 text-sm bg-red-500 rounded-xl text-white" wire:click="cancelTransaksi('{{ $tr->transaksi_no }}')">Cancel</button>
+                            </td>
+                        </tr>
                         @endforeach
                     </tbody>
                 </table>
@@ -155,32 +189,32 @@
             </thead>
             <tbody>
                 @foreach ($materialRequest as $m)
-                    <tr
-                        class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <td class="px-6 py-4">
-                            {{ $loop->iteration }}
-                        </td>
-                        <th scope="row"
-                            class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            {{ $m->material_no }}
-                        </th>
-                        <td class="px-6 py-4">
-                            {{ $m->material_name }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ $m->request_qty }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ $m->bag_qty }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ $m->iss_min_lot }}
-                        </td>
-                        <td class="px-6 py-4">
-                            <button class="btn bg-red-500 shadow-md text-white p-2 rounded-lg text-xs"
-                                wire:click="deleteItem('{{ $m->id }}')">Hapus</button>
-                        </td>
-                    </tr>
+                <tr
+                    class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <td class="px-6 py-4">
+                        {{ $loop->iteration }}
+                    </td>
+                    <th scope="row"
+                        class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        {{ $m->material_no }}
+                    </th>
+                    <td class="px-6 py-4">
+                        {{ $m->material_name }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ $m->request_qty }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ $m->bag_qty }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ $m->iss_min_lot }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <button class="btn bg-red-500 shadow-md text-white p-2 rounded-lg text-xs"
+                            wire:click="deleteItem('{{ $m->id }}')">Hapus</button>
+                    </td>
+                </tr>
                 @endforeach
             </tbody>
         </table>
@@ -219,16 +253,16 @@
         <span class="text-4xl font-medium text-white">{{ $statusLoading ?? 'Loading...' }}</span>
     </div>
     @script
-        <script>
-            $wire.on('alert', (event) => {
-                Swal.fire({
-                    timer: event[0].time,
-                    title: event[0].title,
-                    icon: event[0].icon,
-                    showConfirmButton: false,
-                    timerProgressBar: true,
-                });
+    <script>
+        $wire.on('alert', (event) => {
+            Swal.fire({
+                timer: event[0].time,
+                title: event[0].title,
+                icon: event[0].icon,
+                showConfirmButton: false,
+                timerProgressBar: true,
             });
-        </script>
+        });
+    </script>
     @endscript
 </div>

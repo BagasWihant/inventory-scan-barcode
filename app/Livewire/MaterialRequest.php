@@ -111,7 +111,7 @@ class MaterialRequest extends Component
         $this->requestQty = null;
     }
 
-    public function saveRequest()
+    public function saveRequest($requestQty = 0)
     {
         if (!$this->userRequest) {
             return $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please fill User Request']);
@@ -119,10 +119,10 @@ class MaterialRequest extends Component
         if (!$this->type) {
             return $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please choose Type']);
         }
-        if ($this->selectedData['qty'] < $this->requestQty) {
+        if ($this->selectedData['qty'] < $requestQty) {
             return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Maksimal qty : ' . $this->selectedData['qty']]);
         }
-        if ($this->requestQty % $this->selectedData['iss_min_lot'] !== 0) {
+        if ($requestQty % $this->selectedData['iss_min_lot'] !== 0) {
             return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Request Qty bukan kelipatan dari Min. Lot']);
         }
 
@@ -134,16 +134,16 @@ class MaterialRequest extends Component
         if ($cekExist) {
             $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Material sudah di input']);
             $this->resetField();
-            return ;
+            return;
         }
-        
+
         if (count($this->selectedData) > 1 && $this->materialNo != null) {
             ModelsMaterialRequest::create([
                 'transaksi_no' => $transaksiNoItem,
                 'material_no' => $this->materialNo,
                 'material_name' => $this->selectedData['matl_nm'],
                 'type' => $this->type,
-                'request_qty' => $this->requestQty,
+                'request_qty' => $requestQty,
                 'bag_qty' => $this->selectedData['bag_qty'],
                 'iss_min_lot' => $this->selectedData['iss_min_lot'],
                 'iss_unit' => $this->selectedData['iss_unit'],
