@@ -2,7 +2,7 @@
     <div class="flex gap-3">
         {{-- input --}}
         <div class=" w-full"
-        x-data="{
+            x-data="{
                 reqQty: '',
                 selectedData: null,
                 multiply() {
@@ -33,16 +33,22 @@
                     });
                 },
                  handleSave() {
-                    $wire.saveRequest(this.reqQty);
-                    this.handleCancel();
+                    $wire.saveRequest(this.reqQty).then(res => {  
+                        if(res){
+                            this.handleCancel();
+                        }else{
+                            this.reqQty = '';
+                            this.$refs.requestQty.value = '';
+                        }
+                    })
+                    
                 },
                 handleCancel() {
                     this.selectedData = null;
                     this.reqQty = '';
                     this.$refs.requestQty.value = '';
                 }
-            }"
-        >
+            }">
 
             <div class="flex justify-between flex-shrink-0">
                 <div class="flex gap-4">

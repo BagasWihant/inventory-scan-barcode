@@ -114,16 +114,20 @@ class MaterialRequest extends Component
     public function saveRequest($requestQty = 0)
     {
         if (!$this->userRequest) {
-            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please fill User Request']);
+            $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please fill User Request']);
+            return false;
         }
         if (!$this->type) {
-            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please choose Type']);
+            $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please choose Type']);
+            return false;
         }
         if ($this->selectedData['qty'] < $requestQty) {
-            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Maksimal qty : ' . $this->selectedData['qty']]);
+            $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Maksimal qty : ' . $this->selectedData['qty']]);
+            return false;
         }
         if ($requestQty % $this->selectedData['iss_min_lot'] !== 0) {
-            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Request Qty bukan kelipatan dari Min. Lot']);
+            $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Request Qty bukan kelipatan dari Min. Lot']);
+            return  false;
         }
 
         $transaksiNoItem = (preg_match("/[a-z]/i", $this->materialNo)) ? $this->transactionNo['wr'] : $this->transactionNo['nw'];
@@ -134,7 +138,7 @@ class MaterialRequest extends Component
         if ($cekExist) {
             $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Material sudah di input']);
             $this->resetField();
-            return;
+            return false;
         }
 
         if (count($this->selectedData) > 1 && $this->materialNo != null) {
@@ -155,6 +159,7 @@ class MaterialRequest extends Component
             $this->userRequestDisable = true;
             $this->loadTable();
             $this->resetField();
+            return true;
         }
     }
 
