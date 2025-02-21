@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\InventoryInController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SinglePage;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -44,18 +45,6 @@ Route::get('monitoring-material-request',fn() => view('pages.single.monitoring-m
 
 // untuk approval diluar inventory
 // sementara proses langsung
-Route::get('/Approval/{id}',function($id){
-    return view('pages.approval.approval-karyawan',[
-        'type'=>'ini->'.$id,
-        // contoh 0=diajukan,1=approve,2=reject
-        'data'=>[
-            'status'=>'2',
-            'section'=>'sections',
-            'position'=>'staff',
-            'qty'=>2,
-            'reason'=>'Lorem ipsum dolor sit, amet consectetur adipisicing elit. Similique ab incidunt repellendus pariatur dolorum a. Suscipit, nihil eius, nesciunt repellat placeat eligendi architecto eveniet id obcaecati sunt blanditiis, possimus perferendis.'
-        ]
-    ]);
-});
+Route::get('/Approval/{id}-{no}', [SinglePage::class,'approval']);
 
 require __DIR__ . '/auth.php';
