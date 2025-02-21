@@ -46,5 +46,7 @@ Route::get('monitoring-material-request',fn() => view('pages.single.monitoring-m
 // untuk approval diluar inventory
 // sementara proses langsung
 Route::get('/Approval/{id}-{no}', [SinglePage::class,'approval']);
+Route::post('/Approval/approve', [SinglePage::class,'approve']);
+Route::post('/Approval/reject', [SinglePage::class,'reject']);
 
 require __DIR__ . '/auth.php';
