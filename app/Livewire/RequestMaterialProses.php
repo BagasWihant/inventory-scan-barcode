@@ -66,8 +66,8 @@ class RequestMaterialProses extends Component
             $scannedMaterial = $tempTransaksiSelected->filter(function ($sub) use ($item) {
                 return str_replace(' ', '', $sub->material_no) == str_replace(' ', '', $item->sws_code);
             })->first();
-            
-            if(!$scannedMaterial){
+
+            if (!$scannedMaterial) {
                 return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Material not in list"]);
             }
 
@@ -76,8 +76,8 @@ class RequestMaterialProses extends Component
             //     ->select('user_id')->distinct()->first();
 
             $checkingUser = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
-            ->where('material_no', $scannedMaterial->material_no)
-            ->first();
+                ->where('material_no', $scannedMaterial->material_no)
+                ->first();
 
             if ($checkingUser && $checkingUser->user_id != $this->userId) {
                 return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Material is already scanned by another user"]);
@@ -94,11 +94,11 @@ class RequestMaterialProses extends Component
             // dd($this->tempRequest);
             if ($this->tempRequest) {
                 // if ($qtySupply == 1) {
-                
-            // Jika iss min lot 1 input manual jika tidak otomatis
-                if($item->iss_min_lot == 1){
+
+                // Jika iss min lot 1 input manual jika tidak otomatis
+                if ($item->iss_min_lot == 1) {
                     return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
-                }else{
+                } else {
                     $this->inputQty($this->tempRequest->qty_request);
                 }
                 // }
@@ -106,28 +106,21 @@ class RequestMaterialProses extends Component
                 // $this->tempRequest->update(['qty_supply' => $this->tempRequest->qty_supply + $qtySupply]);
                 // $this->dispatch('alert', ['time' => 3500, 'icon' => 'success', 'title' => "Material Added"]);
             } else {
-
-                // if ($qtySupply == 1) {
-                temp_request::create([
-                    'transaksi_no' => $scannedMaterial->transaksi_no,
-                    'material_no' => $scannedMaterial->material_no,
-                    'qty_request' => $scannedMaterial->request_qty,
-                    'qty_supply' => 0,
-                    'user_id' => $this->userId
-                ]);
-                $this->tempRequest = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
-                    ->where('material_no', $scannedMaterial->material_no)
-                    ->first();
-                return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
-                // }
-                // temp_request::create([
-                //     'transaksi_no' => $scannedMaterial->transaksi_no,
-                //     'material_no' => $scannedMaterial->material_no,
-                //     'qty_request' => $scannedMaterial->request_qty,
-                //     'qty_supply' => $qtySupply,
-                //     'user_id' => $this->userId
-                // ]);
-                // $this->dispatch('alert', ['time' => 3500, 'icon' => 'success', 'title' => "Material Added"]);
+                
+                // Jika iss min lot 1 input manual jika tidak otomatis
+                if ($item->iss_min_lot == 1) {
+                    temp_request::create([
+                        'transaksi_no' => $scannedMaterial->transaksi_no,
+                        'material_no' => $scannedMaterial->material_no,
+                        'qty_request' => $scannedMaterial->request_qty,
+                        'qty_supply' => 0,
+                        'user_id' => $this->userId
+                    ]);
+                    return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
+                } else {
+                    $this->inputQty($scannedMaterial->request_qty);
+                }
+                
             }
 
             $this->getMaterial($scannedMaterial->transaksi_no);
