@@ -44,6 +44,9 @@ class RequestMaterialProses extends Component
 
     public function prosesScan()
     {
+        if (strlen($this->materialScan) < 3) {
+            return;
+        }
         if (strtolower(substr($this->materialScan, 0, 1)) == "c") {
             $tempSplit = explode(' ', $this->materialScan);
 
@@ -57,16 +60,24 @@ class RequestMaterialProses extends Component
             ->leftJoin('material_mst as mst', 'm.sws_code', '=', 'mst.matl_no')
             ->select(['mst.iss_min_lot', 'm.sws_code']);
         if ($materialScanned->exists()) {
-
             $item = $materialScanned->first();
             $tempTransaksiSelected = $this->transaksiSelected;
             $this->materialScan = $item->sws_code;
             $scannedMaterial = $tempTransaksiSelected->filter(function ($sub) use ($item) {
                 return str_replace(' ', '', $sub->material_no) == str_replace(' ', '', $item->sws_code);
             })->first();
+            
+            if(!$scannedMaterial){
+                return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Material not in list"]);
+            }
+
+            // Lama yang baru dibawah biar gak dobel query. yang bawah query this->tempRequest
+            // $checkingUser = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
+            //     ->select('user_id')->distinct()->first();
 
             $checkingUser = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
-                ->select('user_id')->distinct()->first();
+            ->where('material_no', $scannedMaterial->material_no)
+            ->first();
 
             if ($checkingUser && $checkingUser->user_id != $this->userId) {
                 return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Material is already scanned by another user"]);
@@ -78,13 +89,18 @@ class RequestMaterialProses extends Component
                 $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Qty supply $item->iss_min_lot melebihi Qty request $scannedMaterial->request_qty"]);
             }
 
-            $this->tempRequest = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
-                ->where('material_no', $scannedMaterial->material_no)
-                ->first();
+            $this->tempRequest =  $checkingUser;
 
+            // dd($this->tempRequest);
             if ($this->tempRequest) {
                 // if ($qtySupply == 1) {
-                return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
+                
+            // Jika iss min lot 1 input manual jika tidak otomatis
+                if($item->iss_min_lot == 1){
+                    return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
+                }else{
+                    $this->inputQty($this->tempRequest->qty_request);
+                }
                 // }
 
                 // $this->tempRequest->update(['qty_supply' => $this->tempRequest->qty_supply + $qtySupply]);
@@ -172,7 +188,7 @@ class RequestMaterialProses extends Component
                     ->on('material_request.material_no', '=', 'r.material_no');
             })
             ->leftJoin('material_mst as b', 'material_request.material_no', '=', 'b.matl_no')
-            ->select(['material_request.*', 'r.qty_supply','b.qty as stock'])->get();
+            ->select(['material_request.*', 'r.qty_supply', 'b.qty as stock'])->get();
         $this->transaksiSelected = $dataPrint;
 
         $this->transaksiNo = $trx;
@@ -182,7 +198,7 @@ class RequestMaterialProses extends Component
 
     public function getData()
     {
-        $this->data = MaterialRequest::whereIn('status', ['0','9'])
+        $this->data = MaterialRequest::whereIn('status', ['0', '9'])
             ->when($this->searchKey, function ($q) {
                 $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
             })

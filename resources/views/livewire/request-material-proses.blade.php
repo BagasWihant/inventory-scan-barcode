@@ -236,12 +236,11 @@
                         @this.call('resetQty', material)
                     },
                     editQty(data) {
-
                         Swal.fire({
                             title: `Edit Qty ${data.material_no}`,
                             html: `<div class="flex flex-col">
                                 <strong>Qty</strong>
-                                <input id="editQty1" class="swal2-input">
+                                <input id="editQty1" class="swal2-input" value="${data.request_qty}">
                             </div>`,
                             showDenyButton: true,
                             denyButtonText: `Don't save`,
