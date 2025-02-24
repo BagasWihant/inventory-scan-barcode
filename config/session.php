@@ -32,7 +32,7 @@ return [
     |
     */
 
-    'lifetime' => env('SESSION_LIFETIME', 120),
+    'lifetime' => 20, // jika tidak ada aktifitas selama 20 menit, maka session akan dihapus
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 

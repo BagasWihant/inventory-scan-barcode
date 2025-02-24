@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\InputStockTakingMiddleware;
 use App\Http\Middleware\isMC;
+use App\Http\Middleware\UpdateActivity;
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\IsPrepareStockTaking;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'isPrepareStockTaking' => IsPrepareStockTaking::class,
             'isMC' =>isMC::class,
             'inputStockTaking' => InputStockTakingMiddleware::class,
+            'updateActivity' => UpdateActivity::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

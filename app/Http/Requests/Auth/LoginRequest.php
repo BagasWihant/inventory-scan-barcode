@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use Carbon\Carbon;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -48,6 +49,19 @@ class LoginRequest extends FormRequest
                 'nik' => trans('auth.failed'),
             ]);
         }
+
+        $user = Auth::user();
+        // Periksa apakah updated_at kurang dari 20 menit yang lalu, update at diperbarui setiap membuka link/url baru/ refresh
+        if ($user->updated_at && Carbon::parse($user->updated_at)->diffInMinutes(now()) < 20) {
+            
+            Auth::logout(); // Logout agar user tidak tetap login
+            throw ValidationException::withMessages([
+                'nik' => "User ini sedang login, silakan coba lagi nanti.",
+            ]);
+        }
+
+        // Update waktu terakhir login
+        $user->forceFill(['updated_at' => now()])->save();
 
         RateLimiter::clear($this->throttleKey());
     }
