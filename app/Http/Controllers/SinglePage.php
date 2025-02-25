@@ -36,10 +36,31 @@ class SinglePage extends Controller
         }
 
         $req = DB::table(DB::raw('IP.dbo.PR_MASTER_PLAN'))->where("id", $id)->where("no_plan", $no)->first();
+        $status = $this->getstatus($req->status, 'Short');
+        
+        if($status == 'O'){
+            $allowedIPspv = [
+                '127.0.0.1',
+            ];
 
-        // return view('pages.single.approval',['data'=>['id'=>$id,'no'=>$no]]);
+            if (!in_array(request()->ip(), $allowedIPspv)) {
+                // return abort(400, 'BUKAN SPV');
+                return "<b>Anda tidak bisa mengakses ini. Bukan Supervisor<b>";
+            }
+
+        }elseif($status == 'AP'){
+
+            $allowedIPMan = [
+                '127.0.0.1',
+            ];
+
+            if (!in_array(request()->ip(), $allowedIPMan)) {
+                return "<b>Anda tidak bisa mengakses ini. Bukan Manager<b>";
+            }
+        }
+
         $data = [
-            'status' => $this->getstatus($req->status, 'Short'),
+            'status' => $status,
             'section' => $req->sec,
             'position' => 'Posisi',
             'qty' => 0,
