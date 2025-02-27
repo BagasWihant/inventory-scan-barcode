@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\Approval\Generate;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SinglePage extends Controller
 {
@@ -31,14 +33,16 @@ class SinglePage extends Controller
             ['id' => 'required|integer']
         );
 
+
+
         if ($validator->fails()) {
             abort(400, 'ID HARUS ANGKA'); // Atau bisa menggunakan dd('Invalid ID') untuk debug
         }
 
-        $req = DB::table(DB::raw('IP.dbo.PR_MASTER_PLAN'))->where("id", $id)->where("no_plan", $no)->first();
+        $req = DB::table(DB::raw('IT.dbo.PR_MASTER_PLAN'))->where("id", $id)->where("no_plan", $no)->first();
         $status = $this->getstatus($req->status, 'Short');
-        
-        if($status == 'O'){
+
+        if ($status == 'O') {
             $allowedIPspv = [
                 '127.0.0.1',
             ];
@@ -47,8 +51,7 @@ class SinglePage extends Controller
                 // return abort(400, 'BUKAN SPV');
                 return "<b>Anda tidak bisa mengakses ini. Bukan Supervisor<b>";
             }
-
-        }elseif($status == 'AP'){
+        } elseif ($status == 'AP') {
 
             $allowedIPMan = [
                 '127.0.0.1',
@@ -63,13 +66,17 @@ class SinglePage extends Controller
             'status' => $status,
             'section' => $req->sec,
             'position' => 'Posisi',
-            'qty' => 0,
-            'reason' => 0,
+            'qty' => '0',
+            'reason' => "0aku",
             'docType' => 'Tipenya',
             'docNo' => $req->id . '-' . $req->no_plan,
             'docDate' => Carbon::parse($req->tanggal_plan)->format('d-m-Y'),
         ];
 
+        // load pdf
+        $fileName = "Approval_" . $data['docNo'] . "_" . $data['docDate'] . ".pdf";
+        Excel::store(new Generate($data), $fileName, 'public', \Maatwebsite\Excel\Excel::MPDF);
+        $data['pdf'] = url('storage/' . $fileName);
         return view('pages.single.approval', compact('data'));
     }
 
@@ -88,7 +95,7 @@ class SinglePage extends Controller
         $id = $docno[0];
         $no = $docno[1];
 
-        $cek = DB::table(DB::raw('IP.dbo.PR_MASTER_PLAN'))
+        $cek = DB::table(DB::raw('IT.dbo.PR_MASTER_PLAN'))
             ->where("id", $id)
             ->where("no_plan", $no)
             ->first();
@@ -112,7 +119,7 @@ class SinglePage extends Controller
 
         if ($shortStatus != $status) {
 
-            DB::table(DB::raw('IP.dbo.PR_MASTER_PLAN'))
+            DB::table(DB::raw('IT.dbo.PR_MASTER_PLAN'))
                 ->where("id", $id)
                 ->where("no_plan", $no)
                 ->update([
@@ -130,12 +137,12 @@ class SinglePage extends Controller
                 $insertData['diperiksa'] = $data['pos'];
                 $insertData['tgl_diperiksa'] = date('Y-m-d H:i:s');
 
-                DB::table(DB::raw('IP.dbo.PR_pr'))
+                DB::table(DB::raw('IT.dbo.PR_pr'))
                     ->insert($insertData);
             } else {
                 $updateData['disetujui'] = $data['pos'];
                 $updateData['tgl_disetujui'] = date('Y-m-d H:i:s');
-                DB::table(DB::raw('IP.dbo.PR_pr'))
+                DB::table(DB::raw('IT.dbo.PR_pr'))
                     ->where('id_no_plan', $id)
                     ->where('no_plan', $no)
                     ->update($updateData);
@@ -168,7 +175,7 @@ class SinglePage extends Controller
         $id = $docno[0];
         $no = $docno[1];
 
-        $cek = DB::table(DB::raw('IP.dbo.PR_MASTER_PLAN'))
+        $cek = DB::table(DB::raw('IT.dbo.PR_MASTER_PLAN'))
             ->where("id", $id)
             ->where("no_plan", $no)
             ->first();
@@ -194,7 +201,7 @@ class SinglePage extends Controller
 
         if ($shortStatus != $statusT) {
 
-            DB::table(DB::raw('IP.dbo.PR_MASTER_PLAN'))
+            DB::table(DB::raw('IT.dbo.PR_MASTER_PLAN'))
                 ->where("id", $id)
                 ->where("no_plan", $no)
                 ->update([
@@ -213,14 +220,14 @@ class SinglePage extends Controller
                     'tgl_ditolak' => date('Y-m-d H:i:s'),
                 ];
 
-                DB::table(DB::raw('IP.dbo.PR_pr'))
+                DB::table(DB::raw('IT.dbo.PR_pr'))
                     ->insert($insertData);
             } else {
 
                 $updateData['ditolak'] = $data['pos'];
                 $updateData['tgl_ditolak'] = date('Y-m-d H:i:s');
 
-                DB::table(DB::raw('IP.dbo.PR_pr'))
+                DB::table(DB::raw('IT.dbo.PR_pr'))
                     ->where('id_no_plan', $id)
                     ->where('no_plan', $no)
                     ->update($updateData);

@@ -31,27 +31,9 @@
             </div>
             @endif
             <div class="bg-slate-300 max-w-6xl p-4 rounded-xl shadow-md text-lg">
-                <div class="flex gap-4 my-4">
-                    <strong class="min-w-36">Section </strong>
-                    <span>: {{$data['section']}}</spa>
-                </div>
-                <div class="flex gap-4 my-4">
-                    <strong class="min-w-36">Position </strong>
-                    <span>: {{$data['position']}}</span>
-                </div>
-                <div class="flex gap-4 my-4">
-                    <strong class="min-w-36">Qty </strong>
-                    <span>: {{$data['qty']}}</span>
-                </div>
-                <div class="flex gap-4 my-4">
-                    <strong class="min-w-36">Reason </strong>
-                    <span>: {{$data['reason']}}</span>
-                </div>
-                <div class="flex gap-4 my-4">
-                    <strong class="min-w-36">Detail Subsitution</strong>
-                    <span>: {{$data['reason']}}</span>
-                </div>
+               <iframe src="{{ asset($data['pdf']) }}" width="100%" height="600px"></iframe>
             </div>
+
 
             <div class="my-14 flex justify-between" x-data="{ modal: false }">
                 @if (in_array($data['status'],['O','AP']))
