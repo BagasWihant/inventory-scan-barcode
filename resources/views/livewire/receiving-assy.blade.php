@@ -17,6 +17,15 @@
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-gray-900 uppercase bg-gray-300">
                     <tr>
+                        <th scope="col" class="px-1 py-3">
+                            Transaksi No
+                        </th>
+                        <th scope="col" class="px-1 py-3">
+                            Issue Date
+                        </th>
+                        <th scope="col" class="px-1 py-3">
+                            Line Code
+                        </th>
                         <th scope="col" class="px-6 py-3">
                             Notes
                         </th>
@@ -32,17 +41,23 @@
                     @foreach ($data as $d)
                         <tr
                             class="py-2 @if ($d->type == 2) bg-red-700 text-white font-semibold hover:bg-red-800 @endif hover:bg-gray-200">
-                            {{-- <td class="px-2" role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
+                            <td class="px-2" role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 {{ $d->transaksi_no }}
-                            </td> --}}
+                            </td>
+                            <td role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
+                                {{ $d->issue_date }}
+                            </td>
+                            <td role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
+                                {{ $d->line_c }}
+                            </td>
                             <td role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 {{ $d->type == 2 ? 'Urgent' : 'Reguler' }}
                             </td>
                             <td>
-                                @if ($d->status == 9)
-                                    Sudah di cetak
-                                @elseif($d->status == 0)
-                                    Belum di cetak
+                                @if ($d->status == 1)
+                                    Belum Supply
+                                @elseif($d->status == 2)
+                                    Sudah Supply
                                 @endif
                             </td>
                             <td>

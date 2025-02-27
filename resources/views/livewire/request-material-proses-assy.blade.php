@@ -20,6 +20,12 @@
                         <th scope="col" class="px-1 py-3">
                             Transaksi No
                         </th>
+                        <th scope="col" class="px-1 py-3">
+                            Issue Date
+                        </th>
+                        <th scope="col" class="px-1 py-3">
+                            Line Code
+                        </th>
                         <th scope="col" class="px-6 py-3">
                             Notes
                         </th>
@@ -37,6 +43,12 @@
                             class="py-2 @if ($d->type == 2) bg-red-700 text-white font-semibold hover:bg-red-800 @endif hover:bg-gray-200">
                             <td class="px-2" role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 {{ $d->transaksi_no }}
+                            </td>
+                            <td role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
+                                {{ $d->issue_date }}
+                            </td>
+                            <td role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
+                                {{ $d->line_c }}
                             </td>
                             <td role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 {{ $d->type == 2 ? 'Urgent' : 'Reguler' }}

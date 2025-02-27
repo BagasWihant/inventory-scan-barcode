@@ -193,8 +193,8 @@ class ReceivingAssy extends Component
             // ->when($this->searchKey, function ($q) {
             //     $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
             // })
-            ->select(['transaksi_no', 'status', 'type'])
-            ->groupBy('transaksi_no', 'status', 'type', 'created_at')
+            ->select(['transaksi_no', 'status', 'type','issue_date','line_c'])
+            ->groupBy('transaksi_no', 'status', 'type', 'created_at','issue_date','line_c')
             ->orderByDesc('created_at')
             ->get();
     }

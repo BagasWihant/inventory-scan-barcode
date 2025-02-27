@@ -56,9 +56,11 @@ class RequestMaterialProsesAssy extends Component
                 $this->materialScan = substr($tempSplit[0], 23, 15);
             }
         }
+
         $materialScanned = DB::table('material_conversion_mst as m')->where('supplier_code', $this->materialScan)
             ->leftJoin('material_mst as mst', 'm.sws_code', '=', 'mst.matl_no')
             ->select(['mst.iss_min_lot', 'm.sws_code']);
+
         if ($materialScanned->exists()) {
             $item = $materialScanned->first();
             $tempTransaksiSelected = $this->transaksiSelected;
@@ -180,6 +182,7 @@ class RequestMaterialProsesAssy extends Component
             })
             ->leftJoin('material_mst as b', 'material_request_assy.material_no', '=', 'b.matl_no')
             ->select(['material_request_assy.*', 'r.qty_supply', 'b.qty as stock'])->get();
+
         $this->transaksiSelected = $dataPrint;
 
         $this->transaksiNo = $trx;
@@ -193,8 +196,8 @@ class RequestMaterialProsesAssy extends Component
             ->when($this->searchKey, function ($q) {
                 $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
             })
-            ->select(['transaksi_no', 'status', 'type'])
-            ->groupBy('transaksi_no', 'status', 'type', 'created_at')
+            ->select(['transaksi_no', 'status', 'type','issue_date','line_c'])
+            ->groupBy('transaksi_no', 'status', 'type', 'created_at','issue_date','line_c')
             ->orderByDesc('created_at')
             ->get();
     }
