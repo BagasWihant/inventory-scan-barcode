@@ -34,6 +34,10 @@ Route::middleware(['auth','updateActivity'])->group(function () {
     Route::get('stock-taking-cot', fn() => view('pages.stock-taking-cot'))->name('stock.taking.cot');
     Route::get('material-request', fn() => view('pages.material-request'))->name('material.request');
     Route::get('material-request-proses', fn() => view('pages.material-request-proses'))->name('material.request-proses');
+
+    Route::get('material-request-assy', fn() => view('pages.material-request-assy'))->name('material.request.assy');
+    Route::get('material-request-proses-assy', fn() => view('pages.material-request-proses-assy'))->name('material.request-proses.assy');
+    Route::get('receiving-assy', fn() => view('pages.receiving-assy'))->name('receiving.assy');
 });
 
 Route::controller(InventoryInController::class)->group(function(){
