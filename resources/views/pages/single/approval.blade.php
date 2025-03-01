@@ -31,7 +31,10 @@
             </div>
             @endif
             <div class="bg-slate-300 max-w-6xl p-4 rounded-xl shadow-md text-lg">
-               <iframe src="{{ asset($data['pdf']) }}" width="100%" height="600px"></iframe>
+               <iframe src="{{ asset($data['pdf']) }}"
+                {{-- width="100%" height="600px" --}}
+               frameborder="no" class="iframe"
+               style="width:100%;min-height:90vh"></iframe>
             </div>
 
 

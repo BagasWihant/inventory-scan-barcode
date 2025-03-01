@@ -6,8 +6,10 @@ use App\Exports\Approval\Generate;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
+use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class SinglePage extends Controller
 {
@@ -39,7 +41,17 @@ class SinglePage extends Controller
             abort(400, 'ID HARUS ANGKA'); // Atau bisa menggunakan dd('Invalid ID') untuk debug
         }
 
-        $req = DB::table(DB::raw('IT.dbo.PR_MASTER_PLAN'))->where("id", $id)->where("no_plan", $no)->first();
+        $req = DB::table('IT.dbo.PR_MASTER_PLAN as m')
+        ->where("m.id", $id)
+        ->where("m.no_plan", $no)
+        ->leftJoin('IT.dbo.PR_approval_hirarki as h','m.sec','=','h.section')        
+        ->selectRaw('m.*,spv1,spv2,spv3,ast_mgr,mgr')
+        ->first();
+
+        $detail = DB::table('IT.dbo.PR_detail_plan as d')
+        ->where("id_master_plan", $req->id)->get();
+        $req->detail = $detail;
+
         $status = $this->getstatus($req->status, 'Short');
 
         if ($status == 'O') {
@@ -73,10 +85,31 @@ class SinglePage extends Controller
             'docDate' => Carbon::parse($req->tanggal_plan)->format('d-m-Y'),
         ];
 
+        // cek barcode smentara
+        $barcode = "/$no";
+        $barcodeFile = public_path("storage/barcodes/approval/1$no.png");
+        if (!file_exists($barcodeFile)) {
+            $generator = new BarcodeGeneratorPNG ();
+            $barcode = $generator->getBarcode($barcode, $generator::TYPE_CODE_128);
+            Storage::put('public/barcodes/approval/1' . $no . '.png', $barcode);
+        }
+        $req->barcode = $barcodeFile;
+        echo $barcodeFile;
         // load pdf
-        $fileName = "Approval_" . $data['docNo'] . "_" . $data['docDate'] . ".pdf";
-        Excel::store(new Generate($data), $fileName, 'public', \Maatwebsite\Excel\Excel::MPDF);
-        $data['pdf'] = url('storage/' . $fileName);
+        $fileName = "approval/Approval_" . $data['docNo'] . "_" . $data['docDate'] . ".pdf";
+        $data['pdf'] = '';
+        $pdfFile = url('storage/' . $fileName);
+        
+        // cek pdf
+        // if(!file_exists($pdfFile)){
+            Excel::store(new Generate($req), $fileName, 'public', \Maatwebsite\Excel\Excel::MPDF);
+            $data['pdf'] = $pdfFile;
+        // }
+
+        
+            
+              
+
         return view('pages.single.approval', compact('data'));
     }
 
