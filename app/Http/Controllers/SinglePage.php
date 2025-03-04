@@ -146,8 +146,8 @@ class SinglePage extends Controller
             mkdir($directory, 0775, true);
         }
 
-        // if (!file_exists($path)) {
-        if (true) {
+        if (!file_exists($path)) {
+        // if (true) {
 
             $html = view('templates.pdf.approval-generate', compact('req'))->render();
             $mpdf = new Mpdf();

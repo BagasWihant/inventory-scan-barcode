@@ -171,7 +171,7 @@
                     <table>
                         <tr>
                             <td style="width: 50px;">Nama</td>
-                            <td>: SPV</td>
+                            <td>: {{ $req->spv1 }}</td>
                         </tr>
                         <tr>
                             <td style="width: 50px;">Tanggal</td>
@@ -189,7 +189,7 @@
                     <table>
                         <tr>
                             <td style="width: 50px;">Nama</td>
-                            <td>: Manager</td>
+                            <td>: {{ $req->mgr }}</td>
                         </tr>
                         <tr>
                             <td style="width: 50px;">Tanggal</td>
