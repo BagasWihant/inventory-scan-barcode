@@ -50,7 +50,7 @@ class SinglePage extends Controller
             ->where("m.no_plan", $no)
             ->leftJoin('IT.dbo.PR_approval_hirarki as h', 'm.sec', '=', 'h.section')
             ->leftJoin('IT.dbo.PR_pr as pr', 'm.id', '=', 'pr.id_no_plan')
-            ->selectRaw('pr.*,spv1,spv2,spv3,ast_mgr,mgr,m.*')
+            ->selectRaw('pr.*,h.*,m.*')
             ->first();
 
         $detail = DB::table('IT.dbo.PR_detail_plan as d')
@@ -113,11 +113,11 @@ class SinglePage extends Controller
                 
                 if ($key == 'spv1' && $req->tgl_diperiksa != null) {
                     $key = 'spv';
-                    $valQR = "NIK/$value/$req->tgl_diperiksa";
+                    $valQR = "$req->nik_spv1/$value/$req->tgl_diperiksa";
                     $qr = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($valQR));
                 
                 } else if ($key == 'mgr' && $req->tgl_disetujui != null) {
-                    $valQR = "NIK/$value/$req->tgl_disetujui";
+                    $valQR = "$req->nik_mgr/$value/$req->tgl_disetujui";
                     $qr = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($valQR));
                 }
                 
