@@ -157,7 +157,7 @@
                     <table>
                         <tr>
                             <td style="width: 50px;">Nama</td>
-                            <td>: {{ $req->nama }}</td>
+                            <td>: {{ $req->signCode['creator']['name']}}</td>
                         </tr>
                         <tr>
                             <td style="width: 50px;">Tanggal</td>
@@ -171,7 +171,7 @@
                     <table>
                         <tr>
                             <td style="width: 50px;">Nama</td>
-                            <td>: {{ $req->spv1 }}</td>
+                            <td>: {{ $req->signCode['spv']['name'] }}</td>
                         </tr>
                         <tr>
                             <td style="width: 50px;">Tanggal</td>
@@ -189,7 +189,7 @@
                     <table>
                         <tr>
                             <td style="width: 50px;">Nama</td>
-                            <td>: {{ $req->mgr }}</td>
+                            <td>: {{ $req->signCode['mgr']['name'] }}</td>
                         </tr>
                         <tr>
                             <td style="width: 50px;">Tanggal</td>

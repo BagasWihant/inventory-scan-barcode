@@ -103,37 +103,26 @@ class SinglePage extends Controller
         $sign = [];
 
         // Setting nilai QRCODE
-        $req->qrCreator = '';
-        $req->qrSpv     = '';
-        $req->qrMgr     = '';
-        foreach ($req as $key => $value) {
-            if (in_array($key, $allow)) {
-
-                $qr='';
-                
-                if ($key == 'spv1' && $req->tgl_diperiksa != null) {
-                    $key = 'spv';
-                    $valQR = "$req->nik_spv1/$value/$req->tgl_diperiksa";
-                    $qr = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($valQR));
-                
-                } else if ($key == 'mgr' && $req->tgl_disetujui != null) {
-                    $valQR = "$req->nik_mgr/$value/$req->tgl_disetujui";
-                    $qr = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($valQR));
-                }
-                
-                $sign[$key] = [
-                    "qrcode" => $qr,
-                    "name" => $value
-                ];
-            }
-        }
-
         // Setting nama pembuat
         if ($status != 'O') {
 
-            $valQR = "NIK/$req->nama/$req->tanggal_plan";
-            $sign['creator']['qrcode'] = $qr = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($valQR));
-            $sign['creator']['nama'] = $req->nama;
+            $valQR = "NIK/$req->nama/$req->tanggal_plan/$req->no_pr";
+            $sign['creator']['qrcode'] = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($valQR));
+            $sign['creator']['name'] = $req->nama;
+        }
+
+        // SPV
+        if($req->tgl_diperiksa != null){   
+            $valQR = "$req->nik_spv1/$req->spv1/$req->tgl_diperiksa/$req->no_pr";
+            $sign['spv']['qrcode'] = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($valQR));
+            $sign['spv']['name'] = $req->nama;
+        }
+
+        // MGR
+        if($req->tgl_disetujui != null){   
+            $valQR = "$req->nik_mgr/$req->mgr/$req->tgl_disetujui/$req->no_pr";
+            $sign['mgr']['qrcode'] = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($valQR));
+            $sign['mgr']['name'] = $req->nama;
         }
 
         $req->signCode = $sign;
@@ -147,7 +136,7 @@ class SinglePage extends Controller
         }
 
         if (!file_exists($path)) {
-        // if (true) {
+            // if (true) {
 
             $html = view('templates.pdf.approval-generate', compact('req'))->render();
             $mpdf = new Mpdf();
