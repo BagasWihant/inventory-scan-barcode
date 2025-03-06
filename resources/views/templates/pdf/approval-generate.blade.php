@@ -133,7 +133,7 @@
             <tr>
                 <td align="left">
                     @if (isset($req->signCode['creator']))
-                        {!! $req->signCode['creator']['qrcode']!!}
+                        {!! $req->signCode['creator']['qrcode'] !!}
                     @else
                         <span><br><br><br><br><br></span>
                     @endif
@@ -141,13 +141,13 @@
                 <td></td>
                 <td align="left">
                     @if (isset($req->signCode['spv']))
-                        {!! $req->signCode['spv']['qrcode']!!}
+                        {!! $req->signCode['spv']['qrcode'] !!}
                     @endif
                 </td>
                 <td></td>
                 <td align="left">
                     @if (isset($req->signCode['mgr']))
-                        {!! $req->signCode['mgr']['qrcode']!!}
+                        {!! $req->signCode['mgr']['qrcode'] !!}
                     @endif
                 </td>
 
@@ -157,11 +157,15 @@
                     <table>
                         <tr>
                             <td style="width: 50px;">Nama</td>
-                            <td>: {{ $req->signCode['creator']['name']}}</td>
+                            <td>: {{ isset($req->signCode['creator']['name']) }} </td>
                         </tr>
                         <tr>
                             <td style="width: 50px;">Tanggal</td>
-                            <td>: {{ Carbon\Carbon::parse($req->tanggal_plan)->format('d-m-Y') }}</td>
+                            <td>:
+                                @if (isset($req->signCode['creator']['nama']))
+                                    {{ Carbon\Carbon::parse($req->tanggal_plan)->format('d-m-Y') }}
+                                @endif
+                            </td>
                         </tr>
                     </table>
                 </td>
@@ -171,7 +175,7 @@
                     <table>
                         <tr>
                             <td style="width: 50px;">Nama</td>
-                            <td>: {{ $req->signCode['spv']['name'] }}</td>
+                            <td>: {{ isset($req->signCode['spv']['name']) }}</td>
                         </tr>
                         <tr>
                             <td style="width: 50px;">Tanggal</td>
@@ -189,7 +193,7 @@
                     <table>
                         <tr>
                             <td style="width: 50px;">Nama</td>
-                            <td>: {{ $req->signCode['mgr']['name'] }}</td>
+                            <td>: {{ isset($req->signCode['mgr']['name']) }}</td>
                         </tr>
                         <tr>
                             <td style="width: 50px;">Tanggal</td>
