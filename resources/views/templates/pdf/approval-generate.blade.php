@@ -157,12 +157,12 @@
                     <table>
                         <tr>
                             <td style="width: 50px;">Nama</td>
-                            <td>: {{ isset($req->signCode['creator']['name']) }} </td>
+                            <td>: {{ $req->signCode['creator']['name'] ?? '' }} </td>
                         </tr>
                         <tr>
                             <td style="width: 50px;">Tanggal</td>
                             <td>:
-                                @if (isset($req->signCode['creator']['nama']))
+                                @if (isset($req->signCode['creator']['name']))
                                     {{ Carbon\Carbon::parse($req->tanggal_plan)->format('d-m-Y') }}
                                 @endif
                             </td>
@@ -175,7 +175,7 @@
                     <table>
                         <tr>
                             <td style="width: 50px;">Nama</td>
-                            <td>: {{ isset($req->signCode['spv']['name']) }}</td>
+                            <td>: {{ $req->signCode['spv']['name'] ?? '' }}</td>
                         </tr>
                         <tr>
                             <td style="width: 50px;">Tanggal</td>
@@ -193,7 +193,7 @@
                     <table>
                         <tr>
                             <td style="width: 50px;">Nama</td>
-                            <td>: {{ isset($req->signCode['mgr']['name']) }}</td>
+                            <td>: {{ $req->signCode['mgr']['name'] ?? '' }}</td>
                         </tr>
                         <tr>
                             <td style="width: 50px;">Tanggal</td>

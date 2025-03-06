@@ -70,7 +70,7 @@ class SinglePage extends Controller
             // halaman approve purchasing
             $allowedPurchase = [
                 '127.0.0.1',
-                '192.168.1.7'
+                '192.168.1.249'
             ];
 
             if (!in_array(request()->ip(), $allowedPurchase)) {
@@ -80,7 +80,7 @@ class SinglePage extends Controller
             // halaman spv
             $allowedSPV = [
                 '127.0.0.1',
-                '192.168.1.7'
+                '192.168.1.249'
             ];
 
             if (!in_array(request()->ip(), $allowedSPV)) {
@@ -90,7 +90,7 @@ class SinglePage extends Controller
             // halaman manager
             $allowedIPMan = [
                 '127.0.0.1',
-                '192.168.1.7'
+                '192.168.1.249'
             ];
 
             if (!in_array(request()->ip(), $allowedIPMan)) {
@@ -115,14 +115,14 @@ class SinglePage extends Controller
         if($req->tgl_diperiksa != null){   
             $valQR = "$req->nik_spv1/$req->spv1/$req->tgl_diperiksa/$req->no_pr";
             $sign['spv']['qrcode'] = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($valQR));
-            $sign['spv']['name'] = $req->nama;
+            $sign['spv']['name'] = $req->spv1;
         }
 
         // MGR
         if($req->tgl_disetujui != null){   
             $valQR = "$req->nik_mgr/$req->mgr/$req->tgl_disetujui/$req->no_pr";
             $sign['mgr']['qrcode'] = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($valQR));
-            $sign['mgr']['name'] = $req->nama;
+            $sign['mgr']['name'] = $req->mgr;
         }
 
         $req->signCode = $sign;
@@ -135,8 +135,8 @@ class SinglePage extends Controller
             mkdir($directory, 0775, true);
         }
 
-        if (!file_exists($path)) {
-            // if (true) {
+        // if (!file_exists($path)) {
+            if (true) {
 
             $html = view('templates.pdf.approval-generate', compact('req'))->render();
             $mpdf = new Mpdf();
