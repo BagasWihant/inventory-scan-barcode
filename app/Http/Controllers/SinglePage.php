@@ -34,6 +34,22 @@ class SinglePage extends Controller
             : (array_search($str, $map) ?: 'Unknown');
     }
 
+    private function generatePdf($url, $html)
+    {
+        $mpdf = new Mpdf();
+        $mpdf->SetHTMLHeader("
+        <span style='left: 1px;
+            top: 1px;
+            position: absolute;
+            font-weight: bold;
+            font-size: 12px;'>
+            PT. KARANGANYAR INDO AUTO SYSTEMS 
+        </span>
+        ");
+
+        $mpdf->WriteHTML($html);
+        $mpdf->Output($url, Destination::FILE);
+    }
     public function approval($id, $no)
     {
         $validator = Validator::make(
@@ -112,14 +128,14 @@ class SinglePage extends Controller
         }
 
         // SPV
-        if($req->tgl_diperiksa != null){   
+        if ($req->tgl_diperiksa != null) {
             $valQR = "$req->nik_spv1/$req->spv1/$req->tgl_diperiksa/$req->no_pr";
             $sign['spv']['qrcode'] = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($valQR));
             $sign['spv']['name'] = $req->spv1;
         }
 
         // MGR
-        if($req->tgl_disetujui != null){   
+        if ($req->tgl_disetujui != null) {
             $valQR = "$req->nik_mgr/$req->mgr/$req->tgl_disetujui/$req->no_pr";
             $sign['mgr']['qrcode'] = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($valQR));
             $sign['mgr']['name'] = $req->mgr;
@@ -136,22 +152,10 @@ class SinglePage extends Controller
         }
 
         // if (!file_exists($path)) {
-            if (true) {
-
+        if (true) {
             $html = view('templates.pdf.approval-generate', compact('req'))->render();
-            $mpdf = new Mpdf();
-            $mpdf->SetHTMLHeader("
-            <span style='left: 1px;
-                top: 1px;
-                position: absolute;
-                font-weight: bold;
-                font-size: 12px;'>
-                PT. KARANGANYAR INDO AUTO SYSTEMS 
-            </span>
-            ");
 
-            $mpdf->WriteHTML($html);
-            $mpdf->Output($path, Destination::FILE);
+            $this->generatePdf($path, $html);
         }
 
         $req->pdf = Storage::url('approval/pdf/' . $fileName);
@@ -161,15 +165,15 @@ class SinglePage extends Controller
 
     public function approve(Request $req)
     {
-        $decode = json_decode($req->data, true);
+        $decode = json_decode($req->data);
 
-        $status = $decode['status'];
+        $status = $decode->status;
         if (!in_array($status, ['O', 'AP', 'AS'])) {
             return false;
         }
 
-        $id = $decode['id'];
-        $no = $decode['no_plan'];
+        $id = $decode->id;
+        $no = $decode->no_plan;
 
         $cek = DB::table('IT.dbo.PR_MASTER_PLAN')
             ->where("id", $id)
@@ -184,19 +188,42 @@ class SinglePage extends Controller
             return view('pages.single.approval-response', compact('data'));
         }
 
-        if ($status == 'O') {
-            $nextStatus = 'AP';
-            $data['posisi'] = 'Purchasing';
-            $data['pos'] = 'Purchasing';
-        } elseif ($status == 'AP') {
-            $nextStatus = 'AS';
-            $data['posisi'] = 'Supervisor';
-            $data['pos'] = $decode['spv1'];
-        } else {
-            $nextStatus = 'AM';
-            $data['posisi'] = 'Manager';
-            $data['pos'] = $decode['mgr'];
+        // Tak buat simpel 
+        $positions = [
+            'O'  => ['next' => 'AP', 'posisi' => 'Purchasing', 'pos' => 'Purchasing'],
+            'AP' => ['next' => 'AS', 'posisi' => 'Supervisor', 'pos' => $decode->spv1],
+            'AS' => ['next' => 'AM', 'posisi' => 'Manager', 'pos' => $decode->mgr]
+        ];
+
+        $nextStatus = $positions[$status]['next'];
+        $data['posisi'] = $positions[$status]['posisi'];
+        $data['pos'] = $positions[$status]['pos'];
+
+        $sign = [];
+
+        if ($status !== 'O') {
+            $QR = "$decode->nik_spv1/$decode->spv1/$decode->tgl_diperiksa/$decode->no_pr";
+            $sign['spv'] = [
+                'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
+                'name' => $decode->spv1
+            ];
         }
+
+        if ($status === 'AS') {
+            $QR = "$decode->nik_mgr/$decode->mgr/$decode->tgl_disetujui/$decode->no_pr";
+            $sign['mgr'] = [
+                'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
+                'name' => $decode->mgr
+            ];
+        }
+
+        $QR = "NIK/$decode->nama/$decode->tanggal_plan/$decode->no_pr";
+        $sign['creator'] = [
+            'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
+            'name' => $decode->nama
+        ];
+        
+        $decode->signCode = $sign;
 
         if ($shortStatus != $nextStatus) {
 
@@ -243,10 +270,21 @@ class SinglePage extends Controller
                     ->update($updateData);
             }
 
+            // file pdf
+            $fileName = $decode->docNo . '.pdf';
+            $directory = storage_path('app/public/approval/pdf');
+            $path = $directory . '/' . $fileName;
+            $req = $decode;
 
+            // generatePdf
+            $html = view('templates.pdf.approval-generate', compact('req'))->render();
+            $this->generatePdf($path, $html);
+
+            $data['pdf'] = $req->pdf;
             $data['text'] = 'Berhasil disetujui oleh';
             $data['status'] = '1';
         } else {
+            $data['pdf'] = '';
             $data['status'] = '0';
             $data['posisi'] = '';
             $data['pos'] = '';
