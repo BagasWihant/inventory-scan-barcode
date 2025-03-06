@@ -34,12 +34,20 @@ class MonitoringMaterialRequest extends Component
             ->orderBy('created_at', 'desc')
             ->groupBy('transaksi_no', 'user_id', 'status', 'created_at', 'user_request');
 
-        $this->totalCount = MaterialRequest::where('status', '!=', '-')
-            ->where(DB::raw('CONVERT(date, created_at)'), $this->time->format('Y-m-d'))
-            ->distinct()
-            ->count('transaksi_no');
+        // $this->totalCount = MaterialRequest::where('status', '!=', '-')
+        //     ->where(DB::raw('CONVERT(date, created_at)'), $this->time->format('Y-m-d'))
+        //     ->distinct()
+        //     ->count('transaksi_no');
 
-        $this->material = $materialQuery->get();
+        
+        $data = $materialQuery->get();
+        $this->material = $data;
+        $this->totalCount = $data->count();
+        
+
+        if ($data->whereIn('status', [0, 9])->isNotEmpty()) {
+            $this->dispatch('playSound');
+        }
     }
     public function render()
     {

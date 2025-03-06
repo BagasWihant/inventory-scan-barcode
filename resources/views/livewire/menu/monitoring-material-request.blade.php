@@ -110,3 +110,13 @@
         </table>
     </div>
 </div>
+
+@script
+    <script>
+        const notif = new Audio("{{ asset('assets/sound.wav') }}")
+        $wire.on('playSound', () => {
+            console.log('play');
+            notif.play();
+        });
+    </script>
+@endscript
