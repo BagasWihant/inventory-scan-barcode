@@ -199,31 +199,6 @@ class SinglePage extends Controller
         $data['posisi'] = $positions[$status]['posisi'];
         $data['pos'] = $positions[$status]['pos'];
 
-        $sign = [];
-
-        if ($status !== 'O') {
-            $QR = "$decode->nik_spv1/$decode->spv1/$decode->tgl_diperiksa/$decode->no_pr";
-            $sign['spv'] = [
-                'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
-                'name' => $decode->spv1
-            ];
-        }
-
-        if ($status === 'AS') {
-            $QR = "$decode->nik_mgr/$decode->mgr/$decode->tgl_disetujui/$decode->no_pr";
-            $sign['mgr'] = [
-                'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
-                'name' => $decode->mgr
-            ];
-        }
-
-        $QR = "NIK/$decode->nama/$decode->tanggal_plan/$decode->no_pr";
-        $sign['creator'] = [
-            'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
-            'name' => $decode->nama
-        ];
-        
-        $decode->signCode = $sign;
 
         if ($shortStatus != $nextStatus) {
 
@@ -270,11 +245,47 @@ class SinglePage extends Controller
                     ->update($updateData);
             }
 
+            // get new data after update
+            $req = DB::table('IT.dbo.PR_MASTER_PLAN as m')
+                ->where("m.id", $id)
+                ->where("m.no_plan", $no)
+                ->leftJoin('IT.dbo.PR_approval_hirarki as h', 'm.sec', '=', 'h.section')
+                ->leftJoin('IT.dbo.PR_pr as pr', 'm.id', '=', 'pr.id_no_plan')
+                ->selectRaw('pr.*,h.*,m.*')
+                ->first();
+
+            $sign = [];
+
+            if ($status !== 'O') {
+                $QR = "$req->nik_spv1/$req->spv1/$req->tgl_diperiksa/$req->no_pr";
+                $sign['spv'] = [
+                    'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
+                    'name' => $req->spv1
+                ];
+            }
+
+            if ($status === 'AS') {
+                $QR = "$req->nik_mgr/$req->mgr/$req->tgl_disetujui/$req->no_pr";
+                $sign['mgr'] = [
+                    'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
+                    'name' => $req->mgr
+                ];
+            }
+
+            $QR = "NIK/$req->nama/$req->tanggal_plan/$req->no_pr";
+            $sign['creator'] = [
+                'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
+                'name' => $req->nama
+            ];
+
+            $req->signCode = $sign;
+
             // file pdf
             $fileName = $decode->docNo . '.pdf';
             $directory = storage_path('app/public/approval/pdf');
             $path = $directory . '/' . $fileName;
-            $req = $decode;
+            $req->pdf = Storage::url('approval/pdf/' . $fileName);
+            $req->detail = $decode->detail;
 
             // generatePdf
             $html = view('templates.pdf.approval-generate', compact('req'))->render();
