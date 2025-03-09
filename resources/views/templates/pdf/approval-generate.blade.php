@@ -79,7 +79,7 @@
                 </table>
             </td>
             <td width='10px'></td>
-            <td align="left" width='150px'>
+            {{-- <td align="left" width='150px'>
                 <table>
                     <tr>
                         <td width='150px'>Diterima oleh Purchasing</td>
@@ -90,7 +90,7 @@
                         <td>: {{ Carbon\Carbon::parse($req->tanggal_pr)->format('d-m-Y') }}</td>
                     </tr>
                 </table>
-            </td>
+            </td> --}}
         </tr>
     </table>
 
@@ -125,10 +125,12 @@
         <table class="">
             <tr>
                 <td align="left" width="200px">Dibuat oleh</td>
-                <td width="80px"></td>
+                {{-- <td width="50px"></td> --}}
                 <td align="left" width="200px">Diperiksa oleh</td>
-                <td width="80px"></td>
+                {{-- <td width="50px"></td> --}}
                 <td align="left" width="200px">Disetujui oleh</td>
+                {{-- <td width="50px"></td> --}}
+                <td align="left" width="200px">Diterima oleh</td>
             </tr>
             <tr>
                 <td align="left">
@@ -138,16 +140,22 @@
                         <span><br><br><br><br><br></span>
                     @endif
                 </td>
-                <td></td>
+                {{-- <td></td> --}}
                 <td align="left">
                     @if (isset($req->signCode['spv']))
                         {!! $req->signCode['spv']['qrcode'] !!}
                     @endif
                 </td>
-                <td></td>
+                {{-- <td></td> --}}
                 <td align="left">
                     @if (isset($req->signCode['mgr']))
                         {!! $req->signCode['mgr']['qrcode'] !!}
+                    @endif
+                </td>
+                {{-- <td></td> --}}
+                <td align="left">
+                    @if (isset($req->signCode['terima']))
+                        {!! $req->signCode['terima']['qrcode'] !!}
                     @endif
                 </td>
 
@@ -169,7 +177,7 @@
                         </tr>
                     </table>
                 </td>
-                <td></td>
+                {{-- <td></td> --}}
 
                 <td align="left">
                     <table>
@@ -187,7 +195,7 @@
                         </tr>
                     </table>
                 </td>
-                <td></td>
+                {{-- <td></td> --}}
 
                 <td align="left">
                     <table>
@@ -200,6 +208,24 @@
                             <td>:
                                 @if ($req->tgl_disetujui)
                                     {{ Carbon\Carbon::parse($req->tgl_disetujui)->format('d-m-Y') }}
+                                @endif
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                {{-- <td></td> --}}
+
+                <td align="left">
+                    <table>
+                        <tr>
+                            <td style="width: 50px;">Nama</td>
+                            <td>: {{ $req->signCode['terima']['name'] ?? '' }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 50px;">Tanggal</td>
+                            <td>:
+                                @if ($req->tgl_disetujui)
+                                    {{ Carbon\Carbon::parse($req->tgl_diterima)->format('d-m-Y') }}
                                 @endif
                             </td>
                         </tr>

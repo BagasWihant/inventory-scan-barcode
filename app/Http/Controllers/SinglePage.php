@@ -139,6 +139,12 @@ class SinglePage extends Controller
             $valQR = "$req->nik_mgr/$req->mgr/$req->tgl_disetujui/$req->no_pr";
             $sign['mgr']['qrcode'] = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($valQR));
             $sign['mgr']['name'] = $req->mgr;
+
+            $QR = "$req->nik_diterima/$req->diterima/$req->tgl_diterima/$req->no_pr";
+            $sign['terima'] = [
+                'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
+                'name' => $req->diterima
+            ];
         }
 
         $req->signCode = $sign;
@@ -269,6 +275,12 @@ class SinglePage extends Controller
                 $sign['mgr'] = [
                     'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
                     'name' => $req->mgr
+                ];
+
+                $QR = "$req->nik_diterima/$req->diterima/$req->tgl_diterima/$req->no_pr";
+                $sign['terima'] = [
+                    'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
+                    'name' => $req->diterima
                 ];
             }
 
