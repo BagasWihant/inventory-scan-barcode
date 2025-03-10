@@ -109,14 +109,31 @@
             </tbody>
         </table>
     </div>
+    <audio id="notificationSound" src="{{ asset('assets/sound2.mp3') }}" preload="auto"></audio>
+
+    <script>
+        // Initialize AudioContext on user interaction
+        let audioCtx = null;
+        
+        document.addEventListener('click', function() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                console.log("AudioContext initialized");
+            }
+        }, { once: true });
+    </script>
 </div>
+
 
 @script
     <script>
-        const notif = new Audio("{{ asset('assets/sound.wav') }}")
-        $wire.on('playSound', () => {
-            console.log('play');
-            notif.play();
+        const notif = document.getElementById('notificationSound');
+        $wire.on('playSound', () => {            
+            notif.play()
+        });
+        $wire.on('stopSound', () => {
+            notif.pause()
+            notif.currentTime = 0
         });
     </script>
 @endscript

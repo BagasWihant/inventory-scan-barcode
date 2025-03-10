@@ -47,6 +47,8 @@ class MonitoringMaterialRequest extends Component
 
         if ($data->whereIn('status', [0, 9])->isNotEmpty()) {
             $this->dispatch('playSound');
+        }else{
+            $this->dispatch('stopSound');
         }
     }
     public function render()
