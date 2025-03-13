@@ -85,6 +85,10 @@ class InventoryInController extends Controller
         return view('pages.supply-assy');
     }
 
+    public function receivingSiws() {
+        return view('pages.receiving-siws');
+    }
+
     public function menu_sup($nik)
     {
 

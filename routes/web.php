@@ -3,6 +3,7 @@
 use App\Http\Controllers\InventoryInController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SinglePage;
+use App\Livewire\MaterialRequest;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -30,6 +31,8 @@ Route::middleware(['auth','updateActivity'])->group(function () {
         Route::get('report-taking', 'reportStockTaking')->name('report.stock.taking')->withoutMiddleware('isPrepareStockTaking');
         Route::get('material-available', 'materialAvailable')->name('material.available')->withoutMiddleware('isPrepareStockTaking');
         Route::get('supply-assy', 'supplyAssy')->name('supply.assy')->withoutMiddleware('isPrepareStockTaking');
+
+        Route::get('receiving-siws', 'receivingSiws')->name('inventory.receiving.siws');
     });
     Route::get('stock-taking-cot', fn() => view('pages.stock-taking-cot'))->name('stock.taking.cot');
     Route::get('material-request', fn() => view('pages.material-request'))->name('material.request');

@@ -17,7 +17,6 @@ class UpdateActivity
      */
     public function handle(Request $request, Closure $next): Response
     {
-        print_r(Auth::check());
         if (Auth::check()) {
             Auth::user()->forceFill(['updated_at' => now()])->save();
         }
