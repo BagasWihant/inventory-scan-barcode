@@ -10,6 +10,7 @@ use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use App\Exports\ScannedExport;
 use App\Models\abnormalMaterial;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -17,6 +18,7 @@ class ReceivingSIWS extends Component
 {
     use WithPagination;
 
+    protected $listeners = ['editQty'];
     private $tableTemp = 'temp_counter_siws';
     // private $table = ''
 
@@ -124,18 +126,22 @@ class ReceivingSIWS extends Component
         }
 
         if (strlen($this->produkBarcode) > 2) {
-            
+
             // CTI000400ASSY250304XH33309600030070TS32107-3K6-K502   000002
             if (strtolower(substr($this->paletBarcode, 0, 1)) == "c") {
                 $this->produkBarcode = substr($this->produkBarcode, 23, 13);
             }
-            
-            // K21759740192808XHN32702250001
+
+            // K21759769242168XHN32702250001
             if (strtolower(substr($this->paletBarcode, 0, 1)) == "m") {
                 $this->produkBarcode = substr($this->produkBarcode, 7, 8);
             }
 
-            $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->produkBarcode)->select('sws_code')->first();
+            $key = 'conversion_' . $this->produkBarcode;
+            $supplierCode = Cache::remember($key, 30, function () {
+                return DB::table('material_conversion_mst')->where('supplier_code', $this->produkBarcode)->select('sws_code')->first();
+            });
+
             if ($supplierCode) {
                 $this->sws_code = $supplierCode->sws_code;
 
@@ -145,19 +151,34 @@ class ReceivingSIWS extends Component
                     ->where('palet', $this->paletBarcode);
                 $data = $tempCount->first();
 
+                $key = 'count_' . $supplierCode->sws_code . '_' . $this->paletBarcode . '_' . $this->userId;
+                $count = Cache::remember($key, 30, function () use ($supplierCode) {
+                    return DB::table($this->tableTemp)
+                        ->where('material', $supplierCode->sws_code)
+                        ->where('userID', $this->userId)
+                        ->where('palet', $this->paletBarcode)->count();
+                });
+
                 // $mat_regis = DB::table('material_registrasis')
                 //     ->select('material_no')
                 //     ->where('material_no', $this->sws_code)->exists();
 
-                if ($tempCount->count() > 0) {
+                if ($count > 0) {
                     // if ($mat_regis) {
                     //     $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
                     // } else {
-                    $qry = DB::table('material_setup_mst_CNC_KIAS2')
-                        ->selectRaw('picking_qty')
-                        ->where('material_no', $supplierCode->sws_code)
-                        ->where('pallet_no', $this->paletBarcode)
-                        ->groupBy('picking_qty');
+
+                    // tambahi cache 30s
+                    $key = 'material_setup_' . $supplierCode->sws_code . '_' . $this->paletBarcode . '_' . $this->userId;
+                    $qry = Cache::remember($key, 30, function () use ($supplierCode) {
+                        return DB::table('material_setup_mst_CNC_KIAS2')
+                            ->selectRaw('picking_qty')
+                            ->where('material_no', $supplierCode->sws_code)
+                            ->where('pallet_no', $this->paletBarcode)
+                            ->groupBy('picking_qty')
+                            ->get();
+                    });
+
                     $productDetail = $qry->first();
 
                     $counter = $data->counter + $productDetail->picking_qty;
@@ -221,23 +242,28 @@ class ReceivingSIWS extends Component
             ->pluck('material_no')
             ->all();
 
-        $productsQuery = DB::table('material_setup_mst_CNC_KIAS2 as a')
-            ->selectRaw('pallet_no, a.material_no,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,loc_cd as location_cd')
-            ->leftJoin('material_mst as b', 'a.material_no', '=', 'b.matl_no')
-            ->where('a.pallet_no', $this->paletBarcode)
-            ->whereNotIn('a.material_no', $getScanned)
-            ->groupBy('a.pallet_no', 'a.material_no', 'b.loc_cd')
-            ->orderByDesc('pax')
-            ->orderByDesc('a.material_no');
+        // tambah cache
+        $key = 'picking_' . $this->paletBarcode . '_' . $this->userId;
+        $collection = Cache::remember($key, 30, function () {
+            return DB::table('material_setup_mst_CNC_KIAS2')
+                ->selectRaw('picking_qty,material_no,count(picking_qty) as jml_pick')
+                ->where('pallet_no', $this->paletBarcode)
+                ->groupBy('picking_qty', 'material_no')->get();
+        });
 
+        $getScannedString = implode(',', $getScanned);
+        $key = 'getallcnc_' . $this->paletBarcode . '_' . $this->userId . '_' . md5($getScannedString);
+        $getall = Cache::remember($key, 30, function () use ($getScanned) {
+            return DB::table('material_setup_mst_CNC_KIAS2 as a')
+                ->selectRaw('pallet_no, a.material_no,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,loc_cd as location_cd')
+                ->leftJoin('material_mst as b', 'a.material_no', '=', 'b.matl_no')
+                ->where('a.pallet_no', $this->paletBarcode)
+                ->whereNotIn('a.material_no', $getScanned)
+                ->groupBy('a.pallet_no', 'a.material_no', 'b.loc_cd')
+                ->orderByDesc('pax')
+                ->orderByDesc('a.material_no')->get();
+        });
 
-        $picking = DB::table('material_setup_mst_CNC_KIAS2')
-            ->selectRaw('picking_qty,material_no,count(picking_qty) as jml_pick')
-            ->where('pallet_no', $this->paletBarcode)
-            ->groupBy('picking_qty', 'material_no');
-        $collection = $picking->get();
-
-        $getall = $productsQuery->get();
         $this->products = $getall;
         $materialNos = $getall->pluck('material_no')->all();
 
@@ -337,7 +363,27 @@ class ReceivingSIWS extends Component
         }
 
         $this->refreshTemp();
-        $this->dispatch('paletFocus');
+        $this->dispatch('produkFocus');
+    }
+
+    
+    public function editQty($qty, $material, $palet)
+    {
+        $qryUPdate = tempCounterSiws::where('palet', $palet)->where('material', $material);
+        $data = $qryUPdate->first();
+
+        $sisa = $data->total > $qty ? 0 : $data->total - $qty;
+        $more = $sisa < 0 ? 1 : 0;
+        $qryUPdate->update([
+            'sisa' => $sisa,
+            'counter' => $qty,
+            'qty_more' => $more,
+            'prop_scan' => json_encode([$qty]),
+        ]);
+
+
+        $this->refreshTemp();
+        $this->dispatch('produkFocus');
     }
 
     public function confirm()
