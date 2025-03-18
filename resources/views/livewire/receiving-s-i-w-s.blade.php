@@ -90,7 +90,7 @@
                                     {{ $product->pallet_no }}</th> --}}
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $product->material_no }}</th>
+                                    {{ $product->wire_name }}</th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     @if ($product->serial_no == '00000')

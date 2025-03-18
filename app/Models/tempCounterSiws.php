@@ -23,5 +23,6 @@ class tempCounterSiws extends Model
         'flag',
         'line_c',
         'scanned_time',
+        'serial_no',
     ];
 }
