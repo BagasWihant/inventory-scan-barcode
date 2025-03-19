@@ -264,12 +264,12 @@ class ReceivingSIWS extends Component
             $key = '0getallcnc_' . $this->paletBarcode . '_' . $this->userId . '_' . md5($getScannedString);
             $getall = Cache::remember($key, 30, function () use ($getScanned) {
                 return DB::table($this->tableSetupMst . ' as  a')
-                    ->selectRaw('pallet_no, r.material_no,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,loc_cd as location_cd,serial_no')
+                    ->selectRaw('pallet_no, r.material_no,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,line_c,serial_no')
                     ->leftJoin('material_mst as b', 'a.serial_no', '=', 'b.matl_no')
                     ->leftJoin('master_wire_register as r', 'a.material_no', '=', 'r.id')
                     ->where('a.pallet_no', $this->paletBarcode)
                     ->whereNotIn('a.serial_no', $getScanned)
-                    ->groupBy('a.pallet_no', 'r.material_no', 'b.loc_cd', 'r.material_no', 'serial_no')
+                    ->groupBy('a.pallet_no', 'r.material_no', 'line_c', 'r.material_no', 'serial_no')
                     ->orderByDesc('pax')
                     ->orderByDesc('r.material_no')->get();
             });
@@ -286,11 +286,11 @@ class ReceivingSIWS extends Component
             $key = '1getallcnc_' . $this->paletBarcode . '_' . $this->userId . '_' . md5($getScannedString);
             $getall = Cache::remember($key, 30, function () use ($getScanned) {
                 return DB::table($this->tableSetupMst . ' as  a')
-                    ->selectRaw('pallet_no, a.material_no ,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,loc_cd as location_cd,serial_no')
+                    ->selectRaw('pallet_no, a.material_no ,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,line_c ,serial_no')
                     ->leftJoin('material_mst as b', 'a.serial_no', '=', 'b.matl_no')
                     ->where('a.pallet_no', $this->paletBarcode)
                     ->whereNotIn('a.serial_no', $getScanned)
-                    ->groupBy('a.pallet_no', 'a.material_no', 'b.loc_cd', 'a.material_no', 'serial_no')
+                    ->groupBy('a.pallet_no', 'a.material_no', 'line_c', 'a.material_no', 'serial_no')
                     ->orderByDesc('pax')
                     ->orderByDesc('a.material_no')->get();
             });
@@ -326,6 +326,7 @@ class ReceivingSIWS extends Component
                         'serial_no' => $value->serial_no,
                         'palet' => $this->paletBarcode,
                         'userID' => $this->userId,
+                        'line_c' => $value->line_c,
                         'sisa' => $value->picking_qty,
                         'total' => $value->picking_qty,
                         'pax' => $value->pax,
@@ -339,7 +340,6 @@ class ReceivingSIWS extends Component
                     DB::commit();
                 } catch (\Exception $th) {
                     DB::rollBack();
-                    throw $th;
                 }
             }
         }
@@ -440,8 +440,8 @@ class ReceivingSIWS extends Component
             ->where('userID', $this->userId)
             ->where('palet', $this->paletBarcode);
 
-        $b = $fixProduct->get();
-        foreach ($b as $data) {
+        $dataMaterial = $fixProduct->get();
+        foreach ($dataMaterial as $data) {
             $pax = $data->pax;
             $qty = $data->total / $pax;
             $kelebihan = $data->qty_more;
@@ -616,7 +616,7 @@ class ReceivingSIWS extends Component
 
         $this->resetPage();
         $this->refreshTemp();
-        return Excel::download(new ScannedExport($b), "Scanned Items_" . $paletBarcode . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+        return Excel::download(new ScannedExport($dataMaterial), "Scanned Items_" . $paletBarcode . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
     public function render()
     {

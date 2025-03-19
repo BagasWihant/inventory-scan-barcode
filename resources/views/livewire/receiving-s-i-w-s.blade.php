@@ -72,6 +72,11 @@
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 <div class="flex items-center">
+                                    Line Code
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                <div class="flex items-center">
                                     Pax
                                 </div>
                             </th>
@@ -85,12 +90,12 @@
                     <tbody>
                         @foreach ($productsInPalet as $product)
                             <tr class=" border rounded dark:border-gray-700 ">
-                                {{-- <th scope="row"
-                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $product->pallet_no }}</th> --}}
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $product->material_no }}</th>
+                                    {{ $product->material_no }}</th> 
+                                <th scope="row"
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {{ $product->line_c }}</th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     @if ($product->serial_no == '00000')

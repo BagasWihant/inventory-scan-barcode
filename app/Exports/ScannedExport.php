@@ -36,9 +36,9 @@ class ScannedExport implements WithEvents, WithCustomStartCell, FromCollection, 
     {
         return [
             'A' => 15,
-            'B' => 5,
+            'B' => 10,
             'C' => 5,
-            'D' => 10,
+            'D' => 5,
             'E' => 10,
             'F' => 10,
             'G' => 10,
@@ -46,6 +46,7 @@ class ScannedExport implements WithEvents, WithCustomStartCell, FromCollection, 
             'I' => 10,
             'J' => 10,
             'K' => 10,
+            'L' => 10,
         ];
     }
 
@@ -64,6 +65,7 @@ class ScannedExport implements WithEvents, WithCustomStartCell, FromCollection, 
         $kosong = "  ";
         return [
             $row->material,
+            $row->line_c,
             $row->pax,
             $row->counter,
         ];
@@ -78,6 +80,7 @@ class ScannedExport implements WithEvents, WithCustomStartCell, FromCollection, 
     {
         return [
             'Material No',
+            'Line Code',
             'Pax',
             'Picking Qty',
             'Loc 1',
