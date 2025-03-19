@@ -181,7 +181,7 @@ class ReceivingSIWS extends Component
                     $qry = Cache::remember($key, 30, function () use ($supplierCode, $column) {
                         return DB::table($this->tableSetupMst)
                             ->selectRaw('picking_qty')
-                            ->where($column, $supplierCode->sws_code)
+                            ->where($column, 'like', $supplierCode->sws_code.'%')
                             ->where('pallet_no', $this->paletBarcode)
                             ->groupBy('picking_qty')
                             ->get();
@@ -331,7 +331,7 @@ class ReceivingSIWS extends Component
                         'pax' => $value->pax,
                     ];
 
-                    if (count($group[$value->material_no]) > 1) {
+                    if (count($group[trim($value->material_no)]) > 1) {
                         $insert['scan_count'] = $value->pax;
                     }
 
@@ -339,7 +339,7 @@ class ReceivingSIWS extends Component
                     DB::commit();
                 } catch (\Exception $th) {
                     DB::rollBack();
-                    dd($th);
+                    throw $th;
                 }
             }
         }
