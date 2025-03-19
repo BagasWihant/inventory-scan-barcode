@@ -128,52 +128,60 @@ class ReceivingSIWS extends Component
 
         if (strlen($this->produkBarcode) > 2) {
             // CTI000400ASSY250304XH33309600030070TS32107-3K6-K502   000002
-            if (strtolower(substr($this->paletBarcode, 0, 1)) == "c") {
-                $this->produkBarcode = substr($this->produkBarcode, 23, 13);
-            }
+            $mode = env('KIAS_MODE', true); // mode buat lokal ku
 
-            // K21759769242168XHN32702250001
-            if (strtolower(substr($this->paletBarcode, 0, 1)) == "m") {
-                $this->produkBarcode = substr($this->produkBarcode, 7, 8);
+            if ($mode) {
+
+                if (strtolower(substr($this->paletBarcode, 0, 1)) == "c") {
+                    $this->produkBarcode = substr($this->produkBarcode, 23, 13);
+                }
+
+                // K21759769242168XHN32702250001
+                if (strtolower(substr($this->paletBarcode, 0, 1)) == "m") {
+                    $this->produkBarcode = substr($this->produkBarcode, 7, 8);
+                }
             }
 
             $key = 'conversion_' . $this->produkBarcode;
             $supplierCode = Cache::remember($key, 30, function () {
                 return DB::table('material_conversion_mst')->where('supplier_code', $this->produkBarcode)->select('sws_code')->first();
             });
-
             if ($supplierCode) {
                 $this->sws_code = $supplierCode->sws_code;
 
+                $firstText = strtolower(substr($this->paletBarcode, 0, 1));
+                $allowText = ['m', 'c'];
+                $pattern = '/^\d{2}-\d{4}$/';
+
+                $column = preg_match($pattern, $this->paletBarcode) ? 'serial_no' : (in_array($firstText, $allowText) ? 'material' : null);
                 $tempCount = DB::table($this->tableTemp)
-                    ->where('serial_no', $supplierCode->sws_code)
+                    ->where($column, $supplierCode->sws_code)
                     ->where('userID', $this->userId)
                     ->where('palet', $this->paletBarcode);
                 $data = $tempCount->first();
 
                 $key = 'count_' . $supplierCode->sws_code . '_' . $this->paletBarcode . '_' . $this->userId;
-                $count = Cache::remember($key, 30, function () use ($supplierCode) {
+                $count = Cache::remember($key, 30, function () use ($supplierCode, $column) {
                     return DB::table($this->tableTemp)
-                        ->where('serial_no', $supplierCode->sws_code)
+                        ->where($column, $supplierCode->sws_code)
                         ->where('userID', $this->userId)
-                        ->where('palet', $this->paletBarcode)->count();
+                        ->where('palet', $this->paletBarcode)
+                        ->count();
                 });
 
-                // $mat_regis = DB::table('material_registrasis')
-                //     ->select('material_no')
-                //     ->where('material_no', $this->sws_code)->exists();
 
                 if ($count > 0) {
-                    // if ($mat_regis) {
-                    //     $this->dispatch('newItem', ['qty' => 0, 'title' => 'Material with manual Qty', 'update' => true]);
-                    // } else {
-
                     // tambahi cache 30s
                     $key = 'material_setup_' . $supplierCode->sws_code . '_' . $this->paletBarcode . '_' . $this->userId;
-                    $qry = Cache::remember($key, 30, function () use ($supplierCode) {
+                    $firstText = strtolower(substr($this->paletBarcode, 0, 1));
+                    $allowText = ['m', 'c'];
+                    $pattern = '/^\d{2}-\d{4}$/';
+
+                    $column = preg_match($pattern, $this->paletBarcode) ? 'serial_no' : (in_array($firstText, $allowText) ? 'material_no' : null);
+                    $qry = Cache::remember($key, 30, function () use ($supplierCode, $column) {
                         return DB::table($this->tableSetupMst)
                             ->selectRaw('picking_qty')
-                            ->where('serial_no', $supplierCode->sws_code)
+                            ->where($column, $supplierCode->sws_code)
                             ->where('pallet_no', $this->paletBarcode)
                             ->groupBy('picking_qty')
                             ->get();
@@ -199,22 +207,14 @@ class ReceivingSIWS extends Component
 
                     $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'prop_scan' => json_encode($new_prop_scan)]);
                     $this->refreshTemp();
-                    // }
                 } else {
 
-                    // if ($mat_regis) {
-                    //     $this->dispatch('newItem', ['qty' => 0, 'title' => 'Item with Duplicate Qty']);
-                    //     return;
-                    // } else {
                     $cek = DB::table($this->tableSetupMst)
                         ->selectRaw('max(picking_qty) as qty')
                         ->where('serial_no', $supplierCode->sws_code)->first();
 
                     $this->dispatch('newItem2', ['qty' => $cek->qty, 'title' => 'New Item Detected']);
                     return;
-                    // }
-                    // insert barcode tidak terecord
-                    // $this->dispatch('newItem', ['title' => 'New Item not in Database']);
                 }
             }
         }
@@ -244,12 +244,12 @@ class ReceivingSIWS extends Component
 
 
         $getScannedString = implode(',', $getScanned);
-
-        $firstText = strtolower(substr($this->paletBarcode, 0, 1));
-        $allowText = ['m', 'c'];
+       
+        // $firstText = strtolower(substr($this->paletBarcode, 0, 1));
+        // $allowText = ['m', 'c'];
         $pattern = '/^\d{2}-\d{4}$/';
 
-        if (in_array($firstText, $allowText) || preg_match($pattern, $this->paletBarcode)) {
+        if (preg_match($pattern, $this->paletBarcode)) {
 
             // tambah cache
             $key = '0picking_' . $this->paletBarcode . '_' . $this->userId;
@@ -274,14 +274,13 @@ class ReceivingSIWS extends Component
                     ->orderByDesc('r.material_no')->get();
             });
         } else {
-
             // tambah cache
             $key = '1picking_' . $this->paletBarcode . '_' . $this->userId;
             $collection = Cache::remember($key, 30, function () {
                 return DB::table($this->tableSetupMst . ' as a')
                     ->selectRaw('picking_qty,material_no,count(picking_qty) as jml_pick')
                     ->where('pallet_no', $this->paletBarcode)
-                    ->groupBy('picking_qty','material_no')->get();
+                    ->groupBy('picking_qty', 'material_no')->get();
             });
 
             $key = '1getallcnc_' . $this->paletBarcode . '_' . $this->userId . '_' . md5($getScannedString);
@@ -362,7 +361,13 @@ class ReceivingSIWS extends Component
 
     public function resetPage()
     {
-        DB::table($this->tableTemp)->where('userID', $this->userId)->delete();
+        try {
+            DB::enableQueryLog();
+            DB::table($this->tableTemp)->where('userID', $this->userId)->delete();
+            
+        } catch (\Exception $th) {
+            throw $th;
+        }
 
         DB::table($this->tableSetupMst)
             ->where('serial_no', '00000')
@@ -371,6 +376,7 @@ class ReceivingSIWS extends Component
 
         $this->paletBarcode = null;
         $this->produkBarcode = null;
+        $this->trucking_id = null;
         $this->paletInput = false;
 
         $this->refreshData();
