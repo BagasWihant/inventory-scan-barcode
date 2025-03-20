@@ -127,20 +127,29 @@ class ReceivingSIWS extends Component
         }
 
         if (strlen($this->produkBarcode) > 2) {
-            // CTI000400ASSY250304XH33309600030070TS32107-3K6-K502   000002
             $mode = env('KIAS_MODE', true); // mode buat lokal ku
-
+            $lineCode = null;
             if ($mode) {
 
+                // CTI000400ASSY250304XMR1382000830080S32107-3K6-K502   000002
                 if (strtolower(substr($this->paletBarcode, 0, 1)) == "c") {
-                    $this->produkBarcode = substr($this->produkBarcode, 23, 13);
+                    $lineCode            = substr($this->produkBarcode, 19, 4);
+                    $produkBarcode       = substr($this->produkBarcode, 23, 13);
+                    
+
+                    // cek jika ada T itu termasuk barcode
+                    $this->produkBarcode = substr($produkBarcode, -1) === "T"
+                        ? $produkBarcode
+                        : substr($produkBarcode, 0, 12);
                 }
 
                 // K21759769242168XHN32702250001
                 if (strtolower(substr($this->paletBarcode, 0, 1)) == "m") {
+                    $lineCode            = substr($this->produkBarcode, 15, 4);
                     $this->produkBarcode = substr($this->produkBarcode, 7, 8);
                 }
             }
+
 
             $key = 'conversion_' . $this->produkBarcode;
             $supplierCode = Cache::remember($key, 30, function () {
@@ -158,15 +167,17 @@ class ReceivingSIWS extends Component
                     ->where($column, $supplierCode->sws_code)
                     ->where('userID', $this->userId)
                     ->where('palet', $this->paletBarcode);
+                $lineCode != null ? $tempCount->where('line_c', $lineCode) : null;
                 $data = $tempCount->first();
 
                 $key = 'count_' . $supplierCode->sws_code . '_' . $this->paletBarcode . '_' . $this->userId;
-                $count = Cache::remember($key, 30, function () use ($supplierCode, $column) {
-                    return DB::table($this->tableTemp)
+                $count = Cache::remember($key, 30, function () use ($supplierCode, $column, $lineCode) {
+                    $sql = DB::table($this->tableTemp)
                         ->where($column, $supplierCode->sws_code)
                         ->where('userID', $this->userId)
-                        ->where('palet', $this->paletBarcode)
-                        ->count();
+                        ->where('palet', $this->paletBarcode);
+                    $lineCode != null ? $sql->where('line_c', $lineCode) : null;
+                    return $sql->count();
                 });
 
 
@@ -178,13 +189,14 @@ class ReceivingSIWS extends Component
                     $pattern = '/^\d{2}-\d{4}$/';
 
                     $column = preg_match($pattern, $this->paletBarcode) ? 'serial_no' : (in_array($firstText, $allowText) ? 'material_no' : null);
-                    $qry = Cache::remember($key, 30, function () use ($supplierCode, $column) {
-                        return DB::table($this->tableSetupMst)
+                    $qry = Cache::remember($key, 30, function () use ($supplierCode, $column,$lineCode) {
+                        $sql = DB::table($this->tableSetupMst)
                             ->selectRaw('picking_qty')
-                            ->where($column, 'like', $supplierCode->sws_code.'%')
+                            ->where($column, 'like', $supplierCode->sws_code . '%')
                             ->where('pallet_no', $this->paletBarcode)
-                            ->groupBy('picking_qty')
-                            ->get();
+                            ->groupBy('picking_qty');
+                        $lineCode != null ? $sql->where('line_c', $lineCode) : null;
+                        return $sql->get();
                     });
 
                     $productDetail = $qry->first();
@@ -225,7 +237,12 @@ class ReceivingSIWS extends Component
     private function refreshTemp()
     {
         $this->scanned = DB::table($this->tableTemp . ' as a')
-            ->leftJoin('matloc_temp_CNCKIAS2 as b', 'a.material', '=', 'b.material_no')
+            ->leftJoin('matloc_temp_CNCKIAS2 as b', function ($join) {
+                $join->on('a.material', '=', 'b.material_no')
+                    ->orOn('a.line_c', '=', 'b.location_cd');
+            })
+            // ->leftJoin('matloc_temp_CNCKIAS2 as b', 'a.material', '=', 'b.material_no')
+            // ->leftJoin('matloc_temp_CNCKIAS2 as b', 'a.line_c', '=', 'b.location_cd')
             ->where('palet', $this->paletBarcode)
             ->select('a.*', 'b.location_cd')
             ->where('userID', $this->userId)
@@ -244,7 +261,7 @@ class ReceivingSIWS extends Component
 
 
         $getScannedString = implode(',', $getScanned);
-       
+
         // $firstText = strtolower(substr($this->paletBarcode, 0, 1));
         // $allowText = ['m', 'c'];
         $pattern = '/^\d{2}-\d{4}$/';
@@ -364,7 +381,6 @@ class ReceivingSIWS extends Component
         try {
             DB::enableQueryLog();
             DB::table($this->tableTemp)->where('userID', $this->userId)->delete();
-            
         } catch (\Exception $th) {
             throw $th;
         }
