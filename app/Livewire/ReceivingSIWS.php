@@ -131,11 +131,11 @@ class ReceivingSIWS extends Component
             $lineCode = null;
             if ($mode) {
 
-                // CTI000400ASSY250304XMR1382000830080S32107-3K6-K502   000002
+                // CTI000400ASSY250304XMH2382000830080S32107-3K6-K502   000002
                 if (strtolower(substr($this->paletBarcode, 0, 1)) == "c") {
                     $lineCode            = substr($this->produkBarcode, 19, 4);
                     $produkBarcode       = substr($this->produkBarcode, 23, 13);
-                    
+
 
                     // cek jika ada T itu termasuk barcode
                     $this->produkBarcode = substr($produkBarcode, -1) === "T"
@@ -189,7 +189,7 @@ class ReceivingSIWS extends Component
                     $pattern = '/^\d{2}-\d{4}$/';
 
                     $column = preg_match($pattern, $this->paletBarcode) ? 'serial_no' : (in_array($firstText, $allowText) ? 'material_no' : null);
-                    $qry = Cache::remember($key, 30, function () use ($supplierCode, $column,$lineCode) {
+                    $qry = Cache::remember($key, 30, function () use ($supplierCode, $column, $lineCode) {
                         $sql = DB::table($this->tableSetupMst)
                             ->selectRaw('picking_qty')
                             ->where($column, 'like', $supplierCode->sws_code . '%')
@@ -483,6 +483,7 @@ class ReceivingSIWS extends Component
                                 'locate' => $data->location_cd,
                                 'trucking_id' => $data->trucking_id,
                                 'user_id' => $this->userId,
+                                'line_c' => $data->line_c,
                                 'status' => 1
                             ]);
                             // dump('lebih 1 => '.$data->material);
@@ -493,6 +494,7 @@ class ReceivingSIWS extends Component
                                 'picking_qty' => $value,
                                 'locate' => $data->location_cd,
                                 'trucking_id' => $data->trucking_id,
+                                'line_c' => $data->line_c,
                                 'user_id' => $this->userId
                             ]);
                             // dump('in ada scan lebih=> '.$data->material);
@@ -506,6 +508,7 @@ class ReceivingSIWS extends Component
                             'picking_qty' => $value,
                             'locate' => $data->location_cd,
                             'trucking_id' => $data->trucking_id,
+                            'line_c' => $data->line_c,
                             'user_id' => $this->userId
                         ]);
                         // dump('in => '.$data->material);
@@ -521,6 +524,7 @@ class ReceivingSIWS extends Component
                                 'picking_qty' => $data->total,
                                 'locate' => $data->location_cd,
                                 'trucking_id' => $data->trucking_id,
+                                'line_c' => $data->line_c,
                                 'user_id' => $this->userId
                             ]);
 
@@ -534,6 +538,7 @@ class ReceivingSIWS extends Component
                                 'locate' => $data->location_cd,
                                 'trucking_id' => $data->trucking_id,
                                 'user_id' => $this->userId,
+                                'line_c' => $data->line_c,
                                 'status' => 1
                             ]);
                         } else {
@@ -549,6 +554,7 @@ class ReceivingSIWS extends Component
                                         'locate' => $data->location_cd,
                                         'trucking_id' => $data->trucking_id,
                                         'user_id' => $this->userId,
+                                        'line_c' => $data->line_c,
                                         'status' => 1
                                     ]);
                                     $qtyInstok = $value - $qtyLebih;
@@ -558,6 +564,7 @@ class ReceivingSIWS extends Component
                                         'picking_qty' => $qtyInstok,
                                         'locate' => $data->location_cd,
                                         'trucking_id' => $data->trucking_id,
+                                        'line_c' => $data->line_c,
                                         'user_id' => $this->userId
                                     ]);
                                 }
@@ -569,6 +576,7 @@ class ReceivingSIWS extends Component
                                         'picking_qty' => $value,
                                         'locate' => $data->location_cd,
                                         'trucking_id' => $data->trucking_id,
+                                        'line_c' => $data->line_c,
                                         'user_id' => $this->userId
                                     ]);
                                     abnormalMaterial::create([
@@ -578,6 +586,7 @@ class ReceivingSIWS extends Component
                                         'locate' => $data->location_cd,
                                         'trucking_id' => $data->trucking_id,
                                         'user_id' => $this->userId,
+                                        'line_c' => $data->line_c,
                                         'status' => 0
                                     ]);
                                 }
@@ -589,6 +598,7 @@ class ReceivingSIWS extends Component
                                     'picking_qty' => $value,
                                     'locate' => $data->location_cd,
                                     'trucking_id' => $data->trucking_id,
+                                    'line_c' => $data->line_c,
                                     'user_id' => $this->userId
                                 ]);
                             }
@@ -622,6 +632,7 @@ class ReceivingSIWS extends Component
                         'locate' => $data->location_cd,
                         'trucking_id' => $data->trucking_id,
                         'user_id' => $this->userId,
+                        'line_c' => $data->line_c,
                         'status' => 0
                     ]);
                 }
