@@ -206,7 +206,7 @@ class ReceivingSIWS extends Component
                             ->selectRaw('sum(picking_qty) as picking_qty')
                             ->where($column, 'like', $supplierCode->sws_code . '%')
                             ->where('pallet_no', $this->paletBarcode);
-                        $lineCode != null ? $sql->where('line_c', $lineCode)->groupBy($column,'line_c') : $sql->groupBy($column);
+                        $lineCode != null ? $sql->where('line_c', $lineCode)->groupBy($column, 'line_c') : $sql->groupBy($column);
                         return $sql->get();
                     });
 
@@ -296,7 +296,7 @@ class ReceivingSIWS extends Component
                     ->leftJoin('material_mst as b', 'a.serial_no', '=', 'b.matl_no')
                     ->leftJoin('master_wire_register as r', 'a.material_no', '=', 'r.id')
                     ->where('a.pallet_no', $this->paletBarcode)
-                    ->whereNotIn('a.serial_no', $getScanned)
+                    ->whereNotIn('r.material_no', $getScanned)
                     ->groupBy('a.pallet_no', 'r.material_no', 'line_c', 'r.material_no', 'serial_no')
                     ->orderByDesc('pax')
                     ->orderByDesc('r.material_no')->get();
