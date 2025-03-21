@@ -210,7 +210,7 @@
                                         }">
 
                                             <button
-                                                wire:click="resetItem({{ json_encode([$v->material, $v->palet]) }})"
+                                                wire:click="resetItem({{ json_encode([$v->material, $v->palet,$v->id]) }})"
                                                 class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg p-1 group bg-gradient-to-br from-red-800 to-red-500 group-hover:from-red-900 group-hover:to-red-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
                                                 Reset
                                             </button>

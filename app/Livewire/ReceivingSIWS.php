@@ -138,7 +138,7 @@ class ReceivingSIWS extends Component
             if ($mode) {
                 if (in_array($firstText, $allowText)) {
 
-                    // CTI000400ASSY250304XMH2382000830080S32107-3K6-K502   000002
+                    // CTI000400ASSY250304XMR1382000830080S32107-3K6-K502   000002
                     if ($firstText == "c") {
                         $lineCode            = substr($this->produkBarcode, 19, 4);
                         $produkBarcode       = substr($this->produkBarcode, 23, 13);
@@ -201,13 +201,12 @@ class ReceivingSIWS extends Component
                     $pattern = '/^\d{2}-\d{4}$/';
 
                     $column = preg_match($pattern, $this->paletBarcode) ? 'serial_no' : (in_array($firstText, $allowText) ? 'material_no' : null);
-                    $qry = Cache::remember($key, 30, function () use ($supplierCode, $column, $lineCode) {
+                    $qry = Cache::remember($key, 20, function () use ($supplierCode, $column, $lineCode) {
                         $sql = DB::table($this->tableSetupMst)
-                            ->selectRaw('picking_qty')
+                            ->selectRaw('sum(picking_qty) as picking_qty')
                             ->where($column, 'like', $supplierCode->sws_code . '%')
-                            ->where('pallet_no', $this->paletBarcode)
-                            ->groupBy('picking_qty');
-                        $lineCode != null ? $sql->where('line_c', $lineCode) : null;
+                            ->where('pallet_no', $this->paletBarcode);
+                        $lineCode != null ? $sql->where('line_c', $lineCode)->groupBy($column,'line_c') : $sql->groupBy($column);
                         return $sql->get();
                     });
 
@@ -315,11 +314,11 @@ class ReceivingSIWS extends Component
             $key = '1getallcnc_' . $this->paletBarcode . '_' . $this->userId . '_' . md5($getScannedString);
             $getall = Cache::remember($key, 30, function () use ($getScanned) {
                 return DB::table($this->tableSetupMst . ' as  a')
-                    ->selectRaw('pallet_no, a.material_no ,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,line_c ,serial_no')
+                    ->selectRaw('pallet_no, a.material_no ,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,line_c ')
                     ->leftJoin('material_mst as b', 'a.serial_no', '=', 'b.matl_no')
                     ->where('a.pallet_no', $this->paletBarcode)
                     ->whereNotIn('a.serial_no', $getScanned)
-                    ->groupBy('a.pallet_no', 'a.material_no', 'line_c', 'a.material_no', 'serial_no')
+                    ->groupBy('a.pallet_no', 'a.material_no', 'line_c')
                     ->orderByDesc('pax')
                     ->orderByDesc('a.material_no')->get();
             });
@@ -413,7 +412,9 @@ class ReceivingSIWS extends Component
 
     public function resetItem($req)
     {
-        $qryUPdate = tempCounterSiws::where('palet', $req[1])->where('material', $req[0]);
+        // $qryUPdate = tempCounterSiws::where('palet', $req[1])->where('material', $req[0]);
+        // ganti ke id soale nek dobel2 sulit
+        $qryUPdate = tempCounterSiws::where('id', $req[2]);
         $data = $qryUPdate->first();
 
         $materialSetup = DB::table($this->tableSetupMst)
