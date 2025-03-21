@@ -281,7 +281,7 @@ class ReceivingSIWS extends Component
 
             // tambah cache
             $key = '0picking_' . $this->paletBarcode . '_' . $this->userId;
-            $collection = Cache::remember($key, 30, function () {
+            $collection = Cache::remember($key, 10, function () {
                 return DB::table($this->tableSetupMst . ' as a')
                     ->selectRaw('picking_qty,r.material_no,count(picking_qty) as jml_pick')
                     ->leftJoin('master_wire_register as r', 'a.material_no', '=', 'r.id')
@@ -290,7 +290,7 @@ class ReceivingSIWS extends Component
             });
 
             $key = '0getallcnc_' . $this->paletBarcode . '_' . $this->userId . '_' . md5($getScannedString);
-            $getall = Cache::remember($key, 30, function () use ($getScanned) {
+            $getall = Cache::remember($key, 10, function () use ($getScanned) {
                 return DB::table($this->tableSetupMst . ' as  a')
                     ->selectRaw('pallet_no, r.material_no,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,line_c,serial_no')
                     ->leftJoin('material_mst as b', 'a.serial_no', '=', 'b.matl_no')
@@ -304,7 +304,7 @@ class ReceivingSIWS extends Component
         } else {
             // tambah cache
             $key = '1picking_' . $this->paletBarcode . '_' . $this->userId;
-            $collection = Cache::remember($key, 30, function () {
+            $collection = Cache::remember($key, 10, function () {
                 return DB::table($this->tableSetupMst . ' as a')
                     ->selectRaw('picking_qty,material_no,count(picking_qty) as jml_pick')
                     ->where('pallet_no', $this->paletBarcode)
@@ -312,12 +312,12 @@ class ReceivingSIWS extends Component
             });
 
             $key = '1getallcnc_' . $this->paletBarcode . '_' . $this->userId . '_' . md5($getScannedString);
-            $getall = Cache::remember($key, 30, function () use ($getScanned) {
+            $getall = Cache::remember($key, 10, function () use ($getScanned) {
                 return DB::table($this->tableSetupMst . ' as  a')
                     ->selectRaw('pallet_no, a.material_no ,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,line_c ')
                     ->leftJoin('material_mst as b', 'a.serial_no', '=', 'b.matl_no')
                     ->where('a.pallet_no', $this->paletBarcode)
-                    ->whereNotIn('a.serial_no', $getScanned)
+                    ->whereNotIn('a.material_no', $getScanned)
                     ->groupBy('a.pallet_no', 'a.material_no', 'line_c')
                     ->orderByDesc('pax')
                     ->orderByDesc('a.material_no')->get();
@@ -440,9 +440,9 @@ class ReceivingSIWS extends Component
     }
 
 
-    public function editQty($qty, $material, $palet)
+    public function editQty($qty, $id)
     {
-        $qryUPdate = tempCounterSiws::where('palet', $palet)->where('material', $material);
+        $qryUPdate = tempCounterSiws::where('id', $id);
         $data = $qryUPdate->first();
 
         $sisa = $data->total > $qty ? 0 : $data->total - $qty;
