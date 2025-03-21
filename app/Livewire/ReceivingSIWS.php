@@ -129,38 +129,50 @@ class ReceivingSIWS extends Component
         if (strlen($this->produkBarcode) > 2) {
             $mode = env('KIAS_MODE', true); // mode buat lokal ku
             $lineCode = null;
+
+            $allowText = ['m', 'c'];
+            $pattern = '/^\d{2}-\d{4}$/';
+
+            $firstText = strtolower(substr($this->paletBarcode, 0, 1));
+
             if ($mode) {
+                if (in_array($firstText, $allowText)) {
 
-                // CTI000400ASSY250304XMH2382000830080S32107-3K6-K502   000002
-                if (strtolower(substr($this->paletBarcode, 0, 1)) == "c") {
-                    $lineCode            = substr($this->produkBarcode, 19, 4);
-                    $produkBarcode       = substr($this->produkBarcode, 23, 13);
+                    // CTI000400ASSY250304XMH2382000830080S32107-3K6-K502   000002
+                    if ($firstText == "c") {
+                        $lineCode            = substr($this->produkBarcode, 19, 4);
+                        $produkBarcode       = substr($this->produkBarcode, 23, 13);
 
 
-                    // cek jika ada T itu termasuk barcode
-                    $this->produkBarcode = substr($produkBarcode, -1) === "T"
-                        ? $produkBarcode
-                        : substr($produkBarcode, 0, 12);
+                        // cek jika ada T itu termasuk barcode
+                        $this->produkBarcode = substr($produkBarcode, -1) === "T"
+                            ? $produkBarcode
+                            : substr($produkBarcode, 0, 12);
+                    }
+
+                    // K21759769242168XHN32702250001
+                    if ($firstText == "m") {
+                        $lineCode            = substr($this->produkBarcode, 15, 4);
+                        $this->produkBarcode = substr($this->produkBarcode, 7, 8);
+                    }
+
+                    $key = 'conversion_' . $this->produkBarcode;
+                    $supplierCode = Cache::remember($key, 30, function () {
+                        return DB::table('material_conversion_mst')->where('supplier_code', $this->produkBarcode)->select('sws_code')->first();
+                    });
                 }
 
-                // K21759769242168XHN32702250001
-                if (strtolower(substr($this->paletBarcode, 0, 1)) == "m") {
-                    $lineCode            = substr($this->produkBarcode, 15, 4);
-                    $this->produkBarcode = substr($this->produkBarcode, 7, 8);
+                // jika nomor saja masuk sini
+                if (preg_match($pattern, $this->paletBarcode)) {
+                    $key = 'serialno_' . $this->produkBarcode;
+                    $supplierCode = Cache::remember($key, 30, function () {
+                        return DB::table($this->tableSetupMst)->where('serial_no', $this->produkBarcode)->select('serial_no as sws_code')->first();
+                    });
                 }
             }
 
-
-            $key = 'conversion_' . $this->produkBarcode;
-            $supplierCode = Cache::remember($key, 30, function () {
-                return DB::table('material_conversion_mst')->where('supplier_code', $this->produkBarcode)->select('sws_code')->first();
-            });
             if ($supplierCode) {
                 $this->sws_code = $supplierCode->sws_code;
-
-                $firstText = strtolower(substr($this->paletBarcode, 0, 1));
-                $allowText = ['m', 'c'];
-                $pattern = '/^\d{2}-\d{4}$/';
 
                 $column = preg_match($pattern, $this->paletBarcode) ? 'serial_no' : (in_array($firstText, $allowText) ? 'material' : null);
                 $tempCount = DB::table($this->tableTemp)
@@ -170,7 +182,7 @@ class ReceivingSIWS extends Component
                 $lineCode != null ? $tempCount->where('line_c', $lineCode) : null;
                 $data = $tempCount->first();
 
-                $key = 'count_' . $supplierCode->sws_code . '_' . $this->paletBarcode . '_' . $this->userId;
+                $key = 'count_' . $supplierCode->sws_code . '_' . $this->paletBarcode . '_' . $this->userId . '_' . $lineCode;
                 $count = Cache::remember($key, 30, function () use ($supplierCode, $column, $lineCode) {
                     $sql = DB::table($this->tableTemp)
                         ->where($column, $supplierCode->sws_code)
@@ -183,7 +195,7 @@ class ReceivingSIWS extends Component
 
                 if ($count > 0) {
                     // tambahi cache 30s
-                    $key = 'material_setup_' . $supplierCode->sws_code . '_' . $this->paletBarcode . '_' . $this->userId;
+                    $key = 'material_setup_' . $supplierCode->sws_code . '_' . $this->paletBarcode . '_' . $this->userId . '_' . $lineCode;
                     $firstText = strtolower(substr($this->paletBarcode, 0, 1));
                     $allowText = ['m', 'c'];
                     $pattern = '/^\d{2}-\d{4}$/';
@@ -332,7 +344,6 @@ class ReceivingSIWS extends Component
                 unset($i->material_no);
             }
         });
-
         foreach ($getall as $value) {
             $counterExists = in_array($value->material_no, $existingCounters);
             if (!$counterExists) {
@@ -357,6 +368,7 @@ class ReceivingSIWS extends Component
                     DB::commit();
                 } catch (\Exception $th) {
                     DB::rollBack();
+                    throw $th;
                 }
             }
         }
