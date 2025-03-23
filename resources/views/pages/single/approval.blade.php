@@ -48,7 +48,7 @@
             <div class="my-14 flex justify-between" x-data="{ modal: false }">
                 @if (in_array($req->status, ['O', 'AP', 'AS']))
 
-                    <form action="./approve" method="post">
+                    <form action="./1-approve" method="post">
                         @csrf
                         <input type="hidden" name="data" value="{{ json_encode($req) }}">
                         <button type="submit"
@@ -76,7 +76,7 @@
                         class="flex inset-0 backdrop-blur-md overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 max-h-full">
                         <div class="bg-white p-6 rounded-lg shadow-lg w-2/4">
                             <h2 class="text-xl font-bold">Reason to reject</h2>
-                            <form action="./reject" method="post">
+                            <form action="./1-reject" method="post">
                                 @csrf
                                 <input type="hidden" name="data" value="{{ json_encode($req) }}">
                                 <div>

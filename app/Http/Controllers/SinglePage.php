@@ -107,247 +107,252 @@ class SinglePage extends Controller
         }
     }
 
-    public function approve(Request $req)
+    public function approve(Request $req, $type)
     {
-        $decode = json_decode($req->data);
-
-        $status = $decode->status;
-        if (!in_array($status, ['O', 'AP', 'AS'])) {
-            return false;
-        }
-
-        $id = $decode->id;
-        $no = $decode->no_plan;
-
-        $cek = DB::table('IT.dbo.PR_MASTER_PLAN')
-            ->where("id", $id)
-            ->where("no_plan", $no)
-            ->first();
-
-        $shortStatus = $this->getstatus($cek->status, 'Short');
-        if ($shortStatus != $status) {
-            $data['status'] = '0';
-            $data['posisi'] = '';
-            $data['text'] = 'Pengajuan ini sudah di Eksekusi';
-            return view('pages.single.approval-response', compact('data'));
-        }
-
-        // Tak buat simpel 
-        $positions = [
-            'O'  => ['next' => 'AP', 'posisi' => 'Purchasing', 'pos' => 'Purchasing'],
-            'AP' => ['next' => 'AS', 'posisi' => 'Supervisor', 'pos' => $decode->spv1],
-            'AS' => ['next' => 'AM', 'posisi' => 'Manager', 'pos' => $decode->mgr]
-        ];
-
-        $nextStatus = $positions[$status]['next'];
-        $data['posisi'] = $positions[$status]['posisi'];
-        $data['pos'] = $positions[$status]['pos'];
+        if ($type == 1) {
 
 
-        if ($shortStatus != $nextStatus) {
+            $decode = json_decode($req->data);
 
-            DB::table('IT.dbo.PR_MASTER_PLAN')
-                ->where("id", $id)
-                ->where("no_plan", $no)
-                ->update([
-                    'status' => $this->getstatus($nextStatus, 'Long')
-                ]);
-
-            $insertData = [
-                'id_no_plan' => $id,
-                'no_plan' => $no,
-                'sec' => $cek->sec,
-                'tanggal_pr' => $cek->tanggal_plan
-            ];
-
-            if ($shortStatus == 'O') {
-                $insertData['diperiksa'] = $data['pos'];
-                $insertData['tgl_diperiksa'] = date('Y-m-d H:i:s');
-
-                // INSRT
-                // DB::table(DB::raw('IT.dbo.PR_pr'))
-                //     ->insert($insertData);
-
-
-            } elseif ($shortStatus == 'AP') {
-
-                $updateData['diperiksa'] = $data['pos'];
-                $updateData['tgl_diperiksa'] = date('Y-m-d H:i:s');
-
-                DB::table(DB::raw('IT.dbo.PR_pr'))
-                    ->where('id_no_plan', $id)
-                    ->where('no_plan', $no)
-                    ->update($updateData);
-            } elseif ($shortStatus == 'AS') {
-
-                $updateData['disetujui'] = $data['pos'];
-                $updateData['tgl_disetujui'] = date('Y-m-d H:i:s');
-
-                DB::table(DB::raw('IT.dbo.PR_pr'))
-                    ->where('id_no_plan', $id)
-                    ->where('no_plan', $no)
-                    ->update($updateData);
+            $status = $decode->status;
+            if (!in_array($status, ['O', 'AP', 'AS'])) {
+                return false;
             }
 
-            // get new data after update
-            $req = DB::table('IT.dbo.PR_MASTER_PLAN as m')
-                ->where("m.id", $id)
-                ->where("m.no_plan", $no)
-                ->leftJoin('IT.dbo.PR_approval_hirarki as h', 'm.sec', '=', 'h.section')
-                ->leftJoin('IT.dbo.PR_pr as pr', 'm.id', '=', 'pr.id_no_plan')
-                ->selectRaw('pr.*,h.*,m.*')
+            $id = $decode->id;
+            $no = $decode->no_plan;
+
+            $cek = DB::table('IT.dbo.PR_MASTER_PLAN')
+                ->where("id", $id)
+                ->where("no_plan", $no)
                 ->first();
 
-            $sign = [];
-
-            if ($status !== 'O') {
-                $QR = "$req->nik_spv1/$req->spv1/$req->tgl_diperiksa/$req->no_pr";
-                $sign['spv'] = [
-                    'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
-                    'name' => $req->spv1
-                ];
+            $shortStatus = $this->getstatus($cek->status, 'Short');
+            if ($shortStatus != $status) {
+                $data['status'] = '0';
+                $data['posisi'] = '';
+                $data['text'] = 'Pengajuan ini sudah di Eksekusi';
+                return view('pages.single.approval-response', compact('data'));
             }
 
-            if ($status === 'AS') {
-                $QR = "$req->nik_mgr/$req->mgr/$req->tgl_disetujui/$req->no_pr";
-                $sign['mgr'] = [
-                    'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
-                    'name' => $req->mgr
-                ];
-
-                $QR = "$req->nik_diterima/$req->diterima/$req->tgl_diterima/$req->no_pr";
-                $sign['terima'] = [
-                    'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
-                    'name' => $req->diterima
-                ];
-            }
-
-            $QR = "NIK/$req->nama/$req->tanggal_plan/$req->no_pr";
-            $sign['creator'] = [
-                'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
-                'name' => $req->nama
+            // Tak buat simpel 
+            $positions = [
+                'O'  => ['next' => 'AP', 'posisi' => 'Purchasing', 'pos' => 'Purchasing'],
+                'AP' => ['next' => 'AS', 'posisi' => 'Supervisor', 'pos' => $decode->spv1],
+                'AS' => ['next' => 'AM', 'posisi' => 'Manager', 'pos' => $decode->mgr]
             ];
 
-            $req->signCode = $sign;
-
-            // file pdf
-            $fileName = $decode->docNo . '.pdf';
-            $directory = storage_path('app/public/approval/pdf');
-            $path = $directory . '/' . $fileName;
-            $req->pdf = Storage::url('approval/pdf/' . $fileName);
-            $req->detail = $decode->detail;
-
-            // generatePdf
-            $html = view('templates.pdf.approval-generate', compact('req'))->render();
-            $this->generatePdf($path, $html);
-
-            $data['pdf'] = $req->pdf;
-            $data['text'] = 'Berhasil disetujui oleh';
-            $data['status'] = '1';
-        } else {
-            $data['pdf'] = '';
-            $data['status'] = '0';
-            $data['posisi'] = '';
-            $data['pos'] = '';
-            $data['text'] = 'Mohon buka kembali link anda. Pengajuan ini sudah di eksekusi';
-        }
-
-        return view('pages.single.approval-response', compact('data'));
-    }
+            $nextStatus = $positions[$status]['next'];
+            $data['posisi'] = $positions[$status]['posisi'];
+            $data['pos'] = $positions[$status]['pos'];
 
 
-    public function reject(Request $req)
-    {
+            if ($shortStatus != $nextStatus) {
 
-        $decode = json_decode($req->data, true);
-        $status = $decode['status'];
-        if (!in_array($status, ['O', 'AP', 'AS'])) {
-            return false;
-        }
-
-        $id = $decode['id'];
-        $no = $decode['no_plan'];
-
-        $cek = DB::table(DB::raw('IT.dbo.PR_MASTER_PLAN'))
-            ->where("id", $id)
-            ->where("no_plan", $no)
-            ->first();
-
-        // cek jika udah diapprove tapi direjek
-        $shortStatus = $this->getstatus($cek->status, 'Short');
-        if ($shortStatus != $status) {
-            $data['status'] = '0';
-            $data['posisi'] = '';
-            $data['text'] = 'Pengajuan ini sudah di Eksekusi';
-            return view('pages.single.approval-response', compact('data'));
-        }
-
-        if ($status == 'O') {
-
-            $statusT = 'PT';
-            $data['posisi'] = 'Purchasing';
-            $data['pos'] = 'Purchasing';
-        } elseif ($status == 'AP') {
-
-            $statusT = 'APT';
-            $data['posisi'] = 'Supervisor';
-            $data['pos'] = $decode['spv1'];
-        } elseif ($status == 'AS') {
-
-            $data['posisi'] = 'Manager';
-            $data['pos'] = $decode['mgr'];
-            $statusT = 'AMT';
-        }
-
-        if ($shortStatus != $statusT) {
-
-            DB::table(DB::raw('IT.dbo.PR_MASTER_PLAN'))
-                ->where("id", $id)
-                ->where("no_plan", $no)
-                ->update([
-                    'status' => $this->getstatus($statusT, 'Long'),
-                    'alasan_revisi' => $req->message
-                ]);
-
-            if ($shortStatus == 'O') {
+                DB::table('IT.dbo.PR_MASTER_PLAN')
+                    ->where("id", $id)
+                    ->where("no_plan", $no)
+                    ->update([
+                        'status' => $this->getstatus($nextStatus, 'Long')
+                    ]);
 
                 $insertData = [
                     'id_no_plan' => $id,
                     'no_plan' => $no,
                     'sec' => $cek->sec,
-                    'tanggal_pr' => $cek->tanggal_plan,
-                    'ditolak' => $data['pos'],
-                    'tgl_ditolak' => date('Y-m-d H:i:s'),
+                    'tanggal_pr' => $cek->tanggal_plan
                 ];
 
-                // DB::table(DB::raw('IT.dbo.PR_pr'))
-                //     ->insert($insertData);
-                $updateData['ditolak'] = $data['pos'];
-                $updateData['tgl_ditolak'] = date('Y-m-d H:i:s');
+                if ($shortStatus == 'O') {
+                    $insertData['diperiksa'] = $data['pos'];
+                    $insertData['tgl_diperiksa'] = date('Y-m-d H:i:s');
 
-                DB::table(DB::raw('IT.dbo.PR_pr'))
-                    ->where('id_no_plan', $id)
-                    ->where('no_plan', $no)
-                    ->update($updateData);
+                    // INSRT
+                    // DB::table(DB::raw('IT.dbo.PR_pr'))
+                    //     ->insert($insertData);
+
+
+                } elseif ($shortStatus == 'AP') {
+
+                    $updateData['diperiksa'] = $data['pos'];
+                    $updateData['tgl_diperiksa'] = date('Y-m-d H:i:s');
+
+                    DB::table(DB::raw('IT.dbo.PR_pr'))
+                        ->where('id_no_plan', $id)
+                        ->where('no_plan', $no)
+                        ->update($updateData);
+                } elseif ($shortStatus == 'AS') {
+
+                    $updateData['disetujui'] = $data['pos'];
+                    $updateData['tgl_disetujui'] = date('Y-m-d H:i:s');
+
+                    DB::table(DB::raw('IT.dbo.PR_pr'))
+                        ->where('id_no_plan', $id)
+                        ->where('no_plan', $no)
+                        ->update($updateData);
+                }
+
+                // get new data after update
+                $req = DB::table('IT.dbo.PR_MASTER_PLAN as m')
+                    ->where("m.id", $id)
+                    ->where("m.no_plan", $no)
+                    ->leftJoin('IT.dbo.PR_approval_hirarki as h', 'm.sec', '=', 'h.section')
+                    ->leftJoin('IT.dbo.PR_pr as pr', 'm.id', '=', 'pr.id_no_plan')
+                    ->selectRaw('pr.*,h.*,m.*')
+                    ->first();
+
+                $sign = [];
+
+                if ($status !== 'O') {
+                    $QR = "$req->nik_spv1/$req->spv1/$req->tgl_diperiksa/$req->no_pr";
+                    $sign['spv'] = [
+                        'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
+                        'name' => $req->spv1
+                    ];
+                }
+
+                if ($status === 'AS') {
+                    $QR = "$req->nik_mgr/$req->mgr/$req->tgl_disetujui/$req->no_pr";
+                    $sign['mgr'] = [
+                        'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
+                        'name' => $req->mgr
+                    ];
+
+                    $QR = "$req->nik_diterima/$req->diterima/$req->tgl_diterima/$req->no_pr";
+                    $sign['terima'] = [
+                        'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
+                        'name' => $req->diterima
+                    ];
+                }
+
+                $QR = "NIK/$req->nama/$req->tanggal_plan/$req->no_pr";
+                $sign['creator'] = [
+                    'qrcode' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($QR)),
+                    'name' => $req->nama
+                ];
+
+                $req->signCode = $sign;
+
+                // file pdf
+                $fileName = $decode->docNo . '.pdf';
+                $directory = storage_path('app/public/approval/pdf');
+                $path = $directory . '/' . $fileName;
+                $req->pdf = Storage::url('approval/pdf/' . $fileName);
+                $req->detail = $decode->detail;
+
+                // generatePdf
+                $html = view('templates.pdf.approval-generate', compact('req'))->render();
+                $this->generatePdf($path, $html);
+
+                $data['pdf'] = $req->pdf;
+                $data['text'] = 'Berhasil disetujui oleh';
+                $data['status'] = '1';
             } else {
-
-                $updateData['ditolak'] = $data['pos'];
-                $updateData['tgl_ditolak'] = date('Y-m-d H:i:s');
-
-                DB::table(DB::raw('IT.dbo.PR_pr'))
-                    ->where('id_no_plan', $id)
-                    ->where('no_plan', $no)
-                    ->update($updateData);
+                $data['pdf'] = '';
+                $data['status'] = '0';
+                $data['posisi'] = '';
+                $data['pos'] = '';
+                $data['text'] = 'Mohon buka kembali link anda. Pengajuan ini sudah di eksekusi';
             }
-            $data['text'] = 'Ditolak oleh';
-            $data['status'] = '0';
-        } else {
-            $data['status'] = '0';
-            $data['posisi'] = '';
-            $data['text'] = 'Mohon buka kembali link anda. Pengajuan ini sudah di eksekusi';
-        }
 
-        return view('pages.single.approval-response', compact('data'));
+            return view('pages.single.approval-response', compact('data'));
+        }
+    }
+
+
+    public function reject(Request $req, $type)
+    {
+        if ($type == 1) {
+            $decode = json_decode($req->data, true);
+            $status = $decode['status'];
+            if (!in_array($status, ['O', 'AP', 'AS'])) {
+                return false;
+            }
+
+            $id = $decode['id'];
+            $no = $decode['no_plan'];
+
+            $cek = DB::table(DB::raw('IT.dbo.PR_MASTER_PLAN'))
+                ->where("id", $id)
+                ->where("no_plan", $no)
+                ->first();
+
+            // cek jika udah diapprove tapi direjek
+            $shortStatus = $this->getstatus($cek->status, 'Short');
+            if ($shortStatus != $status) {
+                $data['status'] = '0';
+                $data['posisi'] = '';
+                $data['text'] = 'Pengajuan ini sudah di Eksekusi';
+                return view('pages.single.approval-response', compact('data'));
+            }
+
+            if ($status == 'O') {
+
+                $statusT = 'PT';
+                $data['posisi'] = 'Purchasing';
+                $data['pos'] = 'Purchasing';
+            } elseif ($status == 'AP') {
+
+                $statusT = 'APT';
+                $data['posisi'] = 'Supervisor';
+                $data['pos'] = $decode['spv1'];
+            } elseif ($status == 'AS') {
+
+                $data['posisi'] = 'Manager';
+                $data['pos'] = $decode['mgr'];
+                $statusT = 'AMT';
+            }
+
+            if ($shortStatus != $statusT) {
+
+                DB::table(DB::raw('IT.dbo.PR_MASTER_PLAN'))
+                    ->where("id", $id)
+                    ->where("no_plan", $no)
+                    ->update([
+                        'status' => $this->getstatus($statusT, 'Long'),
+                        'alasan_revisi' => $req->message
+                    ]);
+
+                if ($shortStatus == 'O') {
+
+                    $insertData = [
+                        'id_no_plan' => $id,
+                        'no_plan' => $no,
+                        'sec' => $cek->sec,
+                        'tanggal_pr' => $cek->tanggal_plan,
+                        'ditolak' => $data['pos'],
+                        'tgl_ditolak' => date('Y-m-d H:i:s'),
+                    ];
+
+                    // DB::table(DB::raw('IT.dbo.PR_pr'))
+                    //     ->insert($insertData);
+                    $updateData['ditolak'] = $data['pos'];
+                    $updateData['tgl_ditolak'] = date('Y-m-d H:i:s');
+
+                    DB::table(DB::raw('IT.dbo.PR_pr'))
+                        ->where('id_no_plan', $id)
+                        ->where('no_plan', $no)
+                        ->update($updateData);
+                } else {
+
+                    $updateData['ditolak'] = $data['pos'];
+                    $updateData['tgl_ditolak'] = date('Y-m-d H:i:s');
+
+                    DB::table(DB::raw('IT.dbo.PR_pr'))
+                        ->where('id_no_plan', $id)
+                        ->where('no_plan', $no)
+                        ->update($updateData);
+                }
+                $data['text'] = 'Ditolak oleh';
+                $data['status'] = '0';
+            } else {
+                $data['status'] = '0';
+                $data['posisi'] = '';
+                $data['text'] = 'Mohon buka kembali link anda. Pengajuan ini sudah di eksekusi';
+            }
+
+            return view('pages.single.approval-response', compact('data'));
+        }
     }
 
     public function approvalPRSys($type, $no)
