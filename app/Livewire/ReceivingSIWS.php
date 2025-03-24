@@ -21,7 +21,7 @@ class ReceivingSIWS extends Component
     protected $listeners = ['editQty'];
     private $tableTemp = 'temp_counter_siws';
     private $tableSetupMst = 'material_setup_mst';
-    // private $table = ''
+    private $cacheTime = 1;
 
     public $userId, $products, $produkBarcode, $paletBarcode, $previousPaletBarcode, $sws_code, $qtyPerPax, $trucking_id, $paletInput = false;
 
@@ -29,10 +29,45 @@ class ReceivingSIWS extends Component
     public $scanned = [];
     public $productsInPalet = [];
     public $props = [0, 'No Data'];
+    
+
 
     public function mount()
     {
         $this->userId = auth()->user()->id;
+    }
+
+    private function insertToTemp($getall, $existingCounters, $group)
+    {
+
+        foreach ($getall as $value) {
+            $counterExists = in_array($value->material_no, $existingCounters);
+            if (!$counterExists) {
+                try {
+                    DB::beginTransaction();
+                    $insert = [
+                        'material' => $value->material_no,
+                        'serial_no' => $value->serial_no,
+                        'palet' => $this->paletBarcode,
+                        'userID' => $this->userId,
+                        'line_c' => $value->line_c,
+                        'sisa' => $value->picking_qty,
+                        'total' => $value->picking_qty,
+                        'pax' => $value->pax,
+                    ];
+
+                    if (count($group[trim($value->material_no)]) > 1) {
+                        $insert['scan_count'] = $value->pax;
+                    }
+
+                    tempCounterSiws::create($insert);
+                    DB::commit();
+                } catch (\Exception $th) {
+                    DB::rollBack();
+                    throw $th;
+                }
+            }
+        }
     }
 
     #[On('insertNew')]
@@ -109,7 +144,7 @@ class ReceivingSIWS extends Component
                 $this->trucking_id = $truk->kit_no;
                 $this->paletInput = true;
                 $this->previousPaletBarcode = $this->paletBarcode;
-                $this->refreshData();
+                $this->refreshData(true);
             } else {
                 $this->paletBarcode = null;
             }
@@ -183,7 +218,7 @@ class ReceivingSIWS extends Component
                 $data = $tempCount->first();
 
                 $key = 'count_' . $supplierCode->sws_code . '_' . $this->paletBarcode . '_' . $this->userId . '_' . $lineCode;
-                $count = Cache::remember($key, 30, function () use ($supplierCode, $column, $lineCode) {
+                $count = Cache::remember($key, $this->cacheTime, function () use ($supplierCode, $column, $lineCode) {
                     $sql = DB::table($this->tableTemp)
                         ->where($column, $supplierCode->sws_code)
                         ->where('userID', $this->userId)
@@ -201,7 +236,7 @@ class ReceivingSIWS extends Component
                     $pattern = '/^\d{2}-\d{4}$/';
 
                     $column = preg_match($pattern, $this->paletBarcode) ? 'serial_no' : (in_array($firstText, $allowText) ? 'material_no' : null);
-                    $qry = Cache::remember($key, 20, function () use ($supplierCode, $column, $lineCode) {
+                    $qry = Cache::remember($key, $this->cacheTime, function () use ($supplierCode, $column, $lineCode) {
                         $sql = DB::table($this->tableSetupMst)
                             ->selectRaw('sum(picking_qty) as picking_qty')
                             ->where($column, 'like', $supplierCode->sws_code . '%')
@@ -218,18 +253,25 @@ class ReceivingSIWS extends Component
                     $new_prop_scan = isset($data->prop_scan) ? json_decode($data->prop_scan) : [];
                     array_push($new_prop_scan, $productDetail->picking_qty);
 
+                    // update time 
+                    $mst = DB::table($this->tableSetupMst)
+                        ->where('pallet_no', $data->palet)
+                        ->where('line_c', $data->line_c)
+                        ->where($column, 'like', $supplierCode->sws_code . '%')
+                        ->update(['scanned_at' => date('Y-m-d H:i:s')]);
 
                     if ($data->total < $data->counter || $data->sisa <= 0) {
 
                         $this->produkBarcode = null;
                         $more = $data->qty_more + 1;
                         $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'qty_more' => $more, 'prop_scan' => json_encode($new_prop_scan)]);
-                        $this->refreshTemp();
+                        $this->refreshData();
                         return;
                     }
 
-                    $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'prop_scan' => json_encode($new_prop_scan)]);
-                    $this->refreshTemp();
+                    $tempCount->update(['counter' => $counter, 'sisa' => $sisa, 'prop_scan' => json_encode($new_prop_scan), 'scanned_time' => date('Y-m-d H:i:s')]);
+
+                    $this->refreshData();
                 } else {
 
                     $cek = DB::table($this->tableSetupMst)
@@ -257,12 +299,12 @@ class ReceivingSIWS extends Component
             ->where('palet', $this->paletBarcode)
             ->select('a.*', 'b.location_cd')
             ->where('userID', $this->userId)
-            ->orderByDesc('pax')
+            ->orderByDesc('scanned_time')
             ->orderByDesc('material')
             ->get();
     }
 
-    private function refreshData()
+    private function refreshData($insert = false)
     {
         $getScanned = DB::table('material_in_stock')->select('material_no')
             ->where('pallet_no', $this->paletBarcode)
@@ -281,16 +323,17 @@ class ReceivingSIWS extends Component
 
             // tambah cache
             $key = '0picking_' . $this->paletBarcode . '_' . $this->userId;
-            $collection = Cache::remember($key, 10, function () {
+            $collection = Cache::remember($key, $this->cacheTime, function () {
                 return DB::table($this->tableSetupMst . ' as a')
                     ->selectRaw('picking_qty,r.material_no,count(picking_qty) as jml_pick')
                     ->leftJoin('master_wire_register as r', 'a.material_no', '=', 'r.id')
                     ->where('pallet_no', $this->paletBarcode)
-                    ->groupBy('picking_qty', 'r.material_no')->get();
+                    ->groupBy('picking_qty', 'r.material_no')
+                    ->get();
             });
 
             $key = '0getallcnc_' . $this->paletBarcode . '_' . $this->userId . '_' . md5($getScannedString);
-            $getall = Cache::remember($key, 10, function () use ($getScanned) {
+            $getall = Cache::remember($key, $this->cacheTime, function () use ($getScanned) {
                 return DB::table($this->tableSetupMst . ' as  a')
                     ->selectRaw('pallet_no, r.material_no,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,line_c,serial_no')
                     ->leftJoin('material_mst as b', 'a.serial_no', '=', 'b.matl_no')
@@ -298,13 +341,13 @@ class ReceivingSIWS extends Component
                     ->where('a.pallet_no', $this->paletBarcode)
                     ->whereNotIn('r.material_no', $getScanned)
                     ->groupBy('a.pallet_no', 'r.material_no', 'line_c', 'r.material_no', 'serial_no')
-                    ->orderByDesc('pax')
+                    ->orderByRaw('max(scanned_at) DESC')
                     ->orderByDesc('r.material_no')->get();
             });
         } else {
             // tambah cache
             $key = '1picking_' . $this->paletBarcode . '_' . $this->userId;
-            $collection = Cache::remember($key, 10, function () {
+            $collection = Cache::remember($key, $this->cacheTime, function () {
                 return DB::table($this->tableSetupMst . ' as a')
                     ->selectRaw('picking_qty,material_no,count(picking_qty) as jml_pick')
                     ->where('pallet_no', $this->paletBarcode)
@@ -312,14 +355,14 @@ class ReceivingSIWS extends Component
             });
 
             $key = '1getallcnc_' . $this->paletBarcode . '_' . $this->userId . '_' . md5($getScannedString);
-            $getall = Cache::remember($key, 10, function () use ($getScanned) {
+            $getall = Cache::remember($key, $this->cacheTime, function () use ($getScanned) {
                 return DB::table($this->tableSetupMst . ' as  a')
                     ->selectRaw('pallet_no, a.material_no ,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,line_c ')
                     ->leftJoin('material_mst as b', 'a.serial_no', '=', 'b.matl_no')
                     ->where('a.pallet_no', $this->paletBarcode)
                     ->whereNotIn('a.material_no', $getScanned)
                     ->groupBy('a.pallet_no', 'a.material_no', 'line_c')
-                    ->orderByDesc('pax')
+                    ->orderByRaw('max(scanned_at) DESC')
                     ->orderByDesc('a.material_no')->get();
             });
         }
@@ -343,33 +386,9 @@ class ReceivingSIWS extends Component
                 unset($i->material_no);
             }
         });
-        foreach ($getall as $value) {
-            $counterExists = in_array($value->material_no, $existingCounters);
-            if (!$counterExists) {
-                try {
-                    DB::beginTransaction();
-                    $insert = [
-                        'material' => $value->material_no,
-                        'serial_no' => $value->serial_no,
-                        'palet' => $this->paletBarcode,
-                        'userID' => $this->userId,
-                        'line_c' => $value->line_c,
-                        'sisa' => $value->picking_qty,
-                        'total' => $value->picking_qty,
-                        'pax' => $value->pax,
-                    ];
 
-                    if (count($group[trim($value->material_no)]) > 1) {
-                        $insert['scan_count'] = $value->pax;
-                    }
-
-                    tempCounterSiws::create($insert);
-                    DB::commit();
-                } catch (\Exception $th) {
-                    DB::rollBack();
-                    throw $th;
-                }
-            }
+        if ($insert) {
+            $this->insertToTemp($getall, $existingCounters, $group);
         }
 
         $this->refreshTemp();
@@ -401,6 +420,7 @@ class ReceivingSIWS extends Component
             ->where('pallet_no', $this->paletBarcode)
             ->where('line_c', 'NewItem')->delete();
 
+            $this->resetTimeScan();
         $this->paletBarcode = null;
         $this->produkBarcode = null;
         $this->trucking_id = null;
@@ -444,14 +464,48 @@ class ReceivingSIWS extends Component
     {
         $qryUPdate = tempCounterSiws::where('id', $id);
         $data = $qryUPdate->first();
+        $qtyInput = $qty;
 
         $sisa = $data->total > $qty ? 0 : $data->total - $qty;
-        $more = $sisa < 0 ? 1 : 0;
+
+        $prop = [];
+        $more = 0;
+        $tempLebih = $data->total;
+        $loopKe = 1;
+
+        while ($qty > 0) {
+            if ($qty >= $data->total) {
+
+                $prop[] = (int)$data->total;
+                $qty -= $data->total;
+
+                $tempLebih -= $data->total;
+                if ($tempLebih < 0) {
+                    $more++;
+                }
+
+                $loopKe++;
+            } else {
+
+                if ($loopKe == 1) {
+                    $sisa = $data->total - $qty;
+                } else {
+                    $tempLebih = -$qty;
+                    if ($tempLebih < 0) {
+                        $more++;
+                    }
+                }
+
+                $prop[] = $qty;
+                break;
+            }
+        }
+
         $qryUPdate->update([
             'sisa' => $sisa,
-            'counter' => $qty,
+            'counter' => $qtyInput,
             'qty_more' => $more,
-            'prop_scan' => json_encode([$qty]),
+            'prop_scan' => json_encode($prop),
         ]);
 
 
@@ -654,9 +708,21 @@ class ReceivingSIWS extends Component
         $this->paletInput = false;
         $paletBarcode = $this->paletBarcode;
 
+        $this->resetTimeScan();
         $this->resetPage();
         $this->refreshTemp();
         return Excel::download(new ScannedExport($dataMaterial), "Scanned Items_" . $paletBarcode . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+    }
+
+    private function resetTimeScan() {
+        $firstText = strtolower(substr($this->paletBarcode, 0, 1));
+        $allowText = ['m', 'c'];
+        $pattern = '/^\d{2}-\d{4}$/';
+        $column = preg_match($pattern, $this->paletBarcode) ? 'serial_no' : (in_array($firstText, $allowText) ? 'material_no' : null);
+
+        DB::table($this->tableSetupMst)
+            ->where('pallet_no', $this->paletBarcode)
+            ->update(['scanned_at' => null]);
     }
     public function render()
     {
