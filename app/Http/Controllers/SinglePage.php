@@ -22,10 +22,10 @@ class SinglePage extends Controller
     private function typeDokumen($type)
     {
         switch ($type) {
-            case '2':
+            case '1':
                 return 'Man Request';
                 break;
-            case '1':
+            case '2':
                 return 'PR System';
                 break;
         }
@@ -92,11 +92,11 @@ class SinglePage extends Controller
         }
 
         switch ($type) {
-            case '2':
+            case '1':
                 $data = $this->approvalMan($type, $no);
                 return view('pages.single.approval-man-request', compact('data'));
                 break;
-            case '1':
+            case '2':
                 $req = $this->approvalPRSys($type, $no);
                 return view('pages.single.approval', compact('req'));
                 break;
@@ -262,7 +262,7 @@ class SinglePage extends Controller
 
     public function reject(Request $req, $type)
     {
-        if ($type == 1) {
+        if ($type == 2) {
             $decode = json_decode($req->data, true);
             $status = $decode['status'];
             if (!in_array($status, ['O', 'AP', 'AS'])) {
