@@ -233,11 +233,54 @@
                                 <th scope="row"
                                     class="p-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     @if ($v->counter > 0)
+                                    <div class="" x-data="{
+                                        openModalQty(data) {
+                                            console.log(data[1]);
+                                            Swal.fire({
+                                                title: `Edit qty ${data[1]}`,
+                                                input: 'number',
+                                                inputValue: data[0],
+                                                inputLabel: 'Qty ',
+                                                inputPlaceholder: 'qty',
+                                                showDenyButton: true,
+                                                denyButtonText: `Don't save`
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    $dispatch('editQty', {
+                                                        qty: result.value,
+                                                        id: data[1]
+                                                    })
+                                                    Swal.fire({
+                                                        timer: 1000,
+                                                        title: 'Qty changed successfully',
+                                                        icon: 'success',
+                                                        showConfirmButton: false,
+                                                        timerProgressBar: true,
+                                                    });
+                                                } else if (result.isDenied) {
+                                                    return Swal.fire({
+                                                        timer: 1000,
+                                                        title: 'Changes are not saved',
+                                                        icon: 'info',
+                                                        showConfirmButton: false,
+                                                        timerProgressBar: true,
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    }">
+
                                         <button
                                             wire:click="resetItem({{ json_encode([$v->material, $v->palet, json_decode($v->prop_ori, true)['setup_by'], $v->line_c]) }})"
                                             class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg p-1 group bg-gradient-to-br from-red-800 to-red-500 group-hover:from-red-900 group-hover:to-red-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
                                             Reset
                                         </button>
+
+                                        <button @click="openModalQty(@js([$v->counter, $v->id]))"
+                                            class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg p-1 group bg-gradient-to-br from-yellow-800 to-yellow-500 group-hover:from-yellow-900 group-hover:to-yellow-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
+                                            Edit
+                                        </button>
+                                    </div>
                                     @endif
                                 </th>
                             </tr>

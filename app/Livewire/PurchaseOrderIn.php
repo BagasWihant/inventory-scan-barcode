@@ -31,6 +31,8 @@ class PurchaseOrderIn extends Component
     public $getall = [];
     public $lokasi, $reset = false, $line_code;
 
+    protected $listeners = ['editQty'];
+
     public function mount()
     {
         $this->userId = auth()->user()->id;
@@ -603,6 +605,57 @@ class PurchaseOrderIn extends Component
         } else {
             $this->resetPage();
         }
+    }
+
+    public function editQty($qty,$id){
+        $qryUPdate = tempCounter::where('id', $id);
+        $data = $qryUPdate->first();
+        $qtyInput = $qty;
+
+        $sisa = $data->total > $qty ? 0 : $data->total - $qty;
+
+        $prop = [];
+        $more = 0;
+        $tempLebih = $data->total;
+        $loopKe = 1;
+
+        while ($qty > 0) {
+            if ($qty >= $data->total) {
+
+                $prop[] = (int)$data->total;
+                $qty -= $data->total;
+
+                $tempLebih -= $data->total;
+                if ($tempLebih < 0) {
+                    $more++;
+                }
+
+                $loopKe++;
+            } else {
+
+                if ($loopKe == 1) {
+                    $sisa = $data->total - $qty;
+                } else {
+                    $tempLebih = -$qty;
+                    if ($tempLebih < 0) {
+                        $more++;
+                    }
+                }
+
+                $prop[] = $qty;
+                break;
+            }
+        }
+
+        $qryUPdate->update([
+            'sisa' => $sisa,
+            'counter' => $qtyInput,
+            'qty_more' => $more,
+            'prop_scan' => json_encode($prop),
+        ]);
+
+
+        $this->dispatch('materialFocus');
     }
 
     public function render()
