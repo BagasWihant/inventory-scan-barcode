@@ -385,7 +385,7 @@ class SinglePage extends Controller
             ];
 
             if (!in_array(request()->ip(), $allowedPurchase)) {
-                return "<b>Anda tidak bisa mengakses ini. Bukan Purchasing<b>";
+                abort(499, "Anda tidak bisa mengakses ini. Bukan Purchasing");
             }
         } elseif ($status == 'AP') {
             // halaman spv
@@ -395,7 +395,7 @@ class SinglePage extends Controller
             ];
 
             if (!in_array(request()->ip(), $allowedSPV)) {
-                return "<b>Anda tidak bisa mengakses ini. Bukan Supervisor<b>";
+                abort(499,'Anda tidak bisa mengakses ini. Bukan Supervisor');
             }
         } elseif ($status == 'AS') {
             // halaman manager
@@ -405,7 +405,7 @@ class SinglePage extends Controller
             ];
 
             if (!in_array(request()->ip(), $allowedIPMan)) {
-                return "<b>Anda tidak bisa mengakses ini. Bukan Manager<b>";
+                abort(499,"Anda tidak bisa mengakses ini. Bukan Manager");
             }
         }
 
