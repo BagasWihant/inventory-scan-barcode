@@ -109,7 +109,7 @@ class SinglePage extends Controller
 
     public function approve(Request $req, $type)
     {
-        if ($type == 1) {
+        if ($type == 2) {
 
 
             $decode = json_decode($req->data);
