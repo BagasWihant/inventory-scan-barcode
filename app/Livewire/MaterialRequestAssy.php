@@ -35,6 +35,8 @@ class MaterialRequestAssy extends Component
     public $line_c;
     public $date;
 
+    protected $listeners = ['editQty'];
+
     private function loadTable()
     {
         $materialRequest = ModelsMaterialRequestAssy::where('status', '-')
@@ -66,6 +68,16 @@ class MaterialRequestAssy extends Component
         $this->transactionNo['nw'] = "NW$ymd-" . str_pad($this->variablePage['materialRequestNW'], 4, '0', STR_PAD_LEFT);
     }
 
+    public function editQty($qty, $id)
+    {
+
+        $data = ModelsMaterialRequestAssy::find($id);
+        $data->update([
+            'request_qty' => $qty
+        ]);
+        $this->loadTable();
+    }
+
     public function mount()
     {
         $this->loadTable();
@@ -80,13 +92,32 @@ class MaterialRequestAssy extends Component
         switch ($prop) {
             case 'materialNo':
                 DB::enableQueryLog();
-                $qrySearch = DB::table('material_mst')
-                    // ->where('matl_no', 'like', "%$val%")
-                    ->whereRaw("REPLACE(matl_no, ' ', '') LIKE ?", ["%$val%"])
-                    ->select(['matl_no', 'iss_unit', 'bag_qty', 'iss_min_lot', 'matl_nm', 'qty'])->limit(10)->get();
-                $countSearch = count($qrySearch);
+                if (!$this->line_c) {
+                    $this->materialNo = null;
+                    return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Please fill Line C']);
+                }
+                // $qrySearch = DB::table('material_mst')
+                //     // ->where('matl_no', 'like', "%$val%")
+                //     ->whereRaw("REPLACE(matl_no, ' ', '') LIKE ?", ["%$val%"])
+                //     ->select(['matl_no', 'iss_unit', 'bag_qty', 'iss_min_lot', 'matl_nm', 'qty'])->limit(10)->get();
 
-                if ($countSearch > 0) {
+                $qrySearch = DB::table('material_setup_mst_supplier as s')
+                    ->join('material_in_stock as mis', function ($join) {
+                        $join->on('s.material_no', '=', 'mis.material_no')
+                            ->on('s.kit_no', '=', 'mis.kit_no')
+                            ->on('s.line_c', '=', 'mis.line_c');
+                    })
+                    ->join('material_mst as m', 's.material_no', '=', 'm.matl_no')
+                    ->where('s.line_c', $this->line_c)
+                    ->where('s.material_no', 'like', "%$val%")
+                    ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $this->date)
+                    ->selectRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, sum(mis.picking_qty) as req_qty, s.kit_no,m.qty,m.bag_qty')
+                    ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty')
+                    ->get();
+                // dd($qrySearch);
+                // $countSearch = count($qrySearch);
+
+                if (count($qrySearch) > 0) {
                     $this->searchMaterialNo = true;
                     $this->resultSearchMaterial = $qrySearch;
                 } else {
@@ -98,7 +129,7 @@ class MaterialRequestAssy extends Component
             case 'selectedData':
                 $this->searchMaterialNo = false;
                 $this->selectedData = $val;
-                $this->materialNo = $this->selectedData['matl_no'];
+                $this->materialNo = $this->selectedData['material_no'];
                 break;
             default:
                 # code...
@@ -116,10 +147,10 @@ class MaterialRequestAssy extends Component
 
     public function saveRequest($requestQty = 0)
     {
-        if (!$this->userRequest) {
-            $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please fill User Request']);
-            return false;
-        }
+        // if (!$this->userRequest) {
+        //     $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please fill User Request']);
+        //     return false;
+        // }
         if (!$this->type) {
             $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please choose Type']);
             return false;
@@ -180,11 +211,11 @@ class MaterialRequestAssy extends Component
 
     public function submitRequest()
     {
-        $userRequstIsNull = ModelsMaterialRequestAssy::whereNull('user_request')
-            ->whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']])->exists();
-        if ($userRequstIsNull) {
-            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Please fill all User Request ']);
-        }
+        // $userRequstIsNull = ModelsMaterialRequestAssy::whereNull('user_request')
+        //     ->whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']])->exists();
+        // if ($userRequstIsNull) {
+        //     return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Please fill all User Request ']);
+        // }
         $updateStatus = ModelsMaterialRequestAssy::whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']]);
 
         if (!$updateStatus->exists()) {
