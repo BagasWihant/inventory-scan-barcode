@@ -7,7 +7,7 @@ use App\Livewire\MaterialRequest;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->intended(route('inventory.index', absolute: false));
+    return redirect()->intended(route('instock', absolute: false));
 });
 
 Route::middleware(['auth','updateActivity'])->group(function () {
