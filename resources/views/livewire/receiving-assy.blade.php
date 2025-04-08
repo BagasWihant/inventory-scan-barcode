@@ -121,22 +121,16 @@
                                                 Material No
                                             </th>
                                             <th scope="col" class="px-3 py-3">
+                                                Product No
+                                            </th>
+                                            <th scope="col" class="px-3 py-3">
                                                 Material Name
-                                            </th>
-                                            <th scope="col" class="px-3 py-3">
-                                                Min Lot
-                                            </th>
-                                            <th scope="col" class="px-3 py-3">
-                                                Unit
                                             </th>
                                             <th scope="col" class="px-3 py-3">
                                                 Qty Request
                                             </th>
                                             <th scope="col" class="px-3 py-3">
                                                 Qty Supply
-                                            </th>
-                                            <th scope="col" class="px-3 py-3">
-                                                Stock
                                             </th>
                                             <th>
 
@@ -149,12 +143,10 @@
                                                 <tr
                                                     class="@if ($data->request_qty == $data->qty_supply) bg-green-500 text-white @endif">
                                                     <td class="px-3 py-2">{{ $data->material_no }}</td>
+                                                    <td class="px-3 py-2">-</td>
                                                     <td class="px-3 py-2">{{ $data->material_name }}</td>
-                                                    <td class="px-3 py-2">{{ $data->iss_min_lot }}</td>
-                                                    <td class="px-3 py-2">{{ $data->iss_unit }}</td>
                                                     <td class="px-3 py-2">{{ $data->request_qty }}</td>
                                                     <td class="px-3 py-2">{{ $data->qty_supply }}</td>
-                                                    <td class="px-3 py-2">{{ $data->stock }}</td>
                                                     @if ($data->qty_supply > 0 || $data->qty_supply != null)
                                                         <td class="px-3 py-2">
                                                             <button

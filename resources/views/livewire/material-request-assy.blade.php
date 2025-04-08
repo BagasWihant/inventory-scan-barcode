@@ -65,20 +65,27 @@
                         <label for="bordered-radio-2"
                             class="w-full py-4 ms-2 text-sm font-medium @if ($userRequestDisable == true) text-gray-600 @else  text-gray-900 @endif dark:text-gray-300">Urgent</label>
                     </div>
-                    <input wire:model="userRequest" type="text" placeholder="User Request"
+                    {{-- <input wire:model="userRequest" type="text" placeholder="User Request"
                         @if ($userRequestDisable == true) disabled @endif
-                        class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    <input wire:model="line_c" type="text" placeholder="Line Code"
-                        @if ($userRequestDisable == true) disabled @endif
-                        class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    <input wire:model="date" type="date" @if ($userRequestDisable == true) disabled @endif
-                        class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"> --}}
+                    <div class="">
+                        <label for="">Issue Date</label>
+                        <input wire:model="date" type="date" @if ($userRequestDisable == true) disabled @endif
+                            class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    </div>
+                    <div class="">
+                        <label for="">Line Code</label>
+                        <input wire:model="line_c" type="text" placeholder="Line Code"
+                            @if ($userRequestDisable == true) disabled @endif
+                            class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    </div>
 
                 </div>
                 <div class="">
 
                     @if ($userRequestDisable == true)
-                        <button class="btn bg-yellow-500 shadow-md text-white px-2 p-1 m-1 rounded-lg text-xs text-nowrap"
+                        <button
+                            class="btn bg-yellow-500 shadow-md text-white px-2 p-1 m-1 rounded-lg text-xs text-nowrap"
                             @click="@this.set('userRequestDisable', false)">Ganti</button>
                     @endif
                     <button class="btn bg-red-500 shadow-md text-white px-2 py-1 m-1 rounded-lg text-sm"
@@ -100,7 +107,7 @@
                         @forelse ($resultSearchMaterial as $res)
                             <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
                                 @click="updateDetails(@js($res))">
-                                {{ $res->matl_no }}
+                                {{ $res->material_no }} | {{ $res->kit_no }}
                             </div>
                         @empty
                             <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
@@ -110,13 +117,12 @@
             </div>
 
             <div class="flex gap-4 my-1">
-                <input x-ref="requestQty" type="text" @keydown.enter="handleSave" x-on:input="multiply()"
+                {{-- <input x-ref="requestQty" type="text" @keydown.enter="handleSave" x-on:input="multiply()"
                     placeholder="Input Pax"
-                    class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"> --}}
 
-                <input x-model="reqQty" :class="reqQty ? 'bg-green-100' : 'bg-red-300'" readonly
-                    placeholder="Request Qty" type="text"
-                    class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg  text-base">
+                <input wire:model="selectedData.req_qty" readonly placeholder="Request Qty" type="text"
+                    class="block w-full p-2 text-gray-900 border border-gray-300 bg-slate-200 rounded-lg  text-base">
                 <input wire:model="selectedData.qty" readonly placeholder="Qty" type="text"
                     class="block w-full p-2 text-gray-900 border border-gray-300 bg-slate-200 rounded-lg  text-base">
                 <input wire:model="selectedData.iss_min_lot" readonly placeholder="Min. Lot" type="text"
@@ -124,8 +130,11 @@
                 <input wire:model="selectedData.iss_unit" readonly placeholder="Unit" type="text"
                     class="block w-full p-2 text-gray-900 border border-gray-300 bg-slate-200 rounded-lg  text-base">
             </div>
-            <span class="text-red-600">Pastikan <strong>Request Qty</strong> sesuai dengan kelipatan <strong>Min.
-                    Lot</strong></span>
+            {{-- <span class="text-red-600">Pastikan <strong>Request Qty</strong> sesuai dengan kelipatan <strong>Min.
+                    Lot</strong></span> --}}
+
+            <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg"
+                wire:click="saveRequest(selectedData.req_qty)">Tambah material</button>
 
         </div>
         <div class="w-2/3 bg-gray-200 rounded-md">
@@ -187,6 +196,9 @@
                         No
                     </th>
                     <th scope="col" class="px-6 py-3">
+                        Product No
+                    </th>
+                    <th scope="col" class="px-6 py-3">
                         Material No
                     </th>
                     <th scope="col" class="px-6 py-3">
@@ -195,12 +207,12 @@
                     <th scope="col" class="px-6 py-3">
                         Qty Request
                     </th>
-                    <th scope="col" class="px-6 py-3">
+                    {{-- <th scope="col" class="px-6 py-3">
                         Bag. Qty
                     </th>
                     <th scope="col" class="px-6 py-3">
                         Min Lot
-                    </th>
+                    </th> --}}
                     <th scope="col" class="px-6 py-3">
                     </th>
                 </tr>
@@ -214,6 +226,10 @@
                         </td>
                         <th scope="row"
                             class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            -
+                        </th>
+                        <th scope="row"
+                            class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                             {{ $m->material_no }}
                         </th>
                         <td class="px-6 py-4">
@@ -222,13 +238,50 @@
                         <td class="px-6 py-4">
                             {{ $m->request_qty }}
                         </td>
-                        <td class="px-6 py-4">
+                        {{-- <td class="px-6 py-4">
                             {{ $m->bag_qty }}
                         </td>
                         <td class="px-6 py-4">
                             {{ $m->iss_min_lot }}
-                        </td>
-                        <td class="px-6 py-4">
+                        </td> --}}
+                        <td class="px-6 py-4" x-data="{
+                            openModalQty(data) {
+                                console.log(data[1]);
+                                Swal.fire({
+                                    title: `Edit qty ${data[2]}`,
+                                    input: 'number',
+                                    inputValue: data[0],
+                                    inputLabel: 'Qty ',
+                                    inputPlaceholder: 'qty',
+                                    showDenyButton: true,
+                                    denyButtonText: `Don't save`
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        $dispatch('editQty', {
+                                            qty: result.value,
+                                            id: data[1]
+                                        })
+                                        Swal.fire({
+                                            timer: 1000,
+                                            title: 'Qty changed successfully',
+                                            icon: 'success',
+                                            showConfirmButton: false,
+                                            timerProgressBar: true,
+                                        });
+                                    } else if (result.isDenied) {
+                                        return Swal.fire({
+                                            timer: 1000,
+                                            title: 'Changes are not saved',
+                                            icon: 'info',
+                                            showConfirmButton: false,
+                                            timerProgressBar: true,
+                                        });
+                                    }
+                                });
+                            }
+                        }">
+                            <button class="btn bg-yellow-500 shadow-md text-white p-2 rounded-lg text-xs"
+                                @click="openModalQty(@js([$m->request_qty, $m->id,$m->material_no]))">Edit</button>
                             <button class="btn bg-red-500 shadow-md text-white p-2 rounded-lg text-xs"
                                 wire:click="deleteItem('{{ $m->id }}')">Hapus</button>
                         </td>
