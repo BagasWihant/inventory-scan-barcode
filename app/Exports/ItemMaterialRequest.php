@@ -74,7 +74,7 @@ class ItemMaterialRequest implements FromCollection, WithEvents, WithCustomStart
             $row->material_no ?? " ",
             $row->material_name ?? " ",
             Carbon::parse($row->created_at)->format('d-m-Y') ?? " ",
-            $row->request_ty ?? " ",
+            $row->request_qty ?? " ",
             $row->iss_min_lot ?? " ",
             $row->iss_unit ?? " ",
             $row->loc_cd ?? " ",

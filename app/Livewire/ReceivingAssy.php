@@ -111,14 +111,13 @@ class ReceivingAssy extends Component
                 //     'qty_supply' => 0,
                 //     'user_id' => $this->userId
                 // ]);
-                
+
                 // Jika iss min lot 1 input manual jika tidak otomatis
                 if ($item->iss_min_lot == 1) {
                     return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
                 } else {
                     $this->inputQty($item->iss_min_lot);
                 }
-                
             }
 
             $this->getMaterial($scannedMaterial->transaksi_no);
@@ -168,6 +167,10 @@ class ReceivingAssy extends Component
             ->leftJoin('material_mst as b', 'material_request_assy.material_no', '=', 'b.matl_no')
             ->select(['material_request_assy.*', 'b.loc_cd', DB::raw('(b.iss_min_lot/request_qty) as pax')])->orderBy('b.loc_cd', 'asc')->get();
         MaterialRequestAssy::where('transaksi_no', $id)->update(['status' => '9']);
+
+        // hapus temp request pindah sini
+        temp_request::where('transaksi_no', $id)->delete();
+
         return Excel::download(new ItemMaterialRequest($dataPrint), "Request Material_" . $id . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
@@ -193,8 +196,8 @@ class ReceivingAssy extends Component
             // ->when($this->searchKey, function ($q) {
             //     $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
             // })
-            ->select(['transaksi_no', 'status', 'type','issue_date','line_c'])
-            ->groupBy('transaksi_no', 'status', 'type', 'created_at','issue_date','line_c')
+            ->select(['transaksi_no', 'status', 'type', 'issue_date', 'line_c'])
+            ->groupBy('transaksi_no', 'status', 'type', 'created_at', 'issue_date', 'line_c')
             ->orderByDesc('created_at')
             ->get();
     }
@@ -255,7 +258,8 @@ class ReceivingAssy extends Component
                 ]);
             }
 
-            temp_request::where('transaksi_no', $this->transaksiNo)->delete();
+            // qty supply baca dari temp request nek tak delete di receiving assy suplly nya kosong
+            // temp_request::where('transaksi_no', $this->transaksiNo)->delete();
             DB::commit();
 
             MaterialRequestAssy::where('material_request_assy.transaksi_no', $this->transaksiNo)->update([

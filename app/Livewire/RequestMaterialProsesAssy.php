@@ -175,6 +175,7 @@ class RequestMaterialProsesAssy extends Component
 
     public function getMaterial($trx)
     {
+        DB::enableQueryLog();
         $dataPrint = MaterialRequestAssy::where('material_request_assy.transaksi_no', $trx)
             ->leftJoin('temp_requests as r', function ($join) {
                 $join->on('material_request_assy.transaksi_no', '=', 'r.transaksi_no')
@@ -182,7 +183,7 @@ class RequestMaterialProsesAssy extends Component
             })
             ->leftJoin('material_mst as b', 'material_request_assy.material_no', '=', 'b.matl_no')
             ->select(['material_request_assy.*', 'r.qty_supply', 'b.qty as stock'])->get();
-
+            // dd(DB::getRawQueryLog());
         $this->transaksiSelected = $dataPrint;
 
         $this->transaksiNo = $trx;
@@ -201,11 +202,13 @@ class RequestMaterialProsesAssy extends Component
             ->orderByDesc('created_at')
             ->get();
     }
+
     public function resetQty($material)
     {
         temp_request::where('material_no', $material)->where('transaksi_no', $this->transaksiNo)->update(['qty_supply' => 0]);
         $this->getMaterial($this->transaksiNo);
     }
+
     #[On('editQty')]
     public function editQty($data)
     {
@@ -258,7 +261,8 @@ class RequestMaterialProsesAssy extends Component
                 ]);
             }
 
-            temp_request::where('transaksi_no', $this->transaksiNo)->delete();
+            // qty supply baca dari temp request nek tak delete di receiving assy suplly nya kosong
+            // temp_request::where('transaksi_no', $this->transaksiNo)->delete();
             DB::commit();
 
             MaterialRequestAssy::where('material_request_assy.transaksi_no', $this->transaksiNo)->update([
@@ -272,6 +276,7 @@ class RequestMaterialProsesAssy extends Component
             return ['success' => false, 'title' => $th->getMessage()];
         }
     }
+
     public function render()
     {
         $this->getData();
