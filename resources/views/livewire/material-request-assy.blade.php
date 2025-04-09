@@ -23,13 +23,8 @@
                 }
             },
             updateDetails(data) {
-                $wire.set('selectedData', data);
+                $wire.selectedDataDebounce(data);
                 this.selectedData = data;
-                this.$nextTick(() => {
-                    if (this.$refs.requestQty) {
-                        this.$refs.requestQty.focus();
-                    }
-                });
             },
             handleSave() {
                 $wire.saveRequest(this.reqQty).then(res => {
@@ -70,14 +65,17 @@
                         class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"> --}}
                     <div class="">
                         <label for="">Issue Date</label>
-                        <input wire:model="date" type="date" @if ($userRequestDisable == true) disabled @endif
+                        <input wire:change="dateDebounce" wire:model='date' type="date" @if ($userRequestDisable == true) disabled @endif  onfocus="this.showPicker()"
                             class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     </div>
                     <div class="">
-                        <label for="">Line Code</label>
-                        <input wire:model="line_c" type="text" placeholder="Line Code"
-                            @if ($userRequestDisable == true) disabled @endif
-                            class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        <select wire:model="line_c"
+                        class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" >
+                            <option value="">Line Code</option>
+                            @foreach ($listLine as $p)
+                                <option value="{{ $p->line_c }}">{{ $p->line_c }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                 </div>
@@ -94,7 +92,7 @@
 
             </div>
             <div class="flex gap-3">
-                <input wire:model.live.debounce.500ms="materialNo" type="text" placeholder="Material No"
+                <input wire:keydown.debounce.500ms="materialNoDebounce" wire:model="materialNo" type="text" placeholder="Material No"
                     class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
 
@@ -139,7 +137,7 @@
         </div>
         <div class="w-2/3 bg-gray-200 rounded-md">
             <strong class="flex justify-center">Total Qty Request<span>&nbsp;{{ $totalRequest['qty'] }}</span></strong>
-            <div wire:poll.4s="streamTableSum" class="relative overflow-y-auto shadow-md rounded-lg max-h-40">
+            <div wire:poll.4s="streamTableSum" wire:key="polling-table"  class="relative overflow-y-auto shadow-md rounded-lg max-h-40">
                 <table class="w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400">
                     <thead class="text-xs sticky top-0 text-gray-700 bg-gray-200">
                         <tr>
@@ -333,6 +331,13 @@
                     showConfirmButton: false,
                     timerProgressBar: true,
                 });
+            });
+            $('#lineselect').select2({
+                width: 'resolve',
+                tags: true
+            });
+            $('#lineselect').on('select2:select', function(e) {
+                @this.set('line_c', e.params.data.id)
             });
         </script>
     @endscript
