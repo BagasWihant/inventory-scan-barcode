@@ -185,7 +185,7 @@ class ReceivingSIWS extends Component
                             : substr($produkBarcode, 0, 12);
                     }
 
-                    // K21759769242168XHN32702250001
+                    // K21759769242166XH872702250001
                     if ($firstText == "m") {
                         $lineCode            = substr($this->produkBarcode, 15, 4);
                         $this->produkBarcode = substr($this->produkBarcode, 7, 8);
@@ -688,14 +688,14 @@ class ReceivingSIWS extends Component
                 //     // dump('kurang1 => '.$data->material);
                 // }
             } else {
-                $belumIsiSamaSekali = $data->sisa / $data->pax;
+                // $belumIsiSamaSekali = $data->sisa / $data->pax;
                 for ($i = 0; $i < $data->pax; $i++) {
                     # code...
                     // dump('kurang 2=> '.$data->material);
                     abnormalMaterial::create([
                         'pallet_no' => $this->paletBarcode,
                         'material_no' => $data->material,
-                        'picking_qty' => $belumIsiSamaSekali,
+                        'picking_qty' => $data->sisa,
                         'locate' => $data->location_cd,
                         'trucking_id' => $data->trucking_id,
                         'user_id' => $this->userId,
