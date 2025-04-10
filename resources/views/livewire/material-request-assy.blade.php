@@ -22,10 +22,6 @@
                     this.reqQty = minLot * qtyy;
                 }
             },
-            updateDetails(data) {
-                $wire.selectedDataDebounce(data);
-                this.selectedData = data;
-            },
             handleSave() {
                 $wire.saveRequest(this.reqQty).then(res => {
                     if (res) {
@@ -65,12 +61,13 @@
                         class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"> --}}
                     <div class="">
                         <label for="">Issue Date</label>
-                        <input wire:change="dateDebounce" wire:model='date' type="date" @if ($userRequestDisable == true) disabled @endif  onfocus="this.showPicker()"
+                        <input wire:change="dateDebounce" wire:model='date' type="date"
+                            @if ($userRequestDisable == true) disabled @endif onfocus="this.showPicker()"
                             class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     </div>
                     <div class="">
-                        <select wire:model="line_c"
-                        class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" >
+                        <select wire:model="line_c" wire:change="lineChange"
+                            class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                             <option value="">Line Code</option>
                             @foreach ($listLine as $p)
                                 <option value="{{ $p->line_c }}">{{ $p->line_c }}</option>
@@ -92,27 +89,15 @@
 
             </div>
             <div class="flex gap-3">
-                <input wire:keydown.debounce.500ms="materialNoDebounce" wire:model="materialNo" type="text" placeholder="Material No"
+                <select wire:model="searchMaterialNo" wire:change="selectedDataDebounce"
                     class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    <option value="">Material No</option>
+                    @foreach ($listMaterialNo as $p)
+                        <option value="{{ json_encode($p) }}">{{ $p->material_no }}</option>
+                    @endforeach
+                </select>
             </div>
 
-            <div class="absolute z-10 w-1/4">
-                <div class="py-3 text-center bg-green-100 text-green-700 rounded-lg" wire:loading.block
-                    wire:target="materialNo">Searching</div>
-                <div wire:loading.remove class="rounded-lg bg-slate-50 shadow">
-
-                    @if (strlen($materialNo) >= 3 && $searchMaterialNo == true)
-                        @forelse ($resultSearchMaterial as $res)
-                            <div class="py-1 px-3 text-base hover:bg-blue-200 rounded-lg" role="button"
-                                @click="updateDetails(@js($res))">
-                                {{ $res->material_no }} | {{ $res->kit_no }}
-                            </div>
-                        @empty
-                            <div class="py-3 text-center text-base bg-red-200 rounded-lg">Tidak Ditemukan</div>
-                        @endforelse
-                    @endif
-                </div>
-            </div>
 
             <div class="flex gap-4 my-1">
                 {{-- <input x-ref="requestQty" type="text" @keydown.enter="handleSave" x-on:input="multiply()"
@@ -131,13 +116,14 @@
             {{-- <span class="text-red-600">Pastikan <strong>Request Qty</strong> sesuai dengan kelipatan <strong>Min.
                     Lot</strong></span> --}}
 
-            <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg"
-                wire:click="saveRequest(selectedData.req_qty)">Tambah material</button>
+            <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg" wire:click="saveRequest">Tambah
+                material</button>
 
         </div>
         <div class="w-2/3 bg-gray-200 rounded-md">
             <strong class="flex justify-center">Total Qty Request<span>&nbsp;{{ $totalRequest['qty'] }}</span></strong>
-            <div wire:poll.4s="streamTableSum" wire:key="polling-table"  class="relative overflow-y-auto shadow-md rounded-lg max-h-40">
+            <div wire:poll.4s="streamTableSum" wire:key="polling-table"
+                class="relative overflow-y-auto shadow-md rounded-lg max-h-40">
                 <table class="w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400">
                     <thead class="text-xs sticky top-0 text-gray-700 bg-gray-200">
                         <tr>
@@ -279,7 +265,7 @@
                             }
                         }">
                             <button class="btn bg-yellow-500 shadow-md text-white p-2 rounded-lg text-xs"
-                                @click="openModalQty(@js([$m->request_qty, $m->id,$m->material_no]))">Edit</button>
+                                @click="openModalQty(@js([$m->request_qty, $m->id, $m->material_no]))">Edit</button>
                             <button class="btn bg-red-500 shadow-md text-white p-2 rounded-lg text-xs"
                                 wire:click="deleteItem('{{ $m->id }}')">Hapus</button>
                         </td>

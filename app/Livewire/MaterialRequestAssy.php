@@ -12,7 +12,7 @@ class MaterialRequestAssy extends Component
     public $type;
     public $requestQty;
     public $materialNo;
-    public $searchMaterialNo = false;
+    public $searchMaterialNo;
     public $resultSearchMaterial = [];
     public $selectedData = [];
     public $materialRequest = [];
@@ -34,7 +34,8 @@ class MaterialRequestAssy extends Component
     ];
     public $line_c;
     public $date;
-    public $listLine=[];
+    public $listLine = [];
+    public $listMaterialNo = [];
 
     protected $listeners = ['editQty'];
 
@@ -69,11 +70,12 @@ class MaterialRequestAssy extends Component
         $this->transactionNo['nw'] = "NW$ymd-" . str_pad($this->variablePage['materialRequestNW'], 4, '0', STR_PAD_LEFT);
     }
 
-    private function getListLine() {
+    private function getListLine()
+    {
         $listLine = DB::table('material_setup_mst_supplier')->select('line_c')
-        ->whereRaw('CONVERT(DATE, plan_issue_dt_from) = ?', [$this->date])
-        ->distinct();
-        
+            ->whereRaw('CONVERT(DATE, plan_issue_dt_from) = ?', [$this->date])
+            ->distinct();
+
         return $listLine->get();
     }
 
@@ -102,7 +104,7 @@ class MaterialRequestAssy extends Component
         // dd($prop,$val);
         // switch ($prop) {
         //     case 'materialNo':
-               
+
         //         break;
 
         //     case 'selectedData':
@@ -118,19 +120,21 @@ class MaterialRequestAssy extends Component
         // }
     }
 
-    public function materialNoDebounce(){
-        DB::enableQueryLog();
+    public function dateDebounce()
+    {
+        $this->listLine = $this->getListLine();
+    }
 
-        if (!$this->line_c) {
-            $this->materialNo = null;
-            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Please fill Line C']);
-        }
-        // $qrySearch = DB::table('material_mst')
-        //     // ->where('matl_no', 'like', "%$val%")
-        //     ->whereRaw("REPLACE(matl_no, ' ', '') LIKE ?", ["%$val%"])
-        //     ->select(['matl_no', 'iss_unit', 'bag_qty', 'iss_min_lot', 'matl_nm', 'qty'])->limit(10)->get();
+    public function selectedDataDebounce()
+    {
+        $decode = json_decode($this->searchMaterialNo, true);
+        $this->selectedData = $decode;
+        $this->materialNo = $this->selectedData['material_no'];
+    }
 
-        $qrySearch = DB::table('material_setup_mst_supplier as s')
+    public function lineChange()
+    {
+        $materiallist = DB::table('material_setup_mst_supplier as s')
             ->join('material_in_stock as mis', function ($join) {
                 $join->on('s.material_no', '=', 'mis.material_no')
                     ->on('s.kit_no', '=', 'mis.kit_no')
@@ -138,46 +142,27 @@ class MaterialRequestAssy extends Component
             })
             ->join('material_mst as m', 's.material_no', '=', 'm.matl_no')
             ->where('s.line_c', $this->line_c)
-            ->where('s.material_no', 'like', "%$this->materialNo%")
             ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $this->date)
             ->selectRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, sum(mis.picking_qty) as req_qty, s.kit_no,m.qty,m.bag_qty')
             ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty')
             ->get();
-        // dd($qrySearch);
-        // $countSearch = count($qrySearch);
+        // dd($materiallist);
+        $this->selectedData = [];
 
-        if (count($qrySearch) > 0) {
-            $this->searchMaterialNo = true;
-            $this->resultSearchMaterial = $qrySearch;
-        } else {
-            $this->resultSearchMaterial = [];
-        }
-
+        $this->listMaterialNo = $materiallist;
     }
-
-    public function dateDebounce() {
-        $this->listLine = $this->getListLine();
-    }
-
-    public function selectedDataDebounce($data) {
-        $this->searchMaterialNo = false;
-        $this->selectedData = $data;
-        $this->materialNo = $this->selectedData['material_no'];
-        
-    }
-
-    // public function 
 
     public function resetField()
     {
-        $this->searchMaterialNo = false;
+        $this->searchMaterialNo = null;
         $this->selectedData = [];
         $this->materialNo = null;
         $this->requestQty = null;
     }
 
-    public function saveRequest($requestQty = 0)
+    public function saveRequest()
     {
+        $requestQty = $this->selectedData['req_qty'];
         // if (!$this->userRequest) {
         //     $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please fill User Request']);
         //     return false;
