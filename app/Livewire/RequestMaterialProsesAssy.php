@@ -93,35 +93,7 @@ class RequestMaterialProsesAssy extends Component
 
             $this->tempRequest =  $checkingUser;
 
-            // dd($this->tempRequest);
-            if ($this->tempRequest) {
-
-                // Jika iss min lot 1 input manual jika tidak otomatis
-                if ($item->iss_min_lot == 1) {
-                    return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
-                } else {
-                    $this->inputQty($item->iss_min_lot);
-                }
-
-                // $this->tempRequest->update(['qty_supply' => $this->tempRequest->qty_supply + $qtySupply]);
-                // $this->dispatch('alert', ['time' => 3500, 'icon' => 'success', 'title' => "Material Added"]);
-            } else {
-                // temp_request::create([
-                //     'transaksi_no' => $scannedMaterial->transaksi_no,
-                //     'material_no' => $scannedMaterial->material_no,
-                //     'qty_request' => $scannedMaterial->request_qty,
-                //     'qty_supply' => 0,
-                //     'user_id' => $this->userId
-                // ]);
-                
-                // Jika iss min lot 1 input manual jika tidak otomatis
-                if ($item->iss_min_lot == 1) {
-                    return $this->dispatch('qtyInput', ['trx' => $scannedMaterial->transaksi_no, 'title' => "$scannedMaterial->material_no Qty request"]);
-                } else {
-                    $this->inputQty($item->iss_min_lot);
-                }
-                
-            }
+            $this->inputQty($scannedMaterial->request_qty);
 
             $this->getMaterial($scannedMaterial->transaksi_no);
         }
@@ -183,7 +155,7 @@ class RequestMaterialProsesAssy extends Component
             })
             ->leftJoin('material_mst as b', 'material_request_assy.material_no', '=', 'b.matl_no')
             ->select(['material_request_assy.*', 'r.qty_supply', 'b.qty as stock'])->get();
-            // dd(DB::getRawQueryLog());
+        // dd(DB::getRawQueryLog());
         $this->transaksiSelected = $dataPrint;
 
         $this->transaksiNo = $trx;
@@ -197,8 +169,8 @@ class RequestMaterialProsesAssy extends Component
             ->when($this->searchKey, function ($q) {
                 $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
             })
-            ->select(['transaksi_no', 'status', 'type','issue_date','line_c'])
-            ->groupBy('transaksi_no', 'status', 'type', 'created_at','issue_date','line_c')
+            ->select(['transaksi_no', 'status', 'type', 'issue_date', 'line_c'])
+            ->groupBy('transaksi_no', 'status', 'type', 'created_at', 'issue_date', 'line_c')
             ->orderByDesc('created_at')
             ->get();
     }
