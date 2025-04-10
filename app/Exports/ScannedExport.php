@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -119,18 +120,18 @@ class ScannedExport implements WithEvents, WithCustomStartCell, FromCollection, 
                 $sheet->mergeCells('A1:K3');
                 $sheet->setCellValue('A1', "Scanned List");
                 $sheet->mergeCells('A4:B4');
-                $sheet->setCellValue('A4', "Pallet No");
-                $sheet->mergeCells('C4:D4');
-                $sheet->setCellValue('C4', ": " . $this->data[0]->palet);
+                $sheet->setCellValue('A4', "Issue Date");
+                $sheet->mergeCells('C4:F4');
+                $sheet->setCellValue('C4', " ". Carbon::parse($this->data[0]->plan_issue_dt_from)->format('d-m-Y'));
+                // $sheet->mergeCells('C4:D4');
+                // $sheet->setCellValue('C4', ": " . $this->data[0]->palet);
                 $sheet->mergeCells('A5:B5');
-                $sheet->setCellValue('A5', "Trucking ID");
-                $sheet->mergeCells('C5:D5');
-                $sheet->setCellValue('C5', ": " . $this->data[0]->trucking_id);
-                $sheet->mergeCells('A6:C6');
-                $sheet->setCellValue('A6', "  ");
+                $sheet->setCellValue('A5', "Receiving Date");
+                $sheet->mergeCells('C5:F5');
+                $sheet->setCellValue('C5', ": " . date('d-m-Y'));
                 $sheet->getDelegate()->getStyle('A1:K2')->getFont()->setSize(20);
                 $sheet->getDelegate()->getStyle('A1:K6')->getFont()->setBold(true);
-                $sheet->getDelegate()->getStyle('A4:K5')->applyFromArray([
+                $sheet->getDelegate()->getStyle('A4:L5')->applyFromArray([
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
                         'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
@@ -144,7 +145,7 @@ class ScannedExport implements WithEvents, WithCustomStartCell, FromCollection, 
                     ],
                 ];
 
-                $cellRange = 'A1:K3'; // All headers
+                $cellRange = 'A1:L3'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->applyFromArray($styleArray);
                 $event->sheet->getDelegate()->getStyle("A7:K" . $this->count + 7)->applyFromArray($styleArray);
 
@@ -156,7 +157,7 @@ class ScannedExport implements WithEvents, WithCustomStartCell, FromCollection, 
                         ],
                     ],
                 ];
-                $event->sheet->getDelegate()->getStyle("A7:K" . $this->count + 7)->applyFromArray($border);
+                $event->sheet->getDelegate()->getStyle("A7:L" . $this->count + 7)->applyFromArray($border);
             }
         ];
     }
