@@ -29,7 +29,7 @@ class ReceivingSIWS extends Component
     public $scanned = [];
     public $productsInPalet = [];
     public $props = [0, 'No Data'];
-    
+
 
 
     public function mount()
@@ -54,6 +54,7 @@ class ReceivingSIWS extends Component
                         'sisa' => $value->picking_qty,
                         'total' => $value->picking_qty,
                         'pax' => $value->pax,
+                        'kit_no' => $value->kit_no,
                     ];
 
                     if (count($group[trim($value->material_no)]) > 1) {
@@ -335,12 +336,12 @@ class ReceivingSIWS extends Component
             $key = '0getallcnc_' . $this->paletBarcode . '_' . $this->userId . '_' . md5($getScannedString);
             $getall = Cache::remember($key, $this->cacheTime, function () use ($getScanned) {
                 return DB::table($this->tableSetupMst . ' as  a')
-                    ->selectRaw('pallet_no, r.material_no,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,line_c,serial_no')
+                    ->selectRaw('a.kit_no, pallet_no, r.material_no,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,line_c,serial_no')
                     ->leftJoin('material_mst as b', 'a.serial_no', '=', 'b.matl_no')
                     ->leftJoin('master_wire_register as r', 'a.material_no', '=', 'r.id')
                     ->where('a.pallet_no', $this->paletBarcode)
                     ->whereNotIn('r.material_no', $getScanned)
-                    ->groupBy('a.pallet_no', 'r.material_no', 'line_c', 'r.material_no', 'serial_no')
+                    ->groupBy('a.pallet_no', 'r.material_no', 'line_c', 'r.material_no', 'serial_no', 'a.kit_no')
                     ->orderByRaw('max(scanned_at) DESC')
                     ->orderByDesc('r.material_no')->get();
             });
@@ -357,11 +358,11 @@ class ReceivingSIWS extends Component
             $key = '1getallcnc_' . $this->paletBarcode . '_' . $this->userId . '_' . md5($getScannedString);
             $getall = Cache::remember($key, $this->cacheTime, function () use ($getScanned) {
                 return DB::table($this->tableSetupMst . ' as  a')
-                    ->selectRaw('pallet_no, a.material_no ,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,line_c ')
+                    ->selectRaw('a.kit_no, pallet_no, a.material_no ,count(a.material_no) as pax, sum(a.picking_qty) as picking_qty, min(a.serial_no) as serial_no,line_c ')
                     ->leftJoin('material_mst as b', 'a.serial_no', '=', 'b.matl_no')
                     ->where('a.pallet_no', $this->paletBarcode)
                     ->whereNotIn('a.material_no', $getScanned)
-                    ->groupBy('a.pallet_no', 'a.material_no', 'line_c')
+                    ->groupBy('a.pallet_no', 'a.material_no', 'line_c', 'a.kit_no')
                     ->orderByRaw('max(scanned_at) DESC')
                     ->orderByDesc('a.material_no')->get();
             });
@@ -420,7 +421,7 @@ class ReceivingSIWS extends Component
             ->where('pallet_no', $this->paletBarcode)
             ->where('line_c', 'NewItem')->delete();
 
-            $this->resetTimeScan();
+        $this->resetTimeScan();
         $this->paletBarcode = null;
         $this->produkBarcode = null;
         $this->trucking_id = null;
@@ -515,14 +516,36 @@ class ReceivingSIWS extends Component
 
     public function confirm()
     {
+        $selectGroup = [
+            'tc.material',
+            'tc.pax',
+            'tc.total',
+            'tc.qty_more',
+            'tc.prop_scan',
+            'tc.sisa',
+            'tc.counter',
+            'tc.kit_no',
+            'tc.line_c',
+            'd.trucking_id',
+            'm.location_cd',
+            'mst.plan_issue_dt_from',
+        ];
 
-        $fixProduct = DB::table($this->tableTemp . ' as temp_counters')
-            ->leftJoin('delivery_mst as d', 'temp_counters.palet', '=', 'd.pallet_no')
-            ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
-            ->select('temp_counters.*', 'd.trucking_id', 'm.location_cd')
+        $fixProduct = DB::table($this->tableTemp . ' as tc')
+            ->leftJoin('delivery_mst as d', 'tc.palet', '=', 'd.pallet_no')
+            ->leftJoin('matloc_temp_CNCKIAS2 as m', 'tc.material', '=', 'm.material_no')
+            ->leftJoin('material_setup_mst as mst', function ($join) {
+                $join->on('tc.palet', '=', 'mst.pallet_no')
+                    ->on('tc.material', '=', 'mst.material_no')
+                    ->on('tc.line_c', '=', 'mst.line_c')
+                    ->on('tc.kit_no', '=', 'mst.kit_no')
+                ;
+            })
+            ->select($selectGroup)
             ->where('userID', $this->userId)
-            ->where('palet', $this->paletBarcode);
-
+            ->where('palet', $this->paletBarcode)
+            ->groupBy($selectGroup);
+            
         $dataMaterial = $fixProduct->get();
         foreach ($dataMaterial as $data) {
             $pax = $data->pax;
@@ -550,6 +573,7 @@ class ReceivingSIWS extends Component
                                 'locate' => $data->location_cd,
                                 'trucking_id' => $data->trucking_id,
                                 'user_id' => $this->userId,
+                                'kit_no' => $data->kit_no,
                                 'line_c' => $data->line_c,
                                 'status' => 1
                             ]);
@@ -576,6 +600,7 @@ class ReceivingSIWS extends Component
                             'locate' => $data->location_cd,
                             'trucking_id' => $data->trucking_id,
                             'line_c' => $data->line_c,
+                            'kit_no' => $data->kit_no,
                             'user_id' => $this->userId
                         ]);
                         // dump('in => '.$data->material);
@@ -591,6 +616,7 @@ class ReceivingSIWS extends Component
                                 'picking_qty' => $data->total,
                                 'locate' => $data->location_cd,
                                 'trucking_id' => $data->trucking_id,
+                                'kit_no' => $data->kit_no,
                                 'line_c' => $data->line_c,
                                 'user_id' => $this->userId
                             ]);
@@ -604,6 +630,7 @@ class ReceivingSIWS extends Component
                                 'picking_qty' => $qtyLebih,
                                 'locate' => $data->location_cd,
                                 'trucking_id' => $data->trucking_id,
+                                'kit_no' => $data->kit_no,
                                 'user_id' => $this->userId,
                                 'line_c' => $data->line_c,
                                 'status' => 1
@@ -621,6 +648,7 @@ class ReceivingSIWS extends Component
                                         'locate' => $data->location_cd,
                                         'trucking_id' => $data->trucking_id,
                                         'user_id' => $this->userId,
+                                        'kit_no' => $data->kit_no,
                                         'line_c' => $data->line_c,
                                         'status' => 1
                                     ]);
@@ -631,6 +659,7 @@ class ReceivingSIWS extends Component
                                         'picking_qty' => $qtyInstok,
                                         'locate' => $data->location_cd,
                                         'trucking_id' => $data->trucking_id,
+                                        'kit_no' => $data->kit_no,
                                         'line_c' => $data->line_c,
                                         'user_id' => $this->userId
                                     ]);
@@ -643,6 +672,7 @@ class ReceivingSIWS extends Component
                                         'picking_qty' => $value,
                                         'locate' => $data->location_cd,
                                         'trucking_id' => $data->trucking_id,
+                                        'kit_no' => $data->kit_no,
                                         'line_c' => $data->line_c,
                                         'user_id' => $this->userId
                                     ]);
@@ -653,6 +683,7 @@ class ReceivingSIWS extends Component
                                         'locate' => $data->location_cd,
                                         'trucking_id' => $data->trucking_id,
                                         'user_id' => $this->userId,
+                                        'kit_no' => $data->kit_no,
                                         'line_c' => $data->line_c,
                                         'status' => 0
                                     ]);
@@ -665,6 +696,7 @@ class ReceivingSIWS extends Component
                                     'picking_qty' => $value,
                                     'locate' => $data->location_cd,
                                     'trucking_id' => $data->trucking_id,
+                                    'kit_no' => $data->kit_no,
                                     'line_c' => $data->line_c,
                                     'user_id' => $this->userId
                                 ]);
@@ -689,20 +721,21 @@ class ReceivingSIWS extends Component
                 // }
             } else {
                 // $belumIsiSamaSekali = $data->sisa / $data->pax;
-                for ($i = 0; $i < $data->pax; $i++) {
-                    # code...
-                    // dump('kurang 2=> '.$data->material);
-                    abnormalMaterial::create([
-                        'pallet_no' => $this->paletBarcode,
-                        'material_no' => $data->material,
-                        'picking_qty' => $data->sisa,
-                        'locate' => $data->location_cd,
-                        'trucking_id' => $data->trucking_id,
-                        'user_id' => $this->userId,
-                        'line_c' => $data->line_c,
-                        'status' => 0
-                    ]);
-                }
+                // for ($i = 0; $i < $data->pax; $i++) {
+                # code...
+                // dump('kurang 2=> '.$data->material);
+                abnormalMaterial::create([
+                    'pallet_no' => $this->paletBarcode,
+                    'material_no' => $data->material,
+                    'picking_qty' => $data->sisa,
+                    'locate' => $data->location_cd,
+                    'trucking_id' => $data->trucking_id,
+                    'user_id' => $this->userId,
+                    'kit_no' => $data->kit_no,
+                    'line_c' => $data->line_c,
+                    'status' => 0
+                ]);
+                // }
             }
         }
         $this->paletInput = false;
@@ -714,7 +747,8 @@ class ReceivingSIWS extends Component
         return Excel::download(new ScannedExport($dataMaterial), "Scanned Items_" . $paletBarcode . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
-    private function resetTimeScan() {
+    private function resetTimeScan()
+    {
         $firstText = strtolower(substr($this->paletBarcode, 0, 1));
         $allowText = ['m', 'c'];
         $pattern = '/^\d{2}-\d{4}$/';
