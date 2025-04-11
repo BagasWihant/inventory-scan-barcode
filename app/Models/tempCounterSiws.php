@@ -24,5 +24,6 @@ class tempCounterSiws extends Model
         'line_c',
         'scanned_time',
         'serial_no',
+        'kit_no'
     ];
 }
