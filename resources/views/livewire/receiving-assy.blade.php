@@ -110,7 +110,8 @@
                             @endif
                         </div>
                         <div class="text-center">
-                            <span class="text-red-600">Pastikan saat edit <strong>Qty</strong> sesuai dengan kelipatan <strong>Min. Lot</strong></span>
+                            <span class="text-red-600">Pastikan saat edit <strong>Qty</strong> sesuai dengan kelipatan
+                                <strong>Min. Lot</strong></span>
                         </div>
                         <div class="p-3">
                             <div class="relative overflow-y-auto shadow-md rounded-lg my-4">
@@ -140,21 +141,41 @@
                                     <tbody>
                                         @if ($transaksiSelected)
                                             @foreach ($transaksiSelected as $data)
-                                                <tr
+                                                <tr x-data="{
+                                                    material: '{{ $data->material_no }}',
+                                                    edit: false,
+                                                    qty: '{{ $data->qty_supply }}',
+                                                    saveQty() {
+                                                        // Trigger event ke Livewire / AJAX / emit Alpine
+                                                        console.log('Saving', this.material, this.qty);
+                                                        this.edit = false;
+                                                        $wire.editQty([this.material, this.qty]);
+                                                        // Kalau kamu pakai Livewire, bisa ganti ini jadi emit('saveQty', this.id, this.qty)
+                                                    },
+                                                }"
                                                     class="@if ($data->request_qty == $data->qty_supply) bg-green-500 text-white @endif">
                                                     <td class="px-3 py-2">{{ $data->material_no }}</td>
                                                     <td class="px-3 py-2">-</td>
                                                     <td class="px-3 py-2">{{ $data->material_name }}</td>
                                                     <td class="px-3 py-2">{{ $data->request_qty }}</td>
-                                                    <td class="px-3 py-2">{{ $data->qty_supply }}</td>
+
+                                                    <!-- Qty Supply Edit Area -->
+                                                    <td class="px-3 py-2 cursor-pointer" @click="edit = true">
+                                                        <template x-if="!edit">
+                                                            <span x-text="qty"></span>
+                                                        </template>
+                                                        <template x-if="edit">
+                                                            <input type="number" x-model="qty"
+                                                                @keydown.enter="saveQty" @blur="saveQty"
+                                                                class="w-1/2 px-1 py-1 border border-gray-300 rounded text-black" />
+                                                        </template>
+                                                    </td>
+
                                                     @if ($data->qty_supply > 0 || $data->qty_supply != null)
                                                         <td class="px-3 py-2">
                                                             <button
                                                                 class="bg-yellow-600 px-4 py-2 text-white rounded-md"
                                                                 @click="resetQty('{{ $data->material_no }}')">Reset</button>
-                                                            <button
-                                                                class="bg-yellow-200 px-4 py-2 text-black rounded-md"
-                                                                @click="editQty(@js($data))">Edit</button>
                                                         </td>
                                                     @endif
 
@@ -251,10 +272,10 @@
                             didOpen: () => {
                                 $('#editQty1').focus()
                                 $('#editQty1').on('keydown', (e) => {
-                                if (e.key == 'Enter') {
-                                    Swal.clickConfirm();
-                                }
-                            })
+                                    if (e.key == 'Enter') {
+                                        Swal.clickConfirm();
+                                    }
+                                })
                             },
                             preConfirm: () => {
                                 return [
