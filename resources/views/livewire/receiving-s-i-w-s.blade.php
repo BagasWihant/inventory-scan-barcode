@@ -91,7 +91,7 @@
                         @foreach ($productsInPalet as $product)
                             <tr class=" border rounded dark:border-gray-700 ">
                                 <th scope="row"
-                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white h-5">
                                     {{ $product->material_no }}</th> 
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -162,7 +162,7 @@
                             @endphp
                             <tr class=" border rounded {{ $class }} dark:border-gray-700">
                                 <th scope="row"
-                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white h-5">
                                     {{ $v->material }}</th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -176,7 +176,7 @@
                                     {{ $ket }}
                                 </th>
                                 <th scope="row"
-                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    class="p-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     @if ($v->counter > 0)
                                         <div class="" x-data="{
                                             openModalQty(data) {
