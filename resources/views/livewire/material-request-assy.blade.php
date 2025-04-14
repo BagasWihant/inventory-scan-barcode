@@ -88,36 +88,6 @@
                 </div>
 
             </div>
-            <div class="flex gap-3">
-                <select wire:model="searchMaterialNo" wire:change="selectedDataDebounce"
-                    class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    <option value="">Material No</option>
-                    @foreach ($listMaterialNo as $p)
-                        <option value="{{ json_encode($p) }}">{{ $p->material_no }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-
-            <div class="flex gap-4 my-1">
-                {{-- <input x-ref="requestQty" type="text" @keydown.enter="handleSave" x-on:input="multiply()"
-                    placeholder="Input Pax"
-                    class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"> --}}
-
-                <input wire:model="selectedData.req_qty" readonly placeholder="Request Qty" type="text"
-                    class="block w-full p-2 text-gray-900 border border-gray-300 bg-slate-200 rounded-lg  text-base">
-                <input wire:model="selectedData.qty" readonly placeholder="Qty" type="text"
-                    class="block w-full p-2 text-gray-900 border border-gray-300 bg-slate-200 rounded-lg  text-base">
-                <input wire:model="selectedData.iss_min_lot" readonly placeholder="Min. Lot" type="text"
-                    class="block w-full p-2 text-gray-900 border border-gray-300 bg-slate-200 rounded-lg  text-base">
-                <input wire:model="selectedData.iss_unit" readonly placeholder="Unit" type="text"
-                    class="block w-full p-2 text-gray-900 border border-gray-300 bg-slate-200 rounded-lg  text-base">
-            </div>
-            {{-- <span class="text-red-600">Pastikan <strong>Request Qty</strong> sesuai dengan kelipatan <strong>Min.
-                    Lot</strong></span> --}}
-
-            <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg" wire:click="saveRequest">Tambah
-                material</button>
 
         </div>
         <div class="w-2/3 bg-gray-200 rounded-md">
@@ -264,10 +234,10 @@
                                 });
                             }
                         }">
-                            <button class="btn bg-yellow-500 shadow-md text-white p-2 rounded-lg text-xs"
+                            {{-- <button class="btn bg-yellow-500 shadow-md text-white p-2 rounded-lg text-xs"
                                 @click="openModalQty(@js([$m->request_qty, $m->id, $m->material_no]))">Edit</button>
                             <button class="btn bg-red-500 shadow-md text-white p-2 rounded-lg text-xs"
-                                wire:click="deleteItem('{{ $m->id }}')">Hapus</button>
+                                wire:click="deleteItem('{{ $m->id }}')">Hapus</button> --}}
                         </td>
                     </tr>
                 @endforeach

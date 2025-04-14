@@ -146,10 +146,33 @@ class MaterialRequestAssy extends Component
             ->selectRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, sum(mis.picking_qty) as req_qty, s.kit_no,m.qty,m.bag_qty')
             ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty')
             ->get();
-        // dd($materiallist);
-        $this->selectedData = [];
+        foreach ($materiallist as $items) {
 
-        $this->listMaterialNo = $materiallist;
+            $transaksiNoItem = (preg_match("/[a-z]/i", $items->material_no)) ? $this->transactionNo['wr'] : $this->transactionNo['nw'];
+            ModelsMaterialRequestAssy::create([
+                'transaksi_no' => $transaksiNoItem,
+                'material_no' => $items->material_no,
+                'material_name' => $items->matl_nm,
+                'type' => $this->type,
+                'request_qty' => $items->req_qty,
+                'bag_qty' => $items->bag_qty,
+                'issue_date' => $this->date,
+                'line_c' => $this->line_c,
+
+                'iss_min_lot' => $items->iss_min_lot,
+                'iss_unit' => $items->iss_unit,
+                'user_id' => auth()->user()->id,
+                'status' => '-',
+                'user_request' => $this->userRequest
+            ]);
+        }
+
+        $this->loadTable();
+
+        // dd($materiallist);
+        // $this->selectedData = [];
+
+        // $this->listMaterialNo = $materiallist;
     }
 
     public function resetField()
@@ -196,7 +219,7 @@ class MaterialRequestAssy extends Component
                 'transaksi_no' => $transaksiNoItem,
                 'material_no' => $this->materialNo,
                 'material_name' => $this->selectedData['matl_nm'],
-                'type' => $this->type,
+                'type' => '.',
                 'request_qty' => $requestQty,
                 'bag_qty' => $this->selectedData['bag_qty'],
                 'issue_date' => $this->date,
