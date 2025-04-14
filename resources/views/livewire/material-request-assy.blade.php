@@ -40,6 +40,7 @@
             }
         }">
 
+            {{-- top left --}}
             <div class="flex justify-between gap-2 flex-shrink-0">
                 <div class="flex gap-4">
                     <div class="flex items-center px-2 rounded">
@@ -56,9 +57,6 @@
                         <label for="bordered-radio-2"
                             class="w-full py-4 ms-2 text-sm font-medium @if ($userRequestDisable == true) text-gray-600 @else  text-gray-900 @endif dark:text-gray-300">Urgent</label>
                     </div>
-                    {{-- <input wire:model="userRequest" type="text" placeholder="User Request"
-                        @if ($userRequestDisable == true) disabled @endif
-                        class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"> --}}
                     <div class="">
                         <label for="">Issue Date</label>
                         <input wire:change="dateDebounce" wire:model='date' type="date"
@@ -142,113 +140,137 @@
 
 
     {{-- table --}}
-    <div class="relative overflow-x-auto shadow-md rounded-lg my-4">
-        <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-            <thead class="text-xs text-gray-800 uppercase bg-gray-200">
-                <tr>
-                    <th scope="col" class="px-1 py-3">
-                        No
-                    </th>
-                    <th scope="col" class="px-6 py-3">
-                        Product No
-                    </th>
-                    <th scope="col" class="px-6 py-3">
-                        Material No
-                    </th>
-                    <th scope="col" class="px-6 py-3">
-                        Material Name
-                    </th>
-                    <th scope="col" class="px-6 py-3">
-                        Qty Request
-                    </th>
-                    {{-- <th scope="col" class="px-6 py-3">
-                        Bag. Qty
-                    </th>
-                    <th scope="col" class="px-6 py-3">
-                        Min Lot
-                    </th> --}}
-                    <th scope="col" class="px-6 py-3">
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($materialRequest as $m)
-                    <tr
-                        class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <td class="px-6 py-4">
-                            {{ $loop->iteration }}
-                        </td>
-                        <th scope="row"
-                            class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            -
+    <div x-data="{
+        selectedMaterials: [],
+        selectMaterial(material) {
+            const index = this.selectedMaterials.findIndex(m => m.material_no === material.material_no)
+            const editedQty = this.editedQty[material.material_no]
+            if (editedQty !== undefined) {
+                material.request_qty = editedQty
+            }
+    
+            if (index === -1) {
+                this.selectedMaterials.push(material)
+            } else {
+                this.selectedMaterials.splice(index, 1)
+            }
+        },
+        isSelected(materialNo) {
+            return this.selectedMaterials.some(m => m.material_no === materialNo)
+        },
+        editingQtyReq: null,
+        editedQty: {},
+        starteditingQtyReq(material_no) {
+            this.editingQtyReq = material_no;
+        },
+        stopeditingQtyReq(material) {
+            const editedQty = this.editedQty[material]
+    
+            if (editedQty !== undefined) {
+                // Update qty langsung ke selectedMaterials
+                const selected = this.selectedMaterials.find(m => m.material_no === material)
+                if (selected) {
+                    selected.request_qty = editedQty
+                }
+            }
+    
+            this.editingQtyReq = null;
+        },
+        updateQty(materialNo, value) {
+            this.editedQty[materialNo] = Number(value)
+        },
+        getRequestQty(materialNo, defaultQty) {
+            return this.editedQty[materialNo] ?? defaultQty
+        },
+        submitRequest() {
+            $wire.submitRequest(this.selectedMaterials)
+        }
+    }">
+        <div class="relative overflow-x-auto shadow-md rounded-lg my-4">
+            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-800 uppercase bg-gray-200">
+                    <tr>
+                        <th scope="col" class="px-1 py-3">
+                            No
                         </th>
-                        <th scope="row"
-                            class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            {{ $m->material_no }}
+                        <th scope="col" class="px-6 py-3">
+                            Product No
                         </th>
-                        <td class="px-6 py-4">
-                            {{ $m->material_name }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ $m->request_qty }}
-                        </td>
-                        {{-- <td class="px-6 py-4">
-                            {{ $m->bag_qty }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ $m->iss_min_lot }}
-                        </td> --}}
-                        <td class="px-6 py-4" x-data="{
-                            openModalQty(data) {
-                                console.log(data[1]);
-                                Swal.fire({
-                                    title: `Edit qty ${data[2]}`,
-                                    input: 'number',
-                                    inputValue: data[0],
-                                    inputLabel: 'Qty ',
-                                    inputPlaceholder: 'qty',
-                                    showDenyButton: true,
-                                    denyButtonText: `Don't save`
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        $dispatch('editQty', {
-                                            qty: result.value,
-                                            id: data[1]
-                                        })
-                                        Swal.fire({
-                                            timer: 1000,
-                                            title: 'Qty changed successfully',
-                                            icon: 'success',
-                                            showConfirmButton: false,
-                                            timerProgressBar: true,
-                                        });
-                                    } else if (result.isDenied) {
-                                        return Swal.fire({
-                                            timer: 1000,
-                                            title: 'Changes are not saved',
-                                            icon: 'info',
-                                            showConfirmButton: false,
-                                            timerProgressBar: true,
-                                        });
-                                    }
-                                });
-                            }
-                        }">
-                            {{-- <button class="btn bg-yellow-500 shadow-md text-white p-2 rounded-lg text-xs"
-                                @click="openModalQty(@js([$m->request_qty, $m->id, $m->material_no]))">Edit</button>
-                            <button class="btn bg-red-500 shadow-md text-white p-2 rounded-lg text-xs"
-                                wire:click="deleteItem('{{ $m->id }}')">Hapus</button> --}}
-                        </td>
+                        <th scope="col" class="px-6 py-3">
+                            Material No
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Material Name
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Qty Stock
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Qty Request
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                        </th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-    <div class="flex justify-end gap-3">
-        <button class="btn bg-red-500 shadow-md text-white p-2 rounded-lg" wire:click="cancelRequest">Cancel
-            Request</button>
-        <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg" wire:click="submitRequest">Submit
-            Request</button>
+                </thead>
+                <tbody>
+
+                    @foreach ($materialRequest as $m)
+                        <tr :class="isSelected('{{ $m->material_no }}') ? 'bg-green-200 hover:bg-green-300' :
+                            'bg-white hover:bg-gray-50 '"
+                            class="border-b">
+                            <td class="px-6 py-4">
+                                <input type="checkbox"
+                                    :checked="selectedMaterials.some(m => m.material_no === '{{ $m->material_no }}')"
+                                    @click='selectMaterial(@json($m))'
+                                    id="checkbox-{{ $loop->iteration }}">
+                            </td>
+                            <td class="px-6 py-4" @click='selectMaterial(@json($m))'>
+                                {{ $loop->iteration }}
+                            </td>
+                            <th scope="row" @click='selectMaterial(@json($m))'
+                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                -
+                            </th>
+                            <th scope="row" @click='selectMaterial(@json($m))'
+                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {{ $m->material_no }}
+                            </th>
+                            <td class="px-6 py-4" @click='selectMaterial(@json($m))'>
+                                {{ $m->material_name }}
+                            </td>
+                            <td class="px-6 py-4" @click='selectMaterial(@json($m))'>
+                                {{ $m->qty_stock }}
+                            </td>
+                            <td class="px-6 py-4 cursor-pointer" @click="starteditingQtyReq('{{ $m->material_no }}')">
+
+                                <template
+                                    x-if="editingQtyReq === '{{ $m->material_no }}' && isSelected('{{ $m->material_no }}')">
+                                    <input type="number" min="1"
+                                        :value="getRequestQty('{{ $m->material_no }}', {{ $m->request_qty }})"
+                                        @input="updateQty('{{ $m->material_no }}', $event.target.value)"
+                                        @blur="stopeditingQtyReq('{{ $m->material_no }}')"
+                                        class="border border-gray-300 rounded px-2 py-1 w-20">
+                                </template>
+
+                                <template
+                                    x-if="editingQtyReq !== '{{ $m->material_no }}' || !isSelected('{{ $m->material_no }}')">
+                                    <span
+                                        x-text="getRequestQty('{{ $m->material_no }}', {{ $m->request_qty }})"></span>
+                                </template>
+                            </td>
+                        </tr>
+                    @endforeach
+
+                </tbody>
+            </table>
+
+        </div>
+        <div class="flex justify-end gap-3" x-show="selectedMaterials.length > 0">
+            <button class="btn bg-red-500 shadow-md text-white p-2 rounded-lg" wire:click="cancelRequest">Cancel
+                Request</button>
+            <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg" @click="submitRequest">Submit
+                Request</button>
+        </div>
     </div>
 
     <div wire:loading.flex

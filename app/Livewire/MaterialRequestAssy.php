@@ -72,7 +72,7 @@ class MaterialRequestAssy extends Component
 
     private function getListLine()
     {
-        $listLine = DB::table('material_setup_mst_supplier')->select('line_c')
+        $listLine = DB::table('material_setup_mst')->select('line_c')
             ->whereRaw('CONVERT(DATE, plan_issue_dt_from) = ?', [$this->date])
             ->distinct();
 
@@ -134,7 +134,10 @@ class MaterialRequestAssy extends Component
 
     public function lineChange()
     {
-        $materiallist = DB::table('material_setup_mst_supplier as s')
+        // clear dulu
+        ModelsMaterialRequestAssy::where('user_id', auth()->user()->id)->delete();
+
+        $materialListSql = DB::table('material_setup_mst as s')
             ->join('material_in_stock as mis', function ($join) {
                 $join->on('s.material_no', '=', 'mis.material_no')
                     ->on('s.kit_no', '=', 'mis.kit_no')
@@ -143,31 +146,13 @@ class MaterialRequestAssy extends Component
             ->join('material_mst as m', 's.material_no', '=', 'm.matl_no')
             ->where('s.line_c', $this->line_c)
             ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $this->date)
-            ->selectRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, sum(mis.picking_qty) as req_qty, s.kit_no,m.qty,m.bag_qty')
-            ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty')
-            ->get();
-        foreach ($materiallist as $items) {
+            ->selectRaw('s.material_no, m.matl_nm as material_name, sum(mis.picking_qty) as request_qty, s.kit_no,m.qty as qty_stock,m.bag_qty')
+            ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty');
+        // dd($materialListSql->toRawSql());
+        $materialList = $materialListSql->get();
+        $this->materialRequest = $materialList;
 
-            $transaksiNoItem = (preg_match("/[a-z]/i", $items->material_no)) ? $this->transactionNo['wr'] : $this->transactionNo['nw'];
-            ModelsMaterialRequestAssy::create([
-                'transaksi_no' => $transaksiNoItem,
-                'material_no' => $items->material_no,
-                'material_name' => $items->matl_nm,
-                'type' => $this->type,
-                'request_qty' => $items->req_qty,
-                'bag_qty' => $items->bag_qty,
-                'issue_date' => $this->date,
-                'line_c' => $this->line_c,
-
-                'iss_min_lot' => $items->iss_min_lot,
-                'iss_unit' => $items->iss_unit,
-                'user_id' => auth()->user()->id,
-                'status' => '-',
-                'user_request' => $this->userRequest
-            ]);
-        }
-
-        $this->loadTable();
+        // $this->loadTable();
 
         // dd($materiallist);
         // $this->selectedData = [];
@@ -248,30 +233,52 @@ class MaterialRequestAssy extends Component
 
 
 
-    public function submitRequest()
+    public function submitRequest($data)
     {
+        foreach ($data as $value) {
+            # code...
+            $transaksiNoItem = (preg_match("/[a-z]/i", $value['material_no'])) ? $this->transactionNo['wr'] : $this->transactionNo['nw'];
+    
+            ModelsMaterialRequestAssy::create([
+                'transaksi_no' => $transaksiNoItem,
+                'material_no' => $value['material_no'],
+                'material_name' => $value['material_name'],
+                'type' => '.',
+                'request_qty' => $value['request_qty'],
+                'bag_qty' => $value['bag_qty'],
+                'issue_date' => $this->date,
+                'line_c' => $this->line_c,
+                'user_id' => auth()->user()->id,
+                'status' => '0',
+                'user_request' => $this->userRequest
+            ]);
+        }
         // $userRequstIsNull = ModelsMaterialRequestAssy::whereNull('user_request')
         //     ->whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']])->exists();
         // if ($userRequstIsNull) {
         //     return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Please fill all User Request ']);
         // }
-        $updateStatus = ModelsMaterialRequestAssy::whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']]);
+        // $updateStatus = ModelsMaterialRequestAssy::whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']]);
 
-        if (!$updateStatus->exists()) {
-            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Submit Failed No. Transaksi berbeda (beda hari)']);
-        }
+        // if (!$updateStatus->exists()) {
+        //     return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Submit Failed No. Transaksi berbeda (beda hari)']);
+        // }
 
-        $updateStatus->update([
-            'status' => 0,
-            'user_request' => $this->userRequest,
-            'created_at' => Carbon::now(),
-        ]);
+        // $updateStatus->update([
+        //     'status' => 0,
+        //     'user_request' => $this->userRequest,
+        //     'created_at' => Carbon::now(),
+        // ]);
 
-        $this->streamTableSum();
-        $this->loadTable();
-        $this->userRequestDisable = false;
-        $this->userRequest = null;
-        $this->resetField();
+        // $this->streamTableSum();
+        // $this->loadTable();
+        // $this->userRequestDisable = false;
+        // $this->userRequest = null;
+        // $this->resetField();
+
+        // reset tabel
+        $this->materialRequest = [];
+
         $this->dispatch('alert', ['time' => 2500, 'icon' => 'success', 'title' => 'Request Material Berhasil']);
         $this->generateNoTransaksi();
     }
