@@ -191,6 +191,9 @@
                 <thead class="text-xs text-gray-800 uppercase bg-gray-200">
                     <tr>
                         <th scope="col" class="px-1 py-3">
+                            
+                        </th>
+                        <th scope="col" class="px-1 py-3">
                             No
                         </th>
                         <th scope="col" class="px-6 py-3">
