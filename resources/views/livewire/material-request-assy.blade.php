@@ -1,61 +1,24 @@
-<div class="max-w-7xl m-auto">
+<div class="max-w-7xl m-auto" x-data="{
+    type: 1,
+}">
     <div class="flex gap-3">
         {{-- input --}}
-        <div class=" w-full" x-data="{
-            reqQty: '',
-            selectedData: null,
-            multiply() {
-                const minLot = this.selectedData.iss_min_lot;
-                console.log(minLot, this.$refs.requestQty.value);
-                if (minLot != 1 && this.$refs.requestQty.value > 99) {
-                    Swal.fire({
-                        timer: 1500,
-                        title: 'Maks 99',
-                        icon: 'error',
-                        showConfirmButton: false,
-                        timerProgressBar: true,
-                    });
-                    this.$refs.requestQty.value = 99
-                }
-                if (this.$refs.requestQty) {
-                    const qtyy = this.$refs.requestQty.value;
-                    this.reqQty = minLot * qtyy;
-                }
-            },
-            handleSave() {
-                $wire.saveRequest(this.reqQty).then(res => {
-                    if (res) {
-                        this.handleCancel();
-                    } else {
-                        this.reqQty = '';
-                        this.$refs.requestQty.value = '';
-                    }
-                })
-        
-            },
-            handleCancel() {
-                this.selectedData = null;
-                this.reqQty = '';
-                this.$refs.requestQty.value = '';
-            }
-        }">
+        <div class=" w-full">
 
             {{-- top left --}}
             <div class="flex justify-between gap-2 flex-shrink-0">
                 <div class="flex gap-4">
                     <div class="flex items-center px-2 rounded">
-                        <input id="bordered-radio-1" type="radio" value="1" wire:model="type"
-                            @if ($userRequestDisable == true) disabled @endif
+                        <input id="bordered-radio-1" type="radio" value="1" x-model="type"
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="bordered-radio-1"
-                            class="w-full py-4 ms-2 text-sm font-medium @if ($userRequestDisable == true) text-gray-600 @else  text-gray-900 @endif dark:text-gray-300">Reguler</label>
+                            class="w-full py-4 ms-2 text-sm font-medium dark:text-gray-300">Reguler</label>
                     </div>
                     <div class="flex items-center px-2 rounded ">
-                        <input checked id="bordered-radio-2" type="radio" value="2" wire:model="type"
-                            @if ($userRequestDisable == true) disabled @endif
+                        <input checked id="bordered-radio-2" type="radio" value="2" x-model="type"
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="bordered-radio-2"
-                            class="w-full py-4 ms-2 text-sm font-medium @if ($userRequestDisable == true) text-gray-600 @else  text-gray-900 @endif dark:text-gray-300">Urgent</label>
+                            class="w-full py-4 ms-2 text-sm font-medium  dark:text-gray-300">Partial</label>
                     </div>
                     <div class="">
                         <label for="">Issue Date</label>
@@ -78,11 +41,10 @@
 
                     @if ($userRequestDisable == true)
                         <button
-                            class="btn bg-yellow-500 shadow-md text-white px-2 p-1 m-1 rounded-lg text-xs text-nowrap"
-                            @click="@this.set('userRequestDisable', false)">Ganti</button>
+                            class="btn bg-yellow-500 shadow-md text-white px-2 p-1 m-1 rounded-lg text-xs text-nowrap">Ganti</button>
                     @endif
                     <button class="btn bg-red-500 shadow-md text-white px-2 py-1 m-1 rounded-lg text-sm"
-                        @click="handleCancel" wire:click="resetField">Clear</button>
+                        wire:click="resetField">Clear</button>
                 </div>
 
             </div>
@@ -141,59 +103,62 @@
 
     {{-- table --}}
     <div x-data="{
-        selectedMaterials: [],
-        selectMaterial(material) {
-            const index = this.selectedMaterials.findIndex(m => m.material_no === material.material_no)
-            const editedQty = this.editedQty[material.material_no]
-            if (editedQty !== undefined) {
-                material.request_qty = editedQty
-            }
-    
-            if (index === -1) {
-                this.selectedMaterials.push(material)
-            } else {
-                this.selectedMaterials.splice(index, 1)
-            }
-        },
-        isSelected(materialNo) {
-            return this.selectedMaterials.some(m => m.material_no === materialNo)
-        },
-        editingQtyReq: null,
-        editedQty: {},
-        starteditingQtyReq(material_no) {
-            this.editingQtyReq = material_no;
-        },
-        stopeditingQtyReq(material) {
-            const editedQty = this.editedQty[material]
-    
-            if (editedQty !== undefined) {
-                // Update qty langsung ke selectedMaterials
-                const selected = this.selectedMaterials.find(m => m.material_no === material)
-                if (selected) {
-                    selected.request_qty = editedQty
+                Materials: [],
+                editingQtyReq: null,
+                editedQty: {},
+                starteditingQtyReq(material_no) {
+                    this.editingQtyReq = material_no;
+                },
+                stopeditingQtyReq(material) {
+                    const editedQty = this.editedQty[material];
+                    if (editedQty !== undefined) {
+                        const selected = this.Materials.find(m => m.material_no === material);
+                        if (selected) {
+                            selected.request_qty = editedQty;
+                        }
+                    }
+                    this.editingQtyReq = null;
+                },
+                updateQty(materialNo, value) {
+                    this.editedQty[materialNo] = Number(value);
+                },
+                getRequestQty(materialNo, defaultQty) {
+                    return this.editedQty[materialNo] ?? defaultQty;
+                },
+                submitRequest() {
+                    console.log(this.Materials);
+                    console.log(this.editedQty);
+
+                    $wire.submitRequest(this.Materials);
+                },
+                initMaterials(json) {
+                console.log(json)
+                    this.Materials = JSON.parse(json);
                 }
-            }
-    
-            this.editingQtyReq = null;
-        },
-        updateQty(materialNo, value) {
-            this.editedQty[materialNo] = Number(value)
-        },
-        getRequestQty(materialNo, defaultQty) {
-            return this.editedQty[materialNo] ?? defaultQty
-        },
-        submitRequest() {
-            $wire.submitRequest(this.selectedMaterials)
-        }
-    }">
+            }"
+            x-init="
+            $wire.getMaterialData().then(data => {
+                Materials = data;
+                console.log('Materials load:', Materials);
+            });
+            
+            // Listen for material updates from Livewire
+            $wire.on('materialsUpdated', (data) => {
+                Materials = data[0];
+                console.log('Materials updated:', data[0]);
+            });
+        ">
         <div class="relative overflow-x-auto shadow-md rounded-lg my-4">
+            <template x-if="type == 1">
+                <p class="text-base text-red-500 font-bold text-center">Mode Reguler tidak bisa edit qty</p>
+            </template>
+            <template x-if="type == 2">
+                <p class="text-base text-red-500 font-bold text-center">Mode Partial bisa edit qty dengan cara klik qty request</p>
+            </template>
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-800 uppercase bg-gray-200">
                     <tr>
-                        <th scope="col" class="px-1 py-3">
-                            
-                        </th>
-                        <th scope="col" class="px-1 py-3">
+                        <th scope="col" class="px-1 py-3" align="center">
                             No
                         </th>
                         <th scope="col" class="px-6 py-3">
@@ -211,43 +176,36 @@
                         <th scope="col" class="px-6 py-3">
                             Qty Request
                         </th>
-                        <th scope="col" class="px-6 py-3">
-                        </th>
                     </tr>
                 </thead>
                 <tbody>
 
                     @foreach ($materialRequest as $m)
-                        <tr :class="isSelected('{{ $m->material_no }}') ? 'bg-green-200 hover:bg-green-300' :
-                            'bg-white hover:bg-gray-50 '"
-                            class="border-b">
+                        <tr class="border-b bg-white hover:bg-gray-50">
                             <td class="px-6 py-4">
-                                <input type="checkbox"
-                                    :checked="selectedMaterials.some(m => m.material_no === '{{ $m->material_no }}')"
-                                    @click='selectMaterial(@json($m))'
-                                    id="checkbox-{{ $loop->iteration }}">
-                            </td>
-                            <td class="px-6 py-4" @click='selectMaterial(@json($m))'>
                                 {{ $loop->iteration }}
                             </td>
-                            <th scope="row" @click='selectMaterial(@json($m))'
+                            <th scope="row"
                                 class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 -
                             </th>
-                            <th scope="row" @click='selectMaterial(@json($m))'
+                            <th scope="row"
                                 class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {{ $m->material_no }}
                             </th>
-                            <td class="px-6 py-4" @click='selectMaterial(@json($m))'>
+                            <td class="px-6 py-4">
                                 {{ $m->material_name }}
                             </td>
-                            <td class="px-6 py-4" @click='selectMaterial(@json($m))'>
+                            <td class="px-6 py-4">
                                 {{ $m->qty_stock }}
                             </td>
-                            <td class="px-6 py-4 cursor-pointer" @click="starteditingQtyReq('{{ $m->material_no }}')">
+                            <td class="px-6 py-4 cursor-pointer"
+                                @click="type === '2' && starteditingQtyReq('{{ $m->material_no }}')"
+                                :class="{ 'cursor-not-allowed': type === '1' }">
 
-                                <template
-                                    x-if="editingQtyReq === '{{ $m->material_no }}' && isSelected('{{ $m->material_no }}')">
+
+                                <!-- Jika type 2 dan sedang edit, tampilkan input -->
+                                <template x-if="editingQtyReq === '{{ $m->material_no }}' && type === '2'">
                                     <input type="number" min="1"
                                         :value="getRequestQty('{{ $m->material_no }}', {{ $m->request_qty }})"
                                         @input="updateQty('{{ $m->material_no }}', $event.target.value)"
@@ -255,8 +213,14 @@
                                         class="border border-gray-300 rounded px-2 py-1 w-20">
                                 </template>
 
-                                <template
-                                    x-if="editingQtyReq !== '{{ $m->material_no }}' || !isSelected('{{ $m->material_no }}')">
+                                <!-- Jika type 1, hanya tampilkan text -->
+                                <template x-if="type === '1'">
+                                    <span
+                                        x-text="getRequestQty('{{ $m->material_no }}', {{ $m->request_qty }})"></span>
+                                </template>
+
+                                <!-- Jika type 2 dan tidak sedang edit, tampilkan text -->
+                                <template x-if="editingQtyReq !== '{{ $m->material_no }}' && type === '2'">
                                     <span
                                         x-text="getRequestQty('{{ $m->material_no }}', {{ $m->request_qty }})"></span>
                                 </template>
@@ -268,7 +232,7 @@
             </table>
 
         </div>
-        <div class="flex justify-end gap-3" x-show="selectedMaterials.length > 0">
+        <div class="flex justify-end gap-3">
             <button class="btn bg-red-500 shadow-md text-white p-2 rounded-lg" wire:click="cancelRequest">Cancel
                 Request</button>
             <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg" @click="submitRequest">Submit
@@ -312,13 +276,6 @@
                     showConfirmButton: false,
                     timerProgressBar: true,
                 });
-            });
-            $('#lineselect').select2({
-                width: 'resolve',
-                tags: true
-            });
-            $('#lineselect').on('select2:select', function(e) {
-                @this.set('line_c', e.params.data.id)
             });
         </script>
     @endscript

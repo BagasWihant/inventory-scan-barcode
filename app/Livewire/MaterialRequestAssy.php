@@ -79,16 +79,6 @@ class MaterialRequestAssy extends Component
         return $listLine->get();
     }
 
-    public function editQty($qty, $id)
-    {
-
-        $data = ModelsMaterialRequestAssy::find($id);
-        $data->update([
-            'request_qty' => $qty
-        ]);
-        $this->loadTable();
-    }
-
     public function mount()
     {
         $this->loadTable();
@@ -99,26 +89,6 @@ class MaterialRequestAssy extends Component
         $this->listLine = $this->getListLine();
     }
 
-    public function updated($prop, $val)
-    {
-        // dd($prop,$val);
-        // switch ($prop) {
-        //     case 'materialNo':
-
-        //         break;
-
-        //     case 'selectedData':
-        //         $this->searchMaterialNo = false;
-        //         $this->selectedData = $val;
-        //         $this->materialNo = $this->selectedData['material_no'];
-        //         break;
-        //     case 'date':
-        //         break;
-        //     default:
-        //         # code...
-        //         break;
-        // }
-    }
 
     public function dateDebounce()
     {
@@ -135,7 +105,6 @@ class MaterialRequestAssy extends Component
     public function lineChange()
     {
         // clear dulu
-        ModelsMaterialRequestAssy::where('user_id', auth()->user()->id)->delete();
 
         $materialListSql = DB::table('material_setup_mst as s')
             ->join('material_in_stock as mis', function ($join) {
@@ -148,16 +117,11 @@ class MaterialRequestAssy extends Component
             ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $this->date)
             ->selectRaw('s.material_no, m.matl_nm as material_name, sum(mis.picking_qty) as request_qty, s.kit_no,m.qty as qty_stock,m.bag_qty')
             ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty');
-        // dd($materialListSql->toRawSql());
+        
         $materialList = $materialListSql->get();
         $this->materialRequest = $materialList;
+        $this->dispatch('materialsUpdated', $this->materialRequest);
 
-        // $this->loadTable();
-
-        // dd($materiallist);
-        // $this->selectedData = [];
-
-        // $this->listMaterialNo = $materiallist;
     }
 
     public function resetField()
@@ -231,6 +195,10 @@ class MaterialRequestAssy extends Component
         return $this->dispatch('alert', ['time' => 2500, 'icon' => 'success', 'title' => 'Material Telah di Hapus']);
     }
 
+    public function getMaterialData()
+    {
+        return $this->materialRequest;
+    }
 
 
     public function submitRequest($data)
@@ -253,31 +221,10 @@ class MaterialRequestAssy extends Component
                 'user_request' => $this->userRequest
             ]);
         }
-        // $userRequstIsNull = ModelsMaterialRequestAssy::whereNull('user_request')
-        //     ->whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']])->exists();
-        // if ($userRequstIsNull) {
-        //     return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Please fill all User Request ']);
-        // }
-        // $updateStatus = ModelsMaterialRequestAssy::whereIn('transaksi_no', [$this->transactionNo['wr'], $this->transactionNo['nw']]);
-
-        // if (!$updateStatus->exists()) {
-        //     return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Submit Failed No. Transaksi berbeda (beda hari)']);
-        // }
-
-        // $updateStatus->update([
-        //     'status' => 0,
-        //     'user_request' => $this->userRequest,
-        //     'created_at' => Carbon::now(),
-        // ]);
-
-        // $this->streamTableSum();
-        // $this->loadTable();
-        // $this->userRequestDisable = false;
-        // $this->userRequest = null;
-        // $this->resetField();
 
         // reset tabel
         $this->materialRequest = [];
+        $this->dispatch('materialsUpdated', $this->materialRequest);
 
         $this->dispatch('alert', ['time' => 2500, 'icon' => 'success', 'title' => 'Request Material Berhasil']);
         $this->generateNoTransaksi();
