@@ -20,7 +20,8 @@ class RequestMaterialProsesAssy extends Component
     public $materialSelected;
     public $userId;
     public $data;
-    public $dada;
+    public $todayCount;
+    public $canConfirm;
 
     public function mount()
     {
@@ -141,7 +142,7 @@ class RequestMaterialProsesAssy extends Component
         $dataPrint = MaterialRequestAssy::where('transaksi_no', $id)
             ->leftJoin('material_mst as b', 'material_request_assy.material_no', '=', 'b.matl_no')
             ->select(['material_request_assy.*', 'b.loc_cd', DB::raw('(b.iss_min_lot/request_qty) as pax')])->orderBy('b.loc_cd', 'asc')->get();
-        MaterialRequestAssy::where('transaksi_no', $id)->update(['status' => '9']);
+        // MaterialRequestAssy::where('transaksi_no', $id)->update(['status' => '9']);
         return Excel::download(new ItemMaterialRequest($dataPrint), "Request Material_" . $id . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
@@ -155,7 +156,8 @@ class RequestMaterialProsesAssy extends Component
             })
             ->leftJoin('material_mst as b', 'material_request_assy.material_no', '=', 'b.matl_no')
             ->select(['material_request_assy.*', 'r.qty_supply', 'b.qty as stock'])->get();
-        // dd(DB::getRawQueryLog());
+        // dump(DB::getRawQueryLog());
+        $this->canConfirm = $dataPrint->first()->status;
         $this->transaksiSelected = $dataPrint;
 
         $this->transaksiNo = $trx;
@@ -165,14 +167,17 @@ class RequestMaterialProsesAssy extends Component
 
     public function getData()
     {
-        $this->data = MaterialRequestAssy::whereIn('status', ['0', '9'])
-            ->when($this->searchKey, function ($q) {
+        $this->data =  MaterialRequestAssy::when($this->searchKey, function ($q) {
                 $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
             })
-            ->select(['transaksi_no', 'status', 'type', 'issue_date', 'line_c'])
-            ->groupBy('transaksi_no', 'status', 'type', 'created_at', 'issue_date', 'line_c')
-            ->orderByDesc('created_at')
-            ->get();
+            ->selectRaw('transaksi_no, status, type, issue_date, line_c, CONVERT(DATE,created_at) as created_at')
+            ->groupByRaw('transaksi_no, status, type, CONVERT(DATE,created_at), issue_date, line_c')
+            ->orderByDesc(DB::raw('CONVERT(DATE,created_at)'))->get();
+
+        $today = now()->toDateString();
+        $this->todayCount = $this->data->filter(function ($item) use ($today) {
+            return \Carbon\Carbon::parse($item->created_at)->toDateString() === $today;
+        })->count();
     }
 
     public function resetQty($material)

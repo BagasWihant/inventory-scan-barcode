@@ -1,6 +1,7 @@
 <div class="max-w-7xl mx-auto">
     <div class="text-2xl text-center font-extrabold py-6" id="setHerePagination">Proses Material Assy Request</div>
 
+    <div class="flex justify-end"><span>Total Transaksi Hari ini : <b> {{ $todayCount }}</b></span></div>
     <div class="relative w-full">
         <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
             <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
@@ -11,7 +12,7 @@
         <input type="text" id="search" wire:model.live.debounce.300ms="searchKey"
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Transaksi No." />
-    </div>
+        </div>
     <div>
         <div class="relative overflow-x-auto shadow-md rounded-lg my-4" x-data="tableManager()">
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -40,7 +41,12 @@
                 <tbody>
                     @foreach ($data as $d)
                         <tr
-                            class="py-2 @if ($d->type == 2) bg-red-700 text-white font-semibold hover:bg-red-800 @endif hover:bg-gray-200">
+                            class="py-2
+                                @if ($d->status == 0)
+                                 bg-red-700 text-white font-semibold hover:bg-red-800
+                                @elseif ($d->status == 1)
+                                 bg-green-700 text-white font-semibold hover:bg-green-800
+                                @endif ">
                             <td class="px-2" role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 {{ $d->transaksi_no }}
                             </td>
@@ -54,10 +60,10 @@
                                 {{ $d->type == 2 ? 'Urgent' : 'Reguler' }}
                             </td>
                             <td>
-                                @if ($d->status == 9)
-                                    Sudah di cetak
+                                @if ($d->status == 1)
+                                    Sudah di proses
                                 @elseif($d->status == 0)
-                                    Belum di cetak
+                                    Belum di proses
                                 @endif
                             </td>
                             <td>
@@ -180,8 +186,10 @@
 
                             <button @click="closeModal" type="button"
                                 class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
+                            @if($canConfirm == 0)
                             <button type="button" @click="saveDetailScanned"
                                 class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-blue-500 rounded-lg border  hover:bg-blue-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Confirm</button>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -190,7 +198,7 @@
 
         <div wire:loading.flex
             class=" fixed z-[99] bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
-            wire:target="materialScan,saveDetailScanned,resetQty" aria-label="Loading..." role="status">
+            wire:target="materialScan,saveDetailScanned,resetQty,getMaterial" aria-label="Loading..." role="status">
             <svg class="h-20 w-20 animate-spin stroke-white " viewBox="0 0 256 256">
                 <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
                     stroke-linejoin="round" stroke-width="24"></line>
