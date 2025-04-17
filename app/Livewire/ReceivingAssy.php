@@ -166,7 +166,7 @@ class ReceivingAssy extends Component
         $dataPrint = MaterialRequestAssy::where('transaksi_no', $id)
             ->leftJoin('material_mst as b', 'material_request_assy.material_no', '=', 'b.matl_no')
             ->select(['material_request_assy.*', 'b.loc_cd', DB::raw('(b.iss_min_lot/request_qty) as pax')])->orderBy('b.loc_cd', 'asc')->get();
-        MaterialRequestAssy::where('transaksi_no', $id)->update(['status' => '9']);
+        // MaterialRequestAssy::where('transaksi_no', $id)->update(['status' => '9']);
 
         // hapus temp request pindah sini
         temp_request::where('transaksi_no', $id)->delete();
@@ -176,13 +176,14 @@ class ReceivingAssy extends Component
 
     public function getMaterial($trx)
     {
-        $dataPrint = MaterialRequestAssy::where('material_request_assy.transaksi_no', $trx)
-            ->leftJoin('temp_requests as r', function ($join) {
-                $join->on('material_request_assy.transaksi_no', '=', 'r.transaksi_no')
-                    ->on('material_request_assy.material_no', '=', 'r.material_no');
-            })
-            ->leftJoin('material_mst as b', 'material_request_assy.material_no', '=', 'b.matl_no')
-            ->select(['material_request_assy.*', 'r.qty_supply', 'b.qty as stock'])->get();
+        $dataPrint = DB::table('material_request_assy as mra')
+        ->leftJoin('setup_dtl as sd', function ($join) {
+            $join->on('mra.material_no', '=', 'sd.material_no')
+                ->on('mra.transaksi_no', '=', 'sd.pallet_no');
+        })
+        ->selectRaw('mra.material_no, mra.material_name, mra.request_qty, sd.qty as qty_supply, mra.status')->get();
+      
+        // dd(DB::getRawQueryLog());
         $this->transaksiSelected = $dataPrint;
 
         $this->transaksiNo = $trx;
@@ -192,14 +193,13 @@ class ReceivingAssy extends Component
 
     public function getData()
     {
-        $this->data = MaterialRequestAssy::where('status', 1)
+        $this->data = MaterialRequestAssy::
             // ->when($this->searchKey, function ($q) {
             //     $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
             // })
-            ->select(['transaksi_no', 'status', 'type', 'issue_date', 'line_c'])
-            ->groupBy('transaksi_no', 'status', 'type', 'created_at', 'issue_date', 'line_c')
-            ->orderByDesc('created_at')
-            ->get();
+            selectRaw('transaksi_no, status, type, issue_date, line_c, CONVERT(DATE,created_at) as created_at')
+            ->groupByRaw('transaksi_no, status, type, CONVERT(DATE,created_at), issue_date, line_c')
+            ->orderByDesc(DB::raw('CONVERT(DATE,created_at)'))->get();
     }
     public function resetQty($material)
     {
@@ -209,6 +209,7 @@ class ReceivingAssy extends Component
     #[On('editQty')]
     public function editQty($data)
     {
+        dd($data);
         temp_request::where('material_no', $data['material'])->where('transaksi_no', $this->transaksiNo)->update(['qty_request' => $data['qty']]);
         MaterialRequestAssy::where('material_no', $data['material'])->where('transaksi_no', $this->transaksiNo)->update(['request_qty' => $data['qty']]);
         $this->getMaterial($this->transaksiNo);

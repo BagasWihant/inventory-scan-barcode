@@ -40,7 +40,10 @@
                 <tbody>
                     @foreach ($data as $d)
                         <tr
-                            class="py-2 @if ($d->type == 2) bg-red-700 text-white font-semibold hover:bg-red-800 @endif hover:bg-gray-200">
+                            class="py-2 
+                            @if ($d->status == 1) bg-red-700 text-white font-semibold hover:bg-red-800 
+                            @elseif ($d->status == 2) bg-green-700 text-white font-semibold hover:bg-green-800
+                            @endif ">
                             <td class="px-2" role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 {{ $d->transaksi_no }}
                             </td>
@@ -133,6 +136,9 @@
                                             <th scope="col" class="px-3 py-3">
                                                 Qty Supply
                                             </th>
+                                            <th scope="col" class="px-3 py-3">
+                                                Qty Receive
+                                            </th>
                                             <th>
 
                                             </th>
@@ -158,6 +164,7 @@
                                                     <td class="px-3 py-2">-</td>
                                                     <td class="px-3 py-2">{{ $data->material_name }}</td>
                                                     <td class="px-3 py-2">{{ $data->request_qty }}</td>
+                                                    <td class="px-3 py-2">{{ $data->qty_supply }}</td>
 
                                                     <!-- Qty Supply Edit Area -->
                                                     <td class="px-3 py-2 cursor-pointer" @click="edit = true">
