@@ -13,7 +13,61 @@
             placeholder="Transaksi No." /> --}}
     </div>
     <div>
-        <div class="relative overflow-x-auto shadow-md rounded-lg my-4" x-data="tableManager()">
+        <div class="relative overflow-x-auto shadow-md rounded-lg my-4" x-data="{
+            transaksiSelected: [],
+            editQtyName: null,
+            editedQty: {},
+            showModal: false,
+            showMaterialDetails(trx) {
+                @this.call('getMaterial', trx).then((data) => {
+                    this.showModal = true
+                    this.transaksiSelected = data
+                });
+            },
+            closeModal() {
+                this.transaksiSelected = [];
+                this.showModal = false
+            },
+            saveDetailScanned() {
+                @this.call('saveDetailScanned').then((data) => {
+                    console.log(data);
+                    if (data.success) {
+                        return this.showModal = false
+                    }
+                    return Swal.fire({
+                        timer: 2500,
+                        title: data.message,
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
+        
+                })
+            },
+            resetQty(material) {
+                @this.call('resetQty', material)
+            },
+            startEditing(material) {
+                this.editQtyName = material
+            },
+            stopEditing(material, value) {
+                const selected = this.transaksiSelected.find(m => m.material_no === material);
+                if (selected) {
+                    selected.qty_receive = value;
+                }
+                this.editQtyName = null;
+            },
+            resetQty(material) {
+                const selected = this.transaksiSelected.find(m => m.material_no === material);
+                if (selected) {
+                    selected.qty_receive = selected.qty_supply;
+                }
+            },
+            saveDetailScanned() {
+                @this.call('saveDetailScanned', this.transaksiSelected)
+                this.closeModal()
+            }
+        }">
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-gray-900 uppercase bg-gray-300">
                     <tr>
@@ -42,8 +96,7 @@
                         <tr
                             class="py-2 
                             @if ($d->status == 1) bg-red-700 text-white font-semibold hover:bg-red-800 
-                            @elseif ($d->status == 2) bg-green-700 text-white font-semibold hover:bg-green-800
-                            @endif ">
+                            @elseif ($d->status == 2) bg-green-700 text-white font-semibold hover:bg-green-800 @endif ">
                             <td class="px-2" role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 {{ $d->transaksi_no }}
                             </td>
@@ -100,7 +153,8 @@
                                     <span class="sr-only">Close modal</span>
                                 </button>
                             </div>
-                            @if ($transaksiSelected && $transaksiSelected[0]->status != 1)
+
+                            <template x-if="transaksiSelected[0]?.status == 0 ">
                                 <div class="px-6 py-2">
                                     <label for="large-input"
                                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material
@@ -110,7 +164,8 @@
                                         wire:keydown.debounce.300ms="prosesScan"
                                         class=" block w-1/4 p-2 text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                 </div>
-                            @endif
+                            </template>
+
                         </div>
                         <div class="text-center">
                             <span class="text-red-600">Pastikan saat edit <strong>Qty</strong> sesuai dengan kelipatan
@@ -145,50 +200,39 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @if ($transaksiSelected)
-                                            @foreach ($transaksiSelected as $data)
-                                                <tr x-data="{
-                                                    material: '{{ $data->material_no }}',
-                                                    edit: false,
-                                                    qty: '{{ $data->qty_supply }}',
-                                                    saveQty() {
-                                                        // Trigger event ke Livewire / AJAX / emit Alpine
-                                                        console.log('Saving', this.material, this.qty);
-                                                        this.edit = false;
-                                                        $wire.editQty([this.material, this.qty]);
-                                                        // Kalau kamu pakai Livewire, bisa ganti ini jadi emit('saveQty', this.id, this.qty)
-                                                    },
-                                                }"
-                                                    class="@if ($data->request_qty == $data->qty_supply) bg-green-500 text-white @endif">
-                                                    <td class="px-3 py-2">{{ $data->material_no }}</td>
-                                                    <td class="px-3 py-2">-</td>
-                                                    <td class="px-3 py-2">{{ $data->material_name }}</td>
-                                                    <td class="px-3 py-2">{{ $data->request_qty }}</td>
-                                                    <td class="px-3 py-2">{{ $data->qty_supply }}</td>
-
-                                                    <!-- Qty Supply Edit Area -->
-                                                    <td class="px-3 py-2 cursor-pointer" @click="edit = true">
-                                                        <template x-if="!edit">
-                                                            <span x-text="qty"></span>
-                                                        </template>
-                                                        <template x-if="edit">
-                                                            <input type="number" x-model="qty"
-                                                                @keydown.enter="saveQty" @blur="saveQty"
-                                                                class="w-1/2 px-1 py-1 border border-gray-300 rounded text-black" />
-                                                        </template>
-                                                    </td>
-
-                                                    @if ($data->qty_supply > 0 || $data->qty_supply != null)
-                                                        <td class="px-3 py-2">
-                                                            <button
-                                                                class="bg-yellow-600 px-4 py-2 text-white rounded-md"
-                                                                @click="resetQty('{{ $data->material_no }}')">Reset</button>
-                                                        </td>
-                                                    @endif
-
-                                                </tr>
-                                            @endforeach
-                                        @endif
+                                        <template x-for="m in transaksiSelected" :key="m.material_no">
+                                            <tr
+                                                :class="m.request_qty == m.qty_supply ? ' bg-green-500 text-white' :
+                                                    ' bg-yellow-500 text-white'">
+                                                <td class="px-3 py-2" x-text="m.material_no"></td>
+                                                <td class="px-3 py-2" x-text="'-'"></td>
+                                                <td class="px-3 py-2" x-text="m.material_name"></td>
+                                                <td class="px-3 py-2" x-text="m.request_qty"></td>
+                                                <td class="px-3 py-2" x-text="m.qty_supply"></td>
+                                                <td class="px-3 py-2"
+                                                    @click="transaksiSelected[0]?.status == 1 && startEditing(m.material_no)"
+                                                    :class="{
+                                                        'cursor-pointer': transaksiSelected[0]?.status == 1,
+                                                        'cursor-default': transaksiSelected[0]?.status != 1
+                                                    }">
+                                                    <template
+                                                        x-if="editQtyName === m.material_no && transaksiSelected[0]?.status == 1">
+                                                        <input type="number" min="1" :value="m.qty_receive"
+                                                            @blur="stopEditing(m.material_no, $event.target.value)"
+                                                            class="text-black border border-gray-300 rounded px-2 py-1 w-24" />
+                                                    </template>
+                                                    <template x-if="editQtyName !== m.material_no ">
+                                                        <span x-text="m.qty_receive"></span>
+                                                    </template>
+                                                </td>
+                                                <td>
+                                                    <template x-if="transaksiSelected[0]?.status == 1">
+                                                        <button class="bg-yellow-600 px-4 py-1 text-white rounded-md"
+                                                            @click="resetQty(m.material_no)">Reset</button>
+                                                    </template>
+                                                </td>
+                                            </tr>
+                                        </template>
                                     </tbody>
                                 </table>
                             </div>
@@ -200,8 +244,10 @@
 
                             <button @click="closeModal" type="button"
                                 class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
-                            <button type="button" @click="saveDetailScanned"
-                                class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-blue-500 rounded-lg border  hover:bg-blue-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Confirm</button>
+                            <template x-if="transaksiSelected[0]?.status == 1 ">
+                                <button type="button" @click="saveDetailScanned"
+                                    class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-blue-500 rounded-lg border  hover:bg-blue-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Confirm</button>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -234,111 +280,6 @@
             </svg>
             <span class="text-4xl font-medium text-white">{{ $statusLoading ?? 'Loading...' }}</span>
         </div>
-        <script>
-            function tableManager() {
-                return {
-                    showModal: false,
-                    showMaterialDetails(trx) {
-                        @this.call('getMaterial', trx).then((data) => {
-                            if (data.success) this.showModal = true
-                        });
-                    },
-                    closeModal() {
-                        @this.materialScan = null;
-                        @this.transaksiSelected = null;
-                        this.showModal = false
-                    },
-                    saveDetailScanned() {
-                        @this.call('saveDetailScanned').then((data) => {
-                            console.log(data);
-                            if (data.success) {
-                                return this.showModal = false
-                            }
-                            return Swal.fire({
-                                timer: 2500,
-                                title: data.message,
-                                icon: 'error',
-                                showConfirmButton: false,
-                                timerProgressBar: true,
-                            });
-
-                        })
-                    },
-                    resetQty(material) {
-                        @this.call('resetQty', material)
-                    },
-                    editQty(data) {
-                        Swal.fire({
-                            title: `Edit Qty ${data.material_no}`,
-                            html: `<div class="flex flex-col">
-                                <strong>Qty</strong>
-                                <input id="editQty1" class="swal2-input" value="${data.request_qty}">
-                            </div>`,
-                            showDenyButton: true,
-                            denyButtonText: `Don't save`,
-                            didOpen: () => {
-                                $('#editQty1').focus()
-                                $('#editQty1').on('keydown', (e) => {
-                                    if (e.key == 'Enter') {
-                                        Swal.clickConfirm();
-                                    }
-                                })
-                            },
-                            preConfirm: () => {
-                                return [
-                                    document.getElementById("editQty1").value,
-                                ];
-                            }
-
-                        }).then((result) => {
-                            qtyInput = parseInt(result.value[0])
-                            if (result.isConfirmed) {
-                                if (qtyInput > data.stock) {
-                                    return Swal.fire({
-                                        timer: 1500,
-                                        title: `Qty maksimal ${data.stock}`,
-                                        icon: "error",
-                                        timerProgressBar: true,
-                                    });
-                                }
-
-                                if (qtyInput % data.iss_min_lot !== 0) {
-                                    return Swal.fire({
-                                        timer: 1500,
-                                        title: `Qty tidak kelipatan dari Min Lot`,
-                                        icon: "error",
-                                        timerProgressBar: true,
-                                    });
-                                }
-                                @this.call('editQty', {
-                                    material: data.material_no,
-                                    qty: qtyInput,
-                                }).then((data) => {
-
-                                });
-                                // return Swal.fire({
-                                //     timer: 2000,
-                                //     title: "Material Added",
-                                //     icon: "success",
-                                //     showConfirmButton: false,
-                                //     timerProgressBar: true,
-                                // });
-                            } else if (result.isDenied) {
-                                @this.getMaterial(event[0].trx)
-                                return Swal.fire({
-                                    timer: 1000,
-                                    title: "Changes are not saved",
-                                    icon: "info",
-                                    showConfirmButton: false,
-                                    timerProgressBar: true,
-                                });
-                            }
-                        });
-                    },
-
-                }
-            }
-        </script>
         @script
             <script>
                 $wire.on('alert', (event) => {
