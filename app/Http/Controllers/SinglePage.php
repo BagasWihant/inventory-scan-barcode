@@ -46,7 +46,7 @@ class SinglePage extends Controller
             ? ($map[$str] ?? 'Unknown')
             : (array_search($str, $map) ?: 'Unknown');
     }
-    private function generatePdf($url, $html, $lampiran = null)
+    private function generatePdf($url, $html, $pdf = null, array $lampiran = [])
     {
         $mpdf = new Mpdf();
         $mpdf->SetHTMLHeader("
@@ -60,8 +60,16 @@ class SinglePage extends Controller
         ");
 
         $mpdf->WriteHTML($html);
+
         if (!empty($lampiran)) {
             foreach ($lampiran as $lamp) {
+                $mpdf->AddPage();
+                $httml = $lamp;
+                $mpdf->WriteHTML($httml);
+            }
+        }
+        if (!empty($pdf)) {
+            foreach ($pdf as $lamp) {
                 $mpdf->AddPage();
                 // $pdf = asset('assets/syarat-dan-ketentuan-layanan-utama.pdf');
                 $pdf = $lamp;
@@ -242,7 +250,9 @@ class SinglePage extends Controller
 
                 // generatePdf
                 $html = view('templates.pdf.approval-generate', compact('req'))->render();
-                $this->generatePdf($path, $html);
+                $page2 = view('templates.pdf.approval-monthly')->render();
+
+                $this->generatePdf($path, $html,null,[$page2]);
 
                 $data['pdf'] = $req->pdf;
                 $data['text'] = 'Berhasil disetujui oleh';
@@ -395,7 +405,7 @@ class SinglePage extends Controller
             ];
 
             if (!in_array(request()->ip(), $allowedSPV)) {
-                abort(499,'Anda tidak bisa mengakses ini. Bukan Supervisor');
+                abort(499, 'Anda tidak bisa mengakses ini. Bukan Supervisor');
             }
         } elseif ($status == 'AS') {
             // halaman manager
@@ -405,7 +415,7 @@ class SinglePage extends Controller
             ];
 
             if (!in_array(request()->ip(), $allowedIPMan)) {
-                abort(499,"Anda tidak bisa mengakses ini. Bukan Manager");
+                abort(499, "Anda tidak bisa mengakses ini. Bukan Manager");
             }
         }
 
@@ -456,7 +466,8 @@ class SinglePage extends Controller
         if (true) {
             $html = view('templates.pdf.approval-generate', compact('req'))->render();
 
-            $this->generatePdf($path, $html);
+            $page2 = view('templates.pdf.approval-monthly')->render();
+            $this->generatePdf($path, $html, null, [$page2]);
         }
 
         $req->pdf = Storage::url('approval/pdf/' . $fileName);
@@ -509,11 +520,12 @@ class SinglePage extends Controller
             mkdir($directory, 0775, true);
         }
         $html = view('templates.pdf.approval-man-request-generate', compact('data'))->render();
+        $page2 = view('templates.pdf.approval-monthly')->render();
 
         // Lampiran
         $lampiran = DB::table('IT.dbo.HR_MPR_filepath')->where('idMpr', $id)->get()->pluck('FilePath');
 
-        $this->generatePdf($path, $html);
+        $this->generatePdf($path, $html, null, [$page2]);
 
         $data->pdf = Storage::url('approval/pdf/' . $fileName);
         $data->type = $this->typeDokumen($type);
