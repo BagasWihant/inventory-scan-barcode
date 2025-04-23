@@ -22,7 +22,8 @@ class MaterialRequestAssy extends Model
         'user_id',
         'loc_cd',
         'status',
-        'proses_date'
+        'proses_date',
+        'sisa_request_qty'
     ];
 
     public function user()

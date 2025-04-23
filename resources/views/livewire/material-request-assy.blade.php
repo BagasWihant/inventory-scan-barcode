@@ -114,7 +114,17 @@
                     if (editedQty !== undefined) {
                         const selected = this.Materials.find(m => m.material_no === material);
                         if (selected) {
-                            selected.request_qty = editedQty;
+                            if(selected.request_qty < editedQty){
+                                Swal.fire({
+                                    timer: 1000,
+                                    title: `Qty Request tidak boleh lebih besar dari  ${selected.request_qty}`,
+                                    icon: 'error',
+                                    showConfirmButton: false,
+                                    timerProgressBar: true,
+                                });
+                                return;
+                            }
+                            selected.request_qty_new = editedQty;
                         }
                     }
                     this.editingQtyReq = null;
@@ -126,10 +136,11 @@
                     return this.editedQty[materialNo] ?? defaultQty;
                 },
                 submitRequest() {
-                    console.log(this.Materials);
-                    console.log(this.editedQty);
-
+                    
                     $wire.submitRequest(this.Materials);
+                    this.Materials = [];
+                    this.editedQty = {};
+                    
                 },
                 initMaterials(json) {
                 console.log(json)
