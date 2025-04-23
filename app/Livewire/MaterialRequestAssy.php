@@ -124,7 +124,7 @@ class MaterialRequestAssy extends Component
                 ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $this->date)
                 ->selectRaw('s.material_no, m.matl_nm as material_name, sum(mis.picking_qty) as request_qty, s.kit_no, m.qty as qty_stock, m.bag_qty')
                 ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty');
-                // dd($materialList->toRawSql());
+            // dd($materialList->toRawSql());
             $this->materialRequest = $materialList->get();
         } else {
 
@@ -136,7 +136,7 @@ class MaterialRequestAssy extends Component
                 $this->materialRequest = [];
             } else {
                 $materialListSql = DB::table('material_setup_mst as s')
-                  
+
                     ->join('material_mst as m', 's.material_no', '=', 'm.matl_no')
                     ->join('material_request_assy as mr', function ($join) {
                         $join->on('s.material_no', '=', 'mr.material_no')
@@ -236,8 +236,15 @@ class MaterialRequestAssy extends Component
 
     public function submitRequest($data)
     {
+        $materialNos = array_column($data, 'material_no');
+        ModelsMaterialRequestAssy::where('user_id', auth()->user()->id)
+            ->where('line_c', $this->line_c)
+            ->where('issue_date', $this->date)
+            ->whereIn('material_no', $materialNos)
+            ->update(['sisa_request_qty' => 0]);
+
         foreach ($data as $value) {
-            # code...
+
             $transaksiNoItem = (preg_match("/[a-z]/i", $value['material_no'])) ? $this->transactionNo['wr'] : $this->transactionNo['nw'];
 
             $sisa = 0;
