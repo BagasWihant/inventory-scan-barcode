@@ -200,7 +200,7 @@ class MaterialRequestAssy extends Component
                 'transaksi_no' => $transaksiNoItem,
                 'material_no' => $this->materialNo,
                 'material_name' => $this->selectedData['matl_nm'],
-                'type' => '.',
+                'type' => '-',
                 'request_qty' => $requestQty,
                 'bag_qty' => $this->selectedData['bag_qty'],
                 'issue_date' => $this->date,

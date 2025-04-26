@@ -12,7 +12,7 @@
         <input type="text" id="search" wire:model.live.debounce.300ms="searchKey"
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Transaksi No." />
-        </div>
+    </div>
     <div>
         <div class="relative overflow-x-auto shadow-md rounded-lg my-4" x-data="tableManager()">
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -42,11 +42,9 @@
                     @foreach ($data as $d)
                         <tr
                             class="py-2
-                                @if ($d->status == 0)
-                                 bg-red-700 text-white font-semibold hover:bg-red-800
+                                @if ($d->status == 0) bg-red-700 text-white font-semibold hover:bg-red-800
                                 @elseif ($d->status == 1)
-                                 bg-green-700 text-white font-semibold hover:bg-green-800
-                                @endif ">
+                                 bg-green-700 text-white font-semibold hover:bg-green-800 @endif ">
                             <td class="px-2" role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 {{ $d->transaksi_no }}
                             </td>
@@ -57,9 +55,9 @@
                                 {{ $d->line_c }}
                             </td>
                             <td role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
-                                {{ $d->type == 2 ? 'Urgent' : 'Reguler' }}
+                                {{ $d->type == 1 ? 'Sudah di Cetak' : 'Belum di Cetak' }}
                             </td>
-                            <td>
+                            <td  role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 @if ($d->status == 1)
                                     Sudah di proses
                                 @elseif($d->status == 0)
@@ -67,8 +65,10 @@
                                 @endif
                             </td>
                             <td>
-                                <button class="bg-blue-600 px-4 py-2 text-white rounded-md"
-                                    wire:click="print('{{ $d->transaksi_no }}')">Print</button>
+                                @if ($d->type != 1)
+                                    <button class="bg-blue-600 px-4 py-2 text-white rounded-md"
+                                        wire:click="print('{{ $d->transaksi_no }}')">Print</button>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -116,7 +116,8 @@
                             @endif
                         </div>
                         <div class="text-center">
-                            <span class="text-red-600">Pastikan saat edit <strong>Qty</strong> sesuai dengan kelipatan <strong>Min. Lot</strong></span>
+                            <span class="text-red-600">Pastikan saat edit <strong>Qty</strong> sesuai dengan kelipatan
+                                <strong>Min. Lot</strong></span>
                         </div>
                         <div class="p-3">
                             <div class="relative overflow-y-auto shadow-md rounded-lg my-4">
@@ -186,9 +187,9 @@
 
                             <button @click="closeModal" type="button"
                                 class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
-                            @if($canConfirm == 0)
-                            <button type="button" @click="saveDetailScanned"
-                                class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-blue-500 rounded-lg border  hover:bg-blue-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Confirm</button>
+                            @if ($canConfirm == 0)
+                                <button type="button" @click="saveDetailScanned"
+                                    class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-blue-500 rounded-lg border  hover:bg-blue-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Confirm</button>
                             @endif
                         </div>
                     </div>
@@ -267,10 +268,10 @@
                             didOpen: () => {
                                 $('#editQty1').focus()
                                 $('#editQty1').on('keydown', (e) => {
-                                if (e.key == 'Enter') {
-                                    Swal.clickConfirm();
-                                }
-                            })
+                                    if (e.key == 'Enter') {
+                                        Swal.clickConfirm();
+                                    }
+                                })
                             },
                             preConfirm: () => {
                                 return [

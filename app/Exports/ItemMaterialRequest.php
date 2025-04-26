@@ -14,10 +14,11 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class ItemMaterialRequest implements FromCollection, WithEvents, WithCustomStartCell, WithMapping, WithHeadings, WithColumnWidths
 {
-    public $data, $count;
-    public function __construct($data)
+    public $data, $count,$no_sj;
+    public function __construct($data,$no_sj)
     {
         $this->data = $data;
+        $this->no_sj = $no_sj;
         $this->count = count($data);
     }
     /**
@@ -91,6 +92,8 @@ class ItemMaterialRequest implements FromCollection, WithEvents, WithCustomStart
                 $sheet->setCellValue('B1', "MATERIAL REQUEST");
                 $sheet->mergeCells('A2:C2');
                 $sheet->setCellValue('A2', "Transaksi No : ".$this->data[0]->transaksi_no);
+                $sheet->mergeCells('G2:I2');
+                $sheet->setCellValue('G2', "Surat Jalan : ".$this->no_sj);
                 $sheet->mergeCells('A3:C3');
                 $sheet->setCellValue('A3', "Print Date   : ".date('d-m-Y H:i'));
                 $sheet->setCellValue('A4', " ");
