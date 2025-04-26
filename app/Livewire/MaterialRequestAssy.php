@@ -104,7 +104,10 @@ class MaterialRequestAssy extends Component
 
     public function lineChange()
     {
-        // clear dulu
+        if (!$this->type) {
+            $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please choose Type']);
+            return false;
+        }
         // cek data di request assy 
         $yangSudahRequest = ModelsMaterialRequestAssy::where('user_id', auth()->user()->id)
             ->where('line_c', $this->line_c)
@@ -159,10 +162,10 @@ class MaterialRequestAssy extends Component
 
     public function resetField()
     {
-        $this->searchMaterialNo = null;
-        $this->selectedData = [];
-        $this->materialNo = null;
-        $this->requestQty = null;
+        $this->materialRequest = [];
+        $this->type = null;
+        $this->dispatch('materialsUpdated', $this->materialRequest);
+
     }
 
     public function saveRequest()
@@ -171,11 +174,7 @@ class MaterialRequestAssy extends Component
         // if (!$this->userRequest) {
         //     $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please fill User Request']);
         //     return false;
-        // }
-        if (!$this->type) {
-            $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please choose Type']);
-            return false;
-        }
+        // }        
         if ($this->selectedData['qty'] < $requestQty) {
             $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Maksimal qty : ' . $this->selectedData['qty']]);
             return false;

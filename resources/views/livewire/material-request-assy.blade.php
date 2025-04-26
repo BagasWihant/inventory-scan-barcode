@@ -1,6 +1,65 @@
 <div class="max-w-7xl m-auto" x-data="{
-    type: 1,
-}">
+    type: null,
+    Materials: [],
+    editingQtyReq: null,
+    editedQty: {},
+    starteditingQtyReq(material_no) {
+        this.editingQtyReq = material_no;
+    },
+    stopeditingQtyReq(material) {
+        const editedQty = this.editedQty[material];
+        if (editedQty !== undefined) {
+            const selected = this.Materials.find(m => m.material_no === material);
+            if (selected) {
+                if (selected.request_qty < editedQty) {
+                    Swal.fire({
+                        timer: 1000,
+                        title: `Qty Request tidak boleh lebih besar dari  ${selected.request_qty}`,
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
+                    return;
+                }
+                selected.request_qty_new = editedQty;
+            }
+        }
+        this.editingQtyReq = null;
+    },
+    updateQty(materialNo, value) {
+        this.editedQty[materialNo] = Number(value);
+    },
+    getRequestQty(materialNo, defaultQty) {
+        return this.editedQty[materialNo] ?? defaultQty;
+    },
+    submitRequest() {
+
+        $wire.submitRequest(this.Materials);
+        this.Materials = [];
+        this.editedQty = {};
+
+    },
+    initMaterials(json) {
+        console.log(json)
+        this.Materials = JSON.parse(json);
+    },
+    resetField(){
+        this.Materials = [];
+        this.type = null;
+        $wire.resetField();
+        document.getElementById('line_c').value = ''
+    }
+    }" 
+    x-init="$wire.getMaterialData().then(data => {
+        Materials = data;
+        console.log('Materials load:', Materials);
+    });
+
+    // Listen for material updates from Livewire
+    $wire.on('materialsUpdated', (data) => {
+        Materials = data[0];
+        console.log('Materials updated:', data[0]);
+    });">
     <div class="flex gap-3">
         {{-- input --}}
         <div class=" w-full">
@@ -9,13 +68,14 @@
             <div class="flex justify-between gap-2 flex-shrink-0">
                 <div class="flex gap-4">
                     <div class="flex items-center px-2 rounded">
-                        <input id="bordered-radio-1" type="radio" value="1" x-model="type"
+                        <input id="bordered-radio-1" type="radio" value="1" x-model="type" wire:model="type"
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="bordered-radio-1"
                             class="w-full py-4 ms-2 text-sm font-medium dark:text-gray-300">Reguler</label>
                     </div>
                     <div class="flex items-center px-2 rounded ">
                         <input checked id="bordered-radio-2" type="radio" value="2" x-model="type"
+                            wire:model="type"
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="bordered-radio-2"
                             class="w-full py-4 ms-2 text-sm font-medium  dark:text-gray-300">Partial</label>
@@ -27,7 +87,7 @@
                             class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     </div>
                     <div class="">
-                        <select wire:model="line_c" wire:change="lineChange"
+                        <select wire:model="line_c" wire:change="lineChange" id="line_c"
                             class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                             <option value="">Line Code</option>
                             @foreach ($listLine as $p)
@@ -44,7 +104,7 @@
                             class="btn bg-yellow-500 shadow-md text-white px-2 p-1 m-1 rounded-lg text-xs text-nowrap">Ganti</button>
                     @endif
                     <button class="btn bg-red-500 shadow-md text-white px-2 py-1 m-1 rounded-lg text-sm"
-                        wire:click="resetField">Clear</button>
+                        @click="resetField">Clear</button>
                 </div>
 
             </div>
@@ -102,69 +162,14 @@
 
 
     {{-- table --}}
-    <div x-data="{
-                Materials: [],
-                editingQtyReq: null,
-                editedQty: {},
-                starteditingQtyReq(material_no) {
-                    this.editingQtyReq = material_no;
-                },
-                stopeditingQtyReq(material) {
-                    const editedQty = this.editedQty[material];
-                    if (editedQty !== undefined) {
-                        const selected = this.Materials.find(m => m.material_no === material);
-                        if (selected) {
-                            if(selected.request_qty < editedQty){
-                                Swal.fire({
-                                    timer: 1000,
-                                    title: `Qty Request tidak boleh lebih besar dari  ${selected.request_qty}`,
-                                    icon: 'error',
-                                    showConfirmButton: false,
-                                    timerProgressBar: true,
-                                });
-                                return;
-                            }
-                            selected.request_qty_new = editedQty;
-                        }
-                    }
-                    this.editingQtyReq = null;
-                },
-                updateQty(materialNo, value) {
-                    this.editedQty[materialNo] = Number(value);
-                },
-                getRequestQty(materialNo, defaultQty) {
-                    return this.editedQty[materialNo] ?? defaultQty;
-                },
-                submitRequest() {
-                    
-                    $wire.submitRequest(this.Materials);
-                    this.Materials = [];
-                    this.editedQty = {};
-                    
-                },
-                initMaterials(json) {
-                console.log(json)
-                    this.Materials = JSON.parse(json);
-                }
-            }"
-            x-init="
-            $wire.getMaterialData().then(data => {
-                Materials = data;
-                console.log('Materials load:', Materials);
-            });
-            
-            // Listen for material updates from Livewire
-            $wire.on('materialsUpdated', (data) => {
-                Materials = data[0];
-                console.log('Materials updated:', data[0]);
-            });
-        ">
+    <div>
         <div class="relative overflow-x-auto shadow-md rounded-lg my-4">
             <template x-if="type == 1">
                 <p class="text-base text-red-500 font-bold text-center">Mode Reguler tidak bisa edit qty</p>
             </template>
             <template x-if="type == 2">
-                <p class="text-base text-red-500 font-bold text-center">Mode Partial bisa edit qty dengan cara klik qty request</p>
+                <p class="text-base text-red-500 font-bold text-center">Mode Partial bisa edit qty dengan cara klik qty
+                    request</p>
             </template>
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-800 uppercase bg-gray-200">
