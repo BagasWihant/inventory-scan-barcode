@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Exports\ItemMaterialRequest;
+use App\Models\MaterialInStockAssy;
 use App\Models\MaterialRequestAssy;
 use App\Models\SetupDtlAssy;
 use App\Models\SetupMstAssy;
@@ -49,7 +50,7 @@ class ReceivingAssy extends Component
                     ->on('mra.transaksi_no', '=', 'sd.pallet_no');
             })
             ->where('mra.transaksi_no', $trx)
-            ->selectRaw('mra.material_no, mra.material_name, mra.request_qty, sd.qty as qty_supply, mra.status, sd.qty as qty_receive')->get();
+            ->selectRaw('mra.material_no, mra.material_name, mra.request_qty, sd.qty as qty_supply, mra.status, sd.qty as qty_receive, surat_jalan, mra.line_c')->get();
 
         $this->transaksiNo = $trx;
         $this->materialScan = null;
@@ -63,12 +64,13 @@ class ReceivingAssy extends Component
             //     $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
             // })
             selectRaw('transaksi_no, status, type, issue_date, line_c, CONVERT(DATE,created_at) as created_at')
+            ->where('status', '1')
             ->groupByRaw('transaksi_no, status, type, CONVERT(DATE,created_at), issue_date, line_c')
             ->orderByDesc(DB::raw('CONVERT(DATE,created_at)'))->get();
     }
-   
+
     public function saveDetailScanned($data)
-    {        
+    {
         try {
             DB::beginTransaction();
             $mst = SetupMstAssy::create([
@@ -76,8 +78,9 @@ class ReceivingAssy extends Component
                 'status' => '1',
                 'line_cd' => $this->transaksiNo,
                 'created_by' => $this->userId,
-                
+
             ]);
+
             $mstId = $mst->id;
             foreach ($data as $item) {
                 SetupDtlAssy::create([
@@ -88,7 +91,17 @@ class ReceivingAssy extends Component
                     'pallet_no' => $this->transaksiNo,
 
                 ]);
-                
+                MaterialInStockAssy::create([
+                    'transaksi_no' => $this->transaksiNo,
+                    'material_no' => $item['material_no'],
+                    'material_name' => $item['material_name'],
+                    'qty' => $item['qty_receive'],
+                    'issue_date' => date('Y-m-d'),
+                    'line_c' => $item['line_c'],
+                    'user_id' => $this->userId,
+                    'surat_jalan' => $item['surat_jalan'],
+                ]);
+
                 $matMst = DB::table('material_mst')->where('matl_no', $item['material_no']);
                 $matMstData = $matMst->first();
                 $matMst->update([

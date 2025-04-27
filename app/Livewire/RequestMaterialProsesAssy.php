@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Exports\ItemMaterialRequest;
 use App\Models\MaterialRequestAssy;
 use App\Models\temp_request;
+use \Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -27,6 +28,30 @@ class RequestMaterialProsesAssy extends Component
     {
         $this->userId = auth()->user()->id;
         $this->getData();
+    }
+
+    private function generateSJ()
+    {
+        $prefix = date('Ym');
+        $configKey = 'SJ_MR';
+
+        $row = DB::table('WH_config')->where('config', $configKey)->first();
+
+        if (!$row || !Str::startsWith($row->value, $prefix)) {
+            $newValue = $prefix . '0001';
+
+            DB::table('WH_config')->updateOrInsert(
+                ['config' => $configKey],
+                ['value' => $newValue]
+            );
+        } else {
+            $lastNumber = (int) substr($row->value, -4);
+            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+            $newValue = $prefix . $newNumber;
+
+            DB::table('WH_config')->where('config', $configKey)->update(['value' => $newValue]);
+        }
+        return $newValue;
     }
 
     public function updated($prop, $val)
@@ -142,8 +167,10 @@ class RequestMaterialProsesAssy extends Component
         $dataPrint = MaterialRequestAssy::where('transaksi_no', $id)
             ->leftJoin('material_mst as b', 'material_request_assy.material_no', '=', 'b.matl_no')
             ->select(['material_request_assy.*', 'b.loc_cd', DB::raw('(b.iss_min_lot/request_qty) as pax')])->orderBy('b.loc_cd', 'asc')->get();
-        // MaterialRequestAssy::where('transaksi_no', $id)->update(['status' => '9']);
-        return Excel::download(new ItemMaterialRequest($dataPrint), "Request Material_" . $id . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+        $no_sj = $this->generateSJ();
+        MaterialRequestAssy::where('transaksi_no', $id)->update(['type' => '1', 'surat_jalan' => $no_sj]);
+
+        return Excel::download(new ItemMaterialRequest($dataPrint, $no_sj), "Request Material_" . $id . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
     public function getMaterial($trx)
@@ -168,8 +195,8 @@ class RequestMaterialProsesAssy extends Component
     public function getData()
     {
         $this->data =  MaterialRequestAssy::when($this->searchKey, function ($q) {
-                $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
-            })
+            $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
+        })
             ->selectRaw('transaksi_no, status, type, issue_date, line_c, CONVERT(DATE,created_at) as created_at')
             ->groupByRaw('transaksi_no, status, type, CONVERT(DATE,created_at), issue_date, line_c')
             ->orderByDesc(DB::raw('CONVERT(DATE,created_at)'))->get();
@@ -230,12 +257,12 @@ class RequestMaterialProsesAssy extends Component
                     'created_at' => now(),
                     'pallet_no' => $this->transaksiNo,
                 ]);
-                $matMst = DB::table('material_mst')->where('matl_no', $item->material_no);
-                $matMstData = $matMst->first();
-                $matMst->update([
-                    'qty' => $matMstData->qty - $item->qty_supply,
-                    'qty_OUT' => $matMstData->qty_OUT + $item->qty_supply
-                ]);
+                // $matMst = DB::table('material_mst')->where('matl_no', $item->material_no);
+                // $matMstData = $matMst->first();
+                // $matMst->update([
+                //     'qty' => $matMstData->qty - $item->qty_supply,
+                //     'qty_OUT' => $matMstData->qty_OUT + $item->qty_supply
+                // ]);
             }
 
             // qty supply baca dari temp request nek tak delete di receiving assy suplly nya kosong

@@ -4,31 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class MaterialRequestAssy extends Model
+class MaterialInStockAssy extends Model
 {
-    protected $table = 'material_request_assy';
+    protected $table = 'material_in_stock_assy';
     protected $fillable = [
         'transaksi_no',
         'material_no',
         'material_name',
         'type',
-        'request_qty',
-        'user_request',
-        'bag_qty',
+        'qty',
         'issue_date',
         'line_c',
         'iss_min_lot',
         'iss_unit',
         'user_id',
-        'loc_cd',
         'status',
+        'loc_cd',
         'proses_date',
-        'sisa_request_qty',
-        'surat_jalan'
+        'surat_jalan',
     ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 }
