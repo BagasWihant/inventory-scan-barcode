@@ -390,7 +390,7 @@ class SinglePage extends Controller
         if ($status == 'O') {
             // halaman approve purchasing
             $allowedPurchase = [
-                '127.0.0.1',
+                '172.99.0.1',
                 '192.168.1.249'
             ];
 
@@ -400,7 +400,7 @@ class SinglePage extends Controller
         } elseif ($status == 'AP') {
             // halaman spv
             $allowedSPV = [
-                '127.0.0.1',
+                '172.99.0.1',
                 '192.168.1.249'
             ];
 
@@ -410,7 +410,7 @@ class SinglePage extends Controller
         } elseif ($status == 'AS') {
             // halaman manager
             $allowedIPMan = [
-                '127.0.0.1',
+                '172.99.0.1',
                 '192.168.1.249'
             ];
 
