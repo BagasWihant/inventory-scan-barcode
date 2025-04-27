@@ -1,0 +1,203 @@
+<div class="max-w-7xl m-auto" x-data="{
+    Materials: [],
+    editingQtyReq: null,
+    editedQty: {},
+    starteditingQtyReq(material_no) {
+        this.editingQtyReq = material_no;
+        this.$nextTick(() => {
+            this.$refs.inputQty.focus();
+        });
+    },
+    stopeditingQtyReq(material) {
+        const editedQty = this.editedQty[material];
+        if (editedQty !== undefined) {
+            const selected = this.Materials.find(m => m.material_no === material);
+            if (selected) {
+                if (selected.qty < editedQty) {
+                    Swal.fire({
+                        timer: 1000,
+                        title: `Qty Request tidak boleh lebih besar dari  ${selected.qty}`,
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
+                    this.editedQty[material] = 0;
+                    return;
+                }
+                selected.retur_qty = editedQty;
+            }
+        }
+        this.editingQtyReq = null;
+    },
+    updateQty(materialNo, value) {
+        this.editedQty[materialNo] = Number(value);
+    },
+    getRequestQty(materialNo, defaultQty) {
+        return this.editedQty[materialNo] ?? defaultQty;
+    },
+    submitRequest() {
+        $wire.submitRequest(this.Materials);
+        this.Materials = [];
+        this.editedQty = {};
+
+    },
+    initMaterials(json) {
+        console.log(json)
+        this.Materials = JSON.parse(json);
+    },
+    resetField() {
+        this.Materials = [];
+        $wire.resetField();
+        document.getElementById('line_c').value = ''
+    }
+}" x-init="// Listen for material updates from Livewire
+$wire.on('materialsUpdated', (data) => {
+    Materials = data[0];
+    console.log('Materials updated:', data[0]);
+});">
+    <div class="flex gap-3">
+        {{-- input --}}
+        <div class=" w-full">
+
+            {{-- top left --}}
+            <div class="flex justify-between gap-2 flex-shrink-0">
+                <div class="flex gap-4">
+                    <div class="">
+                        <label for="">Issue Date</label>
+                        <input wire:change="dateDebounce" wire:model='date' type="date" onfocus="this.showPicker()"
+                            class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    </div>
+                    <div class="">
+                        <select wire:model="line_c" wire:change="lineChange" id="line_c"
+                            class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                            <option value="">Line Code</option>
+                            @foreach ($listLine as $p)
+                                <option value="{{ $p->line_c }}">{{ $p->line_c }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                </div>
+                <div class="">
+
+                    <button class="btn bg-red-500 shadow-md text-white px-2 py-1 m-1 rounded-lg text-sm"
+                        @click="resetField">Clear</button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    {{-- table --}}
+    <div>
+        <div class="relative overflow-x-auto shadow-md rounded-lg my-4">
+            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-800 uppercase bg-gray-200">
+                    <tr>
+                        <th scope="col" class="px-1 py-3" align="center">
+                            No
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Material No
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Material Name
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Qty Assy
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Qty Retur
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+
+                    @foreach ($materialRequest as $m)
+                        <tr
+                            :class="getRequestQty('{{ $m->material_no }}', 0) > 0 ? 'bg-green-300 text-black' : 'bg-white'">
+                            <td class="px-6 py-4">
+                                {{ $loop->iteration }}
+                            </td>
+                            <th scope="row"
+                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {{ $m->material_no }}
+                            </th>
+                            <td class="px-6 py-4">
+                                {{ $m->material_name }}
+                            </td>
+                            <td class="px-6 py-4">
+                                {{ $m->qty }}
+                            </td>
+                            <td class="px-6 py-4 cursor-pointer" @click="starteditingQtyReq('{{ $m->material_no }}')">
+
+                                <!-- Jika sedang edit -->
+                                <template x-if="editingQtyReq === '{{ $m->material_no }}'">
+                                    <input type="number" min="1" x-ref="inputQty"
+                                        :value="getRequestQty('{{ $m->material_no }}', 0)"
+                                        @input="updateQty('{{ $m->material_no }}', $event.target.value)"
+                                        @blur="stopeditingQtyReq('{{ $m->material_no }}')"
+                                        class="border border-gray-300 rounded px-2 py-1 w-20">
+                                </template>
+
+                                <!-- Jika tidak sedang edit -->
+                                <template x-if="editingQtyReq !== '{{ $m->material_no }}'">
+                                    <span x-text="getRequestQty('{{ $m->material_no }}', 0)"></span>
+                                </template>
+                            </td>
+                        </tr>
+                    @endforeach
+
+                </tbody>
+            </table>
+
+        </div>
+        <div class="flex justify-end gap-3">
+            <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg" @click="submitRequest">Submit
+                Request</button>
+        </div>
+    </div>
+
+    <div wire:loading.flex
+        class=" fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
+        wire:target="saveRequest" aria-label="Loading..." role="status">
+        <svg class="h-20 w-20 animate-spin stroke-white " viewBox="0 0 256 256">
+            <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24"></line>
+            <line x1="195.9" y1="60.1" x2="173.3" y2="82.7" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24"></line>
+            <line x1="224" y1="128" x2="192" y2="128" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24">
+            </line>
+            <line x1="195.9" y1="195.9" x2="173.3" y2="173.3" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24"></line>
+            <line x1="128" y1="224" x2="128" y2="192" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24">
+            </line>
+            <line x1="60.1" y1="195.9" x2="82.7" y2="173.3" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24"></line>
+            <line x1="32" y1="128" x2="64" y2="128" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24"></line>
+            <line x1="60.1" y1="60.1" x2="82.7" y2="82.7" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="24">
+            </line>
+        </svg>
+        <span class="text-4xl font-medium text-white">{{ $statusLoading ?? 'Loading...' }}</span>
+    </div>
+    @script
+        <script>
+            $wire.on('alert', (event) => {
+                Swal.fire({
+                    timer: event[0].time,
+                    title: event[0].title,
+                    icon: event[0].icon,
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            });
+        </script>
+    @endscript
+</div>
