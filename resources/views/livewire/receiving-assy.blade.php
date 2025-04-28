@@ -53,6 +53,16 @@
             stopEditing(material, value) {
                 const selected = this.transaksiSelected.find(m => m.material_no === material);
                 if (selected) {
+                    if (selected.qty_supply < value) {
+                        Swal.fire({
+                            timer: 1000,
+                            title: `Qty Request tidak boleh lebih besar dari  ${selected.qty_supply}`,
+                            icon: 'error',
+                            showConfirmButton: false,
+                            timerProgressBar: true,
+                        });
+                        return;
+                    }
                     selected.qty_receive = value;
                 }
                 this.editQtyName = null;
@@ -202,8 +212,8 @@
                                     <tbody>
                                         <template x-for="m in transaksiSelected" :key="m.material_no">
                                             <tr
-                                                :class="m.request_qty == m.qty_supply ? ' bg-green-500 text-white' :
-                                                    ' bg-yellow-500 text-white'">
+                                                :class="m.request_qty == m.qty_receive ? ' bg-green-500 text-white' :
+                                                    ' bg-yellow-400 text-white' ">
                                                 <td class="px-3 py-2" x-text="m.material_no"></td>
                                                 <td class="px-3 py-2" x-text="'-'"></td>
                                                 <td class="px-3 py-2" x-text="m.material_name"></td>
@@ -219,6 +229,7 @@
                                                         x-if="editQtyName === m.material_no && transaksiSelected[0]?.status == 1">
                                                         <input type="number" min="1" :value="m.qty_receive"
                                                             @blur="stopEditing(m.material_no, $event.target.value)"
+                                                            @keydown.enter="stopEditing(m.material_no, $event.target.value)"
                                                             class="text-black border border-gray-300 rounded px-2 py-1 w-24" />
                                                     </template>
                                                     <template x-if="editQtyName !== m.material_no ">
