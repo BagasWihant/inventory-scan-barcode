@@ -2,10 +2,16 @@
     Materials: [],
     editingQtyReq: null,
     editedQty: {},
+    pollingInterval: null,
+    tabelStream: {},
+
     starteditingQtyReq(material_no) {
         this.editingQtyReq = material_no;
         this.$nextTick(() => {
-            this.$refs.inputQty.focus();
+            const inputRef = this.$refs['inputQty-' + material_no];
+            if (inputRef) {
+                inputRef.focus();
+            }
         });
     },
     stopeditingQtyReq(material) {
@@ -13,15 +19,15 @@
         if (editedQty !== undefined) {
             const selected = this.Materials.find(m => m.material_no === material);
             if (selected) {
-                if (selected.qty < editedQty) {
+                if (selected.qty_retur < editedQty) {
                     Swal.fire({
                         timer: 1000,
-                        title: `Qty Request tidak boleh lebih besar dari  ${selected.qty}`,
+                        title: `Qty Request tidak boleh lebih besar dari  ${selected.qty_retur}`,
                         icon: 'error',
                         showConfirmButton: false,
                         timerProgressBar: true,
                     });
-                    this.editedQty[material] = 0;
+                    this.editedQty[material] = selected.qty_retur;
                     return;
                 }
                 selected.retur_qty = editedQty;
@@ -39,22 +45,32 @@
         $wire.submitRequest(this.Materials);
         this.Materials = [];
         this.editedQty = {};
-
-    },
-    initMaterials(json) {
-        console.log(json)
-        this.Materials = JSON.parse(json);
     },
     resetField() {
         this.Materials = [];
         $wire.resetField();
         document.getElementById('line_c').value = ''
-    }
-}" x-init="// Listen for material updates from Livewire
-$wire.on('materialsUpdated', (data) => {
-    Materials = data[0];
-    console.log('Materials updated:', data[0]);
-});">
+    },
+    lineChange() {
+        $wire.lineChange().then((res) => {
+            this.Materials = res;
+
+        });
+    },
+    pollingRequest() {
+        $wire.streamTableSum().then((res) => {
+            console.log('load pertama');
+            this.tabelStream = res;
+        });
+
+        this.pollingInterval = setInterval(() => {
+            $wire.streamTableSum().then((res) => {
+                this.tabelStream = res;
+            });
+        }, 3500);
+    },
+}" x-init="pollingRequest();">
+
     <div class="flex gap-3">
         {{-- input --}}
         <div class=" w-full">
@@ -68,7 +84,7 @@ $wire.on('materialsUpdated', (data) => {
                             class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     </div>
                     <div class="">
-                        <select wire:model="line_c" wire:change="lineChange" id="line_c"
+                        <select wire:model="line_c" @change="lineChange" id="line_c"
                             class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                             <option value="">Line Code</option>
                             @foreach ($listLine as $p)
@@ -80,11 +96,52 @@ $wire.on('materialsUpdated', (data) => {
                 </div>
                 <div class="">
 
-                    <button class="btn bg-red-500 shadow-md text-white px-2 py-1 m-1 rounded-lg text-sm"
+                    <button class="btn bg-red-500 shadow-md text-white px-2 py-1 m-1 rounded-lg "
                         @click="resetField">Clear</button>
                 </div>
 
             </div>
+
+        </div>
+
+        <div class="w-2/3 bg-gray-200 rounded-md">
+            <strong class="flex justify-center">Total Qty Retur &nbsp;<span x-text="tabelStream.qty"></span></strong>
+            <div class="relative overflow-y-auto shadow-md rounded-lg max-h-40">
+                <table class="w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs sticky top-0 text-gray-700 bg-gray-200">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                No Retur
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Jumlah Material
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Time Request
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="m in tabelStream.data" :key="m.material_no">
+                            <tr
+                                class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                <th scope="row"
+                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    <span x-text="m.no_retur"></span>
+                                </th>
+                                <td class="px-6 py-4">
+                                    <span x-text="m.count"></span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span x-text="m.time_request"></span>
+                                </td>
+                            </tr>
+                        </template>
+
+                    </tbody>
+                </table>
+            </div>
+
 
         </div>
     </div>
@@ -106,7 +163,10 @@ $wire.on('materialsUpdated', (data) => {
                             Material Name
                         </th>
                         <th scope="col" class="px-6 py-3">
-                            Qty Assy
+                            Qty Supply Assy
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Qty Receive Assy
                         </th>
                         <th scope="col" class="px-6 py-3">
                             Qty Retur
@@ -114,42 +174,46 @@ $wire.on('materialsUpdated', (data) => {
                     </tr>
                 </thead>
                 <tbody>
-                    
-
-                    @foreach ($materialRequest as $m)
+                    <template x-for="(m,index) in Materials" :key="m.material_no">
                         <tr
-                            :class="getRequestQty('{{ $m->material_no }}', 0) > 0 ? 'bg-green-300 text-black' : 'bg-white'">
+                            :class="getRequestQty(m.material_no, m.qty_retur) > 0 ? 'bg-green-300 text-black' : 'bg-white'">
                             <td class="px-6 py-4">
-                                {{ $loop->iteration }}
+                                <span x-text="index + 1"></span>
                             </td>
                             <th scope="row"
                                 class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {{ $m->material_no }}
+                                <span x-text="m.material_no"></span>
                             </th>
-                            <td class="px-6 py-4">
-                                {{ $m->material_name }}
+                            <td class="px-6 py-4" wire:ignore.self>
+                                <span x-text="m.material_name"></span>
                             </td>
-                            <td class="px-6 py-4">
-                                {{ $m->qty }}
+                            <td class="px-6 py-4 text-gray-900 " wire:ignore.self>
+                                <span x-text="m.qty_supply_assy"></span>
                             </td>
-                            <td class="px-6 py-4 cursor-pointer" @click="starteditingQtyReq('{{ $m->material_no }}')">
+                            <td class="px-6 py-4 text-gray-900 " wire:ignore.self>
+                                <span x-text="m.qty"></span>
+                            </td>
+                            <td class="px-6 py-4 cursor-pointer" @click="starteditingQtyReq(m.material_no)"
+                                wire:ignore.self>
 
                                 <!-- Jika sedang edit -->
-                                <template x-if="editingQtyReq === '{{ $m->material_no }}'">
-                                    <input type="number" min="1" x-ref="inputQty"
-                                        :value="getRequestQty('{{ $m->material_no }}', 0)"
-                                        @input="updateQty('{{ $m->material_no }}', $event.target.value)"
-                                        @blur="stopeditingQtyReq('{{ $m->material_no }}')"
+                                <template x-if="editingQtyReq === m.material_no">
+                                    <input type="number" min="1" :x-ref="'inputQty-' + m.material_no"
+                                        :value="getRequestQty(m.material_no, m.qty_retur)"
+                                        @input="updateQty(m.material_no, $event.target.value)"
+                                        @blur="stopeditingQtyReq(m.material_no)"
                                         class="border border-gray-300 rounded px-2 py-1 w-20">
                                 </template>
 
                                 <!-- Jika tidak sedang edit -->
-                                <template x-if="editingQtyReq !== '{{ $m->material_no }}'">
-                                    <span x-text="getRequestQty('{{ $m->material_no }}', 0)"></span>
+                                <template x-if="editingQtyReq !== m.material_no">
+                                    <span x-text="getRequestQty(m.material_no, m.qty_retur)"></span>
                                 </template>
                             </td>
                         </tr>
-                    @endforeach
+                    </template>
+
+
 
                 </tbody>
             </table>

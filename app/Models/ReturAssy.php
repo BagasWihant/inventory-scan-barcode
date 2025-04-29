@@ -15,5 +15,6 @@ class ReturAssy extends Model
         'line_c',
         'issue_date',
         'status',
+        'no_retur',
     ];
 }

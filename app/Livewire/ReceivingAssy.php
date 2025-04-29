@@ -50,7 +50,7 @@ class ReceivingAssy extends Component
                     ->on('mra.transaksi_no', '=', 'sd.pallet_no');
             })
             ->where('mra.transaksi_no', $trx)
-            ->selectRaw('mra.material_no, mra.material_name, mra.request_qty, sd.qty as qty_supply, mra.status, sd.qty as qty_receive, surat_jalan, mra.line_c')->get();
+            ->selectRaw('mra.material_no, mra.material_name, mra.request_qty, sd.qty as qty_supply, mra.status, sd.qty as qty_receive, surat_jalan, mra.line_c, mra.issue_date')->get();
 
         $this->transaksiNo = $trx;
         $this->materialScan = null;
@@ -96,7 +96,7 @@ class ReceivingAssy extends Component
                     'material_no' => $item['material_no'],
                     'material_name' => $item['material_name'],
                     'qty' => $item['qty_receive'],
-                    'issue_date' => date('Y-m-d'),
+                    'issue_date' => $item['issue_date'],
                     'line_c' => $item['line_c'],
                     'user_id' => $this->userId,
                     'surat_jalan' => $item['surat_jalan'],
