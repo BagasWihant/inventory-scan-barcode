@@ -42,9 +42,28 @@
         return this.editedQty[materialNo] ?? defaultQty;
     },
     submitRequest() {
-        $wire.submitRequest(this.Materials);
-        this.Materials = [];
-        this.editedQty = {};
+        $wire.submitRequest(this.Materials).then((res) => {
+            if (res == 'success') {
+
+                this.Materials = [];
+                this.editedQty = {};
+                Swal.fire({
+                    timer: 1000,
+                    title: `Retur Request Berhasil di kirimkan`,
+                    icon: 'success',
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            } else {
+                Swal.fire({
+                    timer: 1000,
+                    title: `Retur Request Gagal di kirimkan`,
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            }
+        });
     },
     resetField() {
         this.Materials = [];
@@ -122,7 +141,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <template x-for="m in tabelStream.data" :key="m.material_no">
+                        <template x-for="(m,index) in tabelStream.data" :key="index">
                             <tr
                                 class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                 <th scope="row"

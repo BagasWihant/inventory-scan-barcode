@@ -114,6 +114,7 @@ class ReturRequestAssy extends Component
         }
 
         $this->resetField();
+        return 'success';
     }
 
     public function resetField()
