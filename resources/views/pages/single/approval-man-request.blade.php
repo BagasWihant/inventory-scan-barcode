@@ -10,35 +10,20 @@
                     {{ Carbon\Carbon::parse($data->doc_date)->format('d-m-Y') }} </sp>
             </div>
             <!-- top -->
-            @if ($data->status == 'O')
+            @if (empty($data->checked_date))
                 <div class="text-center mb-14">
-                    <span class="text-2xl font-bold text-green-600">Pengajuan ke Purchasing</span>
+                    <span class="text-2xl font-bold text-green-600">Pengajuan ke Dept. Head</span>
+
                 </div>
-            @elseif($data->status == 'PT')
+            @else
                 <div class="text-center mb-14">
-                    <span class="text-2xl font-bold text-red-600">Ditolak Purchasing</span>
-                </div>
-            @elseif($data->status == 'AP')
-                <div class="text-center mb-14">
-                    <span class="text-2xl font-bold text-yellow-600">Pengajuan ke Supervisor</span>
-                </div>
-            @elseif($data->status == 'APT')
-                <div class="text-center mb-14">
-                    <span class="text-2xl font-bold text-red-600">Pengajuan ditolak Supervisor</span>
-                </div>
-            @elseif($data->status == 'AS')
-                <div class="text-center mb-14">
-                    <span class="text-2xl font-bold text-blue-600">Pengajuan ke Manajer</span>
-                </div>
-            @elseif($data->status == 'AMT')
-                <div class="text-center mb-14">
-                    <span class="text-2xl font-bold text-red-600">Pengajuan ditolek Manajer</span>
-                </div>
-            @elseif($data->status == 'AM')
-                <div class="text-center mb-14">
-                    <span class="text-2xl font-bold text-blue-600">Pengajuan disetujui Manajer</span>
+                    <span
+                        class="text-2xl font-bold {{ str_contains($data->status, 'Reject') ? 'text-red-600' : 'text-green-600' }}">
+                        {{ $data->status }}
+                    </span>
                 </div>
             @endif
+
             <div class="bg-slate-300 max-w-6xl p-4 rounded-xl shadow-md text-lg">
                 <iframe src="{{ asset($data->pdf) }}" frameborder="no" class="iframe"
                     style="width:100%;min-height:150vh"></iframe>
@@ -46,20 +31,13 @@
 
 
             <div class="my-14 flex justify-between" x-data="{ modal: false }">
-                @if (in_array($data->status, ['O', 'AP', 'AS']))
-
-                    <form action="./approve" method="post">
+                @if (empty($data->hr_recieved))
+                    <form action="./1-approve" method="post">
                         @csrf
                         <input type="hidden" name="data" value="{{ json_encode($data) }}">
                         <button type="submit"
                             class="text-lg uppercase bg-gradient-to-br from-cyan-600 to-blue-700 text-white px-4 py-2 rounded-lg transition duration-500 ease-in-out hover:opacity-80 hover:backdrop-blur-md hover:scale-105">
-                            Approve @if ($data->status == 'O')
-                                Purchasing
-                            @elseif($data->status == 'AP')
-                                Supervisor
-                            @else
-                                Manajer
-                            @endif
+                            {{ $data->status }}
                         </button>
                     </form>
 
@@ -76,7 +54,7 @@
                         class="flex inset-0 backdrop-blur-md overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 max-h-full">
                         <div class="bg-white p-6 rounded-lg shadow-lg w-2/4">
                             <h2 class="text-xl font-bold">Reason to reject</h2>
-                            <form action="./reject" method="post">
+                            <form action="./1-reject" method="post">
                                 @csrf
                                 <input type="hidden" name="data" value="{{ json_encode($data) }}">
                                 <div>

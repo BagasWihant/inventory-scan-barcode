@@ -117,6 +117,31 @@ class SinglePage extends Controller
 
     public function approve(Request $req, $type)
     {
+        if($type == 1){
+            $decode = json_decode($req->data);
+            $no = $decode->id;
+            $approvalSteps = [
+                'checked_date' => 'Checker Approve',
+                'approved1_date' => 'Approved1',
+                'approved2_date' => 'Approved2',
+                'hr_recieved' => 'Recieved' 
+            ];
+            foreach ($approvalSteps as $field => $param) {
+    
+                if (empty($decode->$field)) {
+                    DB::select("EXEC sp_hr_mpr_email_web ?, ?, ?", [$param, $decode->no_doc, '']);
+    
+                    $getData = $this->approvalMan($type, $no);
+    
+                    $data['pdf'] = $getData->pdf;
+                    $data['text'] = $getData->status;
+                    $data['status'] = '';
+                    $data['posisi'] = '';
+    
+                    return view('pages.single.approval-response', compact('data'));
+                }
+            }
+        }
         if ($type == 2) {
 
 
@@ -252,7 +277,7 @@ class SinglePage extends Controller
                 $html = view('templates.pdf.approval-generate', compact('req'))->render();
                 $page2 = view('templates.pdf.approval-monthly')->render();
 
-                $this->generatePdf($path, $html,null,[$page2]);
+                $this->generatePdf($path, $html, null, [$page2]);
 
                 $data['pdf'] = $req->pdf;
                 $data['text'] = 'Berhasil disetujui oleh';
@@ -270,8 +295,34 @@ class SinglePage extends Controller
     }
 
 
+
     public function reject(Request $req, $type)
     {
+        if($type == 1){
+            $decode = json_decode($req->data);
+            $id = $decode->id;
+
+            $approvalSteps = [
+                'checked_date' => 'Checker Reject',
+                'approved1_date' => 'Rejected1',
+                'approved2_date' => 'Rejected2',
+            ];
+            foreach ($approvalSteps as $field => $param) {
+    
+                if (empty($decode->$field)) {
+                    DB::select("EXEC sp_hr_mpr_email_web ?, ?, ?", [$param, $decode->no_doc, '']);
+    
+                    $getData = $this->approvalMan($type, $id);
+    
+                    $data['pdf'] = $getData->pdf;
+                    $data['text'] = $getData->status;
+                    $data['status'] = '';
+                    $data['posisi'] = '';
+    
+                    return view('pages.single.approval-response', compact('data'));
+                }
+            }  
+        }
         if ($type == 2) {
             $decode = json_decode($req->data, true);
             $status = $decode['status'];
@@ -482,8 +533,8 @@ class SinglePage extends Controller
                 'aprv.*',
                 'cek.emp_nm as checked_name',
                 'req.emp_nm as req_name',
-                'apr1.emp_nm as apr1_name',
-                'apr2.emp_nm as apr2_name',
+                'apr1.emp_nm as approved1_name',
+                'apr2.emp_nm as approved2_name',
                 'hr.emp_nm as hr_name'
             )
             ->join('IT.dbo.HR_MPR_Approval as aprv', 'main.id', '=', 'aprv.id')

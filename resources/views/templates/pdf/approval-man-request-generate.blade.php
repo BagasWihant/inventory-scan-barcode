@@ -214,45 +214,52 @@
                                     <th align="center">Received By</th>
                                 </tr>
                                 <tr>
-                                    <td height='80px' align="center"> {!! $data->req_by == null
+
+                                    <td height='80px' align="center"> {!! empty($data->req_date)
                                         ? ''
                                         : str_replace(
                                             '<?xml version="1.0" encoding="UTF-8"?>',
                                             '',
-                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->req_by/$data->req_name/$data->no_doc/$data->req_date"),
+                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->req_name-$data->req_by-$data->no_doc-$data->req_date"),
                                         ) !!} </td>
-                                    <td height='80px' align="center"> {!! $data->checked_by == null
+
+                                    <td height='80px' align="center"> {!! empty($data->checked_date)
                                         ? ''
                                         : str_replace(
                                             '<?xml version="1.0" encoding="UTF-8"?>',
                                             '',
-                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->checked_by/$data->checked_name/$data->no_doc/$data->req_date"),
-                                        ) !!} <br>
-                                        {{ $data->checked_judgement }}</td>
-                                    <td height='80px' align="center"> {!! $data->approved1_by == null
+                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->checked_name-$data->checked_by-$data->no_doc-$data->checked_date"),
+                                        ) !!} </td>
+
+
+                                    <td height='80px' align="center"> {!! empty($data->approved1_date)
                                         ? ''
                                         : str_replace(
                                             '<?xml version="1.0" encoding="UTF-8"?>',
                                             '',
-                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->approved1_by/$data->apr1_name/$data->no_doc/$data->approved1_date"),
-                                        ) !!} <br>
-                                        {{ $data->approved1_judgement }}</td>
-                                    <td height='80px' align="center"> {!! $data->approved2_by == null
+                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->approved1_name-$data->approved1_by-$data->no_doc-$data->approved1_date"),
+                                        ) !!} </td>
+
+
+                                    <td height='80px' align="center"> {!! empty($data->approved2_date)
                                         ? ''
                                         : str_replace(
                                             '<?xml version="1.0" encoding="UTF-8"?>',
                                             '',
-                                             SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->approved2_by/$data->apr2_name/$data->no_doc/$data->approved2_date"),
-                                        ) !!} <br>
-                                        {{ $data->approved2_judgement }}</td>
-                                    <td height='80px' align="center"> {!! $data->hr_by == null
+                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->approved2_name-$data->approved2_by-$data->no_doc-$data->approved2_date"),
+                                        ) !!} </td>
+
+
+
+                                    <td height='80px' align="center"> {!! empty($data->hr_recieved)
                                         ? ''
                                         : str_replace(
                                             '<?xml version="1.0" encoding="UTF-8"?>',
                                             '',
-                                             SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->hr_by/$data->hr_name/$data->no_doc/$data->hr_recieved"),
-                                        ) !!} <br>
-                                        {{ $data->hr_status }}</td>
+                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->hr_name-$data->hr_by-$data->no_doc-$data->hr_recieved"),
+                                        ) !!} </td>
+
+
                                 </tr>
                                 <tr>
                                     <td align="center">{{ $data->req_by == null ? '' : substr($data->req_name,0, 15) }}</td>
