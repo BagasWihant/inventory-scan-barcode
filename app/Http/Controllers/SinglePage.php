@@ -129,7 +129,7 @@ class SinglePage extends Controller
             foreach ($approvalSteps as $field => $param) {
     
                 if (empty($decode->$field)) {
-                    DB::select("EXEC sp_hr_mpr_email_web ?, ?, ?", [$param, $decode->no_doc, '']);
+                    DB::connection('it')->statement("EXEC sp_hr_mpr_email_web ?, ?, ?", [$param, $decode->no_doc, '']);
     
                     $getData = $this->approvalMan($type, $no);
     
@@ -310,13 +310,13 @@ class SinglePage extends Controller
             foreach ($approvalSteps as $field => $param) {
     
                 if (empty($decode->$field)) {
-                    DB::select("EXEC sp_hr_mpr_email_web ?, ?, ?", [$param, $decode->no_doc, '']);
+                    DB::connection('it')->statement("EXEC sp_hr_mpr_email_web ?, ?, ?", [$param, $decode->no_doc, '']);
     
                     $getData = $this->approvalMan($type, $id);
     
                     $data['pdf'] = $getData->pdf;
                     $data['text'] = $getData->status;
-                    $data['status'] = '';
+                    $data['status'] = '0';
                     $data['posisi'] = '';
     
                     return view('pages.single.approval-response', compact('data'));

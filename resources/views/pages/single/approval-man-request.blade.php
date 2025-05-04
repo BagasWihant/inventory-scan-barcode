@@ -30,14 +30,33 @@
             </div>
 
 
-            <div class="my-14 flex justify-between" x-data="{ modal: false }">
-                @if (empty($data->hr_recieved))
+            <div class="my-14 flex justify-between" x-data="{
+                modal: false,
+                message: '',
+                error: null,
+                submitForm() {
+                
+                    this.error = null;
+            
+                    if (this.message.trim() === '') {
+                        this.error = 'Reason is required';
+                    } else {
+                        this.$refs.form.submit();
+                    }
+                }
+            }">
+                @if (empty($data->hr_recieved) && !str_contains($data->status,'Reject'))
+
                     <form action="./1-approve" method="post">
                         @csrf
                         <input type="hidden" name="data" value="{{ json_encode($data) }}">
                         <button type="submit"
                             class="text-lg uppercase bg-gradient-to-br from-cyan-600 to-blue-700 text-white px-4 py-2 rounded-lg transition duration-500 ease-in-out hover:opacity-80 hover:backdrop-blur-md hover:scale-105">
-                            {{ $data->status }}
+                            @if (empty($data->checked_date))
+                                Pengajuan ke Dept. Head
+                            @else
+                                {{ $data->status }}
+                            @endif
                         </button>
                     </form>
 
@@ -54,22 +73,22 @@
                         class="flex inset-0 backdrop-blur-md overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 max-h-full">
                         <div class="bg-white p-6 rounded-lg shadow-lg w-2/4">
                             <h2 class="text-xl font-bold">Reason to reject</h2>
-                            <form action="./1-reject" method="post">
+                            <form  x-ref="form" action="./1-reject" method="post">
                                 @csrf
                                 <input type="hidden" name="data" value="{{ json_encode($data) }}">
                                 <div>
                                     <label for="first_name"
                                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Reason</label>
-                                    <textarea id="reject_message" name="message" required rows="4"
+                                    <textarea id="reject_message" name="message" x-model="message" required rows="4"
                                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                         placeholder="Write your message here..."></textarea>
-
+                                    <div class="text-red-500 text-sm" x-text="error" x-show="error"></div>
                                     <!-- <textarea required></textarea> -->
                                 </div>
                                 <div class="flex justify-end gap-4">
                                     <button @click="modal = false"
                                         class="uppercase mt-4 px-4 py-2 bg-gray-400 text-black rounded-lg">Close</button>
-                                    <button type="submit" @click="modal = false;"
+                                    <button type="button" @click="submitForm"
                                         class="uppercase mt-4 px-4 py-2 bg-red-500 text-white rounded-lg">REJECT</button>
                                 </div>
                             </form>
