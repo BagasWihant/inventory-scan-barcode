@@ -21,9 +21,15 @@
         this.dataDetail = []
     },
 
-    saveDetailScanned(){
-        @this.call('saveDetailScanned',this.dataDetail[0].no_retur).then((res) => {
-             if (res == 'success') {
+    saveDetailScanned() {
+        let status = null;
+        if (this.dataDetail[0].status == '-') {
+            status = '0';
+        } else if (this.dataDetail[0].status == '0') {
+            status = '1';
+        }
+        @this.call('saveDetailScanned', [this.dataDetail[0].no_retur, status]).then((res) => {
+            if (res == 'success') {
                 Swal.fire({
                     timer: 1000,
                     title: `Retur Berhasil di proses`,
@@ -56,7 +62,7 @@
                     d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
             </svg>
         </div>
-        <input type="text" id="search" 
+        <input type="text" id="search"
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Transaksi No." />
     </div>
@@ -81,8 +87,11 @@
                 </thead>
                 <tbody>
                     <template x-for="d in data" :key="d.no_retur">
-                        <tr :class="d.status === '-' ? 'bg-red-700 text-white font-semibold hover:bg-red-800' :
-                            'bg-green-700 text-white font-semibold hover:bg-green-800'"
+                        <tr :class="{
+                            'bg-red-700 text-white font-semibold hover:bg-red-800': d.status === '-',
+                            'bg-yellow-400 text-white font-semibold hover:bg-yellow-600': d.status === '0',
+                            'bg-green-700 text-white font-semibold hover:bg-green-800': d.status === '1'
+                        }"
                             class="py-2 h-10">
                             <td class="px-2" role="button" @click="showMaterialDetails(d.no_retur)">
                                 <span x-text="d.no_retur"></span>
@@ -94,7 +103,8 @@
                                 <span x-text="d.line_c"></span>
                             </td>
                             <td role="button" @click="showMaterialDetails(d.no_retur)">
-                                <span x-text="d.status == '-'  ? 'Belum diproses' : 'Sudah diproses'"></span>
+                                <span
+                                    x-text="d.status == '-'  ? 'Belum diproses' : d.status == '0' ? 'QA Checking' : 'Sudah diproses'"></span>
                             </td>
                         </tr>
                     </template>
@@ -168,7 +178,7 @@
                                                     <td>
                                                         <span x-text="d.line_c"></span>
                                                     </td>
-                                                    <td >
+                                                    <td>
                                                         <span x-text="d.qty"></span>
                                                     </td>
                                                 </tr>
@@ -184,11 +194,14 @@
                                 <button @click="closeModal" type="button"
                                     class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
 
-                                    <template x-if="dataDetail.length > 0 && dataDetail[0].status == '-' ">
+                                <template x-if="dataDetail.length > 0 && dataDetail[0].status != '1' ">
 
-                                        <button type="button" @click="saveDetailScanned"
-                                        class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-blue-500 rounded-lg border  hover:bg-blue-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Confirm</button>
-                                    </template>
+                                    <button type="button" @click="saveDetailScanned"
+                                        class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-blue-500 rounded-lg border  hover:bg-blue-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                                        <span x-text="dataDetail[0].status == '-' ? 'Confirm QA Checking' : 
+                                        (dataDetail[0].status == '0' ? 'Confirm to Stock' : '')"></span>
+                                    </button>
+                                </template>
 
                             </div>
                         </div>
@@ -234,7 +247,6 @@
                         timerProgressBar: true,
                     });
                 });
-
             </script>
         @endscript
     </div>
