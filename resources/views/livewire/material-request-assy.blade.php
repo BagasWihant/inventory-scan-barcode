@@ -1,6 +1,7 @@
 <div class="max-w-7xl m-auto" x-data="{
     type: null,
     Materials: [],
+    tmpMaterials: [],
     editingQtyReq: null,
     editedQty: {},
     starteditingQtyReq(material_no) {
@@ -11,10 +12,10 @@
         if (editedQty !== undefined) {
             const selected = this.Materials.find(m => m.material_no === material);
             if (selected) {
-                if (selected.request_qty < editedQty) {
+                if (selected.request_qty_ori < editedQty) {
                     Swal.fire({
                         timer: 1000,
-                        title: `Qty Request tidak boleh lebih besar dari  ${selected.request_qty}`,
+                        title: `Qty Request tidak boleh lebih besar dari  ${selected.request_qty_ori}`,
                         icon: 'error',
                         showConfirmButton: false,
                         timerProgressBar: true,
@@ -39,27 +40,39 @@
         this.editedQty = {};
 
     },
-    initMaterials(json) {
-        console.log(json)
-        this.Materials = JSON.parse(json);
+    initMaterials(data) {
+    
+        this.Materials = data;
+        this.tmpMaterials = data;
+        this.changeType();
     },
-    resetField(){
+    resetField() {
         this.Materials = [];
         this.type = null;
         $wire.resetField();
         document.getElementById('line_c').value = ''
+    },
+    changeType() {
+        if (this.type == 1) {
+            this.Materials = this.tmpMaterials.map(m => ({ ...m }));
+        } else {
+            this.Materials = this.tmpMaterials.map(material => {
+                return {
+                    ...material,
+                    request_qty: 0
+                };
+            });
+        }
     }
-    }" 
-    x-init="$wire.getMaterialData().then(data => {
-        Materials = data;
-        console.log('Materials load:', Materials);
-    });
+}" x-init="$wire.getMaterialData().then(data => {
+    {{-- Materials = data; --}}
+    initMaterials(data);
+});
 
-    // Listen for material updates from Livewire
-    $wire.on('materialsUpdated', (data) => {
-        Materials = data[0];
-        console.log('Materials updated:', data[0]);
-    });">
+// Listen for material updates from Livewire
+$wire.on('materialsUpdated', (data) => {
+    initMaterials(data[0]);
+});">
     <div class="flex gap-3">
         {{-- input --}}
         <div class=" w-full">
@@ -69,13 +82,14 @@
                 <div class="flex gap-4">
                     <div class="flex items-center px-2 rounded">
                         <input id="bordered-radio-1" type="radio" value="1" x-model="type" wire:model="type"
+                            @change="changeType()"
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="bordered-radio-1"
                             class="w-full py-4 ms-2 text-sm font-medium dark:text-gray-300">Reguler</label>
                     </div>
                     <div class="flex items-center px-2 rounded ">
                         <input checked id="bordered-radio-2" type="radio" value="2" x-model="type"
-                            wire:model="type"
+                            @change="changeType()" wire:model="type"
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="bordered-radio-2"
                             class="w-full py-4 ms-2 text-sm font-medium  dark:text-gray-300">Partial</label>
@@ -195,11 +209,10 @@
                     </tr>
                 </thead>
                 <tbody>
-
-                    @foreach ($materialRequest as $m)
+                    <template x-for="(m,i) in Materials" :key="m.material_no">
                         <tr class="border-b bg-white hover:bg-gray-50">
                             <td class="px-6 py-4">
-                                {{ $loop->iteration }}
+                                <span x-text="i+1"></span>
                             </td>
                             <th scope="row"
                                 class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -207,43 +220,42 @@
                             </th>
                             <th scope="row"
                                 class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {{ $m->material_no }}
+                                <span x-text="m.material_no"></span>
                             </th>
                             <td class="px-6 py-4">
-                                {{ $m->material_name }}
+                                <span x-text="m.material_name"></span>
                             </td>
                             <td class="px-6 py-4">
-                                {{ $m->qty_stock }}
+                                <span x-text="m.qty_stock"></span>
                             </td>
                             <td class="px-6 py-4 cursor-pointer"
-                                @click="type === '2' && starteditingQtyReq('{{ $m->material_no }}')"
+                                @click="type === '2' && starteditingQtyReq(m.material_no)"
                                 :class="{ 'cursor-not-allowed': type === '1' }">
 
 
                                 <!-- Jika type 2 dan sedang edit, tampilkan input -->
-                                <template x-if="editingQtyReq === '{{ $m->material_no }}' && type === '2'">
+                                <template x-if="editingQtyReq === m.material_no && type === '2'">
                                     <input type="number" min="1"
-                                        :value="getRequestQty('{{ $m->material_no }}', {{ $m->request_qty }})"
-                                        @input="updateQty('{{ $m->material_no }}', $event.target.value)"
-                                        @blur="stopeditingQtyReq('{{ $m->material_no }}')"
+                                        :value="getRequestQty(m.material_no, m.request_qty)"
+                                        @input="updateQty(m.material_no, $event.target.value)"
+                                        @blur="stopeditingQtyReq(m.material_no)"
                                         class="border border-gray-300 rounded px-2 py-1 w-20">
                                 </template>
 
                                 <!-- Jika type 1, hanya tampilkan text -->
                                 <template x-if="type === '1'">
                                     <span
-                                        x-text="getRequestQty('{{ $m->material_no }}', {{ $m->request_qty }})"></span>
+                                        x-text="getRequestQty(m.material_no, m.request_qty)"></span>
                                 </template>
 
                                 <!-- Jika type 2 dan tidak sedang edit, tampilkan text -->
-                                <template x-if="editingQtyReq !== '{{ $m->material_no }}' && type === '2'">
+                                <template x-if="editingQtyReq !== m.material_no && type === '2'">
                                     <span
-                                        x-text="getRequestQty('{{ $m->material_no }}', {{ $m->request_qty }})"></span>
+                                        x-text="getRequestQty(m.material_no, m.request_qty)"></span>
                                 </template>
                             </td>
                         </tr>
-                    @endforeach
-
+                    </template>
                 </tbody>
             </table>
 
