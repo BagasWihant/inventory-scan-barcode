@@ -232,7 +232,7 @@ class MaterialRequestAssy extends Component
     }
 
 
-    public function submitRequest($data)
+    public function submitRequest($data,$type)
     {
         $materialNos = array_column($data, 'material_no');
         ModelsMaterialRequestAssy::where('user_id', auth()->user()->id)
@@ -242,17 +242,19 @@ class MaterialRequestAssy extends Component
             ->update(['sisa_request_qty' => 0]);
 
         foreach ($data as $value) {
-            if ($value['request_qty'] > 0 || isset($value['request_qty_new'])) {
+            if (($value['request_qty'] > 0 && $type == '1') || (isset($value['request_qty_new']) && $type == '2')) {
 
                 $transaksiNoItem = (preg_match("/[a-z]/i", $value['material_no'])) ? $this->transactionNo['wr'] : $this->transactionNo['nw'];
 
                 $sisa = 0;
                 $req_qty = $value['request_qty'];
-                if (isset($value['request_qty_new'])) {
-                    $sisa = $value['request_qty'] - $value['request_qty_new'];
-                    $req_qty = $value['request_qty_new'];
-                }
 
+                if($type == '2'){
+                    if (isset($value['request_qty_new'])) {
+                        $sisa = $value['request_qty_ori'] - $value['request_qty_new'];
+                        $req_qty = $value['request_qty_new'];
+                    }
+                }
                 ModelsMaterialRequestAssy::create([
                     'transaksi_no' => $transaksiNoItem,
                     'material_no' => $value['material_no'],
