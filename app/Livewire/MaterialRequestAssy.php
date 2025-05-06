@@ -70,10 +70,10 @@ class MaterialRequestAssy extends Component
         $this->transactionNo['nw'] = "NW$ymd-" . str_pad($this->variablePage['materialRequestNW'], 4, '0', STR_PAD_LEFT);
     }
 
-    private function getListLine()
+    private function getListLine($date)
     {
         $listLine = DB::table('material_setup_mst')->select('line_c')
-            ->whereRaw('CONVERT(DATE, plan_issue_dt_from) = ?', [$this->date])
+            ->whereRaw('CONVERT(DATE, plan_issue_dt_from) = ?', [$date])
             ->distinct();
 
         return $listLine->get();
@@ -85,14 +85,14 @@ class MaterialRequestAssy extends Component
         $this->streamTableSum();
         $this->generateNoTransaksi();
         $this->variablePage['timeNow'] = Carbon::now()->format('Y-m-d H:i:s');
-        $this->date = Carbon::now()->format('Y-m-d');
-        $this->listLine = $this->getListLine();
+        $date = Carbon::now()->format('Y-m-d');
+        $this->listLine = $this->getListLine($date);
     }
 
 
-    public function dateDebounce()
+    public function dateDebounce($date)
     {
-        $this->listLine = $this->getListLine();
+        return $this->getListLine($date);
     }
 
     public function selectedDataDebounce()
@@ -102,18 +102,16 @@ class MaterialRequestAssy extends Component
         $this->materialNo = $this->selectedData['material_no'];
     }
 
-    public function lineChange()
+    public function lineChange($line_c, $date)
     {
-        if (!$this->type) {
-            $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Please choose Type']);
-            return false;
-        }
+        $materialSudah = false;
+        $this->line_c = $line_c;
+        $this->date = $date;
         // cek data di request assy 
-        $yangSudahRequest = ModelsMaterialRequestAssy::where('user_id', auth()->user()->id)
-            ->where('line_c', $this->line_c)
-            ->where('issue_date', $this->date)
-            ->select('material_no', 'sisa_request_qty')
-            ->get();
+        $yangSudahRequest = DB::table('material_request_assy')->where('user_id', auth()->user()->id)
+            ->where('line_c', $line_c)
+            ->where('issue_date', $date)
+            ->select('material_no', 'sisa_request_qty')->get();
         if ($yangSudahRequest->isEmpty()) {
             // Tampilkan semua material
             $materialList = DB::table('material_setup_mst as s')
@@ -123,11 +121,11 @@ class MaterialRequestAssy extends Component
                         ->on('s.line_c', '=', 'mis.line_c');
                 })
                 ->join('material_mst as m', 's.material_no', '=', 'm.matl_no')
-                ->where('s.line_c', $this->line_c)
-                ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $this->date)
+                ->where('s.line_c', $line_c)
+                ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $date)
                 ->selectRaw('s.material_no, m.matl_nm as material_name, sum(mis.picking_qty) as request_qty,sum(mis.picking_qty) as request_qty_ori , s.kit_no, m.qty as qty_stock, m.bag_qty')
                 ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty');
-            // dd($materialList->toRawSql());
+
             $this->materialRequest = $materialList->get();
         } else {
 
@@ -136,8 +134,10 @@ class MaterialRequestAssy extends Component
             })->pluck('material_no')->toArray();
 
             if (empty($materialNoLebihDariNol)) {
+                $materialSudah = true;
                 $this->materialRequest = [];
             } else {
+                $materialSudah = true;
                 $materialListSql = DB::table('material_setup_mst as s')
 
                     ->join('material_mst as m', 's.material_no', '=', 'm.matl_no')
@@ -146,18 +146,39 @@ class MaterialRequestAssy extends Component
                             ->on('s.line_c', '=', 'mr.line_c')
                             ->on(DB::raw("CONVERT(DATE, mr.issue_date)"), '=', 'mr.issue_date');
                     })
-                    ->where('s.line_c', $this->line_c)
-                    ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $this->date)
-                    ->whereIn('s.material_no', $materialNoLebihDariNol) // filter only sisa > 0
+                    ->where('s.line_c', $line_c)
+                    ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $date)
+                    ->where('sisa_request_qty', '>', 0)
+                    ->whereIn('s.material_no', $materialNoLebihDariNol)
                     ->selectRaw('s.material_no, m.matl_nm as material_name,mr.sisa_request_qty as request_qty, mr.sisa_request_qty as request_qty_ori, s.kit_no, m.qty as qty_stock, m.bag_qty ')
                     ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty, mr.sisa_request_qty');
 
-                $this->materialRequest = $materialListSql->get();
+                $materialList = DB::table('material_setup_mst as s')
+                    ->join('material_in_stock as mis', function ($join) {
+                        $join->on('s.material_no', '=', 'mis.material_no')
+                            ->on('s.kit_no', '=', 'mis.kit_no')
+                            ->on('s.line_c', '=', 'mis.line_c');
+                    })
+                    ->join('material_mst as m', 's.material_no', '=', 'm.matl_no')
+                    ->where('s.line_c', $line_c)
+                    ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $date)
+                    ->whereNotIn('s.material_no', $materialNoLebihDariNol)
+
+                    ->selectRaw('s.material_no, m.matl_nm as material_name, sum(mis.picking_qty) as request_qty,sum(mis.picking_qty) as request_qty_ori , s.kit_no, m.qty as qty_stock, m.bag_qty')
+                    ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty');
+
+                $data1 = $materialList->get();
+                $data2 = $materialListSql->get();
+                $mergedData = $data2->merge($data1);
+                $this->materialRequest = $mergedData;
             }
         }
 
-
+        if (count($this->materialRequest) == 0 && $materialSudah) {
+            $this->dispatch('alert', ['time' => 2500, 'icon' => 'info', 'title' => 'Material kosong / sudah di request']);
+        }
         $this->dispatch('materialsUpdated', $this->materialRequest);
+        return $this->materialRequest;
     }
 
     public function resetField()
@@ -232,14 +253,10 @@ class MaterialRequestAssy extends Component
     }
 
 
-    public function submitRequest($data,$type)
+    public function submitRequest($data, $type)
     {
         $materialNos = array_column($data, 'material_no');
-        ModelsMaterialRequestAssy::where('user_id', auth()->user()->id)
-            ->where('line_c', $this->line_c)
-            ->where('issue_date', $this->date)
-            ->whereIn('material_no', $materialNos)
-            ->update(['sisa_request_qty' => 0]);
+
 
         foreach ($data as $value) {
             if (($value['request_qty'] > 0 && $type == '1') || (isset($value['request_qty_new']) && $type == '2')) {
@@ -249,11 +266,27 @@ class MaterialRequestAssy extends Component
                 $sisa = 0;
                 $req_qty = $value['request_qty'];
 
-                if($type == '2'){
+                if ($type == '2') {
                     if (isset($value['request_qty_new'])) {
                         $sisa = $value['request_qty_ori'] - $value['request_qty_new'];
                         $req_qty = $value['request_qty_new'];
+
+                        // untuk skip jika edit tapi di isi 0
+                        if ($value['request_qty_new'] < 1) {
+                            continue;
+                        }
+                        ModelsMaterialRequestAssy::where('user_id', auth()->user()->id)
+                            ->where('line_c', $this->line_c)
+                            ->where('issue_date', $this->date)
+                            ->where('material_no', $value['material_no'])
+                            ->update(['sisa_request_qty' => 0]);
                     }
+                } else if ($type == '1') {
+                    ModelsMaterialRequestAssy::where('user_id', auth()->user()->id)
+                        ->where('line_c', $this->line_c)
+                        ->where('issue_date', $this->date)
+                        ->where('material_no', $value['material_no'])
+                        ->update(['sisa_request_qty' => 0]);
                 }
                 ModelsMaterialRequestAssy::create([
                     'transaksi_no' => $transaksiNoItem,

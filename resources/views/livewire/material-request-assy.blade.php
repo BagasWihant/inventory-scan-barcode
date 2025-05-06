@@ -1,5 +1,8 @@
 <div class="max-w-7xl m-auto" x-data="{
     type: null,
+    date: new Date().toISOString().split('T')[0],
+    line_c: null,
+    lines: [],
     Materials: [],
     tmpMaterials: [],
     editingQtyReq: null,
@@ -11,6 +14,7 @@
         const editedQty = this.editedQty[material];
         if (editedQty !== undefined) {
             const selected = this.Materials.find(m => m.material_no === material);
+            const selectedtmp = this.tmpMaterials.find(m => m.material_no === material);
             if (selected) {
                 if (selected.request_qty_ori < editedQty) {
                     Swal.fire({
@@ -23,6 +27,7 @@
                     return;
                 }
                 selected.request_qty_new = editedQty;
+                selectedtmp.request_qty_new = editedQty;
             }
         }
         this.editingQtyReq = null;
@@ -30,18 +35,20 @@
     updateQty(materialNo, value) {
         this.editedQty[materialNo] = Number(value);
     },
-    getRequestQty(materialNo, defaultQty) {
+    getRequestQty(materialNo, defaultQty, type) {
+        if (type == 1) {
+            return defaultQty
+        }
         return this.editedQty[materialNo] ?? defaultQty;
     },
     submitRequest() {
-
-        $wire.submitRequest(this.Materials);
+        $wire.submitRequest(this.Materials, this.type);
         this.Materials = [];
         this.editedQty = {};
-
+        this.resetField();
     },
     initMaterials(data) {
-    
+
         this.Materials = data;
         this.tmpMaterials = data;
         this.changeType();
@@ -55,7 +62,7 @@
     changeType() {
         if (this.type == 1) {
             this.Materials = this.tmpMaterials.map(m => ({ ...m }));
-        } else {
+        } else if (this.type == 2) {
             this.Materials = this.tmpMaterials.map(material => {
                 return {
                     ...material,
@@ -63,6 +70,28 @@
                 };
             });
         }
+    },
+    lineChange() {
+        if (this.type == null) {
+            Swal.fire({
+                timer: 1000,
+                title: `Please choose type first`,
+                icon: 'error',
+                showConfirmButton: false,
+                timerProgressBar: true,
+            });
+            this.resetField();
+            return;
+        }
+        $wire.lineChange(this.line_c, this.date).then(data => {
+            console.log(data)
+        });
+    },
+    dateDebounce() {
+        $wire.dateDebounce(this.date).then(data => {
+            this.lines = data;
+            console.log(data)
+        });
     }
 }" x-init="$wire.getMaterialData().then(data => {
     {{-- Materials = data; --}}
@@ -81,32 +110,30 @@ $wire.on('materialsUpdated', (data) => {
             <div class="flex justify-between gap-2 flex-shrink-0">
                 <div class="flex gap-4">
                     <div class="flex items-center px-2 rounded">
-                        <input id="bordered-radio-1" type="radio" value="1" x-model="type" wire:model="type"
-                            @change="changeType()"
+                        <input id="bordered-radio-1" type="radio" value="1" x-model="type" @change="changeType()"
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="bordered-radio-1"
                             class="w-full py-4 ms-2 text-sm font-medium dark:text-gray-300">Reguler</label>
                     </div>
                     <div class="flex items-center px-2 rounded ">
                         <input checked id="bordered-radio-2" type="radio" value="2" x-model="type"
-                            @change="changeType()" wire:model="type"
+                            @change="changeType()"
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="bordered-radio-2"
                             class="w-full py-4 ms-2 text-sm font-medium  dark:text-gray-300">Partial</label>
                     </div>
                     <div class="">
                         <label for="">Issue Date</label>
-                        <input wire:change="dateDebounce" wire:model='date' type="date"
-                            @if ($userRequestDisable == true) disabled @endif onfocus="this.showPicker()"
+                        <input @change="dateDebounce" x-model='date' type="date" onfocus="this.showPicker()"
                             class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     </div>
                     <div class="">
-                        <select wire:model="line_c" wire:change="lineChange" id="line_c"
+                        <select x-model="line_c" @change="lineChange" id="line_c"
                             class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                             <option value="">Line Code</option>
-                            @foreach ($listLine as $p)
-                                <option value="{{ $p->line_c }}">{{ $p->line_c }}</option>
-                            @endforeach
+                            <template x-for="line in lines" :key="line.id">
+                                <option x-text="line.line_c"></option>
+                            </template>
                         </select>
                     </div>
 
@@ -203,13 +230,18 @@ $wire.on('materialsUpdated', (data) => {
                         <th scope="col" class="px-6 py-3">
                             Qty Stock
                         </th>
+                        <template x-if="type == 2">
+                            <th scope="col" class="px-6 py-3">
+                                Qty Receive
+                            </th>
+                        </template>
                         <th scope="col" class="px-6 py-3">
                             Qty Request
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <template x-for="(m,i) in Materials" :key="m.material_no">
+                    <template x-for="(m,i) in Materials" :key="i">
                         <tr class="border-b bg-white hover:bg-gray-50">
                             <td class="px-6 py-4">
                                 <span x-text="i+1"></span>
@@ -228,6 +260,12 @@ $wire.on('materialsUpdated', (data) => {
                             <td class="px-6 py-4">
                                 <span x-text="m.qty_stock"></span>
                             </td>
+
+                            <template x-if="type == 2">
+                                <td scope="col" class="px-6 py-3">
+                                    <span x-text="m.request_qty_ori"></span>
+                                </td>
+                            </template>
                             <td class="px-6 py-4 cursor-pointer"
                                 @click="type === '2' && starteditingQtyReq(m.material_no)"
                                 :class="{ 'cursor-not-allowed': type === '1' }">
@@ -244,14 +282,12 @@ $wire.on('materialsUpdated', (data) => {
 
                                 <!-- Jika type 1, hanya tampilkan text -->
                                 <template x-if="type === '1'">
-                                    <span
-                                        x-text="getRequestQty(m.material_no, m.request_qty)"></span>
+                                    <span x-text="getRequestQty(m.material_no, m.request_qty,type)"></span>
                                 </template>
 
                                 <!-- Jika type 2 dan tidak sedang edit, tampilkan text -->
                                 <template x-if="editingQtyReq !== m.material_no && type === '2'">
-                                    <span
-                                        x-text="getRequestQty(m.material_no, m.request_qty)"></span>
+                                    <span x-text="getRequestQty(m.material_no, m.request_qty,type)"></span>
                                 </template>
                             </td>
                         </tr>
