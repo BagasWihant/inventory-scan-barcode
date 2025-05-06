@@ -136,22 +136,7 @@ class MaterialRequestAssy extends Component
             })->pluck('material_no')->toArray();
 
             if (empty($materialNoLebihDariNol)) {
-                $listMaterialYangMasuk = $yangSudahRequest->pluck('material_no')->toArray();
-
-                $materialList = DB::table('material_setup_mst as s')
-                    ->join('material_in_stock as mis', function ($join) {
-                        $join->on('s.material_no', '=', 'mis.material_no')
-                            ->on('s.kit_no', '=', 'mis.kit_no')
-                            ->on('s.line_c', '=', 'mis.line_c');
-                    })
-                    ->join('material_mst as m', 's.material_no', '=', 'm.matl_no')
-                    ->where('s.line_c', $this->line_c)
-                    ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $this->date)
-                    ->whereNotIn('s.material_no', $listMaterialYangMasuk)
-                    ->selectRaw('s.material_no, m.matl_nm as material_name, sum(mis.picking_qty) as request_qty,sum(mis.picking_qty) as request_qty_ori , s.kit_no, m.qty as qty_stock, m.bag_qty')
-                    ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty');
-
-                $this->materialRequest = $materialList->get();
+                $this->materialRequest = [];
             } else {
                 $materialListSql = DB::table('material_setup_mst as s')
 
