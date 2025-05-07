@@ -193,7 +193,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template x-for="(m,index) in Materials" :key="m.material_no">
+                    <template x-for="(m,index) in Materials" :key="index">
                         <tr
                             :class="getRequestQty(m.material_no, m.qty_retur) > 0 ? 'bg-green-300 text-black' : 'bg-white'">
                             <td class="px-6 py-4">

@@ -3,7 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\MaterialInStockAssy;
-use App\Models\ReturAssy;
+use App\Models\ReturQa;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -73,9 +73,9 @@ class ReturRequestAssy extends Component
             mas.surat_jalan, mas.issue_date, mas.line_c, 
             sum(sd.request_qty) as qty_supply_assy, (sum(sd.request_qty) - sum(mas.qty)) as qty_retur')
             ->groupByRaw('mas.material_no,mas.material_name,mas.surat_jalan,mas.issue_date,mas.line_c')->get();
-            // dd($returnData->toRawSql());
+        // dd($returnData);
 
-            // join setup dtl qty sama terus. soalnya di proses assy input qty nya emang sama 
+        // join setup dtl qty sama terus. soalnya di proses assy input qty nya emang sama 
         // $returnData = MaterialInStockAssy::where('user_id', auth()->user()->id)
         //     ->join('material_request_assy as sd', function ($join) {
         //         $join->on('material_in_stock_assy.material_no', '=', 'sd.material_no')
@@ -94,17 +94,14 @@ class ReturRequestAssy extends Component
     public function submitRequest($data)
     {
         $noRetur = 'RTR-' . $this->generateNoRetur();
-        
         // ambil data yang sudah di edit
         foreach ($data as $v) {
-
-            if (isset($v['qty_retur']) && $v['qty_retur'] > 0) {
-                
-                ReturAssy::create([
+            if (isset($v['retur_qty']) && $v['retur_qty'] > 0) {
+                ReturQa::create([
                     'no_retur' => $noRetur,
                     'material_no' => $v['material_no'],
                     'material_name' => $v['material_name'],
-                    'qty' => $v['qty_retur'],
+                    'qty' => $v['retur_qty'],
                     'surat_jalan' => $v['surat_jalan'],
                     'line_c' => $v['line_c'],
                     'issue_date' => $v['issue_date'],
