@@ -4,7 +4,10 @@
     data: [],
     dataDetail: [],
     editQty: null,
-    editedQty: {},
+    editedQtyPassed: {},
+    editedQtyFail: {},
+    editingQtyPassed: null,
+    editingQty: null,
     loadData() {
         @this.call('loadData').then((res) => {
             this.data = res;
@@ -21,14 +24,14 @@
         this.dataDetail = []
     },
 
-    saveDetailScanned() {
-        let status = null;
+    saveDetailScanned(status) {
+        {{-- let status = null;
         if (this.dataDetail[0].status == '-') {
             status = '0';
         } else if (this.dataDetail[0].status == '0') {
             status = '1';
-        }
-        @this.call('saveDetailScanned', [this.dataDetail[0].no_retur, status]).then((res) => {
+        } --}}
+        @this.call('saveDetailScanned', [this.dataDetail[0].no_retur, status, this.dataDetail]).then((res) => {
             if (res == 'success') {
                 Swal.fire({
                     timer: 1000,
@@ -49,6 +52,61 @@
             }
         });
         this.closeModal();
+    },
+    getRequestQtyPassed(mat, def) {
+        return this.editedQtyPassed[mat] ?? def;
+    },
+    updateQtyPassed(mat, value) {
+        this.editedQtyPassed[mat] = Number(value);
+
+    },
+    stopeditingQtyPassed(material) {
+        const editedQty = this.editedQtyPassed[material];
+        if (editedQty !== undefined) {
+            const selected = this.dataDetail.find(m => m.material_no === material);
+            if (selected) {
+                selected.retur_qty_pass = editedQty;
+            }
+        }
+        this.editingQtypass = null;
+    },
+    getRequestQtyFail(mat, def) {
+        return this.editedQtyFail[mat] ?? def;
+    },
+    editQty(material_no, stat) {
+        if (stat == '0') {
+            this.editingQty = 'inputQtyFail-' + material_no;
+            this.$nextTick(() => {
+                const inputRef = this.$refs['inputQtyFail-' + material_no];
+                if (inputRef) {
+                    inputRef.focus();
+                }
+            });
+
+        } else {
+            this.editingQty = 'inputQtyPassed-' + material_no;
+            this.$nextTick(() => {
+                const inputRef = this.$refs['inputQtyPassed-' + material_no];
+                if (inputRef) {
+                    inputRef.focus();
+                }
+            });
+
+        }
+    },
+    updateQtyFail(mat, value) {
+        this.editedQtyFail[mat] = Number(value);
+
+    },
+    stopeditingQtyFail(material) {
+        const editedQty = this.editedQtyFail[material];
+        if (editedQty !== undefined) {
+            const selected = this.dataDetail.find(m => m.material_no === material);
+            if (selected) {
+                selected.retur_qty_fail = editedQty;
+            }
+        }
+        this.editingQtyFail = null;
     }
 }" x-init="loadData();">
     <div class="text-2xl text-center font-extrabold py-6" id="setHerePagination">Proses Retur Assy</div>
@@ -88,7 +146,8 @@
                 <tbody>
                     <template x-for="d in data" :key="d.no_retur">
                         <tr :class="{
-                            'bg-red-700 text-white font-semibold hover:bg-red-800': d.status === '-',
+                            'bg-red-700 text-white font-semibold hover:bg-red-800': d.status === 'x',
+                            'bg-red-400 text-white font-semibold hover:bg-red-600': d.status === '-',
                             'bg-yellow-400 text-white font-semibold hover:bg-yellow-600': d.status === '0',
                             'bg-green-700 text-white font-semibold hover:bg-green-800': d.status === '1'
                         }"
@@ -104,7 +163,7 @@
                             </td>
                             <td role="button" @click="showMaterialDetails(d.no_retur)">
                                 <span
-                                    x-text="d.status == '-'  ? 'Belum diproses' : d.status == '0' ? 'QA Checking' : 'Sudah diproses'"></span>
+                                    x-text="d.status == '-'  ? 'Belum diproses' : d.status == 'x' ? 'DiReject' : d.status == '1' ? 'Sudah diproses' : '??'"></span>
                             </td>
                         </tr>
                     </template>
@@ -160,7 +219,13 @@
                                                     Line C
                                                 </th>
                                                 <th scope="col" class="px-3 py-3">
-                                                    Qty Retur
+                                                    Qty Retur Request
+                                                </th>
+                                                <th scope="col" class="px-3 py-3">
+                                                    Qty Retur Fail
+                                                </th>
+                                                <th scope="col" class="px-3 py-3">
+                                                    Qty Retur Passed
                                                 </th>
                                                 <th>
                                                 </th>
@@ -181,6 +246,45 @@
                                                     <td>
                                                         <span x-text="d.qty"></span>
                                                     </td>
+                                                    <td class="px-6 py-4 cursor-pointer"
+                                                        @click="editQty(d.material_no,0)">
+
+                                                        <!-- Jika sedang edit -->
+                                                        <template x-if="editingQty === 'inputQtyFail-'+d.material_no">
+                                                            <input type="number" min="1"
+                                                                :x-ref="'inputQtyFail-' + d.material_no"
+                                                                :value="getRequestQtyFail(d.material_no, 0)"
+                                                                @input="updateQtyFail(d.material_no, $event.target.value)"
+                                                                @blur="stopeditingQtyFail(d.material_no)"
+                                                                class="border border-gray-300 rounded px-2 py-1 w-20">
+                                                        </template>
+
+                                                        <!-- Jika tidak sedang edit -->
+                                                        <template x-if="editingQty !== 'inputQtyFail-'+ d.material_no">
+                                                            <span x-text="getRequestQtyFail(d.material_no, 0)"></span>
+                                                        </template>
+                                                    </td>
+                                                    <td class="px-6 py-4 cursor-pointer"
+                                                        @click="editQty(d.material_no,1)">
+
+                                                        <!-- Jika sedang edit -->
+                                                        <template
+                                                            x-if="editingQty === 'inputQtyPassed-'+ d.material_no">
+                                                            <input type="number" min="1"
+                                                                :x-ref="'inputQtyPassed-' + d.material_no"
+                                                                :value="getRequestQtyPassed(d.material_no, 0)"
+                                                                @input="updateQtyPassed(d.material_no, $event.target.value)"
+                                                                @blur="stopeditingQtyPassed(d.material_no)"
+                                                                class="border border-gray-300 rounded px-2 py-1 w-20">
+                                                        </template>
+
+                                                        <!-- Jika tidak sedang edit -->
+                                                        <template
+                                                            x-if="editingQty !== 'inputQtyPassed-'+d.material_no">
+                                                            <span
+                                                                x-text="getRequestQtyPassed(d.material_no, 0)"></span>
+                                                        </template>
+                                                    </td>
                                                 </tr>
                                             </template>
                                         </tbody>
@@ -189,19 +293,26 @@
 
                             </div>
                             <div
-                                class="flex items-center justify-end p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600 sticky bottom-0 bg-white">
+                                class="flex items-center justify-between p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600 sticky bottom-0 bg-white">
+                                <div class="">
 
-                                <button @click="closeModal" type="button"
-                                    class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
+                                    <button @click="closeModal" type="button"
+                                        class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
+                                </div>
+                                {{-- 
+                                <template x-if="dataDetail.length > 0 && dataDetail[0].status != '1' "> --}}
+                                <div class="">
 
-                                <template x-if="dataDetail.length > 0 && dataDetail[0].status != '1' ">
-
-                                    <button type="button" @click="saveDetailScanned"
-                                        class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-blue-500 rounded-lg border  hover:bg-blue-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                                        <span x-text="dataDetail[0].status == '-' ? 'Confirm QA Checking' : 
-                                        (dataDetail[0].status == '0' ? 'Confirm to Stock' : '')"></span>
+                                    <button type="button" @click="saveDetailScanned('x')"
+                                        class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-red-500 rounded-lg border  hover:bg-red-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                                        <span x-text="'Reject'"></span>
                                     </button>
-                                </template>
+                                    <button type="button" @click="saveDetailScanned('1')"
+                                        class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-blue-500 rounded-lg border  hover:bg-blue-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                                        <span x-text="'Confirm QA'"></span>
+                                    </button>
+                                </div>
+                                {{-- </template> --}}
 
                             </div>
                         </div>
