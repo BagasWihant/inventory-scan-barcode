@@ -39,32 +39,34 @@ class ReturProsesAssy extends Component
         } elseif ($status == '1') {
             foreach ($data as $v) {
                 // jika ada yang oke
-                if (isset($v["retur_qty_pass"])) {
-                    if ($v["retur_qty_pass"] > 0) {
-                        ReturAssy::create([
-                            'no_retur' => $v['no_retur'],
-                            'material_no' => $v['material_no'],
-                            'material_name' => $v['material_name'],
-                            'qty' => $v['retur_qty_pass'],
-                            'surat_jalan' => $v['surat_jalan'],
-                            'line_c' => $v['line_c'],
-                            'issue_date' => $v['issue_date'],
-                            'status' => 1,
-                        ]);
+                if ($v["retur_qty_pass"] > 0) {
+                    ReturAssy::create([
+                        'no_retur' => $v['no_retur'],
+                        'material_no' => $v['material_no'],
+                        'material_name' => $v['material_name'],
+                        'qty' => $v['retur_qty_pass'],
+                        'surat_jalan' => $v['surat_jalan'],
+                        'line_c' => $v['line_c'],
+                        'issue_date' => $v['issue_date'],
+                        'status' => 1,
+                    ]);
 
-                        $matMst = DB::table('material_mst')->where('matl_no', $v['material_no']);
-                        $matMstData = $matMst->first();
-                        $matMst->update([
-                            'qty' => $matMstData->qty + $v['retur_qty_pass'],
-                            'qty_IN' => $matMstData->qty_OUT + $v['retur_qty_pass']
-                        ]);
-                    }
+                    // ini jika diretur semua
+                    // if($v['retur_qty_fail'] == 0){
+                    //     DB::table('retur_qa')->where('id', $v['id'])->update(['status' => '1']);
+                    // }
+
+                    $matMst = DB::table('material_mst')->where('matl_no', $v['material_no']);
+                    $matMstData = $matMst->first();
+                    $matMst->update([
+                        'qty' => $matMstData->qty + $v['retur_qty_pass'],
+                        'qty_IN' => $matMstData->qty_OUT + $v['retur_qty_pass']
+                    ]);
                 }
 
-                if (isset($v["retur_qty_fail"])) {
-                    if ($v["retur_qty_fail"] > 0) {
-                        DB::table('retur_qa')->where('id', $v['id'])->update(['status' => 'x']);
-                    }
+
+                if ($v["retur_qty_fail"] > 0) {
+                    DB::table('retur_qa')->where('id', $v['id'])->update(['status' => 'x', 'qty' => $v['retur_qty_fail']]);
                 }
             }
             return 'success';
