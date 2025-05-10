@@ -133,13 +133,34 @@ class MaterialRequestAssy extends Component
                 return $item->sisa_request_qty > 0;
             })->pluck('material_no')->toArray();
 
+            $matno = $yangSudahRequest->pluck('material_no')->toArray();
+
             if (empty($materialNoLebihDariNol)) {
+                // ini yang sudah direquest tapi tidak ada sisa, qty request sama semua
+
+                $yangQtyNol = $yangSudahRequest->filter(function ($item) {
+                    return $item->sisa_request_qty <= 0;
+                })->pluck('material_no')->toArray();
+
                 $materialSudah = true;
-                $this->materialRequest = [];
+                $materialList = DB::table('material_setup_mst as s')
+                    ->join('material_in_stock as mis', function ($join) {
+                        $join->on('s.material_no', '=', 'mis.material_no')
+                            ->on('s.kit_no', '=', 'mis.kit_no')
+                            ->on('s.line_c', '=', 'mis.line_c');
+                    })
+                    ->join('material_mst as m', 's.material_no', '=', 'm.matl_no')
+                    ->where('s.line_c', $line_c)
+                    ->whereNotIn('s.material_no', $yangQtyNol)
+                    ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $date)
+                    ->selectRaw('s.material_no, m.matl_nm as material_name, sum(mis.picking_qty) as request_qty,sum(mis.picking_qty) as request_qty_ori , s.kit_no, m.qty as qty_stock, m.bag_qty')
+                    ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty');
+
+                $this->materialRequest = $materialList->get();
             } else {
                 $materialSudah = true;
+                // ini mencari yang sisa
                 $materialListSql = DB::table('material_setup_mst as s')
-
                     ->join('material_mst as m', 's.material_no', '=', 'm.matl_no')
                     ->join('material_request_assy as mr', function ($join) {
                         $join->on('s.material_no', '=', 'mr.material_no')
@@ -153,6 +174,8 @@ class MaterialRequestAssy extends Component
                     ->selectRaw('s.material_no, m.matl_nm as material_name,mr.sisa_request_qty as request_qty, mr.sisa_request_qty as request_qty_ori, s.kit_no, m.qty as qty_stock, m.bag_qty ')
                     ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty, mr.sisa_request_qty');
 
+                // ini mencari yang utuh
+                    
                 $materialList = DB::table('material_setup_mst as s')
                     ->join('material_in_stock as mis', function ($join) {
                         $join->on('s.material_no', '=', 'mis.material_no')
@@ -161,24 +184,35 @@ class MaterialRequestAssy extends Component
                     })
                     ->join('material_mst as m', 's.material_no', '=', 'm.matl_no')
                     ->where('s.line_c', $line_c)
-                    ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $date)
-                    ->whereNotIn('s.material_no', $materialNoLebihDariNol)
+                    ->whereNotIn('s.material_no', $matno)
 
+                    ->where(DB::raw("CONVERT(DATE, s.plan_issue_dt_from)"), $date)
                     ->selectRaw('s.material_no, m.matl_nm as material_name, sum(mis.picking_qty) as request_qty,sum(mis.picking_qty) as request_qty_ori , s.kit_no, m.qty as qty_stock, m.bag_qty')
                     ->groupByRaw('s.material_no, m.iss_unit, m.iss_min_lot, m.matl_nm, s.kit_no, m.qty, m.bag_qty');
 
                 $data1 = $materialList->get();
                 $data2 = $materialListSql->get();
+                // dd($materialList->toRawSql(), $data2);
                 $mergedData = $data2->merge($data1);
                 $this->materialRequest = $mergedData;
             }
         }
 
-        if (count($this->materialRequest) == 0 && $materialSudah) {
-            $this->dispatch('alert', ['time' => 2500, 'icon' => 'info', 'title' => 'Material kosong / sudah di request']);
+        // if (count($this->materialRequest) == 0 && $materialSudah) {
+        //     $this->dispatch('alert', ['time' => 2500, 'icon' => 'info', 'title' => 'Material kosong / sudah di request']);
+        // }
+
+        
+        $palet = [];
+        if($line_c) {
+            $palet = DB::table('material_in_stock as mis')->where('line_c', $line_c)->distinct()->select('pallet_no')->get();
         }
+        
         $this->dispatch('materialsUpdated', $this->materialRequest);
-        return $this->materialRequest;
+        return [
+            'data' => $this->materialRequest,
+            'palet' => $palet
+        ];
     }
 
     public function resetField()

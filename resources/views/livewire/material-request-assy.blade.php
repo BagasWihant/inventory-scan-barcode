@@ -2,6 +2,7 @@
     type: null,
     date: new Date().toISOString().split('T')[0],
     line_c: null,
+    palet: [],
     lines: [],
     Materials: [],
     tmpMaterials: [],
@@ -83,15 +84,15 @@
             this.resetField();
             return;
         }
-        $wire.lineChange(this.line_c, this.date).then(data => {
-            console.log(data)
+        $wire.lineChange(this.line_c, this.date).then(res => {
+            this.palet = res.palet;
         });
     },
     dateDebounce() {
         $wire.dateDebounce(this.date).then(data => {
             this.lines = data;
-            console.log(data)
         });
+
     }
 }" x-init="$wire.getMaterialData().then(data => {
     {{-- Materials = data; --}}
@@ -136,7 +137,6 @@ $wire.on('materialsUpdated', (data) => {
                             </template>
                         </select>
                     </div>
-
                 </div>
                 <div class="">
 
@@ -149,6 +149,7 @@ $wire.on('materialsUpdated', (data) => {
                 </div>
 
             </div>
+
 
         </div>
         <div class="w-2/3 bg-gray-200 rounded-md">
