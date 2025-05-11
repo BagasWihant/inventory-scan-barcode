@@ -14,6 +14,8 @@ Route::middleware(['auth','updateActivity'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/setting', fn() => view('pages.settings'))->name('setting');
+
 
     Route::middleware('isPrepareStockTaking')->controller(InventoryInController::class)->group(function () {
         Route::get('palet_in', 'index')->name('inventory.index');

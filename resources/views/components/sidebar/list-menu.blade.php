@@ -130,6 +130,11 @@
             'hidden' => true,
         ],
         [
+            'url' => route('setting'),
+            'label' => 'Setting',
+            'hidden' => true,
+        ],
+        [
             'url' => 'http://172.16.250.5/it/',
             'label' => 'File Manager',
             'new_tab' => '',
