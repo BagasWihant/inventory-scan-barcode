@@ -57,7 +57,7 @@
                             <td role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 {{ $d->type == 1 ? 'Sudah di Cetak' : 'Belum di Cetak' }}
                             </td>
-                            <td  role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
+                            <td role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 @if ($d->status == 1)
                                     Sudah di proses
                                 @elseif($d->status == 0)
@@ -65,10 +65,9 @@
                                 @endif
                             </td>
                             <td>
-                                @if ($d->type != 1)
-                                    <button class="bg-blue-600 px-4 py-2 text-white rounded-md"
-                                        wire:click="print('{{ $d->transaksi_no }}')">Print</button>
-                                @endif
+                                <button class="bg-blue-600 px-4 py-2 text-white rounded-md"
+                                    wire:click="print('{{ $d->transaksi_no }}')">Print</button>
+
                             </td>
                         </tr>
                     @endforeach

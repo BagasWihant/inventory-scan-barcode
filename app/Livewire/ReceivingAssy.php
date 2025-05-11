@@ -8,10 +8,12 @@ use App\Models\MaterialRequestAssy;
 use App\Models\SetupDtlAssy;
 use App\Models\SetupMstAssy;
 use App\Models\temp_request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
 
 class ReceivingAssy extends Component
 {
@@ -28,6 +30,25 @@ class ReceivingAssy extends Component
     {
         $this->userId = auth()->user()->id;
         $this->getData();
+    }
+
+    private function configAddMaterial()
+    {
+        $configKey = 'ADD_MAT_BTN_RECEIVE';
+
+        $row = Cache::rememberForever($configKey, function () use ($configKey) {
+            return DB::table('WH_config')->where('config', $configKey)->first();
+        });
+
+        if (!$row) {
+            DB::table('WH_config')->updateOrInsert(
+                ['config' => $configKey],
+                ['value' => '0']
+            );
+            return '0';
+        }
+
+        return $row->value;
     }
     public function print($id)
     {
@@ -50,11 +71,29 @@ class ReceivingAssy extends Component
                     ->on('mra.transaksi_no', '=', 'sd.pallet_no');
             })
             ->where('mra.transaksi_no', $trx)
-            ->selectRaw('mra.material_no, mra.material_name, mra.request_qty, sd.qty as qty_supply, mra.status, sd.qty as qty_receive, surat_jalan, mra.line_c, mra.issue_date')->get();
+            ->selectRaw('mra.transaksi_no,mra.material_no, mra.material_name, mra.request_qty, sd.qty as qty_supply, mra.status, sd.qty as qty_receive, surat_jalan, mra.line_c, mra.issue_date')->get();
 
         $this->transaksiNo = $trx;
         $this->materialScan = null;
-        return $dataPrint;
+        $buttonAdd = $this->configAddMaterial();
+
+        return [$dataPrint, $buttonAdd];
+    }
+
+    public function addMaterialDetail($add, $sample)
+    {
+        MaterialRequestAssy::create([
+            'transaksi_no' => $sample[0]['transaksi_no'],
+            'material_no' => $add['material_no'],
+            'material_name' => '-',
+            'type' => '-',
+            'request_qty' => 0,
+            'bag_qty' => 0,
+            'issue_date' => $sample[0]['issue_date'],
+            'line_c' => $sample[0]['line_c'],
+            'user_id' => auth()->user()->id,
+            'status' => '0',
+        ]);
     }
 
     public function getData()
@@ -71,6 +110,7 @@ class ReceivingAssy extends Component
 
     public function saveDetailScanned($data)
     {
+        dd($data);
         try {
             DB::beginTransaction();
             $mst = SetupMstAssy::create([

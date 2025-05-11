@@ -18,10 +18,12 @@
             editQtyName: null,
             editedQty: {},
             showModal: false,
+            addButton: false,
             showMaterialDetails(trx) {
                 @this.call('getMaterial', trx).then((data) => {
                     this.showModal = true
-                    this.transaksiSelected = data
+                    this.transaksiSelected = data[0]
+                    this.addButton = data[1]
                 });
             },
             closeModal() {
@@ -76,7 +78,32 @@
             saveDetailScanned() {
                 @this.call('saveDetailScanned', this.transaksiSelected)
                 this.closeModal()
-            }
+            },
+            showForm: false,
+            form: {
+                material_no: '',
+                material_name: '',
+                request_qty: 0,
+                qty_supply: 0,
+                qty_receive: 0,
+            },
+            addMaterial() {
+                if (!this.form.material_no || !this.form.material_name) {
+                    alert('Material No and Material Name are required.');
+                    return;
+                }
+                this.transaksiSelected.push({ ...this.form });
+                @this.call('addMaterialDetail', this.form,this.transaksiSelected)
+                
+                this.form = {
+                    material_no: '',
+                    material_name: '',
+                    request_qty: 0,
+                    qty_supply: 0,
+                    qty_receive: 0,
+                };
+                this.showForm = false;
+            },
         }">
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-gray-900 uppercase bg-gray-300">
@@ -177,13 +204,35 @@
                             </template>
 
                         </div>
-                        <div class="text-center">
-                            <span class="text-red-600">Pastikan saat edit <strong>Qty</strong> sesuai dengan kelipatan
-                                <strong>Min. Lot</strong></span>
+                        <div class="flex justify-end p-3" x-show="addButton == 1">
+                            <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg"
+                                x-show="showForm == false" @click="showForm = !showForm" x-transition>Add
+                                Material</button>
                         </div>
-                        <div class="p-3">
+                        <div class="p-3" x-show="showForm" x-transition>
+                            <div class="bg-gray-100 p-4 rounded-lg shadow-md space-y-3">
+                                <label for="">Material No</label>
+                                <input type="text" placeholder="Material No" class="w-full p-2 border rounded"
+                                    x-model="form.material_no">
+                                <label for="">Material Name</label>
+                                <input type="text" placeholder="Material Name" class="w-full p-2 border rounded"
+                                    x-model="form.material_name">
+                                <label for="">Qty Receive</label>
+                                <input type="number" placeholder="Qty Receive" class="w-full p-2 mb-3 border rounded"
+                                    x-model.number="form.qty_receive">
+
+                                <div class="flex justify-end gap-3">
+                                    <button class="bg-red-400 text-white px-4 py-2 rounded"
+                                        @click="showForm = !showForm">Cancel</button>
+                                    <button class="bg-green-600 text-white px-4 py-2 rounded"
+                                        @click="addMaterial()">Submit</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-3" x-show="showForm == false" x-transition>
                             <div class="relative overflow-y-auto shadow-md rounded-lg my-4">
-                                <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                                <table
+                                    class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                                     <thead class="text-gray-900 uppercase bg-gray-300">
                                         <tr>
                                             <th scope="col" class="px-3 py-3">
@@ -213,7 +262,7 @@
                                         <template x-for="m in transaksiSelected" :key="m.material_no">
                                             <tr
                                                 :class="m.request_qty == m.qty_receive ? ' bg-green-500 text-white' :
-                                                    ' bg-yellow-400 text-white' ">
+                                                    ' bg-yellow-400 text-white'">
                                                 <td class="px-3 py-2" x-text="m.material_no"></td>
                                                 <td class="px-3 py-2" x-text="'-'"></td>
                                                 <td class="px-3 py-2" x-text="m.material_name"></td>
