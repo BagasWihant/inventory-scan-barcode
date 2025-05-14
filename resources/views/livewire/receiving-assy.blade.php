@@ -29,6 +29,7 @@
             closeModal() {
                 this.transaksiSelected = [];
                 this.showModal = false
+                this.showForm = false
             },
             saveDetailScanned() {
                 @this.call('saveDetailScanned').then((data) => {
@@ -78,6 +79,7 @@
             saveDetailScanned() {
                 @this.call('saveDetailScanned', this.transaksiSelected)
                 this.closeModal()
+                this.showForm = false
             },
             showForm: false,
             form: {
@@ -93,8 +95,8 @@
                     return;
                 }
                 this.transaksiSelected.push({ ...this.form });
-                @this.call('addMaterialDetail', this.form,this.transaksiSelected)
-                
+                @this.call('addMaterialDetail', this.form, this.transaksiSelected)
+        
                 this.form = {
                     material_no: '',
                     material_name: '',
@@ -104,6 +106,21 @@
                 };
                 this.showForm = false;
             },
+            inputPenerima: '',
+            openListPenerima: false,
+            listPenerima: [],
+            searchPenerima() {
+                console.log(this.inputPenerima)
+                @this.call('searchPenerima', this.inputPenerima).then((res) => {
+        
+                    this.openListPenerima = true
+                    this.listPenerima = res
+                })
+            },
+            pilihPenerima(penerima) {
+                this.inputPenerima = penerima
+                this.openListPenerima = false
+            }
         }">
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-gray-900 uppercase bg-gray-300">
@@ -164,8 +181,8 @@
             </table>
 
             <!-- Main modal -->
-            <div id="static-modal" data-modal-backdrop="static" tabindex="-1" aria-hidden="true" x-show="showModal"
-                x-cloak x-transition:enter="transition ease-out duration-300"
+            <div id="static-modal" data-modal-backdrop="static" tabindex="-1" x-show="showModal" x-cloak
+                x-transition:enter="transition ease-out duration-300"
                 x-transition:enter-start="scale-90 backdrop-blur-sm"
                 x-transition:enter-end=" scale-100 backdrop-blur-md"
                 x-transition:leave="transition ease-in duration-200" x-transition:leave-start=" scale-100"
@@ -191,23 +208,39 @@
                                 </button>
                             </div>
 
-                            <template x-if="transaksiSelected[0]?.status == 0 ">
+                        </div>
+                        <div class="flex justify-between">
+                            <div class="w-full">
                                 <div class="px-6 py-2">
                                     <label for="large-input"
-                                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material
-                                        No.
+                                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nama
+                                        Penerima
                                     </label>
-                                    <input type="text" wire:model="materialScan"
-                                        wire:keydown.debounce.300ms="prosesScan"
+                                    <input type="text" x-model="inputPenerima" placeholder="Search Here..."
+                                        x-on:input="searchPenerima"
                                         class=" block w-1/4 p-2 text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                 </div>
-                            </template>
+                                <div class="absolute shadow-md z-10 w-1/2 left-3" x-show="openListPenerima">
 
-                        </div>
-                        <div class="flex justify-end p-3" x-show="addButton == 1">
-                            <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg"
-                                x-show="showForm == false" @click="showForm = !showForm" x-transition>Add
-                                Material</button>
+                                    <ul x-on:click.outside="openListPenerima = !openListPenerima"
+                                        x-transition:enter="transition ease-out duration-300"
+                                        x-transition:enter-start="opacity-0 translate"
+                                        x-transition:enter-end="opacity-100 translate"
+                                        x-transition:leave="transition ease-in duration-300"
+                                        x-transition:leave-start="opacity-100 translate"
+                                        x-transition:leave-end="opacity-0 translate" class="w-full cursor-pointer">
+                                        <template x-for="lp in listPenerima" :key="lp">
+                                            <li class="w-full text-gray-700 p-2 bg-white  hover:bg-blue-200 rounded-sm"
+                                                @click="pilihPenerima(lp)" x-text="lp"></li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="w-full flex justify-end p-3" x-show="addButton == 1">
+                                <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg"
+                                    x-show="showForm == false" @click="showForm = !showForm" x-transition>Add
+                                    Material</button>
+                            </div>
                         </div>
                         <div class="p-3" x-show="showForm" x-transition>
                             <div class="bg-gray-100 p-4 rounded-lg shadow-md space-y-3">
@@ -218,8 +251,8 @@
                                 <input type="text" placeholder="Material Name" class="w-full p-2 border rounded"
                                     x-model="form.material_name">
                                 <label for="">Qty Receive</label>
-                                <input type="number" placeholder="Qty Receive" class="w-full p-2 mb-3 border rounded"
-                                    x-model.number="form.qty_receive">
+                                <input type="number" placeholder="Qty Receive"
+                                    class="w-full p-2 mb-3 border rounded" x-model.number="form.qty_receive">
 
                                 <div class="flex justify-end gap-3">
                                     <button class="bg-red-400 text-white px-4 py-2 rounded"

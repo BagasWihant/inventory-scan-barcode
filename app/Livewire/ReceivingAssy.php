@@ -108,6 +108,10 @@ class ReceivingAssy extends Component
             ->orderByDesc(DB::raw('CONVERT(DATE,created_at)'))->get();
     }
 
+    public function searchPenerima($input){
+        $data = DB::table('users')->where('username', 'like', '%' . $input . '%')->select('username')->limit(5)->get()->pluck('username')->toArray();
+        return $data;
+    }
     public function saveDetailScanned($data)
     {
         dd($data);
