@@ -235,7 +235,7 @@ class RequestMaterialProsesAssy extends Component
         try {
 
             DB::beginTransaction();
-            $idSetupMst = DB::table('Setup_mst')->insertGetId([
+            $idSetupMst = DB::table('Setup_mst_assy')->insertGetId([
                 'issue_dt' => date('Y-m-d'),
                 'line_cd' => $this->transaksiNo,
                 'status' => '1',
@@ -250,7 +250,7 @@ class RequestMaterialProsesAssy extends Component
                     return ['success' => false, 'message' => "Tidak bisa Confirm, Qty supply lebih atau kosong"];
                 }
 
-                DB::table('Setup_dtl')->insert([
+                DB::table('Setup_dtl_assy')->insert([
                     'setup_id' => $idSetupMst,
                     'material_no' => $item->material_no,
                     'qty' => $item->qty_supply,
