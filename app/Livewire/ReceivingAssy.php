@@ -35,20 +35,21 @@ class ReceivingAssy extends Component
     private function configAddMaterial()
     {
         $configKey = 'ADD_MAT_BTN_RECEIVE';
+        if (auth()->user()->Admin == 1) {
+            return 1;
+        }
 
         $row = Cache::rememberForever($configKey, function () use ($configKey) {
             return DB::table('WH_config')->where('config', $configKey)->first();
         });
 
-        if (!$row) {
-            DB::table('WH_config')->updateOrInsert(
-                ['config' => $configKey],
-                ['value' => '0']
-            );
-            return '0';
+        if (!empty($row)) {
+            $data = json_decode($row->value, true);
+            if ($data[$this->userId] == 1) {
+                return 1;
+            }
+            return 0;
         }
-
-        return $row->value;
     }
     public function print($id)
     {
@@ -66,12 +67,12 @@ class ReceivingAssy extends Component
     public function getMaterial($trx)
     {
         $dataPrint = DB::table('material_request_assy as mra')
-            ->leftJoin('setup_dtl as sd', function ($join) {
+            ->leftJoin('setup_dtl_assy as sd', function ($join) {
                 $join->on('mra.material_no', '=', 'sd.material_no')
                     ->on('mra.transaksi_no', '=', 'sd.pallet_no');
             })
             ->where('mra.transaksi_no', $trx)
-            ->selectRaw('mra.transaksi_no,mra.material_no, mra.material_name, mra.request_qty, sd.qty as qty_supply, mra.status, sd.qty as qty_receive, surat_jalan, mra.line_c, mra.issue_date')->get();
+            ->selectRaw('mra.transaksi_no,mra.material_no, mra.material_name, mra.request_qty, sd.qty as qty_supply, mra.status, sd.qty as qty_receive, surat_jalan, mra.line_c, mra.issue_date,sd.setup_id')->get();
 
         $this->transaksiNo = $trx;
         $this->materialScan = null;
@@ -94,6 +95,14 @@ class ReceivingAssy extends Component
             'user_id' => auth()->user()->id,
             'status' => '0',
         ]);
+
+        DB::table('Setup_dtl_assy')->insert([
+            'setup_id' => $add['setup_id'],
+            'material_no' => $add['material_no'],
+            'qty' => $add['qty_receive'],
+            'created_at' => now(),
+            'pallet_no' => $sample[0]['transaksi_no'],
+        ]);
     }
 
     public function getData()
@@ -108,13 +117,17 @@ class ReceivingAssy extends Component
             ->orderByDesc(DB::raw('CONVERT(DATE,created_at)'))->get();
     }
 
-    public function searchPenerima($input){
-        $data = DB::table('users')->where('username', 'like', '%' . $input . '%')->select('username')->limit(5)->get()->pluck('username')->toArray();
+    public function searchPenerima($input)
+    {
+        $data = DB::table('ms_nik')
+            ->where('nik', 'like', '%' . $input . '%')
+            ->orWhere('nama', 'like', '%' . $input . '%')
+            ->select('nama', 'nik')->limit(5)->get()->toArray();
+
         return $data;
     }
-    public function saveDetailScanned($data)
+    public function saveDetailScanned($data, $penerima)
     {
-        dd($data);
         try {
             DB::beginTransaction();
             $mst = SetupMstAssy::create([
@@ -144,13 +157,14 @@ class ReceivingAssy extends Component
                     'line_c' => $item['line_c'],
                     'user_id' => $this->userId,
                     'surat_jalan' => $item['surat_jalan'],
+                    'penerima' => $penerima['nama'],
                 ]);
 
                 $matMst = DB::table('material_mst')->where('matl_no', $item['material_no']);
                 $matMstData = $matMst->first();
                 $matMst->update([
-                    'qty' => $matMstData->qty - $item['qty_supply'],
-                    'qty_OUT' => $matMstData->qty_OUT + $item['qty_supply']
+                    'qty' => (int) $matMstData->qty - (int) $item['qty_supply'],
+                    'qty_OUT' => (int)$matMstData->qty_OUT + (int)$item['qty_supply']
                 ]);
             }
 

@@ -22,5 +22,6 @@ class MaterialInStockAssy extends Model
         'loc_cd',
         'proses_date',
         'surat_jalan',
+        'penerima'
     ];
 }

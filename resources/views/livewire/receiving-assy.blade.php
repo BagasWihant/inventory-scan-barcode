@@ -33,7 +33,6 @@
             },
             saveDetailScanned() {
                 @this.call('saveDetailScanned').then((data) => {
-                    console.log(data);
                     if (data.success) {
                         return this.showModal = false
                     }
@@ -77,7 +76,11 @@
                 }
             },
             saveDetailScanned() {
-                @this.call('saveDetailScanned', this.transaksiSelected)
+                if (this.penerima.nik == null) {
+                    alert('Penerima tidak boleh kosong');
+                    return
+                }
+                @this.call('saveDetailScanned', this.transaksiSelected,this.penerima)
                 this.closeModal()
                 this.showForm = false
             },
@@ -90,16 +93,17 @@
                 qty_receive: 0,
             },
             addMaterial() {
-                if (!this.form.material_no || !this.form.material_name) {
-                    alert('Material No and Material Name are required.');
+                if (!this.form.material_no) {
+                    alert('Material No are required.');
                     return;
                 }
+                this.form.setup_id = this.transaksiSelected[0].setup_id;
                 this.transaksiSelected.push({ ...this.form });
                 @this.call('addMaterialDetail', this.form, this.transaksiSelected)
         
                 this.form = {
                     material_no: '',
-                    material_name: '',
+                    material_name: '-',
                     request_qty: 0,
                     qty_supply: 0,
                     qty_receive: 0,
@@ -107,19 +111,22 @@
                 this.showForm = false;
             },
             inputPenerima: '',
+            penerima: {
+                nik: null,
+                nama: null,
+            },
             openListPenerima: false,
             listPenerima: [],
             searchPenerima() {
-                console.log(this.inputPenerima)
                 @this.call('searchPenerima', this.inputPenerima).then((res) => {
-        
                     this.openListPenerima = true
                     this.listPenerima = res
                 })
             },
             pilihPenerima(penerima) {
-                this.inputPenerima = penerima
+                this.inputPenerima = penerima.nama
                 this.openListPenerima = false
+                this.penerima = penerima
             }
         }">
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -209,35 +216,47 @@
                             </div>
 
                         </div>
-                        <div class="flex justify-between">
+                        <div class="flex justify-between" x-show="showForm == false">
                             <div class="w-full">
-                                <div class="px-6 py-2">
-                                    <label for="large-input"
-                                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nama
-                                        Penerima
-                                    </label>
-                                    <input type="text" x-model="inputPenerima" placeholder="Search Here..."
-                                        x-on:input="searchPenerima"
-                                        class=" block w-1/4 p-2 text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                                </div>
-                                <div class="absolute shadow-md z-10 w-1/2 left-3" x-show="openListPenerima">
+                                <div x-show="penerima.nik == null">
+                                    <div class="px-6 py-2">
+                                        <label for="large-input"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nama
+                                            Penerima
+                                        </label>
+                                        <input type="text" x-model="inputPenerima" placeholder="Search Here..."
+                                            x-on:input="searchPenerima"
+                                            class=" block w-1/4 p-2 text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                    </div>
+                                    <div class="absolute shadow-md z-10 w-1/2 left-3" x-show="openListPenerima">
 
-                                    <ul x-on:click.outside="openListPenerima = !openListPenerima"
-                                        x-transition:enter="transition ease-out duration-300"
-                                        x-transition:enter-start="opacity-0 translate"
-                                        x-transition:enter-end="opacity-100 translate"
-                                        x-transition:leave="transition ease-in duration-300"
-                                        x-transition:leave-start="opacity-100 translate"
-                                        x-transition:leave-end="opacity-0 translate" class="w-full cursor-pointer">
-                                        <template x-for="lp in listPenerima" :key="lp">
-                                            <li class="w-full text-gray-700 p-2 bg-white  hover:bg-blue-200 rounded-sm"
-                                                @click="pilihPenerima(lp)" x-text="lp"></li>
-                                        </template>
-                                    </ul>
+                                        <ul x-on:click.outside="openListPenerima = !openListPenerima"
+                                            x-transition:enter="transition ease-out duration-300"
+                                            x-transition:enter-start="opacity-0 translate"
+                                            x-transition:enter-end="opacity-100 translate"
+                                            x-transition:leave="transition ease-in duration-300"
+                                            x-transition:leave-start="opacity-100 translate"
+                                            x-transition:leave-end="opacity-0 translate" class="w-full cursor-pointer">
+                                            <template x-for="(lp,i) in listPenerima" :key="i">
+                                                <li class="w-full text-gray-700 p-2 bg-white  hover:bg-blue-200 rounded-sm"
+                                                    @click="pilihPenerima(lp)" x-text="lp.nik + ' | ' + lp.nama"></li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div x-show="penerima.nik != null">
+                                    <div class="px-6 py-2">
+                                        <p class="mb-2 text-lg font-medium text-gray-900"
+                                            x-text="'Nik Penerima : ' + penerima.nik"></p>
+                                        <p class="mb-2 text-lg font-medium text-gray-900"
+                                            x-text="'Nama Penerima : ' + penerima.nama"></p>
+                                        <button class="bg-red-600 shadow-md text-white p-1 rounded-lg text-sm"
+                                            @click="penerima.nama = null;penerima.nik = null; inputPenerima = null">Reset</button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="w-full flex justify-end p-3" x-show="addButton == 1">
-                                <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg"
+                                <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg h-10"
                                     x-show="showForm == false" @click="showForm = !showForm" x-transition>Add
                                     Material</button>
                             </div>
@@ -292,7 +311,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <template x-for="m in transaksiSelected" :key="m.material_no">
+                                        <template x-for="(m,i) in transaksiSelected" :key="i">
                                             <tr
                                                 :class="m.request_qty == m.qty_receive ? ' bg-green-500 text-white' :
                                                     ' bg-yellow-400 text-white'">
