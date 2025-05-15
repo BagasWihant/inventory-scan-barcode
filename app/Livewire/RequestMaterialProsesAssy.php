@@ -235,6 +235,14 @@ class RequestMaterialProsesAssy extends Component
         try {
 
             DB::beginTransaction();
+            $idSetupMst = DB::table('Setup_mst')->insertGetId([
+                'issue_dt' => date('Y-m-d'),
+                'line_cd' => $this->transaksiNo,
+                'status' => '1',
+                'created_at' => now(),
+                'created_by' => $this->userId,
+                'finished_at' => now(),
+            ]);
             $idSetupMst = DB::table('Setup_mst_assy')->insertGetId([
                 'issue_dt' => date('Y-m-d'),
                 'line_cd' => $this->transaksiNo,
@@ -251,6 +259,13 @@ class RequestMaterialProsesAssy extends Component
                 }
 
                 DB::table('Setup_dtl_assy')->insert([
+                    'setup_id' => $idSetupMst,
+                    'material_no' => $item->material_no,
+                    'qty' => $item->qty_supply,
+                    'created_at' => now(),
+                    'pallet_no' => $this->transaksiNo,
+                ]);
+                DB::table('Setup_dtl')->insert([
                     'setup_id' => $idSetupMst,
                     'material_no' => $item->material_no,
                     'qty' => $item->qty_supply,
