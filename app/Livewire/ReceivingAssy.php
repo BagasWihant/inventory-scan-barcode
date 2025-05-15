@@ -160,12 +160,6 @@ class ReceivingAssy extends Component
                     'penerima' => $penerima['nama'],
                 ]);
 
-                $matMst = DB::table('material_mst')->where('matl_no', $item['material_no']);
-                $matMstData = $matMst->first();
-                $matMst->update([
-                    'qty' => (int) $matMstData->qty - (int) $item['qty_supply'],
-                    'qty_OUT' => (int)$matMstData->qty_OUT + (int)$item['qty_supply']
-                ]);
             }
 
             // qty supply baca dari temp request nek tak delete di receiving assy suplly nya kosong
