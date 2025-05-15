@@ -80,11 +80,12 @@
                     alert('Penerima tidak boleh kosong');
                     return
                 }
-                @this.call('saveDetailScanned', this.transaksiSelected,this.penerima)
+                @this.call('saveDetailScanned', this.transaksiSelected, this.penerima)
                 this.closeModal()
                 this.showForm = false
             },
             showForm: false,
+            showFormStep2: false,
             form: {
                 material_no: '',
                 material_name: '',
@@ -98,6 +99,7 @@
                     return;
                 }
                 this.form.setup_id = this.transaksiSelected[0].setup_id;
+                this.form.penanggung_jawab = this.penanggungJawab.nama;
                 this.transaksiSelected.push({ ...this.form });
                 @this.call('addMaterialDetail', this.form, this.transaksiSelected)
         
@@ -109,24 +111,39 @@
                     qty_receive: 0,
                 };
                 this.showForm = false;
+                this.penanggungJawab = {
+                    nik: null,
+                    nama: null,
+                };
+                this.showFormStep2 = false;
             },
             inputPenerima: '',
             penerima: {
                 nik: null,
                 nama: null,
             },
+            penanggungJawab: {
+                nik: null,
+                nama: null,
+            },
             openListPenerima: false,
             listPenerima: [],
             searchPenerima() {
+            console.log(this.penerima)
                 @this.call('searchPenerima', this.inputPenerima).then((res) => {
                     this.openListPenerima = true
                     this.listPenerima = res
                 })
             },
             pilihPenerima(penerima) {
-                this.inputPenerima = penerima.nama
+                this.inputPenerima = ''
                 this.openListPenerima = false
                 this.penerima = penerima
+            },
+            pilihPenanggungJawab(penerima) {
+                this.inputPenerima = ''
+                this.openListPenerima = false
+                this.penanggungJawab = penerima
             }
         }">
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -216,7 +233,7 @@
                             </div>
 
                         </div>
-                        <div class="flex justify-between" x-show="showForm == false">
+                        <div  x-effect="console.log('penerima updated', penerima)" class="flex justify-between" x-show="showForm == false">
                             <div class="w-full">
                                 <div x-show="penerima.nik == null">
                                     <div class="px-6 py-2">
@@ -262,22 +279,75 @@
                             </div>
                         </div>
                         <div class="p-3" x-show="showForm" x-transition>
-                            <div class="bg-gray-100 p-4 rounded-lg shadow-md space-y-3">
-                                <label for="">Material No</label>
-                                <input type="text" placeholder="Material No" class="w-full p-2 border rounded"
-                                    x-model="form.material_no">
-                                <label for="">Material Name</label>
-                                <input type="text" placeholder="Material Name" class="w-full p-2 border rounded"
-                                    x-model="form.material_name">
-                                <label for="">Qty Receive</label>
-                                <input type="number" placeholder="Qty Receive"
-                                    class="w-full p-2 mb-3 border rounded" x-model.number="form.qty_receive">
 
-                                <div class="flex justify-end gap-3">
-                                    <button class="bg-red-400 text-white px-4 py-2 rounded"
-                                        @click="showForm = !showForm">Cancel</button>
-                                    <button class="bg-green-600 text-white px-4 py-2 rounded"
-                                        @click="addMaterial()">Submit</button>
+                            <div class="bg-gray-100 p-4 rounded-lg shadow-md space-y-3">
+                                {{-- SET PENANGGUNG JAWAB --}}
+                                <div class="flex" x-show="showFormStep2 == false">
+                                    <div class="px-6 py-2" x-show="penanggungJawab.nik == null">
+                                        <label for="large-input"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nama
+                                            Penanggung Jawab
+                                        </label>
+                                        <input type="text" x-model="inputPenerima" placeholder="Search Here..."
+                                            x-on:input="searchPenerima"
+                                            class=" block w-1/2 p-2 text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                    </div>
+                                    <div class="">
+                                        <div x-show="penanggungJawab.nik != null">
+                                            <div class="px-6 py-2">
+                                                <p class="mb-2 text-lg font-medium text-gray-900"
+                                                    x-text="'Nik Penanggung Jawab : ' + penanggungJawab.nik"></p>
+                                                <p class="mb-2 text-lg font-medium text-gray-900"
+                                                    x-text="'Nama Penanggung Jawab : ' + penanggungJawab.nama"></p>
+                                                <button class="bg-red-600 shadow-md text-white p-1 rounded-lg text-sm"
+                                                    @click="penanggungJawab.nama = null;penanggungJawab.nik = null; inputPenerima = null;">Reset</button>
+                                                <button class="bg-blue-500 shadow-md text-white p-1 rounded-lg text-sm"
+                                                    @click="showFormStep2 = !showFormStep2">Set Penanggung
+                                                    Jawab</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="absolute shadow-md z-10 w-1/2 left-3 -bottom-12"
+                                        x-show="openListPenerima">
+
+                                        <ul x-on:click.outside="openListPenerima = !openListPenerima"
+                                            x-transition:enter="transition ease-out duration-300"
+                                            x-transition:enter-start="opacity-0 translate"
+                                            x-transition:enter-end="opacity-100 translate"
+                                            x-transition:leave="transition ease-in duration-300"
+                                            x-transition:leave-start="opacity-100 translate"
+                                            x-transition:leave-end="opacity-0 translate"
+                                            class="w-full cursor-pointer">
+                                            <template x-for="(lp,i) in listPenerima" :key="i">
+                                                <li class="w-full text-gray-700 p-2 bg-white  hover:bg-blue-200 rounded-sm"
+                                                    @click="pilihPenanggungJawab(lp)"
+                                                    x-text="lp.nik + ' | ' + lp.nama"></li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="" x-show="showFormStep2 && penanggungJawab.nik != null">
+                                    <p class="mb-2 text-lg font-medium text-gray-900"
+                                        x-text="'Nik Penanggung Jawab : ' + penanggungJawab.nik"></p>
+                                    <p class="mb-2 text-lg font-medium text-gray-900"
+                                        x-text="'Nama Penanggung Jawab : ' + penanggungJawab.nama"></p>
+                                    <label for="">Material No</label>
+                                    <input type="text" placeholder="Material No" class="w-full p-2 border rounded"
+                                        x-model="form.material_no">
+                                    <label for="">Material Name</label>
+                                    <input type="text" placeholder="Material Name"
+                                        class="w-full p-2 border rounded" x-model="form.material_name">
+                                    <label for="">Qty Receive</label>
+                                    <input type="number" placeholder="Qty Receive"
+                                        class="w-full p-2 mb-3 border rounded" x-model.number="form.qty_receive">
+
+                                    <div class="flex justify-end gap-3">
+                                        <button class="bg-red-400 text-white px-4 py-2 rounded"
+                                            @click="showForm = !showForm">Cancel</button>
+                                        <button class="bg-green-600 text-white px-4 py-2 rounded"
+                                            @click="addMaterial()">Submit</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

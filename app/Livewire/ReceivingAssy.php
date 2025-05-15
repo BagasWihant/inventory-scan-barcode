@@ -93,7 +93,7 @@ class ReceivingAssy extends Component
             'issue_date' => $sample[0]['issue_date'],
             'line_c' => $sample[0]['line_c'],
             'user_id' => auth()->user()->id,
-            'status' => '0',
+            'status' => '+',
         ]);
 
         DB::table('Setup_dtl_assy')->insert([
@@ -160,6 +160,14 @@ class ReceivingAssy extends Component
                     'penerima' => $penerima['nama'],
                 ]);
 
+                if ($item["status"] == "+") {
+                    $matMst = DB::table('material_mst')->where('matl_no', $item['material_no']);
+                    $matMstData = $matMst->first();
+                    $matMst->update([
+                        'qty' => (int) $matMstData->qty - (int) $item['qty_supply'],
+                        'qty_OUT' => (int)$matMstData->qty_OUT + (int)$item['qty_supply']
+                    ]);
+                }
             }
 
             // qty supply baca dari temp request nek tak delete di receiving assy suplly nya kosong
