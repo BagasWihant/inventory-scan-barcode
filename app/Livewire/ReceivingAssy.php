@@ -94,6 +94,7 @@ class ReceivingAssy extends Component
             'line_c' => $sample[0]['line_c'],
             'user_id' => auth()->user()->id,
             'status' => '+',
+            'penanggung_jwb' => $add['penanggung_jawab'],
         ]);
 
         DB::table('Setup_dtl_assy')->insert([
@@ -126,28 +127,19 @@ class ReceivingAssy extends Component
 
         return $data;
     }
+
+    function searchMaterial($material)
+    {
+        $list = DB::table('material_mst')
+            ->where('matl_no', 'like', '%' . $material . '%')->select('matl_no', 'matl_nm','qty')->limit(5)->get();
+
+        return $list;
+    }
     public function saveDetailScanned($data, $penerima)
     {
         try {
             DB::beginTransaction();
-            $mst = SetupMstAssy::create([
-                'issue_date' => date('Y-m-d'),
-                'status' => '1',
-                'line_cd' => $this->transaksiNo,
-                'created_by' => $this->userId,
-
-            ]);
-
-            $mstId = $mst->id;
             foreach ($data as $item) {
-                SetupDtlAssy::create([
-                    'setup_id' => $mstId,
-                    'material_no' => $item['material_no'],
-                    'qty' => $item['qty_receive'],
-                    'created_at' => now(),
-                    'pallet_no' => $this->transaksiNo,
-
-                ]);
                 MaterialInStockAssy::create([
                     'transaksi_no' => $this->transaksiNo,
                     'material_no' => $item['material_no'],

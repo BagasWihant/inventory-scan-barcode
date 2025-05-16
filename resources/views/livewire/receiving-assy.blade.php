@@ -19,6 +19,16 @@
             editedQty: {},
             showModal: false,
             addButton: false,
+            confirmButton: true,
+            swal(title, icon, time = 2000) {
+                Swal.fire({
+                    timer: time,
+                    title: title,
+                    icon: icon,
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            },
             showMaterialDetails(trx) {
                 @this.call('getMaterial', trx).then((data) => {
                     this.showModal = true
@@ -30,6 +40,7 @@
                 this.transaksiSelected = [];
                 this.showModal = false
                 this.showForm = false
+                this.confirmButton = true
             },
             saveDetailScanned() {
                 @this.call('saveDetailScanned').then((data) => {
@@ -77,7 +88,7 @@
             },
             saveDetailScanned() {
                 if (this.penerima.nik == null) {
-                    alert('Penerima tidak boleh kosong');
+                    this.swal('Penerima must be filled', 'error');
                     return
                 }
                 @this.call('saveDetailScanned', this.transaksiSelected, this.penerima)
@@ -92,14 +103,28 @@
                 request_qty: 0,
                 qty_supply: 0,
                 qty_receive: 0,
+                max_qty: 0,
             },
             addMaterial() {
                 if (!this.form.material_no) {
-                    alert('Material No are required.');
+                    this.swal('Material No are required.', 'error');
                     return;
                 }
+                if (!this.form.material_name) {
+                    this.swal('Material not chosen', 'error');
+                    return;
+                }
+                if (this.form.max_qty < this.form.qty_receive) {
+                    this.swal('Qty Request not bigger than Qty', 'error');
+                    return
+                }
                 this.form.setup_id = this.transaksiSelected[0].setup_id;
+                this.form.issue_date = this.transaksiSelected[0].issue_date;
+                this.form.line_c = this.transaksiSelected[0].line_c;
+                this.form.surat_jalan = this.transaksiSelected[0].surat_jalan;
                 this.form.penanggung_jawab = this.penanggungJawab.nama;
+                this.form.status = '+';
+
                 this.transaksiSelected.push({ ...this.form });
                 @this.call('addMaterialDetail', this.form, this.transaksiSelected)
         
@@ -109,6 +134,7 @@
                     request_qty: 0,
                     qty_supply: 0,
                     qty_receive: 0,
+                    max_qty: 0,
                 };
                 this.showForm = false;
                 this.penanggungJawab = {
@@ -116,6 +142,7 @@
                     nama: null,
                 };
                 this.showFormStep2 = false;
+                this.confirmButton = true
             },
             inputPenerima: '',
             penerima: {
@@ -129,7 +156,6 @@
             openListPenerima: false,
             listPenerima: [],
             searchPenerima() {
-            console.log(this.penerima)
                 @this.call('searchPenerima', this.inputPenerima).then((res) => {
                     this.openListPenerima = true
                     this.listPenerima = res
@@ -144,6 +170,23 @@
                 this.inputPenerima = ''
                 this.openListPenerima = false
                 this.penanggungJawab = penerima
+            },
+            material: {
+                no: '',
+                name: ''
+            },
+            listMaterial: [],
+            searchMaterial() {
+                @this.call('searchMaterial', this.form.material_no).then((res) => {
+                    this.openListPenerima = true
+                    this.listMaterial = res
+                })
+            },
+            pilihMaterial(m) {
+                this.form.material_no = m.matl_no
+                this.form.material_name = m.matl_nm
+                this.form.max_qty = Number(m.qty)
+                this.openListPenerima = false
             }
         }">
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -233,7 +276,8 @@
                             </div>
 
                         </div>
-                        <div  x-effect="console.log('penerima updated', penerima)" class="flex justify-between" x-show="showForm == false">
+                        <div x-effect="console.log('penerima updated', penerima)" class="flex justify-between"
+                            x-show="showForm == false">
                             <div class="w-full">
                                 <div x-show="penerima.nik == null">
                                     <div class="px-6 py-2">
@@ -274,7 +318,8 @@
                             </div>
                             <div class="w-full flex justify-end p-3" x-show="addButton == 1">
                                 <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg h-10"
-                                    x-show="showForm == false" @click="showForm = !showForm" x-transition>Add
+                                    x-show="showForm == false" @click="showForm = !showForm;confirmButton = false"
+                                    x-transition>Add
                                     Material</button>
                             </div>
                         </div>
@@ -288,7 +333,7 @@
                                             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nama
                                             Penanggung Jawab
                                         </label>
-                                        <input type="text" x-model="inputPenerima" placeholder="Search Here..."
+                                        <input type="text" x-model="inputPenerima" placeholder="Penanggung Jawab"
                                             x-on:input="searchPenerima"
                                             class=" block w-1/2 p-2 text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                     </div>
@@ -334,17 +379,32 @@
                                         x-text="'Nama Penanggung Jawab : ' + penanggungJawab.nama"></p>
                                     <label for="">Material No</label>
                                     <input type="text" placeholder="Material No" class="w-full p-2 border rounded"
-                                        x-model="form.material_no">
+                                        x-on:input="searchMaterial" x-model="form.material_no">
+                                    <div class="absolute shadow-md z-10 w-1/2 left-3" x-show="openListPenerima">
+
+                                        <ul x-on:click.outside="openListPenerima = !openListPenerima"
+                                            x-transition:enter="transition ease-out duration-300"
+                                            x-transition:enter-start="opacity-0 translate"
+                                            x-transition:enter-end="opacity-100 translate"
+                                            x-transition:leave="transition ease-in duration-300"
+                                            x-transition:leave-start="opacity-100 translate"
+                                            x-transition:leave-end="opacity-0 translate"
+                                            class="w-full cursor-pointer">
+                                            <template x-for="(m,i) in listMaterial" :key="i">
+                                                <li class="w-full text-gray-700 p-2 bg-white  hover:bg-blue-200 rounded-sm"
+                                                    @click="pilihMaterial(m)" x-text="m.matl_no"></li>
+                                            </template>
+                                        </ul>
+                                    </div>
                                     <label for="">Material Name</label>
-                                    <input type="text" placeholder="Material Name"
+                                    <input type="text" placeholder="Material Name" disabled
                                         class="w-full p-2 border rounded" x-model="form.material_name">
                                     <label for="">Qty Receive</label>
                                     <input type="number" placeholder="Qty Receive"
                                         class="w-full p-2 mb-3 border rounded" x-model.number="form.qty_receive">
-
                                     <div class="flex justify-end gap-3">
                                         <button class="bg-red-400 text-white px-4 py-2 rounded"
-                                            @click="showForm = !showForm">Cancel</button>
+                                            @click="showForm = !showForm;confirmButton = true">Cancel</button>
                                         <button class="bg-green-600 text-white px-4 py-2 rounded"
                                             @click="addMaterial()">Submit</button>
                                     </div>
@@ -427,7 +487,7 @@
                             <button @click="closeModal" type="button"
                                 class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
                             <template x-if="transaksiSelected[0]?.status == 1 ">
-                                <button type="button" @click="saveDetailScanned"
+                                <button type="button" @click="saveDetailScanned" x-show="confirmButton"
                                     class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-blue-500 rounded-lg border  hover:bg-blue-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Confirm</button>
                             </template>
                         </div>

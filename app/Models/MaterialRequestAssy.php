@@ -24,7 +24,8 @@ class MaterialRequestAssy extends Model
         'status',
         'proses_date',
         'sisa_request_qty',
-        'surat_jalan'
+        'surat_jalan',
+        'penanggung_jwb'
     ];
 
     public function user()
