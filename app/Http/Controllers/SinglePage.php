@@ -90,6 +90,8 @@ class SinglePage extends Controller
     }
     public function approval($type, $no)
     {
+
+
         $validator = Validator::make(
             ['type' => $type],
             ['type' => 'required|integer']
@@ -117,27 +119,28 @@ class SinglePage extends Controller
 
     public function approve(Request $req, $type)
     {
-        if($type == 1){
+        if ($type == 1) {
             $decode = json_decode($req->data);
             $no = $decode->id;
             $approvalSteps = [
                 'checked_date' => 'Checker Approve',
                 'approved1_date' => 'Approved1',
                 'approved2_date' => 'Approved2',
-                'hr_recieved' => 'Recieved' 
+                'hr_recieved' => 'Recieved'
             ];
+
             foreach ($approvalSteps as $field => $param) {
-    
+
                 if (empty($decode->$field)) {
                     DB::connection('it')->statement("EXEC sp_hr_mpr_email_web ?, ?, ?", [$param, $decode->no_doc, '']);
-    
+
                     $getData = $this->approvalMan($type, $no);
-    
+
                     $data['pdf'] = $getData->pdf;
                     $data['text'] = $getData->status;
                     $data['status'] = '';
                     $data['posisi'] = '';
-    
+
                     return view('pages.single.approval-response', compact('data'));
                 }
             }
@@ -295,10 +298,9 @@ class SinglePage extends Controller
     }
 
 
-
     public function reject(Request $req, $type)
     {
-        if($type == 1){
+        if ($type == 1) {
             $decode = json_decode($req->data);
             $id = $decode->id;
 
@@ -308,20 +310,20 @@ class SinglePage extends Controller
                 'approved2_date' => 'Rejected2',
             ];
             foreach ($approvalSteps as $field => $param) {
-    
+
                 if (empty($decode->$field)) {
                     DB::connection('it')->statement("EXEC sp_hr_mpr_email_web ?, ?, ?", [$param, $decode->no_doc, '']);
-    
+
                     $getData = $this->approvalMan($type, $id);
-    
+
                     $data['pdf'] = $getData->pdf;
                     $data['text'] = $getData->status;
                     $data['status'] = '0';
                     $data['posisi'] = '';
-    
+
                     return view('pages.single.approval-response', compact('data'));
                 }
-            }  
+            }
         }
         if ($type == 2) {
             $decode = json_decode($req->data, true);
@@ -571,12 +573,16 @@ class SinglePage extends Controller
             mkdir($directory, 0775, true);
         }
         $html = view('templates.pdf.approval-man-request-generate', compact('data'))->render();
-        $page2 = view('templates.pdf.approval-monthly')->render();
+        
 
-        // Lampiran
-        $lampiran = DB::table('IT.dbo.HR_MPR_filepath')->where('idMpr', $id)->get()->pluck('FilePath');
+        // get blob sementara  ambil random
+        $blob = DB::table('HR_Systems.dbo.HR_MPR_filepath')->first();
 
-        $this->generatePdf($path, $html, null, [$page2]);
+        // simpan ke tmp
+        $tmpPath = storage_path('app/' . $blob->fileName);
+        file_put_contents($tmpPath, $blob->fileByte);
+
+        $this->generatePdf($path, $html, [$tmpPath]);
 
         $data->pdf = Storage::url('approval/pdf/' . $fileName);
         $data->type = $this->typeDokumen($type);
