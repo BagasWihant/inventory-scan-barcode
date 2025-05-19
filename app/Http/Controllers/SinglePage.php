@@ -548,6 +548,44 @@ class SinglePage extends Controller
             ->where('main.id', $id)->first();
         $data = $hrmpr;
 
+        if(empty($data->checked_date)){
+            $allowedIP = [
+                '172.99.0.1',
+                '192.168.1.249'
+            ];
+
+            if (!in_array(request()->ip(), $allowedIP)) {
+                abort(499, "Anda tidak bisa mengakses ini. Hubungi IT");
+            }
+        }else if(empty($data->approved1_date)){
+            $allowedIP = [
+                '172.99.0.1',
+                '192.168.1.249'
+            ];
+
+            if (!in_array(request()->ip(), $allowedIP)) {
+                abort(499, "Anda tidak bisa mengakses ini. Hubungi IT");
+            }
+        }else if(empty($data->approved2_date)){
+            $allowedIP = [
+                '172.99.0.1',
+                '192.168.1.249'
+            ];
+
+            if (!in_array(request()->ip(), $allowedIP)) {
+                abort(499, "Anda tidak bisa mengakses ini. Hubungi IT");
+            }
+        }else if(empty($data->hr_recieved)){
+            $allowedIP = [
+                '172.99.0.1',
+                '192.168.1.249'
+            ];
+
+            if (!in_array(request()->ip(), $allowedIP)) {
+                abort(499, "Anda tidak bisa mengakses ini. Hubungi IT");
+            }
+        }
+
         // spesial
         $spesial = DB::table('IT.dbo.mpr_special_requirement')
             ->select('special_requirement as key')

@@ -12,7 +12,7 @@
             <!-- top -->
             @if (empty($data->checked_date))
                 <div class="text-center mb-14">
-                    <span class="text-2xl font-bold text-green-600">Pengajuan ke Dept. Head</span>
+                    <span class="text-2xl font-bold text-green-600">Pengajuan ke Approval 1</span>
 
                 </div>
             @else
@@ -53,7 +53,7 @@
                         <button type="submit"
                             class="text-lg uppercase bg-gradient-to-br from-cyan-600 to-blue-700 text-white px-4 py-2 rounded-lg transition duration-500 ease-in-out hover:opacity-80 hover:backdrop-blur-md hover:scale-105">
                             @if (empty($data->checked_date))
-                                Pengajuan ke Dept. Head
+                                Pengajuan ke Approval 1
                             @else
                                 {{ $data->status }}
                             @endif
