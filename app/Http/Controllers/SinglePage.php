@@ -549,37 +549,29 @@ class SinglePage extends Controller
         $data = $hrmpr;
 
         if(empty($data->checked_date)){
-            $allowedIP = [
-                '172.99.0.1',
-                '192.168.1.249'
-            ];
-
+            // ganti nama jabatan yang sesuai
+            $allowedIP = DB::table('ip_conf')->where('jabatan', 'checker')->get()->pluck('ip')->toArray();
+            
             if (!in_array(request()->ip(), $allowedIP)) {
                 abort(499, "Anda tidak bisa mengakses ini. Hubungi IT");
             }
         }else if(empty($data->approved1_date)){
-            $allowedIP = [
-                '172.99.0.1',
-                '192.168.1.249'
-            ];
+            // ganti nama jabatan yang sesuai
+            $allowedIP = DB::table('ip_conf')->where('jabatan', 'Approv1')->get()->pluck('ip')->toArray();
 
             if (!in_array(request()->ip(), $allowedIP)) {
                 abort(499, "Anda tidak bisa mengakses ini. Hubungi IT");
             }
         }else if(empty($data->approved2_date)){
-            $allowedIP = [
-                '172.99.0.1',
-                '192.168.1.249'
-            ];
+            // ganti nama jabatan yang sesuai
+            $allowedIP = DB::table('ip_conf')->where('jabatan', 'Approv2')->get()->pluck('ip')->toArray();
 
             if (!in_array(request()->ip(), $allowedIP)) {
                 abort(499, "Anda tidak bisa mengakses ini. Hubungi IT");
             }
         }else if(empty($data->hr_recieved)){
-            $allowedIP = [
-                '172.99.0.1',
-                '192.168.1.249'
-            ];
+            // ganti nama jabatan yang sesuai
+            $allowedIP = DB::table('ip_conf')->where('jabatan', 'HR')->get()->pluck('ip')->toArray();
 
             if (!in_array(request()->ip(), $allowedIP)) {
                 abort(499, "Anda tidak bisa mengakses ini. Hubungi IT");
