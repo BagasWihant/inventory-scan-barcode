@@ -220,7 +220,9 @@
                                         : str_replace(
                                             '<?xml version="1.0" encoding="UTF-8"?>',
                                             '',
-                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->req_name-$data->req_by-$data->no_doc-$data->req_date"),
+                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate(
+                                                "$data->req_name-$data->req_by-$data->no_doc-$data->req_date",
+                                            ),
                                         ) !!} </td>
 
                                     <td height='80px' align="center"> {!! empty($data->checked_date)
@@ -228,7 +230,9 @@
                                         : str_replace(
                                             '<?xml version="1.0" encoding="UTF-8"?>',
                                             '',
-                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->checked_name-$data->checked_by-$data->no_doc-$data->checked_date"),
+                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate(
+                                                "$data->checked_name-$data->checked_by-$data->no_doc-$data->checked_date",
+                                            ),
                                         ) !!} </td>
 
 
@@ -237,7 +241,9 @@
                                         : str_replace(
                                             '<?xml version="1.0" encoding="UTF-8"?>',
                                             '',
-                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->approved1_name-$data->approved1_by-$data->no_doc-$data->approved1_date"),
+                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate(
+                                                "$data->approved1_name-$data->approved1_by-$data->no_doc-$data->approved1_date",
+                                            ),
                                         ) !!} </td>
 
 
@@ -246,7 +252,9 @@
                                         : str_replace(
                                             '<?xml version="1.0" encoding="UTF-8"?>',
                                             '',
-                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->approved2_name-$data->approved2_by-$data->no_doc-$data->approved2_date"),
+                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate(
+                                                "$data->approved2_name-$data->approved2_by-$data->no_doc-$data->approved2_date",
+                                            ),
                                         ) !!} </td>
 
 
@@ -256,17 +264,23 @@
                                         : str_replace(
                                             '<?xml version="1.0" encoding="UTF-8"?>',
                                             '',
-                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("$data->hr_name-$data->hr_by-$data->no_doc-$data->hr_recieved"),
+                                            SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate(
+                                                "$data->hr_name-$data->hr_by-$data->no_doc-$data->hr_recieved",
+                                            ),
                                         ) !!} </td>
 
 
                                 </tr>
                                 <tr>
-                                    <td align="center">{{ $data->req_by == null ? '' : substr($data->req_name,0, 15) }}</td>
-                                    <td align="center">{{ $data->checked_by == null ? '' : substr($data->checked_name,0, 15) }}</td>
+                                    <td align="center">
+                                        {{ $data->req_by == null ? '' : substr($data->req_name, 0, 15) }}
+                                    </td>
+                                    <td align="center">
+                                        {{ $data->checked_by == null ? '' : substr($data->checked_name, 0, 15) }}</td>
                                     <td align="center">Handoko R</td>
                                     <td align="center">Budi Eko</td>
-                                    <td align="center">{{ $data->hr_by == null ? '' : substr($data->hr_name,0, 15) }}</td>
+                                    <td align="center">{{ $data->hr_by == null ? '' : substr($data->hr_name, 0, 15) }}
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td align="center">Section Head</td>
@@ -287,17 +301,17 @@
             <td colspan="2">
                 <table class='no-border'>
                     <tr>
-                        <th colspan="3">*Karyawan Subtitution (Nama, NIK)</th>
+                        <th colspan="2">*Karyawan Subtitution (Nama, NIK)</th>
                     </tr>
                     @for ($i = 0; $i < $data->countsubs; $i++)
-                    <tr>
                         @foreach ($data->subs[$i] as $sub)
-                                <td width="150px" align="center"> 
-                                    {{ $sub->replace ?? '' }} - {{ $sub->emp_nm ?? '' }} 
+                            <tr>
+                                <td align="left">
+                                    {{ $sub->replace ?? '' }} - {{ $sub->emp_nm ?? '' }}
                                     {{-- {{json_encode($sub)}} --}}
                                 </td>
-                            @endforeach
-                        </tr>
+                            </tr>
+                        @endforeach
                     @endfor
                 </table>
             </td>
