@@ -34,7 +34,7 @@
                 <tbody>
                     @foreach ($data as $d)
                         <tr
-                            class="py-2 @if ($d->type == 2) bg-red-700 text-white font-semibold hover:bg-red-800 @endif hover:bg-gray-200">
+                            class="py-2 @if ($d->status == 0) bg-red-700 text-white font-semibold hover:bg-red-800 @endif hover:bg-gray-200">
                             <td class="px-2" role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 {{ $d->transaksi_no }}
                             </td>
@@ -98,7 +98,8 @@
                             @endif
                         </div>
                         <div class="text-center">
-                            <span class="text-red-600">Pastikan saat edit <strong>Qty</strong> sesuai dengan kelipatan <strong>Min. Lot</strong></span>
+                            <span class="text-red-600">Pastikan saat edit <strong>Qty</strong> sesuai dengan kelipatan
+                                <strong>Min. Lot</strong></span>
                         </div>
                         <div class="p-3">
                             <div class="relative overflow-y-auto shadow-md rounded-lg my-4">
@@ -135,7 +136,12 @@
                                         @if ($transaksiSelected)
                                             @foreach ($transaksiSelected as $data)
                                                 <tr
-                                                    class="@if ($data->request_qty == $data->qty_supply) bg-green-500 text-white @endif">
+                                                    class="
+                                                    @if ($data->exclude =='1')
+                                                     bg-red-500 text-white
+                                                    @elseif ($data->request_qty == $data->qty_supply)
+                                                     bg-green-500 text-white 
+                                                    @endif">
                                                     <td class="px-3 py-2">{{ $data->material_no }}</td>
                                                     <td class="px-3 py-2">{{ $data->material_name }}</td>
                                                     <td class="px-3 py-2">{{ $data->iss_min_lot }}</td>
@@ -143,20 +149,17 @@
                                                     <td class="px-3 py-2">{{ $data->request_qty }}</td>
                                                     <td class="px-3 py-2">{{ $data->qty_supply }}</td>
                                                     <td class="px-3 py-2">{{ $data->stock }}</td>
-                                                    @if ($data->qty_supply > 0 || $data->qty_supply != null)
-                                                        <td class="px-3 py-2">
-                                                            <button
-                                                                class="bg-yellow-600 px-4 py-2 text-white rounded-md"
-                                                                @click="resetQty('{{ $data->material_no }}')">Reset</button>
-                                                            <button
-                                                                class="bg-yellow-200 px-4 py-2 text-black rounded-md"
-                                                                @click="editQty(@js($data))">Edit</button>
-                                                        </td>
-                                                    @endif
+                                                    <td class="px-3 py-2">
+                                                        <button class="bg-yellow-200 px-4 py-2 text-black rounded-md"
+                                                        @click="editItem(@js($data))">Edit</button>
+                                                        <button class="bg-red-600 px-4 py-2 text-white rounded-md"
+                                                            @click="deleteItem(@js($data))">Delete</button>
+                                                    </td>
 
                                                 </tr>
                                             @endforeach
                                         @endif
+
                                     </tbody>
                                 </table>
                             </div>
@@ -206,9 +209,13 @@
             function tableManager() {
                 return {
                     showModal: false,
+                    dataSelected: {},
                     showMaterialDetails(trx) {
                         @this.call('getMaterial', trx).then((data) => {
-                            if (data.success) this.showModal = true
+                            if (data.success) {
+                                this.showModal = true
+                                this.dataSelected = data.data
+                            }
                         });
                     },
                     closeModal() {
@@ -232,34 +239,55 @@
 
                         })
                     },
-                    resetQty(material) {
-                        @this.call('resetQty', material)
+                    deleteItem(data) {
+                        @this.call('deleteItemDetail', data).then((res) => {
+                            this.showMaterialDetails(data.transaksi_no)
+                        })
                     },
-                    editQty(data) {
+                    editItem(data) {
                         Swal.fire({
-                            title: `Edit Qty ${data.material_no}`,
-                            html: `<div class="flex flex-col">
-                                <strong>Qty</strong>
-                                <input id="editQty1" class="swal2-input" value="${data.request_qty}">
-                            </div>`,
+                            title: `Edit ${data.material_no}`,
+                            html: `
+                                    <div class="flex flex-col mb-2">
+                                        <strong>Qty Request</strong>
+                                        <input type="number" id="editQty1" class="rounded-md p-2 m-2" value="${data.request_qty}">
+                                    </div>
+                                    <div class="flex flex-col mb-2">
+                                        <strong>Qty Supply</strong>
+                                        <input type="number" id="editQty3" class="rounded-md p-2 m-2" value="${data.qty_supply}">
+                                    </div>
+                                    <div class="flex flex-col mb-2">
+                                        <strong>Min Lot</strong>
+                                        <input type="number" id="editQty2" class="rounded-md p-2 m-2" value="${data.iss_min_lot}">
+                                    </div>
+                                    `,
                             showDenyButton: true,
                             denyButtonText: `Don't save`,
                             didOpen: () => {
                                 $('#editQty1').focus()
                                 $('#editQty1').on('keydown', (e) => {
-                                if (e.key == 'Enter') {
-                                    Swal.clickConfirm();
-                                }
-                            })
+                                    if (e.key == 'Enter') {
+                                        Swal.clickConfirm();
+                                    }
+                                })
+                                $('#editQty2').on('keydown', (e) => {
+                                    if (e.key == 'Enter') {
+                                        Swal.clickConfirm();
+                                    }
+                                })
                             },
                             preConfirm: () => {
                                 return [
                                     document.getElementById("editQty1").value,
+                                    document.getElementById("editQty2").value,
+                                    document.getElementById("editQty3").value,
                                 ];
                             }
 
                         }).then((result) => {
                             qtyInput = parseInt(result.value[0])
+                            minLotInput = parseInt(result.value[1])
+                            qtySupply = parseInt(result.value[2])
                             if (result.isConfirmed) {
                                 if (qtyInput > data.stock) {
                                     return Swal.fire({
@@ -270,7 +298,7 @@
                                     });
                                 }
 
-                                if (qtyInput % data.iss_min_lot !== 0) {
+                                if (qtyInput % minLotInput !== 0) {
                                     return Swal.fire({
                                         timer: 1500,
                                         title: `Qty tidak kelipatan dari Min Lot`,
@@ -278,9 +306,11 @@
                                         timerProgressBar: true,
                                     });
                                 }
-                                @this.call('editQty', {
+                                @this.call('editMaterial', {
                                     material: data.material_no,
                                     qty: qtyInput,
+                                    minLot: minLotInput,
+                                    qtySupply: qtySupply
                                 }).then((data) => {
 
                                 });

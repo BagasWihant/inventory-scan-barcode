@@ -118,7 +118,6 @@ class RequestMaterialProses extends Component
                 } else {
                     $this->inputQty($item->iss_min_lot);
                 }
-                
             }
 
             $this->getMaterial($scannedMaterial->transaksi_no);
@@ -184,7 +183,7 @@ class RequestMaterialProses extends Component
 
         $this->transaksiNo = $trx;
         $this->materialScan = null;
-        return ['success' => true];
+        return ['success' => true, 'data' => $dataPrint];
     }
 
     public function getData()
@@ -193,8 +192,8 @@ class RequestMaterialProses extends Component
             ->when($this->searchKey, function ($q) {
                 $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
             })
-            ->select(['transaksi_no', 'status', 'type'])
-            ->groupBy('transaksi_no', 'status', 'type', 'created_at')
+            ->select(['transaksi_no', 'status', 'type', 'status'])
+            ->groupBy('transaksi_no', 'status', 'type', 'status', 'created_at')
             ->orderByDesc('created_at')
             ->get();
     }
@@ -204,10 +203,21 @@ class RequestMaterialProses extends Component
         $this->getMaterial($this->transaksiNo);
     }
     #[On('editQty')]
-    public function editQty($data)
+    public function editMaterial($data)
     {
-        temp_request::where('material_no', $data['material'])->where('transaksi_no', $this->transaksiNo)->update(['qty_request' => $data['qty']]);
-        MaterialRequest::where('material_no', $data['material'])->where('transaksi_no', $this->transaksiNo)->update(['request_qty' => $data['qty']]);
+        temp_request::where('material_no', $data['material'])->where('transaksi_no', $this->transaksiNo)->update([
+            'qty_request' => $data['qty'],
+            'qty_supply' => $data['qtySupply']
+        ]);
+        MaterialRequest::where('material_no', $data['material'])->where('transaksi_no', $this->transaksiNo)->update([
+            'request_qty' => $data['qty'],
+            'iss_min_lot' => $data['minLot']
+        ]);
+
+        // update materialmst
+        DB::table('material_mst')->where('matl_no', $data['material'])->update([
+            'iss_min_lot' => $data['minLot']
+        ]);
         $this->getMaterial($this->transaksiNo);
         $this->dispatch('alert', ['time' => 1500, 'icon' => 'success', 'title' => "Qty Changed"]);
     }
@@ -215,12 +225,13 @@ class RequestMaterialProses extends Component
     public function saveDetailScanned()
     {
         $dataConfirm = MaterialRequest::where('material_request.transaksi_no', $this->transaksiNo)
-            ->leftJoin('temp_requests as r', function ($join) {
-                $join->on('material_request.transaksi_no', '=', 'r.transaksi_no')
-                    ->on('material_request.material_no', '=', 'r.material_no');
-            })
-            ->select(['material_request.*', 'r.qty_supply'])->get();
-
+        ->whereNull('exclude')
+        ->leftJoin('temp_requests as r', function ($join) {
+            $join->on('material_request.transaksi_no', '=', 'r.transaksi_no')
+            ->on('material_request.material_no', '=', 'r.material_no');
+        })
+        ->select(['material_request.*', 'r.qty_supply'])->get();
+        
 
         try {
 
@@ -268,6 +279,13 @@ class RequestMaterialProses extends Component
             $this->getMaterial($this->transaksiNo);
             return ['success' => false, 'title' => $th->getMessage()];
         }
+    }
+
+    public function deleteItemDetail($data)
+    {
+        MaterialRequest::whereId($data['id'])->update([
+            'exclude' => '1',
+        ]);
     }
     public function render()
     {

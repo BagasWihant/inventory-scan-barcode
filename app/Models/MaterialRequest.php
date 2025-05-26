@@ -20,7 +20,8 @@ class MaterialRequest extends Model
         'user_id',
         'loc_cd',
         'status',
-        'proses_date'
+        'proses_date',
+        'exclude'
     ];
 
     public function user()
