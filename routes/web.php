@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryInController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SinglePage;
@@ -7,21 +8,22 @@ use App\Livewire\MaterialRequest;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->intended(route('instock', absolute: false));
+    return redirect()->intended(route('dashboard', absolute: false));
 });
 
-Route::middleware(['auth','updateActivity'])->group(function () {
+Route::middleware(['auth', 'updateActivity'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/setting', fn() => view('pages.settings'))->name('setting');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 
     Route::middleware('isPrepareStockTaking')->controller(InventoryInController::class)->group(function () {
         Route::get('palet_in', 'index')->name('inventory.index');
         Route::get('po_in', 'po')->name('inventory.po');
         Route::get('register_palet', 'register_palet')->name('register_palet');
-        Route::get('create_palet','create_palet')->name('create_palet');
+        Route::get('create_palet', 'create_palet')->name('create_palet');
         Route::get('abnormal', 'abnormal')->name('abnormal');
         Route::get('instock', 'instock')->name('instock');
         Route::get('checking', 'checking')->name('checking');
@@ -44,23 +46,23 @@ Route::middleware(['auth','updateActivity'])->group(function () {
     Route::get('material-request-assy', fn() => view('pages.material-request-assy'))->name('material.request.assy');
     Route::get('material-request-proses-assy', fn() => view('pages.material-request-proses-assy'))->name('material.request-proses.assy');
     Route::get('receiving-assy', fn() => view('pages.receiving-assy'))->name('receiving.assy');
-    
+
     // retur assy
     Route::get('retur-request-assy', fn() => view('pages.retur-request-assy'))->name('retur.request.assy');
     Route::get('retur-proses-assy', fn() => view('pages.retur-proses-assy'))->name('retur.proses.assy');
 });
 
-Route::controller(InventoryInController::class)->group(function(){
+Route::controller(InventoryInController::class)->group(function () {
     Route::get('nik/{nik}/recv_sup/', 'menu_sup')->name('inventory.menu_sup');
 });
 
-Route::get('standar-kerja',fn() => view('pages.single.menu-standar-kerja'));
-Route::get('monitoring-material-request',fn() => view('pages.single.monitoring-material-request'));
+Route::get('standar-kerja', fn() => view('pages.single.menu-standar-kerja'));
+Route::get('monitoring-material-request', fn() => view('pages.single.monitoring-material-request'));
 
 // untuk approval diluar inventory
 // sementara proses langsung
-Route::get('/Approval/{type}-{no}', [SinglePage::class,'approval']);
-Route::post('/Approval/{type}-approve', [SinglePage::class,'approve']);
-Route::post('/Approval/{type}-reject', [SinglePage::class,'reject']);
+Route::get('/Approval/{type}-{no}', [SinglePage::class, 'approval']);
+Route::post('/Approval/{type}-approve', [SinglePage::class, 'approve']);
+Route::post('/Approval/{type}-reject', [SinglePage::class, 'reject']);
 
 require __DIR__ . '/auth.php';
