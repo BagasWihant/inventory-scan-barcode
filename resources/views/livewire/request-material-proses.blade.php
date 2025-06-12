@@ -339,6 +339,11 @@
         </script>
         @script
             <script>
+                const notif = new Audio("{{ asset('assets/sound.wav') }}")
+                $wire.on('playsound', () => {
+                    console.log('play');
+                    notif.play();
+                });
                 $wire.on('alert', (event) => {
                     Swal.fire({
                         timer: event[0].time,

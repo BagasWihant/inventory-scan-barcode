@@ -70,6 +70,8 @@ class RequestMaterialProsesAssy extends Component
 
     public function prosesScan()
     {
+        $this->dispatch('playsound');
+        
         if (strlen($this->materialScan) < 3) {
             return;
         }
@@ -87,7 +89,6 @@ class RequestMaterialProsesAssy extends Component
             ->leftJoin('material_mst as mst', 'm.sws_code', '=', 'mst.matl_no')
             ->select(['mst.iss_min_lot', 'm.sws_code']);
         
-        $this->dispatch('playsound');
 
         if ($materialScanned->exists()) {
             $item = $materialScanned->first();

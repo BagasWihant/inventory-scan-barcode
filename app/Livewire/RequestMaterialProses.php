@@ -44,6 +44,8 @@ class RequestMaterialProses extends Component
 
     public function prosesScan()
     {
+        $this->dispatch('playsound');
+
         if (strlen($this->materialScan) < 3) {
             return;
         }
