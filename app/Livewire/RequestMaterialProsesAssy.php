@@ -86,6 +86,8 @@ class RequestMaterialProsesAssy extends Component
         $materialScanned = DB::table('material_conversion_mst as m')->where('supplier_code', $this->materialScan)
             ->leftJoin('material_mst as mst', 'm.sws_code', '=', 'mst.matl_no')
             ->select(['mst.iss_min_lot', 'm.sws_code']);
+        
+        $this->dispatch('playsound');
 
         if ($materialScanned->exists()) {
             $item = $materialScanned->first();
