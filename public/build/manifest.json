@@ -1,0 +1,19 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-G2EQ9VtD.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-BkPxH0d9.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  },
+  "resources/js/singlepage.js": {
+    "file": "assets/singlepage-D-ZN2fJN.js",
+    "name": "singlepage",
+    "src": "resources/js/singlepage.js",
+    "isEntry": true
+  }
+}

@@ -58,6 +58,7 @@ Route::controller(InventoryInController::class)->group(function () {
 
 Route::get('standar-kerja', fn() => view('pages.single.menu-standar-kerja'));
 Route::get('monitoring-material-request', fn() => view('pages.single.monitoring-material-request'));
+Route::get('monitoring-material-request-assy', fn() => view('pages.single.monitoring-material-request-assy'));
 
 // untuk approval diluar inventory
 // sementara proses langsung
