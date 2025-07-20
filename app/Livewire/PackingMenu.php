@@ -11,7 +11,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
 
-class RequestMaterialProsesAssy extends Component
+class PackingMenu extends Component
 {
     public $searchKey;
     public $materialScan;
@@ -101,11 +101,6 @@ class RequestMaterialProsesAssy extends Component
             if (!$scannedMaterial) {
                 return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Material not in list"]);
             }
-
-            // Lama yang baru dibawah biar gak dobel query. yang bawah query this->tempRequest
-            // $checkingUser = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
-            //     ->select('user_id')->distinct()->first();
-
             $checkingUser = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
                 ->where('material_no', $scannedMaterial->material_no)
                 ->first();
@@ -190,6 +185,8 @@ class RequestMaterialProsesAssy extends Component
         $this->canConfirm = $dataPrint->first()->status;
         $this->transaksiSelected = $dataPrint;
 
+        
+
         $this->transaksiNo = $trx;
         $this->materialScan = null;
         return ['success' => true];
@@ -200,7 +197,7 @@ class RequestMaterialProsesAssy extends Component
         $this->data =  MaterialRequestAssy::when($this->searchKey, function ($q) {
             $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
         })
-            ->where('status', '!=', '1')
+            ->where('status', '=', '1')
             ->selectRaw('transaksi_no, status, type, issue_date, line_c, CONVERT(DATE,created_at) as created_at')
             ->groupByRaw('transaksi_no, status, type, CONVERT(DATE,created_at), issue_date, line_c')
             ->orderByDesc(DB::raw('CONVERT(DATE,created_at)'))->get();
@@ -228,70 +225,12 @@ class RequestMaterialProsesAssy extends Component
 
     public function saveDetailScanned()
     {
-        $dataConfirm = MaterialRequestAssy::where('material_request_assy.transaksi_no', $this->transaksiNo)
-            ->leftJoin('temp_requests as r', function ($join) {
-                $join->on('material_request_assy.transaksi_no', '=', 'r.transaksi_no')
-                    ->on('material_request_assy.material_no', '=', 'r.material_no');
-            })
-            ->select(['material_request_assy.*', 'r.qty_supply'])->get();
-
-
         try {
-
             DB::beginTransaction();
-            $idSetupMst = DB::table('Setup_mst')->insertGetId([
-                'issue_dt' => date('Y-m-d'),
-                'line_cd' => $this->transaksiNo,
-                'status' => '1',
-                'created_at' => now(),
-                'created_by' => $this->userId,
-                'finished_at' => now(),
-            ]);
-            $idSetupMst = DB::table('Setup_mst_assy')->insertGetId([
-                'issue_dt' => date('Y-m-d'),
-                'line_cd' => $this->transaksiNo,
-                'status' => '1',
-                'created_at' => now(),
-                'created_by' => $this->userId,
-                'finished_at' => now(),
-            ]);
-            foreach ($dataConfirm as $item) {
-                if ($item->qty_supply > $item->request_qty || $item->qty_supply == 0 || $item->qty_supply == null) {
-                    DB::rollBack();
-                    $this->getMaterial($this->transaksiNo);
-                    return ['success' => false, 'message' => "Tidak bisa Confirm, Qty supply lebih atau kosong"];
-                }
-
-                DB::table('Setup_dtl_assy')->insert([
-                    'setup_id' => $idSetupMst,
-                    'material_no' => $item->material_no,
-                    'qty' => $item->qty_supply,
-                    'created_at' => now(),
-                    'pallet_no' => $this->transaksiNo,
-                ]);
-                DB::table('Setup_dtl')->insert([
-                    'setup_id' => $idSetupMst,
-                    'material_no' => $item->material_no,
-                    'qty' => $item->qty_supply,
-                    'created_at' => now(),
-                    'pallet_no' => $this->transaksiNo,
-                ]);
-                // $matMst = DB::table('material_mst')->where('matl_no', $item->material_no);
-                // $matMstData = $matMst->first();
-                // $matMst->update([
-                //     'qty' => $matMstData->qty - $item->qty_supply,
-                //     'qty_OUT' => $matMstData->qty_OUT + $item->qty_supply
-                // ]);
-            }
-
-            // qty supply baca dari temp request nek tak delete di receiving assy suplly nya kosong
-            // temp_request::where('transaksi_no', $this->transaksiNo)->delete();
-            DB::commit();
-
             MaterialRequestAssy::where('material_request_assy.transaksi_no', $this->transaksiNo)->update([
-                'status' => '1',
-                'proses_date' => now()
+                'status' => '2', // ini di proses assy
             ]);
+            DB::commit();
             return ['success' => true];
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -299,10 +238,9 @@ class RequestMaterialProsesAssy extends Component
             return ['success' => false, 'title' => $th->getMessage()];
         }
     }
-
     public function render()
     {
         $this->getData();
-        return view('livewire.request-material-proses-assy');
+        return view('livewire.packing-menu');
     }
 }

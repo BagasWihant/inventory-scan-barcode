@@ -1,6 +1,4 @@
-<div class="max-w-7xl m-auto" x-data="{
-    type: '1',
-}">
+<div class="max-w-7xl m-auto">
     <div class="flex gap-3">
         {{-- input --}}
         <div class="w-full">
@@ -8,47 +6,66 @@
             <div class="flex justify-between gap-2 flex-shrink-0">
                 <div class="flex gap-4">
                     <div class="">
-                        <label for="issue-date">Tanggal Produksi</label>
-                        <input id="issue-date" wire:change="dateDebounce" wire:model='date' type="date"
-                        @if ($userRequestDisable == true) disabled @endif onfocus="this.showPicker()"
-                        class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    </div>
-                    
-                    <div class="">
-                        <label for="issue-date">Line Code</label>
-                        <select wire:model="line_c" wire:change="lineChange"
+                        <label for="issue-date">Tanggal Produksi @if ($filterMode == true)
+                                🔒
+                            @endif </label>
+                        <input id="issue-date" wire:model='date' type="date"
+                            @if ($filterMode == true) disabled @endif onfocus="this.showPicker()"
                             class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            <option value="">Line Code</option>
-                            @foreach ($listLine as $p)
-                                <option value="{{ $p->line_c }}">{{ $p->line_c }}</option>
-                            @endforeach
-                        </select>
                     </div>
-                    
+
                     <div class="">
-                        <label for="issue-date">Product Model</label>
-                        <select wire:model="productModel" wire:change="productModel"
+                        <label for="issue-date">Line Code @if ($filterMode == true)
+                                🔒
+                            @endif
+                        </label>
+                        <select wire:model="line_c" @if ($filterMode == true) disabled @endif
                             class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            <option value="">Product Model</option>
+                            <option value="">Line Code @if ($filterMode == true)
+                                    🔒
+                                @endif
+                            </option>
                             @foreach ($listLine as $p)
-                                <option value="{{ $p->line_c }}">{{ $p->line_c }}</option>
+                                <option value="{{ $p->location_cd }}">{{ $p->location_cd }}</option>
                             @endforeach
                         </select>
                     </div>
 
+                    <div class="relative">
+                        <label for="issue-date">Product Model @if ($filterMode == true)
+                                🔒
+                            @endif
+                        </label>
+                        <input wire:model.live.debounce.300ms="productModel" type="text"
+                            @if ($filterMode == true) disabled @endif
+                            class="block w-full p-2 my-1 mt-1 text-gray-900 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="Product Model">
+
+                        @if (strlen($productModel) > 2 && $productModelSearch == true)
+                            <ul
+                                class="absolute z-10 bg-white border mt-1 max-h-60 overflow-y-auto w-full left-0 right-0">
+
+                                @forelse ($listProductFilter as $option)
+                                    <li wire:click="selectProductModel('{{ $option->product_no }}')"
+                                        class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                                        {{ $option->product_no }}
+                                    </li>
+                                @empty
+                                    <li class="px-3 py-2 text-gray-500">Tidak ada hasil.</li>
+                                @endforelse
+                            </ul>
+                        @endif
+                    </div>
+
                     <div class="">
-                        <input type="number" name="num" id="nu" wire:model="qty" placeholder="Qty"
+                        <input type="number" name="num" id="nu" wire:model.live="qty" placeholder="Qty"
                             class="block w-full p-2 my-1 mt-7 text-gray-900 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                        
+
                     </div>
                 </div>
                 <div class="">
-                    @if ($userRequestDisable == true)
-                        <button
-                            class="btn bg-yellow-500 shadow-md text-white px-2 p-1 m-1 rounded-lg text-xs text-nowrap">Ganti</button>
-                    @endif
                     <button class="btn bg-red-500 shadow-md text-white px-2 py-1 m-1 rounded-lg text-sm"
-                        wire:click="resetField">Clear</button>
+                        wire:click="resetField">Reset</button>
                 </div>
             </div>
         </div>
@@ -99,73 +116,22 @@
     </div>
 
     {{-- table --}}
-    <div wire:key="materials-table"
-         x-data="{
-            Materials: [],
-            editingQtyReq: null,
-            editedQty: {},
-            starteditingQtyReq(material_no) {
-                if ($el.closest('[x-data]').type === '2') {
-                    this.editingQtyReq = material_no;
-                }
-            },
-            stopeditingQtyReq(material) {
-                const editedQty = this.editedQty[material];
-                if (editedQty !== undefined) {
-                    const selected = this.Materials.find(m => m.material_no === material);
-                    if (selected) {
-                        selected.request_qty = editedQty;
-                    }
-                }
-                this.editingQtyReq = null;
-            },
-            updateQty(materialNo, value) {
-                this.editedQty[materialNo] = Number(value);
-            },
-            getRequestQty(materialNo, defaultQty) {
-                return this.editedQty[materialNo] ?? defaultQty;
-            },
-            submitRequest() {
-                const requestData = this.Materials.map(item => {
-                    return {
-                        material_no: item.material_no,
-                        material_name: item.material_name,
-                        request_qty: this.editedQty[item.material_no] ?? item.request_qty
-                    };
-                });
-                console.log('Sending:', requestData);
-                $wire.submitRequest(requestData);
-            },
-            refreshMaterials() {
-                $wire.$refresh();
-            }
-        }"
-        x-init="
-            // Initialize materials from the Livewire component
-            {{-- $wire.getMaterialData().then(data => {
-                Materials = data;
-                console.log('Materials loaded:', Materials);
-            }); --}}
-            
-            // Listen for material updates from Livewire
-            $wire.on('materialsUpdated', (data) => {
-                Materials = data;
-                console.log('Materials updated:', Materials);
-            });
-        "
-    >
+    <div wire:key="materials-table">
         <div class="relative overflow-x-auto shadow-md rounded-lg my-4">
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-800 uppercase bg-gray-200">
                     <tr>
                         <th scope="col" class="px-1 py-3" align="center">
-                            Transaksi No
+                            Material No
                         </th>
                         <th scope="col" class="px-6 py-3">
-                            Qty
+                            Material Name
                         </th>
                         <th scope="col" class="px-6 py-3">
-                            Bag Qty
+                            Bom QTY
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Stock Qty
                         </th>
                         <th scope="col" class="px-6 py-3">
                             Total Qty
@@ -173,65 +139,25 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template x-if="Materials.length === 0">
-                        <tr class="border-b bg-white">
-                            <td colspan="6" class="px-6 py-4 text-center">
-                                No materials available. Please select a Line Code.
-                            </td>
-                        </tr>
-                    </template>
-                    
-                    <template x-for="(material, index) in Materials[0]" :key="material.material_no">
+                    @foreach ($listMaterialNo as $m)
                         <tr class="border-b bg-white hover:bg-gray-50">
-                            <td class="px-6 py-4" x-text="index + 1"></td>
-                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                -
-                            </th>
-                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" 
-                                x-text="material.material_no"></th>
-                            <td class="px-6 py-4" x-text="material.material_name"></td>
-                            <td class="px-6 py-4" x-text="material.qty_stock"></td>
-                            <td class="px-6 py-4 cursor-pointer"
-                                @click="starteditingQtyReq(material.material_no)"
-                                :class="{ 'cursor-not-allowed': $el.closest('[x-data]').type === '1' }">
-
-                                <!-- Jika type 2 dan sedang edit, tampilkan input -->
-                                <template x-if="editingQtyReq === material.material_no && $el.closest('[x-data]').type === '2'">
-                                    <input type="number" min="1"
-                                        :value="getRequestQty(material.material_no, material.request_qty)"
-                                        @input="updateQty(material.material_no, $event.target.value)"
-                                        @blur="stopeditingQtyReq(material.material_no)"
-                                        class="border border-gray-300 rounded px-2 py-1 w-20">
-                                </template>
-
-                                <!-- Jika type 1, hanya tampilkan text -->
-                                <template x-if="$el.closest('[x-data]').type === '1'">
-                                    <span x-text="getRequestQty(material.material_no, material.request_qty)"></span>
-                                </template>
-
-                                <!-- Jika type 2 dan tidak sedang edit, tampilkan text -->
-                                <template x-if="editingQtyReq !== material.material_no && $el.closest('[x-data]').type === '2'">
-                                    <span x-text="getRequestQty(material.material_no, material.request_qty)"></span>
-                                </template>
-                            </td>
+                            <td class="px-6 py-4">{{ $m->material_no }}</td>
+                            <td class="px-6 py-4">{{ $m->matl_nm }}</td>
+                            <td class="px-6 py-4">{{ $m->bom_qty }}</td>
+                            <td class="px-6 py-4">{{ $m->qty }}</td>
+                            <td class="px-6 py-4">{{ $m->bom_qty * (int) $qty }}</td>
                         </tr>
-                    </template>
+                    @endforeach
                 </tbody>
             </table>
         </div>
-        
-        <!-- Debug section, dapat dihapus di production -->
-        <div class="bg-gray-100 p-2 mb-4 rounded text-xs overflow-auto max-h-32 hidden">
-            <pre x-text="JSON.stringify(Materials, null, 2)"></pre>
-        </div>
-        
+
         <div class="flex justify-end gap-3">
-            <button class="btn bg-red-500 shadow-md text-white p-2 rounded-lg" wire:click="cancelRequest">
-                Cancel Request
-            </button>
-            <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg" @click="submitRequest">
+            @if(!$disableConfirm && $filterMode)
+            <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg" wire:click="submitRequest">
                 Submit Request
             </button>
+            @endif
         </div>
     </div>
 
@@ -261,7 +187,13 @@
         </svg>
         <span class="text-4xl font-medium text-white">{{ $statusLoading ?? 'Loading...' }}</span>
     </div>
-    
+    <script>
+        function jstable() {
+            materials: {},
+
+            init
+        }
+    </script>
     @script
         <script>
             $wire.on('alert', (event) => {
