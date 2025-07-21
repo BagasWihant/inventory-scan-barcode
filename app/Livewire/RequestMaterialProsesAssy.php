@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Exports\ItemMaterialRequest;
+use App\Exports\ExportREG;
 use App\Models\MaterialRequestAssy;
 use App\Models\temp_request;
 use \Illuminate\Support\Str;
@@ -167,13 +167,20 @@ class RequestMaterialProsesAssy extends Component
 
     public function print($id)
     {
-        $dataPrint = MaterialRequestAssy::where('transaksi_no', $id)
+        $dataPrint = MaterialRequestAssy::where('material_request_assy.transaksi_no', $id)
             ->leftJoin('material_mst as b', 'material_request_assy.material_no', '=', 'b.matl_no')
-            ->select(['material_request_assy.*', 'b.loc_cd', DB::raw('(b.iss_min_lot/request_qty) as pax')])->orderBy('b.loc_cd', 'asc')->get();
+             ->leftJoin('temp_requests as r', function ($join) {
+                $join->on('material_request_assy.transaksi_no', '=', 'r.transaksi_no')
+                    ->on('material_request_assy.material_no', '=', 'r.material_no');
+            })
+            ->select(['material_request_assy.*', 'b.loc_cd', 'r.qty_supply', DB::raw('(b.iss_min_lot/request_qty) as pax')])->orderBy('b.loc_cd', 'asc')->get();
         $no_sj = $this->generateSJ();
+        
+        
+        $totalQty = $dataPrint->sum('qty_supply');
         MaterialRequestAssy::where('transaksi_no', $id)->update(['type' => '1', 'surat_jalan' => $no_sj]);
 
-        return Excel::download(new ItemMaterialRequest($dataPrint, $no_sj), "Request Material_" . $id . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+        return Excel::download(new ExportREG($dataPrint, $no_sj,$totalQty), "Request Material_" . $id . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
     public function getMaterial($trx)

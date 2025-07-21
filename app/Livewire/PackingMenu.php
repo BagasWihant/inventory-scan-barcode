@@ -116,12 +116,13 @@ class PackingMenu extends Component
             }
 
             $this->tempRequest =  $checkingUser;
+            
+            $this->dispatch('qtyInput',['title'=>'Input Qty '.$scannedMaterial->material_no,'trx'=>$scannedMaterial->transaksi_no]);
+            // $this->inputQty($scannedMaterial->request_qty);
 
-            $this->inputQty($scannedMaterial->request_qty);
-
-            $this->getMaterial($scannedMaterial->transaksi_no);
+            // $this->getMaterial($scannedMaterial->transaksi_no);
         }
-        $this->materialScan = null;
+        // $this->materialScan = null;
     }
     #[On('inputQty')]
     public function inputQty($qty)
@@ -131,7 +132,7 @@ class PackingMenu extends Component
         $scannedMaterial = $tempTransaksiSelected->filter(function ($sub) {
             return str_replace(' ', '', trim($sub->material_no)) == str_replace(' ', '', trim($this->materialScan));
         })->first();
-
+        
         if ($this->tempRequest) {
             $qtySupply = $qty + $this->tempRequest->qty_supply;
 

@@ -33,42 +33,43 @@ class MaterialRequestAssyNew extends Component
     public $editedUser = false;
     public $userRequestDisable = false;
     public $variablePage = [
-        'materialRequestNW' => 0,
-        'materialRequestWR' => 0,
+        'materialRequestREG' => 0,
         'timeNow' => null,
     ];
     public $totalRequest = [
         'qty' => 0,
         'data' => []
     ];
-    public $transactionNo = [
-        'nw' => null,
-        'wr' => null,
-    ];
+    public $transactionNo = null;
     public $listMaterialNo = [];
 
     protected $listeners = ['editQty'];
 
     private function generateNoTransaksi(): void
     {
+        $row = DB::table('WH_config')->where('config', 'materialRequestREG')->first();
+
+        if (!$row) {
+            DB::table('WH_config')->updateOrInsert(
+                ['config' => 'materialRequestREG'],
+                ['value' => 0]
+            );
+        }
+
         $getConfig = DB::table('WH_config')->select('config', 'value')
-            ->whereIn('config', ['materialRequestNW', 'materialRequestWR', 'periodRequest'])
+            ->whereIn('config', ['materialRequestREG', 'periodRequest'])
             ->get()->keyBy('config');
 
         $ymd = date('Ymd');
-        $this->variablePage['materialRequestWR'] = (int)$getConfig['materialRequestWR']->value + 1;
-        $this->variablePage['materialRequestNW'] = (int)$getConfig['materialRequestNW']->value + 1;
+        $this->variablePage['materialRequestREG'] = (int)$getConfig['materialRequestREG']->value + 1;
 
         if ($getConfig['periodRequest']->value != $ymd) {
-            $this->variablePage['materialRequestNW'] = 1;
-            $this->variablePage['materialRequestWR'] = 1;
+            $this->variablePage['materialRequestREG'] = 1;
             DB::table('WH_config')->where('config', 'periodRequest')->update(['value' => $ymd]);
         }
-        DB::table('WH_config')->where('config', 'materialRequestNW')->update(['value' => $this->variablePage['materialRequestNW']]);
-        DB::table('WH_config')->where('config', 'materialRequestWR')->update(['value' => $this->variablePage['materialRequestWR']]);
+        DB::table('WH_config')->where('config', 'materialRequestREG')->update(['value' => $this->variablePage['materialRequestREG']]);
 
-        $this->transactionNo['wr'] = "WR$ymd-" . str_pad($this->variablePage['materialRequestWR'], 4, '0', STR_PAD_LEFT);
-        $this->transactionNo['nw'] = "NW$ymd-" . str_pad($this->variablePage['materialRequestNW'], 4, '0', STR_PAD_LEFT);
+        $this->transactionNo = "REG-$ymd-" . str_pad($this->variablePage['materialRequestREG'], 4, '0', STR_PAD_LEFT);
     }
 
     public function mount()
@@ -138,7 +139,6 @@ class MaterialRequestAssyNew extends Component
         $this->qty = null;
         $this->line_c = null;
         $this->listMaterialNo = [];
-
     }
 
     public function selectProductModel($productModel)
@@ -162,13 +162,13 @@ class MaterialRequestAssyNew extends Component
     {
         // validasi lagi
         if ($this->updated('qty', $this->qty)) {
-            
+
             foreach ($this->listMaterialNo as $value) {
-                $transaksiNoItem = (preg_match("/[a-z]/i", $value->material_no)) ? $this->transactionNo['wr'] : $this->transactionNo['nw'];
+                // $transaksiNoItem = (preg_match("/[a-z]/i", $value->material_no)) ? $this->transactionNo['wr'] : $this->transactionNo['nw'];
                 // request = qty yang ditulis * bom qty
                 $requestQty = $value->bom_qty * (int) $this->qty;
                 MaterialRequestAssy::create([
-                    'transaksi_no' => $transaksiNoItem,
+                    'transaksi_no' => $this->transactionNo,
                     'material_no' => $value->material_no,
                     'material_name' => $value->matl_nm,
                     'type' => '-',
@@ -186,7 +186,6 @@ class MaterialRequestAssyNew extends Component
 
             $this->resetField();
             $this->dispatch('alert', ['time' => 2500, 'icon' => 'success', 'title' => 'Berhasil Request Material Assy']);
-
         } else {
             $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Kurang sesuai']);
         }

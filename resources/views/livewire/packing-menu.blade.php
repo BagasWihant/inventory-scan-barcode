@@ -315,6 +315,67 @@
                             }
                         });
                     },
+                    inputQty(data) {
+                        Swal.fire({
+                            title: `Input Qty ${data.material_no}`,
+                            html: `<div class="flex flex-col">
+                                <strong>Qty</strong>
+                                <input id="editQty1" class="swal2-input" >
+                            </div>`,
+                            showDenyButton: true,
+                            denyButtonText: `Don't save`,
+                            didOpen: () => {
+                                $('#editQty1').focus()
+                                $('#editQty1').on('keydown', (e) => {
+                                    if (e.key == 'Enter') {
+                                        Swal.clickConfirm();
+                                    }
+                                })
+                            },
+                            preConfirm: () => {
+                                return [
+                                    document.getElementById("editQty1").value,
+                                ];
+                            }
+
+                        }).then((result) => {
+                            qtyInput = parseInt(result.value[0])
+                            if (result.isConfirmed) {
+                                if (qtyInput > data.stock) {
+                                    return Swal.fire({
+                                        timer: 1500,
+                                        title: `Qty maksimal ${data.stock}`,
+                                        icon: "error",
+                                        timerProgressBar: true,
+                                    });
+                                }
+
+                                if (qtyInput % data.iss_min_lot !== 0) {
+                                    return Swal.fire({
+                                        timer: 1500,
+                                        title: `Qty tidak kelipatan dari Min Lot`,
+                                        icon: "error",
+                                        timerProgressBar: true,
+                                    });
+                                }
+                                @this.call('editQty', {
+                                    material: data.material_no,
+                                    qty: qtyInput,
+                                }).then((data) => {
+
+                                });
+                            } else if (result.isDenied) {
+                                @this.getMaterial(event[0].trx)
+                                return Swal.fire({
+                                    timer: 1000,
+                                    title: "Changes are not saved",
+                                    icon: "info",
+                                    showConfirmButton: false,
+                                    timerProgressBar: true,
+                                });
+                            }
+                        });
+                    },
 
                 }
             }
@@ -341,7 +402,7 @@
                         title: event[0].title,
                         html: `<div class="flex flex-col">
                                 <strong>Qty</strong>
-                                <input id="swal-input1" class="swal2-input">
+                                <input id="swal-input1" type="number" class="swal2-input">
                             </div>`,
                         showDenyButton: true,
                         denyButtonText: `Don't save`,
