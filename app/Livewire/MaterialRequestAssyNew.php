@@ -155,7 +155,8 @@ class MaterialRequestAssyNew extends Component
         $material = DB::connection('it')->table('db_bantu.dbo.BOM as b')
             ->leftJoin('pt_kias.dbo.material_mst as m', 'b.material_no', '=', 'm.matl_no')
             ->where('product_no', $this->productModel)
-            ->select('b.material_no', 'b.bom_qty', DB::raw('100 as qty'), 'm.matl_nm')->get();
+            ->select('b.material_no', 'b.bom_qty', 'm.qty', 'm.matl_nm')->get(); // sing bener iki yaa DB::raw('100 as qty') tak go bypass qty
+
         $this->listMaterialNo = $material;
     }
 
@@ -180,6 +181,7 @@ class MaterialRequestAssyNew extends Component
                     'user_id' => auth()->user()->id,
                     'status' => '1', // => ke menu packing
                     'user_request' => auth()->user()->username, // tak ganti user login
+                    'product_model' => $this->productModel,
                     // sisa = qty dari query -> ambil dari mst - request
                     'sisa_request_qty' => $value->qty - (int) $requestQty // iki yo tak pekso int soale kadang eror nek koma
                 ]);
