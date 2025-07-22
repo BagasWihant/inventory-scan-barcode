@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use App\Exports\ItemMaterialRequest;
 use App\Models\MaterialRequestAssy;
-use App\Models\temp_request;
+use App\Models\ScanRequestPicking;
 use \Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
@@ -101,7 +101,7 @@ class PackingMenu extends Component
             if (!$scannedMaterial) {
                 return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Material not in list"]);
             }
-            $checkingUser = temp_request::where('transaksi_no', $scannedMaterial->transaksi_no)
+            $checkingUser = ScanRequestPicking::where('transaksi_no', $scannedMaterial->transaksi_no)
                 ->where('material_no', $scannedMaterial->material_no)
                 ->first();
 
@@ -148,7 +148,7 @@ class PackingMenu extends Component
                 return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Qty supply $qty melebihi Qty request $scannedMaterial->request_qty"]);
             }
 
-            temp_request::create([
+            ScanRequestPicking::create([
                 'transaksi_no' => $scannedMaterial->transaksi_no,
                 'material_no' => $scannedMaterial->material_no,
                 'qty_request' => $scannedMaterial->request_qty,
@@ -176,7 +176,7 @@ class PackingMenu extends Component
     {
         DB::enableQueryLog();
         $dataPrint = MaterialRequestAssy::where('material_request_assy.transaksi_no', $trx)
-            ->leftJoin('temp_requests as r', function ($join) {
+            ->leftJoin('scan_request_pickings as r', function ($join) {
                 $join->on('material_request_assy.transaksi_no', '=', 'r.transaksi_no')
                     ->on('material_request_assy.material_no', '=', 'r.material_no');
             })
@@ -211,14 +211,14 @@ class PackingMenu extends Component
 
     public function resetQty($material)
     {
-        temp_request::where('material_no', $material)->where('transaksi_no', $this->transaksiNo)->update(['qty_supply' => 0]);
+        ScanRequestPicking::where('material_no', $material)->where('transaksi_no', $this->transaksiNo)->update(['qty_supply' => 0]);
         $this->getMaterial($this->transaksiNo);
     }
 
     #[On('editQty')]
     public function editQty($data)
     {
-        temp_request::where('material_no', $data['material'])->where('transaksi_no', $this->transaksiNo)->update(['qty_request' => $data['qty']]);
+        ScanRequestPicking::where('material_no', $data['material'])->where('transaksi_no', $this->transaksiNo)->update(['qty_request' => $data['qty']]);
         MaterialRequestAssy::where('material_no', $data['material'])->where('transaksi_no', $this->transaksiNo)->update(['request_qty' => $data['qty']]);
         $this->getMaterial($this->transaksiNo);
         $this->dispatch('alert', ['time' => 1500, 'icon' => 'success', 'title' => "Qty Changed"]);

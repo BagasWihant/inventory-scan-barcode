@@ -169,7 +169,7 @@ class RequestMaterialProsesAssy extends Component
     {
         $dataPrint = MaterialRequestAssy::where('material_request_assy.transaksi_no', $id)
             ->leftJoin('material_mst as b', 'material_request_assy.material_no', '=', 'b.matl_no')
-             ->leftJoin('temp_requests as r', function ($join) {
+             ->leftJoin('scan_request_pickings as r', function ($join) {
                 $join->on('material_request_assy.transaksi_no', '=', 'r.transaksi_no')
                     ->on('material_request_assy.material_no', '=', 'r.material_no');
             })
@@ -187,7 +187,7 @@ class RequestMaterialProsesAssy extends Component
     {
         DB::enableQueryLog();
         $dataPrint = MaterialRequestAssy::where('material_request_assy.transaksi_no', $trx)
-            ->leftJoin('temp_requests as r', function ($join) {
+            ->leftJoin('scan_request_pickings as r', function ($join) {
                 $join->on('material_request_assy.transaksi_no', '=', 'r.transaksi_no')
                     ->on('material_request_assy.material_no', '=', 'r.material_no');
             })
@@ -236,7 +236,7 @@ class RequestMaterialProsesAssy extends Component
     public function saveDetailScanned()
     {
         $dataConfirm = MaterialRequestAssy::where('material_request_assy.transaksi_no', $this->transaksiNo)
-            ->leftJoin('temp_requests as r', function ($join) {
+            ->leftJoin('scan_request_pickings as r', function ($join) {
                 $join->on('material_request_assy.transaksi_no', '=', 'r.transaksi_no')
                     ->on('material_request_assy.material_no', '=', 'r.material_no');
             })

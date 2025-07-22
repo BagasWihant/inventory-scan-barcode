@@ -20,6 +20,7 @@ class MaterialRequestAssyNew extends Component
     public $line_c;
     public $productModel;
     public $productModelSearch = false;
+    public $productModelSelected;
     public $filterMode = false;
     public $qty;
     public $disableConfirm = false;
@@ -27,11 +28,7 @@ class MaterialRequestAssyNew extends Component
     public $requestQty;
     public $materialNo;
     public $searchMaterialNo;
-    public $resultSearchMaterial = [];
-    public $selectedData = [];
     public $materialRequest = [];
-    public $editedUser = false;
-    public $userRequestDisable = false;
     public $variablePage = [
         'materialRequestREG' => 0,
         'timeNow' => null,
@@ -83,8 +80,17 @@ class MaterialRequestAssyNew extends Component
         });
 
         $productno = Cache::remember($key1, $ttl, function () {
-            return DB::connection('it')->table('BOM')->groupBy('product_no')->select('product_no')->orderBy('product_no')->get();
+            return DB::connection('it')->table('db_bantu.dbo.BOM as bom')
+                ->leftJoin('prs_kias.dbo.prs_master_product as m', function ($join) {
+                    $join->on('bom.product_no', '=', 'm.product_no')
+                        ->on('bom.dc', '=', 'm.dc');
+                })
+                ->leftJoin('prs_kias.dbo.prs_assy_plan as a', 'm.id', '=', 'a.id')
+                ->select(DB::raw("CONCAT(bom.product_no,' - ',bom.dc) as product_no"), 'a.plan', 'a.id')
+                ->groupBy('bom.product_no', 'bom.dc', 'a.plan', 'a.id')
+                ->orderBy('bom.product_no')->get();
         });
+        
         // $productno = DB::connection('it')->table('BOM')->groupBy('product_no')->select('product_no')->orderBy('product_no')->get();
         $this->generateNoTransaksi();
         $this->listLine = $listline;
@@ -103,12 +109,16 @@ class MaterialRequestAssyNew extends Component
                     $filtered = $this->listProduct->filter(function ($item) use ($val) {
                         return str_contains(strtolower($item->product_no), strtolower($val));
                     })->take(10);
-                    
+
                     $this->listProductFilter = $filtered;
                 }
                 break;
 
             case 'qty':
+                if($this->qty > $this->productModelSelected->plan){
+
+                    return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Input Qty melebihi Qty Plan']);
+                }
                 foreach ($this->listMaterialNo as $item) {
                     if (empty($val) || !is_numeric($val)) $val = 0;
                     if (($item->bom_qty * $val) > $item->qty) {
@@ -140,11 +150,15 @@ class MaterialRequestAssyNew extends Component
         $this->qty = null;
         $this->line_c = null;
         $this->listMaterialNo = [];
+        $this->productModelSelected = null;
     }
 
     public function selectProductModel($productModel)
     {
-        $this->productModel = $productModel;
+        $product = json_decode($productModel);
+        $this->productModelSelected = $product;
+        $this->productModel = $product->product_no;
+        $this->qty = $product->plan;
         $this->productModelSearch = false;
         $this->filterMode = true;
         $this->loadMaterial();
@@ -154,8 +168,9 @@ class MaterialRequestAssyNew extends Component
     {
         $material = DB::connection('it')->table('db_bantu.dbo.BOM as b')
             ->leftJoin('pt_kias.dbo.material_mst as m', 'b.material_no', '=', 'm.matl_no')
-            ->where('product_no', $this->productModel)
-            ->select('b.material_no', 'b.bom_qty', 'm.qty', 'm.matl_nm')->get(); // sing bener iki yaa DB::raw('100 as qty') tak go bypass qty
+            ->whereRaw("CONCAT(product_no,' - ',dc) like ?", $this->productModel)
+            // ->select('b.material_no', 'b.bom_qty', DB::raw('1000 as qty'), 'm.matl_nm')->get(); 
+            ->select('b.material_no', 'b.bom_qty', 'm.qty', 'm.matl_nm')->get(); // sing bener iki m.qty yaa DB::raw('100 as qty') tak go bypass qty
 
         $this->listMaterialNo = $material;
     }
