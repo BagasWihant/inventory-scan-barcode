@@ -101,8 +101,9 @@ class MaterialRequestAssyNew extends Component
                     $this->disableConfirm = true;
 
                     $filtered = $this->listProduct->filter(function ($item) use ($val) {
-                        return str_contains(strtolower($item->product_no), $val);
+                        return str_contains(strtolower($item->product_no), strtolower($val));
                     })->take(10);
+                    
                     $this->listProductFilter = $filtered;
                 }
                 break;
