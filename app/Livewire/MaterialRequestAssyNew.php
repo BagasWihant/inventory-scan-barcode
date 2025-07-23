@@ -85,12 +85,12 @@ class MaterialRequestAssyNew extends Component
                     $join->on('bom.product_no', '=', 'm.product_no')
                         ->on('bom.dc', '=', 'm.dc');
                 })
-                ->leftJoin('prs_kias.dbo.prs_assy_plan as a', 'm.id', '=', 'a.id')
-                ->select(DB::raw("CONCAT(bom.product_no,' - ',bom.dc) as product_no"), 'a.plan', 'a.id')
-                ->groupBy('bom.product_no', 'bom.dc', 'a.plan', 'a.id')
+                // ->leftJoin('prs_kias.dbo.prs_assy_plan as a', 'm.id', '=', 'a.product_id')
+                ->select(DB::raw("CONCAT(bom.product_no,' - ',bom.dc) as product_no"), 'bom.product_no as product_no_ori', 'bom.dc', 'm.id')
+                ->groupBy('bom.product_no', 'bom.dc', 'm.id')
                 ->orderBy('bom.product_no')->get();
         });
-        
+
         // $productno = DB::connection('it')->table('BOM')->groupBy('product_no')->select('product_no')->orderBy('product_no')->get();
         $this->generateNoTransaksi();
         $this->listLine = $listline;
@@ -115,7 +115,7 @@ class MaterialRequestAssyNew extends Component
                 break;
 
             case 'qty':
-                if($this->qty > $this->productModelSelected->plan){
+                if ($this->qty > $this->productModelSelected->plan) {
 
                     return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Input Qty melebihi Qty Plan']);
                 }
@@ -158,9 +158,12 @@ class MaterialRequestAssyNew extends Component
         $product = json_decode($productModel);
         $this->productModelSelected = $product;
         $this->productModel = $product->product_no;
-        $this->qty = $product->plan;
+        $assy_plan =DB::table('prs_kias.dbo.prs_assy_plan')->where('product_id', $product->id)->where('tanggal',$this->date)->whereNull('deleted_at')->orderByDesc('updated_at')->first();
+        $this->qty = $assy_plan->plan;
+        $this->productModelSelected->plan = $assy_plan->plan;
         $this->productModelSearch = false;
         $this->filterMode = true;
+        $this->updated('qty', $this->qty);
         $this->loadMaterial();
     }
 
