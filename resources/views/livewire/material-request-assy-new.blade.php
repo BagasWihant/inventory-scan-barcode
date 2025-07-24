@@ -205,6 +205,14 @@
                     timerProgressBar: true,
                 });
             });
+            $wire.on('alertB', (event) => {
+                Swal.fire({
+                    title: event[0].title,
+                    icon: event[0].icon,
+                    showConfirmButton: true,
+                    timerProgressBar: true,
+                });
+            });
         </script>
     @endscript
 </div>

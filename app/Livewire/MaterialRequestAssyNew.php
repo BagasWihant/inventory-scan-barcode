@@ -117,13 +117,13 @@ class MaterialRequestAssyNew extends Component
             case 'qty':
                 if ($this->qty > $this->productModelSelected->plan) {
 
-                    return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Input Qty melebihi Qty Plan']);
+                    return $this->dispatch('alertB', ['time' => 2500, 'icon' => 'error', 'title' => 'Input Qty melebihi Qty Plan']);
                 }
                 foreach ($this->listMaterialNo as $item) {
                     if (empty($val) || !is_numeric($val)) $val = 0;
                     if (($item->bom_qty * $val) > $item->qty) {
                         $this->disableConfirm = true;
-                        return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Qty melebihi stok']);
+                        return $this->dispatch('alertB', ['time' => 2500, 'icon' => 'error', 'title' => 'Qty melebihi stok']);
                     }
                     if ($item->qty <= 0) {
                         $this->disableConfirm = true;
