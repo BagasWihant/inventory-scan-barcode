@@ -158,13 +158,14 @@ class MaterialRequestAssyNew extends Component
         $product = json_decode($productModel);
         $this->productModelSelected = $product;
         $this->productModel = $product->product_no;
+        $this->loadMaterial();
+
         $assy_plan =DB::table('prs_kias.dbo.prs_assy_plan')->where('product_id', $product->id)->where('tanggal',$this->date)->whereNull('deleted_at')->orderByDesc('updated_at')->first();
         $this->qty = $assy_plan->plan;
         $this->productModelSelected->plan = $assy_plan->plan;
         $this->productModelSearch = false;
         $this->filterMode = true;
         $this->updated('qty', $this->qty);
-        $this->loadMaterial();
     }
 
     public function loadMaterial()
