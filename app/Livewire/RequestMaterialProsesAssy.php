@@ -121,8 +121,12 @@ class RequestMaterialProsesAssy extends Component
             }
 
             $this->tempRequest =  $checkingUser;
-
-            $this->inputQty($scannedMaterial->request_qty);
+            
+            // validasi jika material belum di picking
+            if(empty($scannedMaterial->picking)){
+                return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Material belum di picking, Qty Picking masih 0"]);
+            }
+            $this->inputQty($scannedMaterial->picking);
 
             $this->getMaterial($scannedMaterial->transaksi_no);
         }
@@ -140,9 +144,9 @@ class RequestMaterialProsesAssy extends Component
         if ($this->tempRequest) {
             $qtySupply = $qty + $this->tempRequest->qty_supply;
 
-            if ($qtySupply > $scannedMaterial->request_qty) {
+            if ($qtySupply > $scannedMaterial->picking) {
                 $this->getMaterial($this->transaksiNo);
-                return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Qty supply $qtySupply melebihi Qty request $scannedMaterial->request_qty"]);
+                return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Qty supply $qtySupply melebihi Qty Picking $scannedMaterial->picking"]);
             }
 
             $this->tempRequest->update(['qty_supply' => $qtySupply]);
@@ -186,13 +190,18 @@ class RequestMaterialProsesAssy extends Component
     public function getMaterial($trx)
     {
         DB::enableQueryLog();
-        $dataPrint = MaterialRequestAssy::where('material_request_assy.transaksi_no', $trx)
-            ->leftJoin('scan_request_pickings as r', function ($join) {
+        $dataPrint = DB::table('material_request_assy')->where('material_request_assy.transaksi_no', $trx)
+            ->leftJoin('temp_requests as r', function ($join) {
                 $join->on('material_request_assy.transaksi_no', '=', 'r.transaksi_no')
                     ->on('material_request_assy.material_no', '=', 'r.material_no');
             })
+            ->leftJoin('scan_request_pickings as s', function ($join) {
+                $join->on('material_request_assy.transaksi_no', '=', 's.transaksi_no')
+                    ->on('material_request_assy.material_no', '=', 's.material_no');
+            })
             ->leftJoin('material_mst as b', 'material_request_assy.material_no', '=', 'b.matl_no')
-            ->select(['material_request_assy.*', 'r.qty_supply', 'b.qty as stock'])->get();
+            // ->select(['material_request_assy.*', 'r.qty_supply', ' as stock'])->get();
+            ->select(['material_request_assy.*', 'r.qty_supply', DB::raw('190000 as stock'), 's.qty_supply as picking'])->get();
         // dump(DB::getRawQueryLog());
         $this->canConfirm = $dataPrint->first()->status;
         $this->transaksiSelected = $dataPrint;
