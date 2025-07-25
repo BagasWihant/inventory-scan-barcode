@@ -116,7 +116,7 @@ class MaterialRequestAssyNew extends Component
 
             case 'qty':
                 if ($this->qty > $this->productModelSelected->plan) {
-
+                    $this->qty = $this->productModelSelected->plan;
                     return $this->dispatch('alertB', ['time' => 2500, 'icon' => 'error', 'title' => 'Input Qty melebihi Qty Plan']);
                 }
                 foreach ($this->listMaterialNo as $item) {
@@ -173,7 +173,7 @@ class MaterialRequestAssyNew extends Component
         $material = DB::connection('it')->table('db_bantu.dbo.BOM as b')
             ->leftJoin('pt_kias.dbo.material_mst as m', 'b.material_no', '=', 'm.matl_no')
             ->whereRaw("CONCAT(product_no,' - ',dc) like ?", $this->productModel)
-            // ->select('b.material_no', 'b.bom_qty', DB::raw('1000 as qty'), 'm.matl_nm')->get(); 
+            // ->select('b.material_no', 'b.bom_qty', DB::raw('10000 as qty'), 'm.matl_nm')->get(); // buat test soale qty gonaku 0
             ->select('b.material_no', 'b.bom_qty', 'm.qty', 'm.matl_nm')->get(); // sing bener iki m.qty yaa DB::raw('100 as qty') tak go bypass qty
 
         $this->listMaterialNo = $material;
