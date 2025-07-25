@@ -208,6 +208,7 @@ class MaterialRequestAssyNew extends Component
 
             $this->resetField();
             $this->dispatch('alert', ['time' => 2500, 'icon' => 'success', 'title' => 'Berhasil Request Material Assy']);
+            $this->generateNoTransaksi();
         } else {
             $this->dispatch('alert', ['time' => 2500, 'icon' => 'warning', 'title' => 'Kurang sesuai']);
         }
