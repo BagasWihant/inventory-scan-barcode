@@ -1,4 +1,11 @@
-<div class="max-w-7xl m-auto">
+<div class="max-w-7xl m-auto" x-data="tableManager()" x-init="$wire.on('loadMaterial', (data) => {
+    materials = data[0].map(m => ({
+        ...m,
+        request_qty: m.bom_qty * data[1]
+    }));
+    qtyOri = data[1];
+    qty = data[1];
+});">
     <div class="flex gap-3">
         {{-- input --}}
         <div class="w-full">
@@ -58,7 +65,8 @@
                     </div>
 
                     <div class="">
-                        <input type="number" name="num" id="nu" wire:model.live="qty" placeholder="Qty"
+                        <input type="number" name="num" id="nu" x-model.number="qty" @keyup="qtyChange()"
+                            placeholder="Qty"
                             class="block w-full p-2 my-1 mt-7 text-gray-900 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 
                     </div>
@@ -116,7 +124,7 @@
     </div>
 
     {{-- table --}}
-    <div wire:key="materials-table">
+    <div>
         <div class="relative overflow-x-auto shadow-md rounded-lg my-4">
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-800 uppercase bg-gray-200">
@@ -138,25 +146,50 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach ($listMaterialNo as $m)
-                        <tr class="border-b bg-white hover:bg-gray-50">
-                            <td class="px-6 py-4">{{ $m->material_no }}</td>
-                            <td class="px-6 py-4">{{ $m->matl_nm }}</td>
-                            <td class="px-6 py-4">{{ $m->bom_qty }}</td>
-                            <td class="px-6 py-4">{{ $m->qty }}</td>
-                            <td class="px-6 py-4">{{ $m->bom_qty * (int) $qty }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
+                <template x-for="(material, index) in materials" :key="material.material_no">
+                    <tr class="border-b bg-white hover:bg-gray-50">
+                        <td class="px-6 py-4" x-text="material.material_no"></td>
+                        <td class="px-6 py-4" x-text="material.matl_nm"></td>
+                        <td class="px-6 py-4" x-text="material.bom_qty"></td>
+                        <td class="px-6 py-4" x-text="material.qty"></td>
+                        <td class="px-6 py-4" x-data="{
+                            editing: false,
+                            inputVal: material.bom_qty * qty,
+                            simpanTotalQtyEdit() {
+                                const val = parseFloat(this.inputVal);
+                                if (val > material.qty) {
+                                    this.inputVal = material.bom_qty * qty;
+                                    material.request_qty = this.inputVal;
+                                    alert('Total Qty melebihi Stock', 'warning');
+                                } else {
+                                    material.request_qty = val;
+                                }
+                                this.editing = false;
+                            }
+                        }">
+                            <template x-if="!editing">
+                                <span @click="editing = true" x-text="material.request_qty ?? (material.bom_qty * qty)"
+                                    class="cursor-pointer text-blue-600 font-bold">
+                                </span>
+                            </template>
+
+
+                            <template x-if="editing">
+                                <input type="number" x-model="inputVal" @keydown.enter="simpanTotalQtyEdit()"
+                                    @blur="simpanTotalQtyEdit()"
+                                    class="w-full border border-gray-300 rounded px-2 py-1" />
+                            </template>
+                        </td>
+                    </tr>
+                </template>
             </table>
         </div>
 
         <div class="flex justify-end gap-3">
-            @if(!$disableConfirm && $filterMode)
-            <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg" wire:click="submitRequest">
-                Submit Request
-            </button>
+            @if (!$disableConfirm && $filterMode)
+                <button class="btn bg-blue-500 shadow-md text-white p-2 rounded-lg" @click="submitRequest">
+                    Submit Request
+                </button>
             @endif
         </div>
     </div>
@@ -188,10 +221,51 @@
         <span class="text-4xl font-medium text-white">{{ $statusLoading ?? 'Loading...' }}</span>
     </div>
     <script>
-        function jstable() {
-            materials: {},
+        function tableManager() {
+            return {
+                materials: {},
+                qtyOri: 0,
+                qty: 0,
+                reset() {
+                    this.materials = {},
+                        this.qtyOri = 0,
+                        this.qty = 0
+                },
+                qtyChange() {
+                    if (this.qty > this.qtyOri) {
+                        this.qty = this.qtyOri;
+                        return alert('Input Qty melebihi Qty Plan', 'warning');
+                    }
+                    this.materials.forEach(element => {
+                        if ((element.bom_qty * this.qty) > element.qty) {
+                            return alert('Input melebihi Stock', 'warning');
+                        }
+                        if (element.qty <= 0) {
+                            return alert('Stock Kosong', 'warning');
+                        }
+                    });
+                },
+                submitRequest() {
+                    @this.call('submitRequest', this.materials).then((data) => {
+                        if (data.success) {
+                            alert(data.message, 'success', false);
+                            this.reset();
+                        }
+                    });
+                }
+            }
+        }
 
-            init
+        function alert(title, icon, button = true) {
+            Swal.fire({
+                title: title,
+                icon: icon,
+                showConfirmButton: button,
+                timerProgressBar: true,
+                ...(!button ? {
+                    timer: 3000
+                } : {})
+            });
         }
     </script>
     @script
