@@ -1,7 +1,8 @@
 <div class="max-w-7xl m-auto" x-data="tableManager()" x-init="$wire.on('loadMaterial', (data) => {
     materials = data[0].map(m => ({
         ...m,
-        request_qty: m.bom_qty * data[1]
+        request_qty: m.bom_qty * data[1],
+        edited: false
     }));
     qtyOri = data[1];
     qty = data[1];
@@ -164,11 +165,16 @@
                                 } else {
                                     material.request_qty = val;
                                 }
+                                material.edited = true;
                                 this.editing = false;
                             }
+                        }"
+                            @click="if (!editing) {
+                            editing = true;
+                            Alpine.nextTick(() => $refs.input.focus());
                         }">
                             <template x-if="!editing">
-                                <span @click="editing = true" x-text="material.request_qty ?? (material.bom_qty * qty)"
+                                <span x-text="material.request_qty ?? (material.bom_qty * qty)"
                                     class="cursor-pointer text-blue-600 font-bold">
                                 </span>
                             </template>
@@ -176,7 +182,7 @@
 
                             <template x-if="editing">
                                 <input type="number" x-model="inputVal" @keydown.enter="simpanTotalQtyEdit()"
-                                    @blur="simpanTotalQtyEdit()"
+                                    x-ref="input" @blur="simpanTotalQtyEdit()" @keydown.esc="editing = false"
                                     class="w-full border border-gray-300 rounded px-2 py-1" />
                             </template>
                         </td>
@@ -196,7 +202,7 @@
 
     <div wire:loading.flex
         class="fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
-        wire:target="submitRequest, saveRequest" aria-label="Loading..." role="status">
+        wire:target="submitRequest,selectProductModel" aria-label="Loading..." role="status">
         <svg class="h-20 w-20 animate-spin stroke-white" viewBox="0 0 256 256">
             <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
                 stroke-linejoin="round" stroke-width="24"></line>
@@ -234,6 +240,9 @@
                 qtyChange() {
                     if (this.qty > this.qtyOri) {
                         this.qty = this.qtyOri;
+                        this.materials.forEach(element => {
+                            element.request_qty = element.bom_qty * this.qty;
+                        })
                         return alert('Input Qty melebihi Qty Plan', 'warning');
                     }
                     this.materials.forEach(element => {
@@ -242,6 +251,9 @@
                         }
                         if (element.qty <= 0) {
                             return alert('Stock Kosong', 'warning');
+                        }
+                        if (!element.edited) {
+                            element.request_qty = element.bom_qty * this.qty;
                         }
                     });
                 },
