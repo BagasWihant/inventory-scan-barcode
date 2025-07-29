@@ -45,6 +45,7 @@ Route::middleware(['auth', 'updateActivity'])->group(function () {
     // assy request
     Route::get('material-request-assy', fn() => view('pages.material-request-assy'))->name('material.request.assy');
     Route::get('material-request-assy-new', fn() => view('pages.material-request-assy-new'))->name('material.request.assy.new');
+    Route::get('material-request-assy-new-{param}', fn($param) => view('pages.material-request-assy-new', compact('param')))->name('material.request.assy.new');
     Route::get('material-request-proses-assy', fn() => view('pages.material-request-proses-assy'))->name('material.request-proses.assy');
     Route::get('receiving-assy', fn() => view('pages.receiving-assy'))->name('receiving.assy');
     

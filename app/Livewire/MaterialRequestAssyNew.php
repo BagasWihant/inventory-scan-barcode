@@ -39,8 +39,10 @@ class MaterialRequestAssyNew extends Component
     ];
     public $transactionNo = null;
     public $listMaterialNo = [];
+    public $param;
 
     protected $listeners = ['editQty'];
+
 
     private function generateNoTransaksi(): void
     {
@@ -69,7 +71,7 @@ class MaterialRequestAssyNew extends Component
         $this->transactionNo = "REG-$ymd-" . str_pad($this->variablePage['materialRequestREG'], 4, '0', STR_PAD_LEFT);
     }
 
-    public function mount()
+    public function mount($param)
     {
         $key = 'listline';
         $key1 = 'listproduct';
@@ -90,7 +92,7 @@ class MaterialRequestAssyNew extends Component
                 ->groupBy('bom.product_no', 'bom.dc', 'm.id')
                 ->orderBy('bom.product_no')->get();
         });
-
+        $this->param = $param;
         // $productno = DB::connection('it')->table('BOM')->groupBy('product_no')->select('product_no')->orderBy('product_no')->get();
         $this->generateNoTransaksi();
         $this->listLine = $listline;
@@ -132,6 +134,12 @@ class MaterialRequestAssyNew extends Component
         $product = json_decode($productModel);
         $this->productModelSelected = $product;
         $this->productModel = $product->product_no;
+        
+        $exists = MaterialRequestAssy::where('product_model', $product->product_no)->exists();
+        if($exists){
+            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Material Sudah discan']);
+        }
+
         $this->loadMaterial();
 
         $assy_plan =DB::table('prs_kias.dbo.prs_assy_plan')->where('product_id', $product->id)->where('tanggal',$this->date)->whereNull('deleted_at')->orderByDesc('updated_at')->first();
@@ -188,6 +196,9 @@ class MaterialRequestAssyNew extends Component
 
     public function render()
     {
+        if($this->param){
+            return view('livewire.material-request-assy-new-disable-edit');
+        }
         return view('livewire.material-request-assy-new');
     }
 }
