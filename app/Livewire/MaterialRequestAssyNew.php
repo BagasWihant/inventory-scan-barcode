@@ -143,6 +143,11 @@ class MaterialRequestAssyNew extends Component
         $this->loadMaterial();
 
         $assy_plan =DB::table('prs_kias.dbo.prs_assy_plan')->where('product_id', $product->id)->where('tanggal',$this->date)->whereNull('deleted_at')->orderByDesc('updated_at')->first();
+        
+        if(!$assy_plan){
+            return $this->dispatch('alert', ['time' => 2500, 'icon' => 'error', 'title' => 'Material tidak ada']);
+        }
+        
         $this->qty = $assy_plan->plan;
         $this->dispatch('loadMaterial', $this->listMaterialNo, $this->qty);
 
