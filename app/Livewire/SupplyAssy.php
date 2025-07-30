@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Service\LogActivityService;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -147,6 +148,7 @@ class SupplyAssy extends Component
             $this->batal();
 
             DB::commit();
+            LogActivityService::write("ASSY SUPPLY $this->noPallet");
             $this->dispatch('notification', ['title' => "Supply Disimpan", 'icon' => 'success']);
         } catch (\Exception $e) {
             DB::rollback();

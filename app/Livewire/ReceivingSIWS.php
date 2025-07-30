@@ -10,6 +10,7 @@ use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use App\Exports\ScannedExport;
 use App\Models\abnormalMaterial;
+use App\Service\LogActivityService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -307,11 +308,20 @@ class ReceivingSIWS extends Component
 
     private function refreshData($insert = false)
     {
-        $getScanned = DB::table('material_in_stock')->select('material_no')
-            ->where('pallet_no', $this->paletBarcode)
-            ->union(DB::table('abnormal_materials')->select('material_no')->where('pallet_no', $this->paletBarcode))
-            ->pluck('material_no')
-            ->all();
+        // $getScanned = DB::table('material_in_stock')->select('material_no')
+        //     ->where('pallet_no', $this->paletBarcode)
+        //     ->union(DB::table('abnormal_materials')->select('material_no')->where('pallet_no', $this->paletBarcode))
+        //     ->pluck('material_no')
+        //     ->all();
+
+        // tak coba cache
+        $getScanned = Cache::remember('getScanned_' . $this->paletBarcode . '_' . $this->userId, $this->cacheTime, function () {
+            return DB::table('material_in_stock')->select('material_no')
+                ->where('pallet_no', $this->paletBarcode)
+                ->union(DB::table('abnormal_materials')->select('material_no')->where('pallet_no', $this->paletBarcode))
+                ->pluck('material_no')
+                ->all();
+        });
 
 
         $getScannedString = implode(',', $getScanned);
@@ -545,7 +555,7 @@ class ReceivingSIWS extends Component
             ->where('userID', $this->userId)
             ->where('palet', $this->paletBarcode)
             ->groupBy($selectGroup);
-            
+
         $dataMaterial = $fixProduct->get();
         foreach ($dataMaterial as $data) {
             $pax = $data->pax;
@@ -744,6 +754,7 @@ class ReceivingSIWS extends Component
         $this->resetTimeScan();
         $this->resetPage();
         $this->refreshTemp();
+        LogActivityService::write("Receiving SIWS $paletBarcode");
         return Excel::download(new ScannedExport($dataMaterial), "Scanned Items_" . $paletBarcode . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 
