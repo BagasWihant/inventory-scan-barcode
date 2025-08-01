@@ -117,8 +117,8 @@ class PackingMenu extends Component
             }
 
             $this->tempRequest =  $checkingUser;
-            
-            $this->dispatch('qtyInput',['title'=>'Input Qty '.$scannedMaterial->material_no,'trx'=>$scannedMaterial->transaksi_no]);
+
+            $this->dispatch('qtyInput', ['title' => 'Input Qty ' . $scannedMaterial->material_no, 'trx' => $scannedMaterial->transaksi_no]);
             // $this->inputQty($scannedMaterial->request_qty);
 
             // $this->getMaterial($scannedMaterial->transaksi_no);
@@ -134,25 +134,26 @@ class PackingMenu extends Component
             return str_replace(' ', '', trim($sub->material_no)) == str_replace(' ', '', trim($this->materialScan));
         })->first();
 
+        $allowMaterial = AllowMaterials::where('type', 'qty_request')->pluck('material_no')->toArray();
+
+        // jika tidak didalam list masuk sini
+        if (!in_array($scannedMaterial->material_no, $allowMaterial)) {
+            if ($qty > $scannedMaterial->request_qty) {
+                $this->getMaterial($this->transaksiNo);
+                return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Qty supply $qty melebihi Qty request $scannedMaterial->request_qty"]);
+            }
+        }
+
+        // validasi qty stock
+        if ($qty > $scannedMaterial->stock) {
+            $this->getMaterial($this->transaksiNo);
+            return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Qty supply $qty melebihi Stock $scannedMaterial->stock"]);
+        }
         if ($this->tempRequest) {
             $qtySupply = $qty + $this->tempRequest->qty_supply;
 
-            if ($qtySupply > $scannedMaterial->request_qty) {
-                $this->getMaterial($this->transaksiNo);
-                return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Qty supply $qtySupply melebihi Qty request $scannedMaterial->request_qty"]);
-            }
-
             $this->tempRequest->update(['qty_supply' => $qtySupply]);
         } else {
-            $allowMaterial = AllowMaterials::where('type','qty_request')->pluck('material_no')->toArray();
-            if(!in_array($scannedMaterial->material_no,$allowMaterial)){
-
-                if ($qty > $scannedMaterial->request_qty) {
-                    $this->getMaterial($this->transaksiNo);
-                    return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Qty supply $qty melebihi Qty request $scannedMaterial->request_qty"]);
-                }
-            }
-
             ScanRequestPicking::create([
                 'transaksi_no' => $scannedMaterial->transaksi_no,
                 'material_no' => $scannedMaterial->material_no,
@@ -180,7 +181,7 @@ class PackingMenu extends Component
     public function getMaterial($trx)
     {
         DB::enableQueryLog();
-        $dataPrint = MaterialRequestAssy::where('material_request_assy.transaksi_no', $trx)
+        $dataPrint = DB::table('material_request_assy')->where('material_request_assy.transaksi_no', $trx)
             ->leftJoin('scan_request_pickings as r', function ($join) {
                 $join->on('material_request_assy.transaksi_no', '=', 'r.transaksi_no')
                     ->on('material_request_assy.material_no', '=', 'r.material_no');
@@ -191,7 +192,7 @@ class PackingMenu extends Component
         $this->canConfirm = $dataPrint->first()->status;
         $this->transaksiSelected = $dataPrint;
 
-        
+
 
         $this->transaksiNo = $trx;
         $this->materialScan = null;
