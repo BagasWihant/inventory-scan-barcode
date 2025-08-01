@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Exports\ItemMaterialRequest;
+use App\Models\AllowMaterials;
 use App\Models\MaterialRequestAssy;
 use App\Models\ScanRequestPicking;
 use \Illuminate\Support\Str;
@@ -132,7 +133,7 @@ class PackingMenu extends Component
         $scannedMaterial = $tempTransaksiSelected->filter(function ($sub) {
             return str_replace(' ', '', trim($sub->material_no)) == str_replace(' ', '', trim($this->materialScan));
         })->first();
-        
+
         if ($this->tempRequest) {
             $qtySupply = $qty + $this->tempRequest->qty_supply;
 
@@ -143,9 +144,13 @@ class PackingMenu extends Component
 
             $this->tempRequest->update(['qty_supply' => $qtySupply]);
         } else {
-            if ($qty > $scannedMaterial->request_qty) {
-                $this->getMaterial($this->transaksiNo);
-                return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Qty supply $qty melebihi Qty request $scannedMaterial->request_qty"]);
+            $allowMaterial = AllowMaterials::where('type','qty_request')->pluck('material_no')->toArray();
+            if(!in_array($scannedMaterial->material_no,$allowMaterial)){
+
+                if ($qty > $scannedMaterial->request_qty) {
+                    $this->getMaterial($this->transaksiNo);
+                    return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Qty supply $qty melebihi Qty request $scannedMaterial->request_qty"]);
+                }
             }
 
             ScanRequestPicking::create([
