@@ -68,6 +68,13 @@
         .fl {
             display: flex;
         }
+
+        .credit {
+            color: red;
+        }
+        .debit {
+            color: blue;
+        }
     </style>
 </head>
 
@@ -86,11 +93,33 @@
         </tr>
         
             <tr>
-                <td>isi Bulan</td>
+                <td>apr-25</td>
                 <td>isi no</td>
                 <td>isi Tanggal</td>
                 <td>isi Keterangan</td>
-                <td>isi Debt/Cred</td>
+                <td class="credit">credit</td>
+                <td class="credit">isi Fix Asset</td>
+                <td class="credit">isi Non Fix Asset</td>
+                <td class="credit">isi Expense</td>
+
+            </tr>
+            <tr>
+                <td>apr-25</td>
+                <td>isi no</td>
+                <td>isi Tanggal</td>
+                <td>isi Keterangan</td>
+                <td class="debit">debit</td>
+                <td class="debit">isi Fix Asset</td>
+                <td class="debit">isi Non Fix Asset</td>
+                <td class="debit">isi Expense</td>
+
+            </tr>
+            <tr>
+                <td>apr-25</td>
+                <td>isi no</td>
+                <td>isi Tanggal</td>
+                <td>isi Keterangan</td>
+                <td class=""></td>
                 <td>isi Fix Asset</td>
                 <td>isi Non Fix Asset</td>
                 <td>isi Expense</td>
