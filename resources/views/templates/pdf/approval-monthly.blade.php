@@ -75,6 +75,10 @@
         .debit {
             color: blue;
         }
+
+        .no-cr{
+            color: #727272ff;
+        }
     </style>
 </head>
 
@@ -119,10 +123,10 @@
                 <td>isi no</td>
                 <td>isi Tanggal</td>
                 <td>isi Keterangan</td>
-                <td class=""></td>
-                <td>isi Fix Asset</td>
-                <td>isi Non Fix Asset</td>
-                <td>isi Expense</td>
+                <td class="no-cr"></td>
+                <td class="no-cr">isi Fix Asset</td>
+                <td class="no-cr">isi Non Fix Asset</td>
+                <td class="no-cr">isi Expense</td>
 
             </tr>
     </table>
