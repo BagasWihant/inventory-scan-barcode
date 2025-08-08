@@ -50,6 +50,7 @@ Route::middleware(['auth', 'updateActivity'])->group(function () {
     Route::get('receiving-assy', fn() => view('pages.receiving-assy'))->name('receiving.assy');
     
     Route::get('packing', fn() => view('pages.packing-menu'))->name('material.packing');
+    Route::get('log-history-stock', fn() => view('pages.log-history-stock'))->name('log-stock');
 
     // retur assy
     Route::get('retur-request-assy', fn() => view('pages.retur-request-assy'))->name('retur.request.assy');
