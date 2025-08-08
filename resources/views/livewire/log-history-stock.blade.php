@@ -2,24 +2,26 @@
     materialNo: null,
     lineCode: null,
     date: null,
+    dateReceiving: null,
+    dateSupply: null,
     listMaterials:{},
     isLoading: false,
     isFiltered: false,
     async filterAction() {
         this.isLoading = true;
-        if(this.materialNo == null && this.lineCode == null && this.date == null){
+        if(this.materialNo == null){
             this.isLoading = false;
             Swal.fire({
                 icon: 'warning',
                 title: 'Warning',
-                text: 'Please fill at least one field',
+                text: 'Please fill at least Material No',
                 showConfirmButton: false,
                 timer: 2500
             })
             return;
         }
         this.isFiltered= true;
-        const res = await @this.call('getData',this.materialNo, this.lineCode, this.date);
+        const res = await @this.call('getData',this.materialNo, this.lineCode, this.dateReceiving, this.dateSupply);
         this.listMaterials = res;
         this.isLoading = false;
     },
@@ -27,11 +29,11 @@
         this.isFiltered= false,
         this.materialNo = null;
         this.lineCode = null;
-        this.date = null;
+        this.dateReceiving = null;
         this.listMaterials = [];
     }
 }">
-    <div class="grid md:grid-cols-3 gap-3 max-w-7xl mx-auto pb-6">
+    <div class="grid md:grid-cols-4 gap-3 max-w-7xl mx-auto pb-6">
         <div>
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material No
             </label>
@@ -47,18 +49,26 @@
                 placeholder="Line Code">
         </div>
         <div>
-            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Date
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Date Receiving
             </label>
-            <input id="date" type="date" onclick="this.showPicker()" x-model="date"
+            <input id="dateReceiving" type="date" onclick="this.showPicker()" x-model="dateReceiving"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Select date start">
+        </div>
+        <div>
+            <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Date Supply
+            </label>
+            <input id="dateSupply" type="date" onclick="this.showPicker()" x-model="dateSupply"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="Select date start">
         </div>
     </div>
 
     <div class="flex max-w-7xl mx-auto pb-5">
-        <div class="flex justify-start flex-1" x-show="isFiltered">
-            <button 
-                class="bg-green-500 text-white px-4 py-2 rounded-lg opacity-60 cursor-wait flex items-center gap-2">
+        <div class="flex justify-start flex-1" x-show="isFiltered && !isLoading">
+            <button @click="$wire.export()"
+                :disabled="isLoading"
+                class="bg-green-500 text-white px-4 py-2 rounded-lg flex items-center gap-2">
                 Export Excel
             </button>
         </div>
@@ -107,7 +117,7 @@
                                 Material No
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                Line Code
+                                Qty
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 Date
