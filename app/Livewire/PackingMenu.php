@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Exports\ItemMaterialRequest;
+use App\Exports\PackingExport;
 use App\Models\AllowMaterials;
 use App\Models\MaterialRequestAssy;
 use App\Models\ScanRequestPicking;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PackingMenu extends Component
 {
@@ -150,7 +152,7 @@ class PackingMenu extends Component
             return $this->dispatch('alert', ['time' => 3500, 'icon' => 'error', 'title' => "Qty supply $qty melebihi Stock $scannedMaterial->stock"]);
         }
         if ($this->tempRequest) {
-            $qtySupply = $qty + $this->tempRequest->qty_supply;
+            $qtySupply = (int)$qty + (int)$this->tempRequest->qty_supply;
 
             $this->tempRequest->update(['qty_supply' => $qtySupply]);
         } else {
@@ -162,9 +164,46 @@ class PackingMenu extends Component
                 'user_id' => $this->userId
             ]);
         }
+
+        // update qty mst
+        $matMst = DB::table('material_mst')->where('matl_no', $scannedMaterial->material_no);
+        $matMstData = $matMst->first();
+
+        $sisaQty = (int) $matMstData->qty - (int) $qty;
+        $matMst->update([
+            'qty' => $sisaQty,
+            'qty_OUT' => (int)$matMstData->qty_OUT + (int)$qty
+        ]);
+
+        // kit
+        $kit = DB::table('material_setup_mst')
+            ->where('material_no', $scannedMaterial->material_no)
+            ->where('line_c', $matMstData->loc_cd)->select('kit_no')->first();
+
         $this->getMaterial($this->transaksiNo);
         $this->materialScan = null;
         $this->dispatch('alert', ['time' => 3500, 'icon' => 'success', 'title' => "Material Added"]);
+
+        // print        
+        $qr = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($scannedMaterial->material_no));
+
+        $actual =  [
+            'kit' => $kit->kit_no ?? '',
+            'qty' => $qty
+        ];
+
+        $fraction = [
+            'material_no' => $scannedMaterial->material_no,
+            'qty' => $sisaQty,
+            'location' => $matMstData->loc_cd,
+            'qr' => $qr
+        ];
+
+        return PackingExport::download(
+            $scannedMaterial->material_no,
+            $fraction,
+            $actual
+        );
     }
 
     public function print($id)

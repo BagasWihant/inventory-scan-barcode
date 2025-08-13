@@ -153,12 +153,12 @@ class ReceivingAssy extends Component
                 ]);
 
                 if ($item["status"] == "+") {
-                    $matMst = DB::table('material_mst')->where('matl_no', $item['material_no']);
-                    $matMstData = $matMst->first();
-                    $matMst->update([
-                        'qty' => (int) $matMstData->qty - (int) $item['qty_supply'],
-                        'qty_OUT' => (int)$matMstData->qty_OUT + (int)$item['qty_supply']
-                    ]);
+                    // $matMst = DB::table('material_mst')->where('matl_no', $item['material_no']);
+                    // $matMstData = $matMst->first();
+                    // $matMst->update([
+                    //     'qty' => (int) $matMstData->qty - (int) $item['qty_supply'],
+                    //     'qty_OUT' => (int)$matMstData->qty_OUT + (int)$item['qty_supply']
+                    // ]);
                 }
             }
 
