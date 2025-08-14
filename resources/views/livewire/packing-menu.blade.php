@@ -437,6 +437,24 @@
                         }
                     });
                 })
+
+                $wire.on('previewPdf', (event) => {
+                    console.log(event);
+                    return Swal.fire({
+                        title: event.title || 'Preview PDF',
+                        html: `
+                            <div class="flex flex-col" style="width:100%;height:80vh;margin:auto">
+                                <iframe src="${event.url}" 
+                                        style="width:100%;height:100%;border:none;" 
+                                        frameborder="0"></iframe>
+                            </div>
+                        `,
+                        showCloseButton: true,
+                        showConfirmButton: false,
+                        width: '40%',
+                        heightAuto: false,
+                    });
+                });
             </script>
         @endscript
     </div>

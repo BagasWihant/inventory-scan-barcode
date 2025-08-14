@@ -76,12 +76,19 @@ class PackingExport
         </div>
         ';
 
-        // $mpdf->WriteHTML($html);
-        return response()->streamDownload(function () use ($mpdf, $html) {
-            $mpdf->WriteHTML($html);
-            $mpdf->Output();
-        }, $fileName, [
-            'Content-Type' => 'application/pdf',
-        ]);
+        $filePath = storage_path('app/public/packing/' . trim($fileName).'.pdf');
+        $mpdf->WriteHTML($html);
+        $mpdf->Output($filePath, 'F');
+
+        // return filepath
+        return asset('storage/packing/' . trim($fileName).'.pdf');
+
+        // jika download langsung
+        // return response()->streamDownload(function () use ($mpdf, $html) {
+        //     $mpdf->WriteHTML($html);
+        //     $mpdf->Output();
+        // }, $fileName, [
+        //     'Content-Type' => 'application/pdf',
+        // ]);
     }
 }

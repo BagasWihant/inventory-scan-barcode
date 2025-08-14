@@ -176,9 +176,10 @@ class PackingMenu extends Component
         ]);
 
         // kit
-        $kit = DB::table('material_setup_mst')
+        $matReqAssy = DB::table('material_request_assy')
             ->where('material_no', $scannedMaterial->material_no)
-            ->where('line_c', $matMstData->loc_cd)->select('kit_no')->first();
+            ->where('transaksi_no', $scannedMaterial->transaksi_no)
+            ->select('product_model','line_c')->first();
 
         $this->getMaterial($this->transaksiNo);
         $this->materialScan = null;
@@ -188,21 +189,27 @@ class PackingMenu extends Component
         $qr = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($scannedMaterial->material_no));
 
         $actual =  [
-            'kit' => $kit->kit_no ?? '',
+            'kit' => $matReqAssy->product_model ?? '',
             'qty' => $qty
         ];
 
         $fraction = [
             'material_no' => $scannedMaterial->material_no,
             'qty' => $sisaQty,
-            'location' => $matMstData->loc_cd,
+            'location' => $matReqAssy->line_c,
             'qr' => $qr
         ];
 
-        return PackingExport::download(
+        $filePdf =  PackingExport::download(
             $scannedMaterial->material_no,
             $fraction,
             $actual
+        );
+
+        return $this->dispatch(
+            'previewPdf',
+            url: $filePdf,
+            title: $scannedMaterial->material_no
         );
     }
 
