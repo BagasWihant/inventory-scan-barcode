@@ -250,7 +250,7 @@ class PackingMenu extends Component
         $this->data =  MaterialRequestAssy::when($this->searchKey, function ($q) {
             $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
         })
-            ->where('status', '=', '1')
+            // ->where('status', '=', '1')
             ->selectRaw('transaksi_no, status, type, issue_date, line_c, CONVERT(DATE,created_at) as created_at')
             ->groupByRaw('transaksi_no, status, type, CONVERT(DATE,created_at), issue_date, line_c')
             ->orderByDesc(DB::raw('CONVERT(DATE,created_at)'))->get();

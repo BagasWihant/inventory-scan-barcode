@@ -43,8 +43,7 @@
                         <tr
                             class="py-2
                                 @if ($d->status == 0) bg-red-700 text-white font-semibold hover:bg-red-800
-                                @elseif ($d->status == 1)
-                                 bg-green-700 text-white font-semibold hover:bg-green-800 @endif ">
+                                @elseif ($d->status == 1) bg-green-700 text-white font-semibold hover:bg-green-800 @endif ">
                             <td class="px-2" role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 {{ $d->transaksi_no }}
                             </td>
@@ -60,6 +59,8 @@
                             <td role="button" @click="showMaterialDetails('{{ $d->transaksi_no }}')">
                                 @if ($d->status == 1)
                                     Sudah di proses
+                                @elseif($d->status == 2)
+                                    Selesai
                                 @elseif($d->status == 0)
                                     Belum di proses
                                 @endif
@@ -186,9 +187,10 @@
                             <button @click="closeModal" type="button"
                                 class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
 
-                            <button type="button" @click="saveDetailScanned"
-                                class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-blue-500 rounded-lg border  hover:bg-blue-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Confirm</button>
-
+                            @if ($canConfirm)
+                                <button type="button" @click="saveDetailScanned"
+                                    class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-50 focus:outline-none bg-blue-500 rounded-lg border  hover:bg-blue-600 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Confirm</button>
+                            @endif
                         </div>
                     </div>
                 </div>
