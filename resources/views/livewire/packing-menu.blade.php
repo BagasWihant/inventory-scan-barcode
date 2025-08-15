@@ -233,8 +233,7 @@
                         });
                     },
                     closeModal() {
-                        @this.materialScan = null;
-                        @this.transaksiSelected = null;
+                        @this.call('closeModal')
                         this.showModal = false
                     },
                     saveDetailScanned() {

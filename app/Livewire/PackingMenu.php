@@ -276,6 +276,11 @@ class PackingMenu extends Component
         $this->dispatch('alert', ['time' => 1500, 'icon' => 'success', 'title' => "Qty Changed"]);
     }
 
+    public function closeModal(){
+        $this->materialScan = null;
+        $this->transaksiSelected = null;
+    }
+
     public function saveDetailScanned()
     {
         try {
