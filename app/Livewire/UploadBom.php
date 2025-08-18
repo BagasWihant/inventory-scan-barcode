@@ -80,7 +80,6 @@ class UploadBom extends Component
     public function saveBom($data)
     {
         foreach ($data as $d) {
-            sleep(1);
             DB::table('db_bantu.dbo.bom')
                 ->insert([
                     'product_no' => $d['product_no'],

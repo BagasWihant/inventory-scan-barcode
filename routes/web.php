@@ -51,6 +51,8 @@ Route::middleware(['auth', 'updateActivity'])->group(function () {
     
     Route::get('packing', fn() => view('pages.packing-menu'))->name('material.packing');
     Route::get('log-history-stock', fn() => view('pages.log-history-stock'))->name('log-stock');
+    Route::get('bom-upload', fn() => view('pages.bom-upload'))->name('bom-upload');
+    Route::get('bom-master', fn() => view('pages.bom-master'))->name('bom-master');
 
     // retur assy
     Route::get('retur-request-assy', fn() => view('pages.retur-request-assy'))->name('retur.request.assy');
