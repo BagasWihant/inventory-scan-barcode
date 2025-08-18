@@ -20,7 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'isPrepareStockTaking' => IsPrepareStockTaking::class,
             'isMC' =>isMC::class,
             'inputStockTaking' => InputStockTakingMiddleware::class,
-            'updateActivity' => UpdateActivity::class
+            'updateActivity' => UpdateActivity::class,
+            'allowednik' => \App\Http\Middleware\allowedNIK::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

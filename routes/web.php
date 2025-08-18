@@ -51,8 +51,9 @@ Route::middleware(['auth', 'updateActivity'])->group(function () {
     
     Route::get('packing', fn() => view('pages.packing-menu'))->name('material.packing');
     Route::get('log-history-stock', fn() => view('pages.log-history-stock'))->name('log-stock');
-    Route::get('bom-upload', fn() => view('pages.bom-upload'))->name('bom-upload');
-    Route::get('bom-master', fn() => view('pages.bom-master'))->name('bom-master');
+
+    Route::get('bom-upload', fn() => view('pages.bom-upload'))->name('bom-upload')->middleware(['allowednik:098,122,123']); // nek pengen beberapa 098,097,098
+    Route::get('bom-master', fn() => view('pages.bom-master'))->name('bom-master')->middleware(['allowednik:098,122,123']);
 
     // retur assy
     Route::get('retur-request-assy', fn() => view('pages.retur-request-assy'))->name('retur.request.assy');
