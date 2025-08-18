@@ -168,7 +168,7 @@
                                                         <td class="px-3 py-2">
                                                             <button
                                                                 class="bg-yellow-600 px-4 py-2 text-white rounded-md"
-                                                                @click="resetQty('{{ $data->material_no }}')">Reset</button>
+                                                                @click="resetQty('{{ $data->material_no }}','{{ $data->qty_supply }}')">Reset</button>
                                                         </td>
                                                     @endif
 
@@ -252,8 +252,8 @@
 
                         })
                     },
-                    resetQty(material) {
-                        @this.call('resetQty', material)
+                    resetQty(material, qty) {
+                        @this.call('resetQty', material,qty)
                     },
                     editQty(data) {
                         Swal.fire({

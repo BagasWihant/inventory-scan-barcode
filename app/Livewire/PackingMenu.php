@@ -261,8 +261,19 @@ class PackingMenu extends Component
         })->count();
     }
 
-    public function resetQty($material)
+    public function resetQty($material, $qty)
     {
+        
+         // update qty mst
+        $matMst = DB::table('material_mst')->where('matl_no', $material);
+        $matMstData = $matMst->first();
+
+        $sisaQty = (int) $matMstData->qty + (int) $qty;
+        $matMst->update([
+            'qty' => $sisaQty,
+            'qty_OUT' => (int)$matMstData->qty_OUT - (int)$qty
+        ]);
+
         ScanRequestPicking::where('material_no', $material)->where('transaksi_no', $this->transaksiNo)->update(['qty_supply' => 0]);
         $this->getMaterial($this->transaksiNo);
     }
