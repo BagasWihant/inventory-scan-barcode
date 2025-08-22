@@ -60,7 +60,7 @@ class UploadBom extends Component
         ]);
 
         $dataYangAda = DB::table('db_bantu.dbo.bom')
-            ->selectRaw("REPLACE(material_no, ' ', '') as material_no")
+            ->selectRaw("material_no")
             ->whereRaw("product_no = ?", [$this->product_no])
             ->whereRaw("dc = ?", [$this->dc])
             ->groupBy('material_no')
@@ -80,16 +80,19 @@ class UploadBom extends Component
     public function saveBom($data)
     {
         foreach ($data as $d) {
-            DB::table('db_bantu.dbo.bom')
-                ->insert([
-                    'product_no' => $d['product_no'],
-                    'dc' => $d['dc'],
-                    'material_no' => $d['material_no'],
-                    'bom_qty' => $d['bom_qty'],
+            DB::table('db_bantu.dbo.bom')->updateOrInsert(
+                [
+                    'product_no'  => $this->product_no,
+                    'dc'          => $this->dc,
+                    'material_no' => (string) $d['material_no'],
+                ],
+                [
+                    'bom_qty'    => $d['bom_qty'],
                     'created_at' => now(),
                     'updated_at' => now(),
-                    'status' => 1
-                ]);
+                    'status'     => 1,
+                ]
+            );
         }
     }
 }

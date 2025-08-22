@@ -12,7 +12,7 @@ class ImportBom implements ToCollection, WithHeadingRow
     public $data;
     public $product_no;
     public $dc;
-    public $row = [];   
+    public $row = [];
 
     public function __construct($data, $product_no, $dc)
     {
@@ -26,22 +26,21 @@ class ImportBom implements ToCollection, WithHeadingRow
     public function collection(Collection $collection)
     {
         foreach ($collection as $r) {
-            if (!in_array(str_replace(' ','',$r['material_no']), $this->data)) {
-                $this->row[] = [
-                    'product_no' => $this->product_no,
-                    'dc' => $this->dc,
-                    'material_no' => $r['material_no'],
-                    'bom_qty' => $r['bom_qty'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                    'status' => 1
-                ];
-            }
+            $this->row[] = [
+                'product_no' => $this->product_no,
+                'dc' => $this->dc,
+                'material_no' => $r['material_no'],
+                'bom_qty' => $r['bom_qty'],
+                'created_at' => now(),
+                'updated_at' => now(),
+                'status' => 1
+            ];
         }
         return $this->row;
     }
 
-    public function getData(){
+    public function getData()
+    {
         return $this->row;
     }
 }
