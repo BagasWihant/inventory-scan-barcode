@@ -179,25 +179,27 @@ class PackingMenu extends Component
         $matReqAssy = DB::table('material_request_assy')
             ->where('material_no', $scannedMaterial->material_no)
             ->where('transaksi_no', $scannedMaterial->transaksi_no)
-            ->select('product_model','line_c')->first();
+            ->select('product_model', 'line_c')->first();
 
         $this->getMaterial($this->transaksiNo);
         $this->materialScan = null;
         $this->dispatch('alert', ['time' => 3500, 'icon' => 'success', 'title' => "Material Added"]);
 
         // print        
-        $qr = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($scannedMaterial->material_no));
+        $qr1 = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($scannedMaterial->material_no . '||' . $sisaQty . '||' . $matReqAssy->line_c));
+        $qr2 = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($scannedMaterial->material_no . '||' . $qty . '||' . $matReqAssy->product_model . '||' . $matReqAssy->line_c));
 
         $actual =  [
             'kit' => $matReqAssy->product_model ?? '',
-            'qty' => $qty
+            'qty' => $qty,
+            'qr' => $qr2
         ];
 
         $fraction = [
             'material_no' => $scannedMaterial->material_no,
             'qty' => $sisaQty,
             'location' => $matReqAssy->line_c,
-            'qr' => $qr
+            'qr' => $qr1
         ];
 
         $filePdf =  PackingExport::download(
@@ -263,8 +265,8 @@ class PackingMenu extends Component
 
     public function resetQty($material, $qty)
     {
-        
-         // update qty mst
+
+        // update qty mst
         $matMst = DB::table('material_mst')->where('matl_no', $material);
         $matMstData = $matMst->first();
 
@@ -287,7 +289,8 @@ class PackingMenu extends Component
         $this->dispatch('alert', ['time' => 1500, 'icon' => 'success', 'title' => "Qty Changed"]);
     }
 
-    public function closeModal(){
+    public function closeModal()
+    {
         $this->materialScan = null;
         $this->transaksiSelected = null;
     }

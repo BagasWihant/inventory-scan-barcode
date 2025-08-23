@@ -54,7 +54,7 @@ class PackingExport
             <table>
                 <tr>
                     <td colspan="2"><h6 style="text-align:center;border:1px solid black;width:60px;margin-left:2px;">ACTUAL SUPPLY</h6></td>
-                    <td rowspan="5" style="text-align:center;width:60px;"><b>' . $dataFraction['qr'] . '</b></td>
+                    <td rowspan="5" style="text-align:center;width:60px;"><b>' . $dataActual['qr'] . '</b></td>
                 </tr>
                 <tr>
                     <td style="text-align:left;width:60px;">Material No</td>
