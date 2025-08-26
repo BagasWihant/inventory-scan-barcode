@@ -10,7 +10,7 @@ class PackingExport
     {
         $mpdf = new Mpdf([
             'mode' => 'utf-8',
-            'format' => [80, 50], // 58mm x 100mm (bisa diganti panjangnya)
+            'format' => [80, 27], // 58mm x 100mm (bisa diganti panjangnya)
             'margin_left' => 0,
             'margin_right' => 0,
             'margin_top' => 2,
@@ -20,12 +20,12 @@ class PackingExport
 
         $fraction = '
         <style>
-            @page { size: 80mm 50mm; margin: 0; }
+            @page { size: 80mm 27mm; margin: 4px; }
             body { width: 100%; font-size: 8pt; font-family: sans-serif; }
             table {  border-collapse: collapse; margin: auto; }
             td { padding: 2px; }
         </style>
-        <div style="border:1px solid black;width:98%;margin:auto;margin-bottom:6px;padding-top:6px">
+        <div style="border:1px solid black;width:98%;margin:auto;padding-top:6px">
             
             <table>
                 <tr>
@@ -50,7 +50,7 @@ class PackingExport
             </div>
         </div>';
 
-        $actual = '<div style="border:1px solid black;width:98%;margin:auto;margin-bottom:6px;padding-top:6px">
+        $actual = '<div style="border:1px solid black;width:98%;margin:auto;padding-top:6px">
             
             <table>
                 <tr>
