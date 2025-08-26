@@ -10,7 +10,8 @@ class PackingExport
     {
         $mpdf = new Mpdf([
             'mode' => 'utf-8',
-            'format' => [80, 27], // 58mm x 100mm (bisa diganti panjangnya)
+            'format' => [30, 80], 
+            'orientation' => 'L',
             'margin_left' => 0,
             'margin_right' => 0,
             'margin_top' => 2,
@@ -20,7 +21,7 @@ class PackingExport
 
         $fraction = '
         <style>
-            @page { size: 80mm 27mm; margin: 4px; }
+            @page { size: 30mm 80mm; margin: 4px; }
             body { width: 100%; font-size: 8pt; font-family: sans-serif; }
             table {  border-collapse: collapse; margin: auto; }
             td { padding: 2px; }
