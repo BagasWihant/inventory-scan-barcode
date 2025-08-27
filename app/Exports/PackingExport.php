@@ -33,7 +33,7 @@ class PackingExport
                 </tr>
                 <tr>
                     <td style="text-align:left;width:80px;">Material No</td>
-                    <td style="text-align:left;width:100px;"><b>' . $dataFraction['material_no'] . '</b></td>
+                    <td style="text-align:left;width:160px;"><b>' . $dataFraction['material_no'] . '</b></td>
                 </tr>
                 <tr>
                     <td>Qty</td>
@@ -61,7 +61,7 @@ class PackingExport
                 </tr>
                 <tr>
                     <td style="text-align:left;width:80px;">Material No</td>
-                    <td style="text-align:left;width:130px;"><b>' . $dataFraction['material_no'] . '</b></td>
+                    <td style="text-align:left;width:160px;"><b>' . $dataFraction['material_no'] . '</b></td>
                 </tr>
                 <tr>
                     <td>Issue Qty</td>
