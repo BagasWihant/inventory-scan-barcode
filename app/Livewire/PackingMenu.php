@@ -186,8 +186,8 @@ class PackingMenu extends Component
         $this->dispatch('alert', ['time' => 3500, 'icon' => 'success', 'title' => "Material Added"]);
 
         // print        
-        $qr1 = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($scannedMaterial->material_no . '||' . $sisaQty . '||' . $matReqAssy->line_c));
-        $qr2 = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($scannedMaterial->material_no . '||' . $qty . '||' . $matReqAssy->product_model . '||' . $matReqAssy->line_c));
+        $qr1 = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(75)->generate($scannedMaterial->material_no . '||' . $sisaQty . '||' . $matReqAssy->line_c));
+        $qr2 = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(75)->generate($scannedMaterial->material_no . '||' . $qty . '||' . $matReqAssy->product_model . '||' . $matReqAssy->line_c));
 
         $actual =  [
             'kit' => $matReqAssy->product_model ?? '',
