@@ -22,6 +22,7 @@ Route::middleware(['auth', 'updateActivity'])->group(function () {
     Route::middleware('isPrepareStockTaking')->controller(InventoryInController::class)->group(function () {
         Route::get('palet_in', 'index')->name('inventory.index');
         Route::get('po_in', 'po')->name('inventory.po');
+        Route::get('po_in_new', 'po_new')->name('inventory.ponew');
         Route::get('register_palet', 'register_palet')->name('register_palet');
         Route::get('create_palet', 'create_palet')->name('create_palet');
         Route::get('abnormal', 'abnormal')->name('abnormal');

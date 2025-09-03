@@ -24,6 +24,10 @@ class InventoryInController extends Controller
     {
         return view('pages.po');
     }
+    public function po_new()
+    {
+        return view('pages.po_new');
+    }
 
     public function abnormal()
     {
