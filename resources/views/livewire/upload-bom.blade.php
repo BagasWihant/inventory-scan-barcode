@@ -85,7 +85,7 @@ window.addEventListener('product-model-selected', e => {
 })">
     <div class="flex gap-3 pb-6">
         <div class="flex justify-start flex-col flex-1">
-            <x-search-dropdown :method="'searchDropdown'" :onSelect="'selectDropdown'" :label="'Product Model'" :resetEvent="'reset-product-model'"
+            <x-search-dropdown :method="'searchDropdown'" :onSelect="'selectDropdown'" :label="'Product Model'" :resetEvent="'reset-product-model'" :field="'product_no'"
                 x-bind:disabled="canReset"
                 x-bind:class="{ 'bg-gray-100 text-gray-800': canReset, 'bg-white text-black': !canReset }" />
             <button x-show="canReset" @click="resetDropdown()" class="mt-2 bg-red-500 text-white px-3 py-1 rounded">

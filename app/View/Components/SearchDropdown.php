@@ -13,13 +13,15 @@ class SearchDropdown extends Component
     public $onSelect;
     public $label;
     public $resetEvent;
+    public $field;
 
-    public function __construct($method, $onSelect = 'productSelected', $label, $resetEvent = 'reset-dropdown')
+    public function __construct($method, $onSelect = 'productSelected', $label, $field ,$resetEvent = null)
     {
         $this->method = $method;
         $this->onSelect = $onSelect;
         $this->label = $label;
         $this->resetEvent = $resetEvent;
+        $this->field = $field;
     }
 
     /**
