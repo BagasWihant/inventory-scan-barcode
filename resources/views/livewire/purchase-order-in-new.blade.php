@@ -219,6 +219,11 @@
     closeModal() {
         this.showModal = false;
         this.dataModal = [];
+    },
+    hapusScanned(index) {
+
+        this.dataModal.counter = this.dataModal.counter - this.dataModal.scanned[index][0];
+        this.dataModal.scanned.splice(index, 1);
     }
 }" x-init="window.addEventListener('po-selected', e => {
     if (sj_model === '') {
@@ -589,7 +594,7 @@
                                         <td class="px-3 py-2" x-text="m[0]"></td>
                                         <td class="px-3 py-2" x-text="m[1]"></td>
                                         <td class="px-3 py-2">
-                                            <button @click="dataModal?.scanned.splice(i, 1);console.log(dataModal);"
+                                            <button @click="hapusScanned(i)"
                                                 class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-white rounded-lg p-1 group bg-gradient-to-br from-red-800 to-red-500 group-hover:from-red-900 group-hover:to-red-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
                                                 Hapus
                                             </button>
