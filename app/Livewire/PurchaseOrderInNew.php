@@ -60,22 +60,23 @@ class PurchaseOrderInNew extends Component
 
         $getSetupby = DB::table('material_setup_mst_supplier')->select('setup_by')->where('kit_no', $this->po)->first();
         if ($getSetupby) $this->input_setup_by = $getSetupby->setup_by;
-        // if ($this->input_setup_by == "PO COT" && DB::table('WH_rcv_QRHistory')->where('QR', $data['qr'])->where('user_id', $this->userId)->where('status', 1)->exists()) {
-        //     return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "QR sudah pernah discan"]);
-        // }
+
+        if ($this->input_setup_by == "PO COT" && DB::table('WH_rcv_QRHistory')->where('QR', $data['qr'])->where('user_id', $this->userId)->where('status', 1)->exists()) {
+             return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "QR sudah pernah discan"]);
+        }
 
         // PCL-L24-1607 / S0200381510010150          2108P6002  / yd30  / 210824 / 2 / ANDIK
         $this->line_code = $data['line'];
 
-        // DB::table('WH_rcv_QRHistory')->insert([
-        //     'QR' => $data['qr'],
-        //     'user_id' => $this->userId,
-        //     'PO' => $this->po,
-        //     'line_code' => $this->line_code,
-        //     'material_no' => $this->sws_code,
-        //     'status' => 0,
-        //     'created_at' => date('Y-m-d H:i:s')
-        // ]);
+        DB::table('WH_rcv_QRHistory')->insert([
+             'QR' => $data['qr'],
+             'user_id' => $this->userId,
+             'PO' => $this->po,
+             'line_code' => $this->line_code,
+             'material_no' => $this->sws_code,
+             'status' => 0,
+             'created_at' => date('Y-m-d H:i:s')
+        ]);
 
         $joinCondition = function ($join) {
             $join->on('a.material_no', '=', 'b.material_no')
