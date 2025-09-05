@@ -1,4 +1,8 @@
 <div x-data="{
+    loading: {
+        page: false,
+        confirm: false,
+    },
     canReset: false,
     sj_model: '',
     sj_disable: false,
@@ -11,6 +15,7 @@
     mcs: false,
     listMaterial: [],
     scanMaterial: [],
+    boxNo: 1,
     // fungsi utilitas
     showAlert(message, timer = null, icon = 'warning', title = 'Perhatian') {
         Swal.fire({
@@ -79,14 +84,20 @@
             return { material_no: material_noParse, qty: qtyParse, line: lineParse };
         }
     },
-    scanMaterialAct(parsed) {
+    updateItemMaterial(parsed) {
         mat_no = parsed.material_no
         this.scanMaterial.forEach(item => {
             if (item.material_no.trim() === mat_no) {
                 item.counter = Number(item.counter) + Number(parsed.qty);
+                item.location_cd = this.lok_model;
+                item.scanned.push([Number(parsed.qty), this.boxNo]);
             }
         });
-        console.log(this.scanMaterial,this.listMaterial);
+    },
+
+    // ambil nilai box nya 
+    boxArray() {
+        return [...new Set(this.s.scanned.map(item => item[1]))];
     },
     // end util
 
@@ -98,22 +109,30 @@
         }
 
         let parsed = this.parseQR(this.material_no);
-        console.log(parsed);
         if (!parsed) {
             this.showAlert('QR tidak valid');
             return;
         }
+
+        this.loading.page = true;
         parsed.qr = this.material_no;
         this.line_code = parsed.line;
         this.material_no = '';
 
         if (this.scanMaterial.length > 0) {
-            console.log('update qty')
-            this.scanMaterialAct(parsed);
+            this.updateItemMaterial(parsed);
+            console.log(this.scanMaterial);
+            this.loading.page = false;
             return
         }
+        parsed.location_cd = this.lok_model;
 
         @this.call('scanMaterial', parsed).then((data) => {
+            this.loading.page = false;
+            if (data.length < 1) {
+                return this.showAlert('Material number tidak ditemukan atau salah po');
+            }
+
             this.listMaterial = data;
             this.scanMaterial = data;
             console.log(data);
@@ -134,6 +153,72 @@
         this.material_no = '';
         this.mcs = false;
         this.canReset = false;
+        this.scanMaterial = [];
+        this.listMaterial = [];
+        this.boxNo = 1;
+    },
+    openModalQty(index) {
+        const s = this.scanMaterial[index];
+        Swal.fire({
+            title: `Edit qty ${s.material_no}`,
+            input: 'number',
+            inputValue: s.counter,
+            inputLabel: 'Qty ',
+            inputPlaceholder: 'qty',
+            showDenyButton: true,
+            denyButtonText: `Don't save`
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.scanMaterial.forEach(item => {
+                    if (item.material_no.trim() === s.material_no.trim()) {
+                        item.counter = Number(result.value);
+                    }
+                });
+                Swal.fire({
+                    timer: 1000,
+                    title: 'Qty changed successfully',
+                    icon: 'success',
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            } else if (result.isDenied) {
+                return Swal.fire({
+                    timer: 1000,
+                    title: 'Changes are not saved',
+                    icon: 'info',
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            }
+        });
+    },
+    resetItem(mat_no, line) {
+        this.scanMaterial.forEach(item => {
+            if (item.material_no.trim() === mat_no.trim()) {
+                item.counter = 0;
+                item.scanned = [];
+            }
+        });
+    },
+    confirm() {
+        this.loading.confirm = true;
+        @this.call('confirm', { sj: this.sj_model, scanned: this.scanMaterial }).then((data) => {
+            this.loading.confirm = false;
+            this.resetPage();
+            this.showAlert('Data berhasil disimpan', 2000, 'success', 'Berhasil');
+        });
+    },
+
+    dataModal: [],
+    showModal: false,
+    showScannedModal(index) {
+        this.showModal = true;
+        this.dataModal = this.scanMaterial[index];
+        console.log(this.dataModal);
+    },
+    closeModal() {
+        this.showModal = false;
+        this.dataModal = [];
     }
 }" x-init="window.addEventListener('po-selected', e => {
     if (sj_model === '') {
@@ -205,9 +290,12 @@
                 class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring focus:border-blue-300 sm:text-sm">
         </div>
     </div>
-    <div wire:loading.flex
-        class=" fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
-        wire:target="materialNoScan,resetPage,confirm,choosePo" aria-label="Loading..." role="status">
+
+
+
+    <div x-cloak x-show="loading.page"
+        class="flex fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
+        aria-label="Loading..." role="status">
         <svg class="h-20 w-20 animate-spin stroke-white " viewBox="0 0 256 256">
             <line x1="128" y1="32" x2="128" y2="64" stroke-linecap="round"
                 stroke-linejoin="round" stroke-width="24"></line>
@@ -229,29 +317,50 @@
                 stroke-linejoin="round" stroke-width="24">
             </line>
         </svg>
-        <span class="text-4xl font-medium text-white">{{ $statusLoading ?? 'Loading...' }}</span>
+        <span class="text-4xl font-medium text-white">Loading...</span>
     </div>
     <template x-if="canReset">
-        <div class="flex justify-end pt-3">
-            <button type="button" @click="resetPage"
-                class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
-                <span>
-                    Reset All
-                </span>
-                <div role="status" wire:loading wire:target="resetPage">
-                    <svg aria-hidden="true"
-                        class="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-gray-600 dark:fill-gray-300"
-                        viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-                            fill="currentColor" />
-                        <path
-                            d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-                            fill="currentFill" />
-                    </svg>
-                    <span class="sr-only">Loading...</span>
-                </div>
-            </button>
+        <div class="flex pt-3">
+
+            <div class="block w-full justify-start justify-items-center">
+                <button @click="boxNo--" :disabled="boxNo <= 1" x-show="listMaterial.length > 0"
+                    :class="[
+                        'text-white uppercase font-mono rounded-full text-base px-2 text-center transition-all',
+                        boxNo <= 1 ?
+                        'bg-gray-400 cursor-not-allowed' :
+                        'bg-gradient-to-r from-purple-700 to-pink-700 hover:brightness-125'
+                    ]">
+                    - box
+                </button>
+                <span class="text-base font-bold" x-text="'Nomor Box : ' +boxNo"></span>
+                <button @click="boxNo++" x-show="listMaterial.length > 0"
+                    class="text-white uppercase bg-gradient-to-r from-purple-700 to-pink-700 hover:brightness-125 font-mono rounded-full text-base px-2 text-center">
+                    + box
+                </button>
+
+            </div>
+
+            <div class="flex w-full justify-end">
+                <button type="button" @click="resetPage"
+                    class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
+                    <span>
+                        Reset All
+                    </span>
+                    <div role="status" wire:loading wire:target="resetPage">
+                        <svg aria-hidden="true"
+                            class="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-gray-600 dark:fill-gray-300"
+                            viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                                fill="currentColor" />
+                            <path
+                                d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                                fill="currentFill" />
+                        </svg>
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </button>
+            </div>
         </div>
     </template>
 
@@ -260,22 +369,22 @@
 
 
         <div class="flex gap-4 overflow-x-auto sm:rounded-lg p-3 ">
-            <div class="w-[90%]">
+            <div class="w-[80%]">
 
                 <h2 class="p-3 text-xl text-center font-extrabold dark:text-white">List Barang </h2>
                 <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" class="px-6 py-3">
+                            <th scope="col" class="px-4 py-3">
                                 Material No
                             </th>
-                            <th scope="col" class="px-6 py-3">
+                            <th scope="col" class="px-4 py-3">
                                 Line C
                             </th>
-                            <th scope="col" class="px-6 py-3">
+                            <th scope="col" class="px-4 py-3">
                                 QTY Picking List
                             </th>
-                            <th scope="col" class="px-6 py-3">
+                            <th scope="col" class="px-4 py-3">
                                 In Stock
                             </th>
                         </tr>
@@ -304,19 +413,22 @@
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col " class="px-6 py-3">
+                            <th scope="col " class="px-4 py-3">
                                 Material No
                             </th>
-                            <th scope="col " class="px-6 py-3">
+                            <th scope="col " class="px-4 py-3">
                                 Line C
                             </th>
-                            <th scope="col" class="px-6 py-3">
+                            <th scope="col" class="px-4 py-3">
                                 <div class="flex items-center">
                                     Qty received
                                 </div>
                             </th>
-                            <th scope="col" class="px-6 py-3">
+                            <th scope="col" class="px-4 py-3">
                                 Location
+                            </th>
+                            <th scope="col" class="px-4 py-3">
+                                Box
                             </th>
                             <th scope="col" class="w-4">
                                 keterangan
@@ -350,7 +462,11 @@
                                 </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    <span x-text="s.location"></span>
+                                    <span x-text="s.location_cd"></span>
+                                </th>
+                                <th scope="row"
+                                    class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    <span x-text="boxArray().join(', ')" />
                                 </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -363,6 +479,30 @@
                                                     : 'OUTSTANDING / NOT CLOSE')
                                         " />
                                 </th>
+                                <th scope="row"
+                                    class="p-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+
+                                    <div x-show="s.counter > 0 ">
+                                        <div x-show="boxArray().length > 1">
+                                            <button @click="showScannedModal(i)"
+                                                class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg p-1 group bg-gray-300">
+                                                Detail
+                                            </button>
+                                        </div>
+
+                                        <div x-show="boxArray().length == 1">
+                                            <button @click="resetItem(s.material_no, s.line_c)"
+                                                class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg p-1 group bg-gradient-to-br from-red-800 to-red-500 group-hover:from-red-900 group-hover:to-red-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
+                                                Reset
+                                            </button>
+
+                                            {{-- <button @click="openModalQty(i)"
+                                                class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg p-1 group bg-gradient-to-br from-yellow-800 to-yellow-500 group-hover:from-yellow-900 group-hover:to-yellow-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
+                                                Edit
+                                            </button> --}}
+                                        </div>
+                                    </div>
+                                </th>
                             </tr>
                         </template>
                     </tbody>
@@ -373,12 +513,12 @@
 
         <div class="flex justify-end pt-3">
 
-            <button type="button" wire:click="confirm"
-                class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none transition-all focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
+            <button type="button" @click="confirm" :disabled="loading.confirm"
+                class="text-white bg-gradient-to-r from-cyan-700 to-blue-700 hover:bg-gradient-to-b focus:ring-4 focus:outline-none transition-all focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-xl text-sm px-5 py-2.5 text-center me-2 mb-2">
                 <span wire:loading.remove wire:target="confirm">
                     Konfimasi
                 </span>
-                <div role="status" wire:loading wire:target="confirm">
+                <div role="status" x-cloak x-show="loading.confirm">
                     <svg aria-hidden="true"
                         class="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-gray-600 dark:fill-gray-300"
                         viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -393,135 +533,91 @@
                 </div>
             </button>
         </div>
+
+
+    </div>
+
+    <div id="static-modal" data-modal-backdrop="static" tabindex="-1" x-show="showModal" x-cloak
+        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="scale-90 backdrop-blur-sm"
+        x-transition:enter-end=" scale-100 backdrop-blur-md" x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start=" scale-100" x-transition:leave-end="scale-90"
+        class="flex inset-0 sc backdrop-blur-md overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 max-h-full">
+        <div class="relative p-4 w-full max-w-7xl max-h-full">
+            <!-- Modal content -->
+            <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                <!-- Modal header -->
+                <div class="sticky top-0 z-40 bg-white">
+                    <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 ">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white"
+                            x-text="'Detail Scanned '+ dataModal?.material_no">
+                        </h3>
+                        <button type="button" @click="closeModal"
+                            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 14 14">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                            </svg>
+                            <span class="sr-only">Close modal</span>
+                        </button>
+                    </div>
+
+                </div>
+                <div class="p-3" x-transition>
+                    <div class="relative overflow-y-auto shadow-md rounded-lg my-4">
+                        <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                            <thead class="text-gray-900 uppercase bg-gray-300">
+                                <tr>
+                                    <th scope="col" class="px-3 py-3">
+                                        Scan ke
+                                    </th>
+                                    <th scope="col" class="px-3 py-3">
+                                        Qty
+                                    </th>
+                                    <th scope="col" class="px-3 py-3">
+                                        Box
+                                    </th>
+                                    <th>
+
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="(m,i) in dataModal.scanned" :key="i">
+                                    <tr>
+                                        <td class="px-3 py-2" x-text="i+1"></td>
+                                        <td class="px-3 py-2" x-text="m[0]"></td>
+                                        <td class="px-3 py-2" x-text="m[1]"></td>
+                                        <td class="px-3 py-2">
+                                            <button @click="dataModal?.scanned.splice(i, 1);console.log(dataModal);"
+                                                class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-white rounded-lg p-1 group bg-gradient-to-br from-red-800 to-red-500 group-hover:from-red-900 group-hover:to-red-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
+                                                Hapus
+                                            </button>
+
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+                <!-- Modal footer -->
+                <div
+                    class="flex items-center justify-end p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600 sticky bottom-0 bg-white">
+
+                    <button @click="closeModal" type="button"
+                        class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 @script
     <script>
         const notif = new Audio("{{ asset('assets/sound.wav') }}")
-        $wire.on('playSound', () => {
-            console.log('play');
-            notif.play();
-        });
-        $wire.on('SJFocus', (event) => {
-            setTimeout(function() {
-                $("#surat_jalan").focus()
-            }, 50);
-        });
-        $wire.on('materialFocus', (event) => {
-            setTimeout(function() {
-                $("#materialNoScan").focus()
-            }, 50);
-        });
-        $wire.on('newItem', (event) => {
-            // jika item duplicate
-            if (event[0].update) {
-                let locationValue = null
-                const lineValue = event[0].line ?? null
-                const locationSet = event[0].locationSet
 
-                if (event[0].loc_cd) locationValue = event[0].loc_cd
-                linehtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Line C</strong>'
-                lokasihtml = '<div class="flex flex-col w-1/2 mx-auto"><strong>Location</strong>'
-                if (lineValue !== null) {
-                    if (lineValue.length > 1) {
-                        linehtml += '<select id="swal-input2" class="swal2-input my-2" >'
-                        lineValue.map((i) => {
-                            linehtml += '<option value="' + i.line_c + '">' + i.line_c + '</option>'
-                        })
-                        linehtml += '</select>'
-                    } else {
-                        linehtml +=
-                            `<input id="swal-input2" class="swal2-input" value="${lineValue[0].line_c}" >`
-                    }
-                }
-
-                if (locationSet) {
-                    lokasihtml += `<input id="swal-input3" class="swal2-input" value="${locationSet[0]}" readonly>`
-                } else {
-                    locationData = ['ASSY', 'CNC']
-                    lokasihtml += '<select id="swal-input3" class="swal2-input my-2" >'
-                    locationData.map((i) => {
-                        lokasihtml += '<option value="' + i + '">' + i + '</option>'
-                    })
-                    lokasihtml += '</select>'
-
-                }
-
-                linehtml += '</div>'
-
-                if (event[0].line[0].setup_by === 'PO COT') {
-                    html = `<div class="flex flex-col">
-                                <strong>Qty</strong>
-                                <input id="swal-input1" class="swal2-input">
-                            </div>
-                            ${linehtml}
-                            ${lokasihtml}
-                            `
-                } else {
-                    html = `
-                                <div class="flex flex-col">
-                                    <strong>Qty</strong>
-                                    <input id="swal-input1" class="swal2-input">
-                                    </div>
-                                    <input id="swal-input2" class="swal2-input" hidden>
-                                <div class="flex flex-col">
-                                    <strong>Location</strong>
-                                    <input id="swal-input3" class="swal2-input" value="${locationValue}" >
-                                </div>`
-                }
-                return Swal.fire({
-                    title: event[0].title,
-                    html: `${html}`,
-                    showDenyButton: true,
-                    denyButtonText: `Don't save`,
-                    didOpen: () => {
-                        $('#swal-input1').focus()
-                    },
-                    preConfirm: () => {
-                        return [
-                            document.getElementById("swal-input1").value,
-                            document.getElementById("swal-input2").value,
-                            document.getElementById("swal-input3").value
-                        ];
-                    }
-
-                }).then((result) => {
-                    /* Read more about isConfirmed, isDenied below */
-                    if (result.isConfirmed) {
-                        $wire.dispatch('insertNew', {
-                            reqData: {
-
-                                qty: result.value[0],
-                                lineNew: result.value[1],
-                                location: result.value[2],
-                            },
-                            update: true,
-                            save: false
-                        })
-                        return Swal.fire({
-                            timer: 2000,
-                            title: "Updated",
-                            icon: "success",
-                            showConfirmButton: false,
-                            timerProgressBar: true,
-                        });
-                    } else if (result.isDenied) {
-                        $wire.dispatch('insertNew', {
-                            save: false
-                        })
-                        return Swal.fire({
-                            timer: 1000,
-                            title: "Changes are not saved",
-                            icon: "info",
-                            showConfirmButton: false,
-                            timerProgressBar: true,
-                        });
-                    }
-                });
-
-            }
-        });
         $wire.on('alert', (event) => {
             Swal.fire({
                 timer: event[0].time,
