@@ -450,9 +450,9 @@
                     <tbody>
                         <template x-for="(s,i) in scanMaterial " :key="i">
                             <tr
-                                :class="s.total == s.counter && s.qty_more == 0 ?
+                                :class="s.total == s.counter ?
                                     'bg-green-300 dark:bg-green-500' :
-                                    (s.counter > s.total || s.qty_more > 0 ?
+                                    (s.counter > s.total ?
                                         'bg-amber-400' :
                                         'bg-red-300 dark:bg-red-500')">
                                 <th scope="row"
@@ -479,9 +479,9 @@
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     <span
                                         x-text="
-                                            s.total == s.counter && s.qty_more == 0
+                                            s.total == s.counter 
                                                 ? 'OK CONFIRM'
-                                                : (s.counter > s.total || s.qty_more > 0
+                                                : (s.counter > s.total 
                                                     ? 'EXCESS'
                                                     : 'OUTSTANDING / NOT CLOSE')
                                         " />
