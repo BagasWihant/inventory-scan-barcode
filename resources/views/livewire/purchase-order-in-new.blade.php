@@ -158,22 +158,24 @@
         this.boxNo = 1;
     },
     openModalQty(index) {
-        const s = this.scanMaterial[index];
         Swal.fire({
-            title: `Edit qty ${s.material_no}`,
+            title: `Edit qty ${this.dataModal.material_no}`,
             input: 'number',
-            inputValue: s.counter,
+            inputValue: this.dataModal.scanned[index][0],
             inputLabel: 'Qty ',
             inputPlaceholder: 'qty',
             showDenyButton: true,
             denyButtonText: `Don't save`
         }).then((result) => {
             if (result.isConfirmed) {
-                this.scanMaterial.forEach(item => {
-                    if (item.material_no.trim() === s.material_no.trim()) {
-                        item.counter = Number(result.value);
-                    }
+
+                let totalScan = 0;
+                this.dataModal.scanned[index][0] = Number(result.value);
+                this.dataModal.scanned.forEach(item => {
+                    totalScan += Number(item[0]);
                 });
+                this.dataModal.counter = totalScan;
+
                 Swal.fire({
                     timer: 1000,
                     title: 'Qty changed successfully',
@@ -598,7 +600,10 @@
                                                 class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-white rounded-lg p-1 group bg-gradient-to-br from-red-800 to-red-500 group-hover:from-red-900 group-hover:to-red-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
                                                 Hapus
                                             </button>
-
+                                            <button @click="openModalQty(i)"
+                                                class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-white rounded-lg p-1 group bg-gradient-to-br from-yellow-800 to-yellow-500 group-hover:from-yellow-900 group-hover:to-yellow-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
+                                                Edit Qty
+                                            </button>
                                         </td>
                                     </tr>
                                 </template>
