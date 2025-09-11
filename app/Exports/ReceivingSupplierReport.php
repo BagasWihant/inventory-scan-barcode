@@ -58,6 +58,7 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
             $row->material,
             $row->matl_nm,
             $row->counter,
+            $row->box ?? '',
         ];
     }
 
@@ -68,6 +69,7 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
             'Material no',
             'Material Name',
             'Qty',
+            'Box',
         ];
     }
 
@@ -75,7 +77,7 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
-                $max_col = "D";
+                $max_col = "E";
                 $sheet = $event->sheet;
 
                 // $sheet->mergeCells("A1:".$max_col."1");

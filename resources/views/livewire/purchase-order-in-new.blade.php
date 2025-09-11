@@ -204,7 +204,13 @@
     },
     confirm() {
         this.loading.confirm = true;
-        @this.call('confirm', { sj: this.sj_model, scanned: this.scanMaterial }).then((data) => {
+        @this.call('confirm', {
+            sj: this.sj_model,
+            scanned: this.scanMaterial,
+            location: this.lok_model,
+            line_code: this.line_code,
+            po: this.po_model,
+        }).then((data) => {
             this.loading.confirm = false;
             this.resetPage();
             this.showAlert('Data berhasil disimpan', 2000, 'success', 'Berhasil');
@@ -330,7 +336,7 @@
         <div class="flex pt-3">
 
             <div class="block w-full justify-start justify-items-center">
-                <button @click="boxNo--" :disabled="boxNo <= 1" x-show="listMaterial.length > 0"
+                <!-- <button @click="boxNo--" :disabled="boxNo <= 1" x-show="listMaterial.length > 0"
                     :class="[
                         'text-white uppercase font-mono rounded-full text-base px-2 text-center transition-all',
                         boxNo <= 1 ?
@@ -338,7 +344,7 @@
                         'bg-gradient-to-r from-purple-700 to-pink-700 hover:brightness-125'
                     ]">
                     - box
-                </button>
+                </button> -->
                 <span class="text-base font-bold" x-text="'Nomor Box : ' +boxNo"></span>
                 <button @click="boxNo++" x-show="listMaterial.length > 0"
                     class="text-white uppercase bg-gradient-to-r from-purple-700 to-pink-700 hover:brightness-125 font-mono rounded-full text-base px-2 text-center">
@@ -435,7 +441,7 @@
                                 Location
                             </th>
                             <th scope="col" class="px-4 py-3">
-                                Box
+                                Box Qty
                             </th>
                             <th scope="col" class="w-4">
                                 keterangan
@@ -450,7 +456,7 @@
                     <tbody>
                         <template x-for="(s,i) in scanMaterial " :key="i">
                             <tr
-                                :class="s.picking_qty == s.counter ?
+                                :class="Number(s.total) == s.counter ?
                                     'bg-green-300 dark:bg-green-500' :
                                     (s.counter > s.total ?
                                         'bg-amber-400' :
@@ -473,13 +479,13 @@
                                 </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    <span x-text="boxArray().join(', ')" />
+                                    <span x-text="boxArray().length" />
                                 </th>
                                 <th scope="row"
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     <span
                                         x-text="
-                                            s.picking_qty == s.counter 
+                                            Number(s.total) == s.counter 
                                                 ? 'OK CONFIRM'
                                                 : (s.counter > s.total 
                                                     ? 'EXCESS'
@@ -625,41 +631,41 @@
 </div>
 
 @script
-    <script>
-        const notif = new Audio("{{ asset('assets/sound.wav') }}")
+<script>
+    const notif = new Audio("{{ asset('assets/sound.wav') }}")
 
-        $wire.on('alert', (event) => {
-            Swal.fire({
-                timer: event[0].time,
-                title: event[0].title,
-                icon: event[0].icon,
-                text: event[0].text,
-                showConfirmButton: false,
-                timerProgressBar: true,
-            });
+    $wire.on('alert', (event) => {
+        Swal.fire({
+            timer: event[0].time,
+            title: event[0].title,
+            icon: event[0].icon,
+            text: event[0].text,
+            showConfirmButton: false,
+            timerProgressBar: true,
         });
-        $wire.on('confirmation', (event) => {
-            Swal.fire({
-                title: "Scan dengan Surat Jalan dan PO yang sama ?",
-                showDenyButton: true,
-                showCancelButton: true,
-                showCancelButton: false,
-                confirmButtonText: "Ya",
-                denyButtonText: `Tidak`
-            }).then((result) => {
-                /* Read more about isConfirmed, isDenied below */
-                if (result.isConfirmed) {
-                    Swal.fire("Surat Jalan Sama", "", "info");
-                    $wire.dispatch('resetConfirm', {
-                        type: 0
-                    })
-                } else if (result.isDenied) {
-                    Swal.fire("Reset Semua", "", "info");
-                    $wire.dispatch('resetConfirm', {
-                        type: 1
-                    })
-                }
-            });
+    });
+    $wire.on('confirmation', (event) => {
+        Swal.fire({
+            title: "Scan dengan Surat Jalan dan PO yang sama ?",
+            showDenyButton: true,
+            showCancelButton: true,
+            showCancelButton: false,
+            confirmButtonText: "Ya",
+            denyButtonText: `Tidak`
+        }).then((result) => {
+            /* Read more about isConfirmed, isDenied below */
+            if (result.isConfirmed) {
+                Swal.fire("Surat Jalan Sama", "", "info");
+                $wire.dispatch('resetConfirm', {
+                    type: 0
+                })
+            } else if (result.isDenied) {
+                Swal.fire("Reset Semua", "", "info");
+                $wire.dispatch('resetConfirm', {
+                    type: 1
+                })
+            }
         });
-    </script>
+    });
+</script>
 @endscript

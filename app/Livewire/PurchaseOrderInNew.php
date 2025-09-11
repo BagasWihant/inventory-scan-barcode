@@ -62,20 +62,20 @@ class PurchaseOrderInNew extends Component
         if ($getSetupby) $this->input_setup_by = $getSetupby->setup_by;
 
         if ($this->input_setup_by == "PO COT" && DB::table('WH_rcv_QRHistory')->where('QR', $data['qr'])->where('user_id', $this->userId)->where('status', 1)->exists()) {
-             return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "QR sudah pernah discan"]);
+            return $this->dispatch('alert', ['title' => 'Warning', 'time' => 4000, 'icon' => 'warning', 'text' => "QR sudah pernah discan"]);
         }
 
         // PCL-L24-1607 / S0200381510010150          2108P6002  / yd30  / 210824 / 2 / ANDIK
         $this->line_code = $data['line'];
 
         DB::table('WH_rcv_QRHistory')->insert([
-             'QR' => $data['qr'],
-             'user_id' => $this->userId,
-             'PO' => $this->po,
-             'line_code' => $this->line_code,
-             'material_no' => $this->sws_code,
-             'status' => 0,
-             'created_at' => date('Y-m-d H:i:s')
+            'QR' => $data['qr'],
+            'user_id' => $this->userId,
+            'PO' => $this->po,
+            'line_code' => $this->line_code,
+            'material_no' => $this->sws_code,
+            'status' => 0,
+            'created_at' => date('Y-m-d H:i:s')
         ]);
 
         $joinCondition = function ($join) {
@@ -83,7 +83,6 @@ class PurchaseOrderInNew extends Component
                 ->on('a.kit_no', '=', 'b.kit_no');
             // ->where('b.pallet_no', $paletCode);
         };
-        $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty',  'scanned_time', 'm.loc_cd', 'd.trucking_id'];
 
         if ($this->input_setup_by == "PO COT") {
             $joinCondition = function ($join) {
@@ -93,6 +92,7 @@ class PurchaseOrderInNew extends Component
                 // ->where('b.pallet_no', $paletCode);
             };
         }
+        $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty',  'scanned_time', 'm.loc_cd', 'd.trucking_id', 'm.matl_nm'];
 
         $productsQuery = DB::table('material_setup_mst_supplier as a')
             // ->whereIn('a.material_no', $material_no_list)
@@ -107,6 +107,7 @@ class PurchaseOrderInNew extends Component
                     a.line_c,
                     a.setup_by,
                     m.loc_cd as location_cd_ori,
+                    m.matl_nm,
                     d.trucking_id')
             ->leftJoin('material_in_stock as b', $joinCondition)
             ->leftJoin('material_mst as m', 'a.material_no', '=', 'm.matl_no')
@@ -138,7 +139,11 @@ class PurchaseOrderInNew extends Component
     {
         $surat_jalan = $req['sj'];
         $scanned = $req['scanned'];
+        $location = $req['location'];
+        $line_code = $req['line_code'];
+        $po = $req['po'];
 
+        $scanPerBox = [];
 
         // GENERATE PALET CODE
         $getConfig = DB::table('WH_config')->select('value')->whereIn('config', ['PalletCodeInStock', 'PeriodInStock'])->get();
@@ -166,6 +171,13 @@ class PurchaseOrderInNew extends Component
                 foreach ($scanData as $value) {
                     $qtyPerScan = $value[0];
                     $box = $value[1];
+
+                    $scanPerBox[] = (object) [
+                        'material' => $data['material_no'],
+                        'matl_nm' => $data['matl_nm'],
+                        'counter' => $data['counter'],
+                        'box' => $box,
+                    ];
 
                     if (($iteration == $totalScanPerMaterial) && ($kelebihan > 0 || $data['total'] < 0)) {
                         $picking_qty = $data['total'] < 0 ? $qtyPerScan : $kelebihan;
@@ -203,7 +215,7 @@ class PurchaseOrderInNew extends Component
                         itemIn::create([
                             'pallet_no' => $paletCode,
                             'material_no' => $data['material_no'],
-                            'picking_qty' => $value,
+                            'picking_qty' => $qtyPerScan,
                             'locate' => $this->input_setup_by == 'PO MCS' ? $data['location_cd_ori'] : $data['location_cd'],
                             'trucking_id' => $data['trucking_id'],
                             'kit_no' => $this->po,
@@ -216,6 +228,56 @@ class PurchaseOrderInNew extends Component
                     }
                     $iteration++;
                 }
+            }
+        }
+
+        // update qr
+        DB::table('WH_rcv_QRHistory')
+            ->where('user_id', $this->userId)
+            ->where('palet_iwpi', null)
+            ->when($location == 'ASSY', function ($q) use ($line_code) {
+                $q->where('line_code', $line_code);
+            })
+            ->where("PO", $po)
+            ->update([
+                'status' => 1,
+                'surat_jalan' => $surat_jalan,
+                'palet_iwpi' => $paletCode,
+            ]);
+            
+
+        // JIKA ASSY
+        if ($location == 'ASSY') {
+            $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi', $paletCode)->first();
+
+            // insert
+            if ($dataPaletRegister) {
+                $generator = new BarcodeGeneratorPNG();
+                $barcode = $generator->getBarcode($dataPaletRegister->palet_no, $generator::TYPE_CODE_128);
+                Storage::put('public/barcodes/' . $dataPaletRegister->palet_no . '.png', $barcode);
+
+                $dataPrint = [
+                    'data' => collect($scanPerBox),
+                    'palet_no' => $dataPaletRegister->palet_no,
+                    'issue_date' => $dataPaletRegister->issue_date,
+                    'line_c' => $dataPaletRegister->line_c
+                ];
+                $this->dispatch('confirmation');
+
+                // $this->dispatch('alert', ['title' => 'Succes', 'time' => 5000, 'icon' => 'succes', 'text' => 'ASSY material saved succesfully']);
+                return Excel::download(new ReceivingSupplierReport($dataPrint), "Receiving ASSY_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+            } else {
+                $this->dispatch('confirmation');
+                $dataPrint = [
+                    'data' => collect($scanPerBox),
+                    'issue_date' => '-',
+                    'line_c' => '-',
+                    'palet_no' => '-'
+                ];
+                return Excel::download(new ReceivingSupplierReport($dataPrint), "Receiving ASSY_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+
+                // return $this->dispatch('alert', ['title' => 'Succes', 'time' => 5000, 'icon' => 'succes', 'text' => 'material saved succesfully without palet']);
+                // $this->resetPage();
             }
         }
     }
