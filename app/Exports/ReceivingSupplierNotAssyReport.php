@@ -50,7 +50,7 @@ class ReceivingSupplierNotAssyReport implements FromCollection, WithMapping, Wit
         return [
             $char,
             $row->material,
-            isset(json_decode($row->prop_ori, true)['location']) ? json_decode($row->prop_ori, true)['location'] : $row->location_cd,
+            $row->location,
             $row->line_c,
             $row->total,
             $row->counter,

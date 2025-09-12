@@ -177,6 +177,10 @@ class PurchaseOrderInNew extends Component
                         'matl_nm' => $data['matl_nm'],
                         'counter' => $data['counter'],
                         'box' => $box,
+                        'total' => $data['total'],
+                        'counter' => $data['counter'],
+                        'line_c' => $data['line_c'],
+                        'location'=> $data['location_cd'],
                     ];
 
                     if (($iteration == $totalScanPerMaterial) && ($kelebihan > 0 || $data['total'] < 0)) {
@@ -280,6 +284,17 @@ class PurchaseOrderInNew extends Component
                 // $this->resetPage();
             }
         }
+
+        // jika not assy
+
+        $dataPrint = [
+            'data' => collect($scanPerBox),
+            'palet_no' => $this->paletCode,
+        ];
+
+        $this->dispatch('confirmation');
+        return Excel::download(new ReceivingSupplierNotAssyReport($dataPrint), "Receiving Not ASSY_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+
     }
 
     public function render()
