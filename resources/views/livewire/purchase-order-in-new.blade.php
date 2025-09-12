@@ -53,8 +53,9 @@
             const material_noParse = split1[0] || '';
             const qtyParse = (split1[2] || '').replace(/\D/g, ''); // ambil angka saja
             const lineParse = '';
+            const tipe = 0;
 
-            return { material_no: material_noParse, qty: qtyParse, line: lineParse };
+            return { material_no: material_noParse, qty: qtyParse, line: lineParse, tipe: tipe };
         } else {
             // === Format lain: a/b/c ===
             const split = s.split('/');
@@ -80,14 +81,15 @@
                 this.showAlert('PO atau Linecode berbeda');
                 return null;
             }
+            const tipe = 1;
 
-            return { material_no: material_noParse, qty: qtyParse, line: lineParse };
+            return { material_no: material_noParse, qty: qtyParse, line: lineParse, tipe: tipe };
         }
     },
     updateItemMaterial(parsed) {
         mat_no = parsed.material_no
         this.scanMaterial.forEach(item => {
-            if (item.material_no.trim() === mat_no) {
+            if (item.material_no.trim() === mat_no || item.supplier_code.includes(mat_no)) {
                 item.counter = Number(item.counter) + Number(parsed.qty);
                 item.location_cd = this.lok_model;
                 item.scanned.push([Number(parsed.qty), this.boxNo]);
@@ -126,7 +128,7 @@
             return
         }
         parsed.location_cd = this.lok_model;
-
+        console.log('parsed', parsed);
         @this.call('scanMaterial', parsed).then((data) => {
             this.loading.page = false;
             if (data.length < 1) {
@@ -135,7 +137,7 @@
 
             this.listMaterial = data;
             this.scanMaterial = data;
-            console.log(data);
+            console.log('data material', data);
         });
     },
     poChange() {

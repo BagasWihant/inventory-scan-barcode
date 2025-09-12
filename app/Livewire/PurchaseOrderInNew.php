@@ -19,7 +19,6 @@ use stdClass;
 
 class PurchaseOrderInNew extends Component
 {
-    use WithPagination;
     public $po;
     public $input_setup_by;
     public $sws_code;
@@ -99,8 +98,9 @@ class PurchaseOrderInNew extends Component
             ->where('a.kit_no', $this->po)
             ->where('a.line_c', $this->line_code)
 
-            ->selectRaw('
+            ->selectRaw("
                     a.material_no,
+                    STRING_AGG(c.supplier_code, ', ') AS supplier_code,
                     a.picking_qty,
                     count(a.picking_qty) as pax,
                     a.kit_no, sum(b.picking_qty) as stock_in,
@@ -108,20 +108,27 @@ class PurchaseOrderInNew extends Component
                     a.setup_by,
                     m.loc_cd as location_cd_ori,
                     m.matl_nm,
-                    d.trucking_id')
+                    d.trucking_id")
             ->leftJoin('material_in_stock as b', $joinCondition)
             ->leftJoin('material_mst as m', 'a.material_no', '=', 'm.matl_no')
+            ->leftJoin('material_conversion_mst as c', 'a.material_no', '=', 'c.sws_code')
             ->leftJoin('delivery_mst as d', 'a.kit_no', '=', 'd.pallet_no')
             ->groupBy($groupByColumns)
             ->orderByDesc('scanned_time')
             ->where('a.line_c', $this->line_code)
 
             ->orderBy('a.material_no');
+
         $value = $productsQuery->get();
 
         foreach ($value as $k) {
             $k->total = $k->stock_in > 0 ? $k->picking_qty - $k->stock_in : $k->picking_qty;
-            if ($data['material_no'] == $k->material_no && $data['line'] == $k->line_c) {
+
+            if ($data['material_no'] == $k->material_no && $data['line'] == $k->line_c && $data['tipe'] == '1') {
+                $k->counter = (int) $data['qty'];
+                $k->location_cd = $data['location_cd'];
+                $k->scanned = [[(int)$data['qty'], 1]];
+            } elseif (str_contains($k->supplier_code, $data['material_no']) && $data['tipe'] == '0') {
                 $k->counter = (int) $data['qty'];
                 $k->location_cd = $data['location_cd'];
                 $k->scanned = [[(int)$data['qty'], 1]];
@@ -179,7 +186,7 @@ class PurchaseOrderInNew extends Component
                         'total' => $data['total'],
                         'counter' => $qtyPerScan,
                         'line_c' => $data['line_c'],
-                        'location'=> $data['location_cd'],
+                        'location' => $data['location_cd'],
                     ];
 
                     if (($iteration == $totalScanPerMaterial) && ($kelebihan > 0 || $data['total'] < 0)) {
