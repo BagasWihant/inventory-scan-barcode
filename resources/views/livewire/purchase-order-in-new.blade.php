@@ -95,7 +95,7 @@
         });
     },
 
-    // ambil nilai box nya 
+    // ambil nilai box nya
     boxArray() {
         return [...new Set(this.s.scanned.map(item => item[1]))];
     },
@@ -147,12 +147,15 @@
         this.sj_disable = false;
         this.po_model = '';
         this.po_disable = false;
+        this.mcs = false;
+        this.canReset = false;
+        this.resetSebagian();
+    },
+    resetSebagian() {
         this.lok_model = '';
         this.lok_disable = false;
         this.line_code = '';
         this.material_no = '';
-        this.mcs = false;
-        this.canReset = false;
         this.scanMaterial = [];
         this.listMaterial = [];
         this.boxNo = 1;
@@ -212,8 +215,6 @@
             po: this.po_model,
         }).then((data) => {
             this.loading.confirm = false;
-            this.resetPage();
-            this.showAlert('Data berhasil disimpan', 2000, 'success', 'Berhasil');
         });
     },
 
@@ -242,7 +243,28 @@
     po_model = e.detail.po;
     canReset = true;
     sj_disable = true;
-})">
+});
+window.addEventListener('confirmation', e => {
+    console.log('confirm');
+
+    Swal.fire({
+        title: 'Scan dengan Surat Jalan dan PO yang sama ?',
+        showDenyButton: true,
+        showCancelButton: true,
+        showCancelButton: false,
+        confirmButtonText: 'Ya',
+        denyButtonText: `Tidak`
+    }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        if (result.isConfirmed) {
+            Swal.fire('Surat Jalan Sama', '', 'info');
+            resetSebagian();
+        } else if (result.isDenied) {
+            Swal.fire('Reset Semua', '', 'info');
+            resetPage();
+        }
+    });
+});">
     <div class="flex gap-4">
 
         <div class="flex flex-col w-1/4">
@@ -305,7 +327,6 @@
     </div>
 
 
-
     <div x-cloak x-show="loading.page"
         class="flex fixed z-30 bg-slate-900/60 dark:bg-slate-400/35 top-0 left-0 right-0 bottom-0 justify-center items-center h-screen border border-red-800"
         aria-label="Loading..." role="status">
@@ -335,7 +356,7 @@
     <template x-if="canReset">
         <div class="flex pt-3">
 
-            <div class="block w-full justify-start justify-items-center">
+            <div class="block w-full justify-start justify-items-center" x-show="lok_model === 'ASSY'">
                 <!-- <button @click="boxNo--" :disabled="boxNo <= 1" x-show="listMaterial.length > 0"
                     :class="[
                         'text-white uppercase font-mono rounded-full text-base px-2 text-center transition-all',
@@ -485,9 +506,9 @@
                                     class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     <span
                                         x-text="
-                                            Number(s.total) == s.counter 
+                                            Number(s.total) == s.counter
                                                 ? 'OK CONFIRM'
-                                                : (s.counter > s.total 
+                                                : (s.counter > s.total
                                                     ? 'EXCESS'
                                                     : 'OUTSTANDING / NOT CLOSE')
                                         " />
@@ -510,9 +531,9 @@
                                             </button>
 
                                             {{-- <button @click="openModalQty(i)"
-                                                class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg p-1 group bg-gradient-to-br from-yellow-800 to-yellow-500 group-hover:from-yellow-900 group-hover:to-yellow-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
-                                                Edit
-                                            </button> --}}
+                                            class="relative inline-flex items-center justify-center  overflow-hidden text-sm font-medium text-gray-900 rounded-lg p-1 group bg-gradient-to-br from-yellow-800 to-yellow-500 group-hover:from-yellow-900 group-hover:to-yellow-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800">
+                                            Edit
+                                        </button> --}}
                                         </div>
                                     </div>
                                 </th>
@@ -623,7 +644,9 @@
                     class="flex items-center justify-end p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600 sticky bottom-0 bg-white">
 
                     <button @click="closeModal" type="button"
-                        class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Close</button>
+                        class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                        Close
+                    </button>
                 </div>
             </div>
         </div>
@@ -631,41 +654,18 @@
 </div>
 
 @script
-<script>
-    const notif = new Audio("{{ asset('assets/sound.wav') }}")
+    <script>
+        const notif = new Audio("{{ asset('assets/sound.wav') }}")
 
-    $wire.on('alert', (event) => {
-        Swal.fire({
-            timer: event[0].time,
-            title: event[0].title,
-            icon: event[0].icon,
-            text: event[0].text,
-            showConfirmButton: false,
-            timerProgressBar: true,
+        $wire.on('alert', (event) => {
+            Swal.fire({
+                timer: event[0].time,
+                title: event[0].title,
+                icon: event[0].icon,
+                text: event[0].text,
+                showConfirmButton: false,
+                timerProgressBar: true,
+            });
         });
-    });
-    $wire.on('confirmation', (event) => {
-        Swal.fire({
-            title: "Scan dengan Surat Jalan dan PO yang sama ?",
-            showDenyButton: true,
-            showCancelButton: true,
-            showCancelButton: false,
-            confirmButtonText: "Ya",
-            denyButtonText: `Tidak`
-        }).then((result) => {
-            /* Read more about isConfirmed, isDenied below */
-            if (result.isConfirmed) {
-                Swal.fire("Surat Jalan Sama", "", "info");
-                $wire.dispatch('resetConfirm', {
-                    type: 0
-                })
-            } else if (result.isDenied) {
-                Swal.fire("Reset Semua", "", "info");
-                $wire.dispatch('resetConfirm', {
-                    type: 1
-                })
-            }
-        });
-    });
-</script>
+    </script>
 @endscript

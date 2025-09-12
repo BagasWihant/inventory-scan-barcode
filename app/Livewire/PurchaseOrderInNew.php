@@ -175,10 +175,9 @@ class PurchaseOrderInNew extends Component
                     $scanPerBox[] = (object) [
                         'material' => $data['material_no'],
                         'matl_nm' => $data['matl_nm'],
-                        'counter' => $data['counter'],
                         'box' => $box,
                         'total' => $data['total'],
-                        'counter' => $data['counter'],
+                        'counter' => $qtyPerScan,
                         'line_c' => $data['line_c'],
                         'location'=> $data['location_cd'],
                     ];
@@ -248,7 +247,7 @@ class PurchaseOrderInNew extends Component
                 'surat_jalan' => $surat_jalan,
                 'palet_iwpi' => $paletCode,
             ]);
-            
+
 
         // JIKA ASSY
         if ($location == 'ASSY') {
@@ -294,7 +293,6 @@ class PurchaseOrderInNew extends Component
 
         $this->dispatch('confirmation');
         return Excel::download(new ReceivingSupplierNotAssyReport($dataPrint), "Receiving Not ASSY_" . $dataPrint['palet_no'] . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
-
     }
 
     public function render()
