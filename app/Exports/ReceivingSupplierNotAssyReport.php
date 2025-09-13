@@ -85,7 +85,7 @@ class ReceivingSupplierNotAssyReport implements FromCollection, WithMapping, Wit
 
                 $sheet->mergeCells("A4:B4");
                 $sheet->setCellValue('A4', "Kit No");
-                $sheet->setCellValue('C4', ": " . $this->data[0]->palet);
+                $sheet->setCellValue('C4', ": " . $this->data[0]->po);
                 
                 $sheet->mergeCells("A5:B5");
                 $sheet->setCellValue('A5', "Pallet No");

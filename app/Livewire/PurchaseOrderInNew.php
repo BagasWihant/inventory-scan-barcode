@@ -180,13 +180,14 @@ class PurchaseOrderInNew extends Component
                     $box = $value[1];
 
                     $scanPerBox[] = (object) [
-                        'material' => $data['material_no'],
-                        'matl_nm' => $data['matl_nm'],
-                        'box' => $box,
-                        'total' => $data['total'],
-                        'counter' => $qtyPerScan,
-                        'line_c' => $data['line_c'],
-                        'location' => $data['location_cd'],
+                        'po'        => $po,
+                        'material'  => $data['material_no'],
+                        'matl_nm'   => $data['matl_nm'],
+                        'box'       => $box,
+                        'total'     => $data['total'],
+                        'counter'   => $qtyPerScan,
+                        'line_c'    => $data['line_c'],
+                        'location'  => $data['location_cd'],
                     ];
 
                     if (($iteration == $totalScanPerMaterial) && ($kelebihan > 0 || $data['total'] < 0)) {
@@ -291,11 +292,23 @@ class PurchaseOrderInNew extends Component
             }
         }
 
-        // jika not assy
+        // jika not assy, mapping dulu
+        $sumDataNotAssy = collect($scanPerBox)->groupBy('material')->map(function ($item) {
+            return (object)[
+                'po'        => $item->first()->po,
+                'material'  => $item->first()->material,
+                'matl_nm'   => $item->first()->matl_nm,
+                'box'       => $item->first()->box,
+                'total'     => $item->first()->total,
+                'counter'   => $item->sum('counter'),
+                'line_c'    => $item->first()->line_c,
+                'location'  => $item->first()->location,
+            ];
+        })->values();
 
         $dataPrint = [
-            'data' => collect($scanPerBox),
-            'palet_no' => $this->paletCode,
+            'data' => $sumDataNotAssy,
+            'palet_no' => $paletCode,
         ];
 
         $this->dispatch('confirmation');

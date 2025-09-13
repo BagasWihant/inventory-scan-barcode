@@ -255,7 +255,8 @@ window.addEventListener('confirmation', e => {
         showCancelButton: true,
         showCancelButton: false,
         confirmButtonText: 'Ya',
-        denyButtonText: `Tidak`
+        denyButtonText: `Tidak`,
+        allowOutsideClick: () => false, 
     }).then((result) => {
         /* Read more about isConfirmed, isDenied below */
         if (result.isConfirmed) {
