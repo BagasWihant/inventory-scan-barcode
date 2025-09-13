@@ -91,7 +91,7 @@
         this.scanMaterial.forEach(item => {
             if (item.material_no.trim() === mat_no || item.supplier_code.includes(mat_no)) {
                 item.counter = Number(item.counter) + Number(parsed.qty);
-                item.location_cd = this.lok_model;
+                if(parsed.tipe === 1) item.location_cd = this.lok_model;
                 item.scanned.push([Number(parsed.qty), this.boxNo]);
             }
         });

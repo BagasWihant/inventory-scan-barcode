@@ -130,7 +130,7 @@ class PurchaseOrderInNew extends Component
                 $k->scanned = [[(int)$data['qty'], 1]];
             } elseif (str_contains($k->supplier_code, $data['material_no']) && $data['tipe'] == '0') {
                 $k->counter = (int) $data['qty'];
-                $k->location_cd = $data['location_cd'];
+                $k->location_cd = $k->location_cd_ori;
                 $k->scanned = [[(int)$data['qty'], 1]];
             } else {
                 $k->counter = 0;
