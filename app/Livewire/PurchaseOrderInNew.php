@@ -100,7 +100,7 @@ class PurchaseOrderInNew extends Component
 
             ->selectRaw("
                     a.material_no,
-                    STRING_AGG(c.supplier_code, ', ') AS supplier_code,
+                    '' AS supplier_code,
                     a.picking_qty,
                     count(a.picking_qty) as pax,
                     a.kit_no, sum(b.picking_qty) as stock_in,
@@ -111,7 +111,6 @@ class PurchaseOrderInNew extends Component
                     d.trucking_id")
             ->leftJoin('material_in_stock as b', $joinCondition)
             ->leftJoin('material_mst as m', 'a.material_no', '=', 'm.matl_no')
-            ->leftJoin('material_conversion_mst as c', 'a.material_no', '=', 'c.sws_code')
             ->leftJoin('delivery_mst as d', 'a.kit_no', '=', 'd.pallet_no')
             ->groupBy($groupByColumns)
             ->orderByDesc('scanned_time')
@@ -120,6 +119,30 @@ class PurchaseOrderInNew extends Component
             ->orderBy('a.material_no');
 
         $value = $productsQuery->get();
+
+        // tambahkan supplier_code disini untuk yang cnc
+        // tipe 0 = cnc , otomatis yang punya qr ( slash 2 ) // , walaupun location dipilih assy tapi kalo // tetap tipe 0
+        // tipe 1 assy, punya slash 1 di qr nya (/)
+        if ($data['tipe'] == '0') {
+            $materialList = $value->pluck('material_no')->all();
+            $supplierCode = DB::table('material_conversion_mst')
+                ->whereIn('sws_code', $materialList)
+                ->selectRaw("sws_code, STRING_AGG(supplier_code, ', ') AS supplier_code")
+                ->groupBy('sws_code')
+                ->get();
+
+            // Merge kedua nya, ini untuk menambahkan supplier code karena di cnc yang dibaca di qr kodenya beda dengan namanya
+            $value = $value->map(function ($value) use ($supplierCode) {
+                $swsCode = trim($value->material_no);
+                $supplier = $supplierCode->firstWhere('sws_code', $swsCode);
+
+                if ($supplier) {
+                    $value->supplier_code = $supplier->supplier_code;
+                }
+
+                return $value;
+            });
+        }
 
         foreach ($value as $k) {
             $k->total = $k->stock_in > 0 ? $k->picking_qty - $k->stock_in : $k->picking_qty;

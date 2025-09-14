@@ -1,7 +1,9 @@
 <div x-data="searchDropdownComponent('{{ $method }}', '{{ $onSelect }}', '{{ $label }}', '{{ $field }}', '{{ $resetEvent }}')" x-ref="dropdown" class="relative w-full">
-    <label class="block text-sm font-medium text-gray-700" for="input-searchdropdown{{str_replace(' ', '', $label)}}">{{ $label }}</label>
+    <label class="block text-sm font-medium text-gray-700"
+        for="input-searchdropdown{{ str_replace(' ', '', $label) }}">{{ $label }}</label>
     <div class="gap-2 flex">
-        <input type="text" id="input-searchdropdown{{str_replace(' ', '', $label)}}" x-model="search" @input.debounce.500ms="doSearch" placeholder="Search..." {{ $attributes }}
+        <input type="text" id="input-searchdropdown{{ str_replace(' ', '', $label) }}" x-model="search"
+            @input.debounce.500ms="doSearch" placeholder="Search..." {{ $attributes }}
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring focus:border-blue-300 sm:text-sm">
 
         <div class="flex items-center" x-show="loading">
@@ -14,7 +16,7 @@
             </svg>
         </div>
     </div>
-    <ul x-show="results.length > 0"
+    <ul x-show="results.length > 0 && !selected"
         class="absolute z-10 bg-white border mt-1 rounded-md w-full max-h-40 overflow-y-auto">
         <template x-for="item in results" :key="item.id">
             <li @click="selectItem(item)" class="cursor-pointer px-3 py-2 hover:bg-gray-100" x-text="item[field]">
@@ -31,9 +33,10 @@
             disabled: false,
             loading: false,
             field: field,
+            selected: false,
 
             init() {
-                if(resetEvent){
+                if (resetEvent) {
                     // Listen untuk custom reset event
                     window.addEventListener(resetEvent, () => {
                         this.reset();
@@ -42,7 +45,7 @@
             },
 
             async doSearch() {
-                if (this.search.length < 3) {
+                if (this.search.length < 3 || this.selected) {
                     this.results = [];
                     return;
                 }
@@ -52,15 +55,35 @@
                 this.results = res;
             },
 
-            selectItem(item) {
+            async selectItem(item) {
+                this.selected = true;
                 this.search = item[this.field];
                 this.results = [];
-                @this.call(onSelect, item);
+
+                // this.$dispatch('loading-start', {
+                //     text: 'Memproses pilihan…'
+                // });
+
+                window.dispatchEvent(new CustomEvent('loading-start', {
+                    detail: {
+                        text: 'Memproses pilihan…'
+                    }
+                }));
+
+                try {
+                    await @this.call(onSelect, item);
+
+                    window.dispatchEvent(new CustomEvent('loading-stop'));
+                } finally {
+
+                    window.dispatchEvent(new CustomEvent('loading-stop'));
+                }
             },
 
             reset() {
                 this.search = '';
                 this.results = [];
+                this.selected = false;
             }
         }
     }

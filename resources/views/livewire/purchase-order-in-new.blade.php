@@ -2,6 +2,7 @@
     loading: {
         page: false,
         confirm: false,
+        text: 'Loading...',
     },
     canReset: false,
     sj_model: '',
@@ -91,7 +92,7 @@
         this.scanMaterial.forEach(item => {
             if (item.material_no.trim() === mat_no || item.supplier_code.includes(mat_no)) {
                 item.counter = Number(item.counter) + Number(parsed.qty);
-                if(parsed.tipe === 1) item.location_cd = this.lok_model;
+                if (parsed.tipe === 1) item.location_cd = this.lok_model;
                 item.scanned.push([Number(parsed.qty), this.boxNo]);
             }
         });
@@ -117,20 +118,27 @@
         }
 
         this.loading.page = true;
+        this.loading.text = 'Mendapatkan Material...';
         parsed.qr = this.material_no;
         this.line_code = parsed.line;
         this.material_no = '';
+        // mencegah double scan, 
+        this.$refs.materialNo.disabled = true;
 
         if (this.scanMaterial.length > 0) {
             this.updateItemMaterial(parsed);
-            console.log(this.scanMaterial);
             this.loading.page = false;
+            this.$refs.materialNo.disabled = false;
+
             return
         }
         parsed.location_cd = this.lok_model;
         console.log('parsed', parsed);
         @this.call('scanMaterial', parsed).then((data) => {
             this.loading.page = false;
+            this.$refs.materialNo.disabled = false;
+            this.$refs.materialNo.focus();
+
             if (data.length < 1) {
                 return this.showAlert('Material number tidak ditemukan atau salah po');
             }
@@ -139,9 +147,6 @@
             this.scanMaterial = data;
             console.log('data material', data);
         });
-    },
-    poChange() {
-        console.log(this.po_model);
     },
     resetPage() {
         $dispatch('reset-po-model');
@@ -256,7 +261,7 @@ window.addEventListener('confirmation', e => {
         showCancelButton: false,
         confirmButtonText: 'Ya',
         denyButtonText: `Tidak`,
-        allowOutsideClick: () => false, 
+        allowOutsideClick: () => false,
     }).then((result) => {
         /* Read more about isConfirmed, isDenied below */
         if (result.isConfirmed) {
@@ -267,7 +272,9 @@ window.addEventListener('confirmation', e => {
             resetPage();
         }
     });
-});">
+});"
+    @loading-start.window="loading.page = true;loading.text = $event.detail?.text ?? 'Loading...'"
+    @loading-stop.window="loading.page = false">
     <div class="flex gap-4">
 
         <div class="flex flex-col w-1/4">
@@ -354,7 +361,7 @@ window.addEventListener('confirmation', e => {
                 stroke-linejoin="round" stroke-width="24">
             </line>
         </svg>
-        <span class="text-4xl font-medium text-white">Loading...</span>
+        <span class="text-4xl font-medium text-white" x-text="loading.text" />
     </div>
     <template x-if="canReset">
         <div class="flex pt-3">
