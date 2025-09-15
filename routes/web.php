@@ -55,6 +55,7 @@ Route::middleware(['auth', 'updateActivity'])->group(function () {
 
     Route::get('bom-upload', fn() => view('pages.bom-upload'))->name('bom-upload')->middleware(['allowednik:098,122,123']); // nek pengen beberapa 098,097,098
     Route::get('bom-master', fn() => view('pages.bom-master'))->name('bom-master')->middleware(['allowednik:098,122,123']);
+    Route::get('bom-request', fn() => view('pages.bom-request'))->name('bom-request');
 
     // retur assy
     Route::get('retur-request-assy', fn() => view('pages.retur-request-assy'))->name('retur.request.assy');
