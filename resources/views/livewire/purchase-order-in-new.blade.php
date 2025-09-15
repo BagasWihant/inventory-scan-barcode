@@ -156,11 +156,11 @@
         this.po_disable = false;
         this.mcs = false;
         this.canReset = false;
+        this.lok_model = '';
+        this.lok_disable = false;
         this.resetSebagian();
     },
     resetSebagian() {
-        this.lok_model = '';
-        this.lok_disable = false;
         this.line_code = '';
         this.material_no = '';
         this.scanMaterial = [];
