@@ -17,6 +17,7 @@
     listMaterial: [],
     scanMaterial: [],
     boxNo: 1,
+    hideForm: false,
     // fungsi utilitas
     showAlert(message, timer = null, icon = 'warning', title = 'Perhatian') {
         Swal.fire({
@@ -107,7 +108,7 @@
     materialNoScan() {
         if (this.material_no === '') return;
         this.play();
-        if (this.lok_model === '') {
+        if (this.lok_model === '' && this.mcs === true) {
             return this.showAlert('Silahkan isi lokasi terlebih dahulu');
         }
 
@@ -129,6 +130,7 @@
             this.updateItemMaterial(parsed);
             this.loading.page = false;
             this.$refs.materialNo.disabled = false;
+            this.$refs.materialNo.focus();
 
             return
         }
@@ -158,6 +160,7 @@
         this.canReset = false;
         this.lok_model = '';
         this.lok_disable = false;
+        this.hideForm = false;
         this.resetSebagian();
     },
     resetSebagian() {
@@ -246,7 +249,13 @@
         $dispatch('reset-po-model');
         return showAlert('Silahkan isi Surat Jalan terlebih dahulu');
     }
-    mcs = true;
+
+    if (e.detail.po.includes('PBI')) {
+        mcs = false;
+    }else{
+        mcs = true;
+    }
+
     po_model = e.detail.po;
     canReset = true;
     sj_disable = true;
