@@ -5,6 +5,11 @@
     }
     isLoading = false;
     listData = e.detail.data;
+
+    listData.forEach(row => {
+        row.qty_request = Number(qtyRequest * row.bom_qty);
+    });
+    console.log(listData);
     inputDisable = {
         line: true,
         date: true,
@@ -30,6 +35,7 @@ window.addEventListener('line-selected', e => {
     lineCode: null,
     qtyRequest: null,
     date: null,
+    selected: new Set(),
     showAlert(message, timer = null, icon = 'warning', title = 'Perhatian') {
         Swal.fire({
             title: title,
@@ -40,6 +46,36 @@ window.addEventListener('line-selected', e => {
             timerProgressBar: timer ? true : false,
         });
     },
+    rowKey(row) {
+        return `${row.product_no}|${row.material_no}`;
+    },
+    isSelected(row) {
+        return this.selected.has(this.rowKey(row));
+    },
+    get allSelected() {
+        return this.listData.length > 0 && this.selected.size === this.listData.length;
+    },
+
+    toggleRow(row, checked) {
+        const key = this.rowKey(row);
+        if (checked) this.selected.add(key);
+        else this.selected.delete(key);
+
+        this.selected = new Set(this.selected);
+        console.log('toggle', this.selected);
+
+    },
+    toggleAll(checked) {
+        if (checked) {
+            this.listData.forEach(r => this.selected.add(this.rowKey(r)));
+        } else {
+            this.selected.clear();
+        }
+
+        this.selected = new Set(this.selected);
+        console.log(this.selected);
+    },
+
     resetInput() {
         $dispatch('reset-product-model');
         $dispatch('reset-line-code');
@@ -64,7 +100,7 @@ window.addEventListener('line-selected', e => {
             title: `Edit Qty ${data.material_no}`,
             html: `<div class='flex flex-col'>
                                     <strong>Qty</strong>
-                                    <input id='editQty1' class='swal2-input' value='${data.bom_qty}'>
+                                    <input id='editQty1' class='swal2-input' value='${data.qty_request}'>
                                 </div>`,
             showDenyButton: true,
             denyButtonText: `Don't save`,
@@ -83,12 +119,27 @@ window.addEventListener('line-selected', e => {
             }
 
         }).then((result) => {
-            qtyInput = parseInt(result.value[0])
+            qtyInput = Number(result.value[0])
+            console.log(qtyInput, result.value)
             if (result.isConfirmed) {
-                if (qtyInput !== null && qtyInput !== '') {
-                    data.bom_qty = parseInt(qtyInput);
-                    data.edited = 'edited';
+                if (qtyInput !== 0) {
+                    data.qty_request = parseInt(qtyInput);
+                    return Swal.fire({
+                        timer: 1000,
+                        title: 'Update Success',
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
                 }
+
+                return Swal.fire({
+                    timer: 1000,
+                    title: 'Qty tidak sesuai',
+                    icon: 'info',
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
             } else if (result.isDenied) {
 
                 return Swal.fire({
@@ -102,12 +153,15 @@ window.addEventListener('line-selected', e => {
         });
     },
     submitData() {
-        console.log(this.listData);
+        const keys = Array.from(this.selected);
+        const picked = this.listData.filter(r => keys.includes(this.rowKey(r)));
+        console.log('Selected rows:', picked);
 
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
         });
+        return
         this.isLoading = true;
         @this.call('submitData', this.listData).then((data) => {
             if (data.success) {
@@ -124,7 +178,16 @@ window.addEventListener('line-selected', e => {
                 });
             }
         })
-    }
+    },
+
+    init() {
+        this.$watch('selected', () => {
+            if (this.$refs.master) {
+                this.$refs.master.indeterminate =
+                    this.selected.size > 0 && !this.allSelected;
+            }
+        });
+    },
 }">
     <div class="flex gap-3 pb-6">
         <div class="flex justify-start flex-1 gap-3">
@@ -182,6 +245,10 @@ window.addEventListener('line-selected', e => {
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
+                        <th class="px-4 py-2">
+                            <input type="checkbox" x-ref="master" :checked="allSelected"
+                                @change="toggleAll($event.target.checked)">
+                        </th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Product No</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model
@@ -190,23 +257,31 @@ window.addEventListener('line-selected', e => {
                             Material No</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Material Name</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bom
-                            Qty</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Bom Qty</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty
+                            Request</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Action</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <template x-for="(row, index) in listData" :key="index">
+                    <template x-for="(row, index) in listData" :key="rowKey(row)">
                         <tr>
+                            <td class="px-4 py-2">
+                                <input type="checkbox" :checked="isSelected(row)"
+                                    @change="toggleRow(row, $event.target.checked)">
+                            </td>
+
                             <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="row.product_no" />
                             <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="row.dc" />
                             <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="row.material_no" />
                             <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="row.matl_nm" />
                             <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="row.bom_qty" />
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="row.qty_request" />
                             <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                                 <button @click="editQty(row)" class="bg-green-500 text-white px-3 py-1 rounded">
-                                    Edit
+                                    Edit Qty
                                 </button>
                             </td>
                         </tr>

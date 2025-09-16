@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('kit_no',32);
             $table->string('material_no',32);
             $table->string('location_c',4)->nullable();
-            $table->integer('req_bom',2);
+            $table->integer('req_bom');
             $table->integer('req_issue')->nullable();
             $table->string('remain',8)->nullable();
             $table->date('issue_dt');
