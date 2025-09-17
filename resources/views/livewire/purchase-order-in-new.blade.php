@@ -34,6 +34,20 @@
         notif.currentTime = 0; // biar bisa diputar ulang cepat
         notif.play();
     },
+    scanToTop(parsed) {
+        const key = (parsed.material_no || '').trim();
+
+        // cari index nya
+        const idx = this.scanMaterial.findIndex(item =>
+            (item.material_no || '').trim() === key ||
+            (item.supplier_code || '').includes(key)
+        );
+        console.log(idx);
+        if (idx > 0) {
+            const [hit] = this.scanMaterial.splice(idx, 1);
+            this.scanMaterial.unshift(hit);
+        }
+    },
     parseQR(parseQr) {
         const s = (parseQr ?? '').replace(/\s+/g, '');
         if (!s) {
@@ -127,7 +141,9 @@
         this.$refs.materialNo.disabled = true;
 
         if (this.scanMaterial.length > 0) {
+            this.scanToTop(parsed);
             this.updateItemMaterial(parsed);
+            console.log('data material', this.scanMaterial);
             this.loading.page = false;
             this.$refs.materialNo.disabled = false;
             this.$refs.materialNo.focus();
@@ -147,6 +163,8 @@
 
             this.listMaterial = data;
             this.scanMaterial = data;
+            this.scanToTop(parsed);
+
             console.log('data material', data);
         });
     },
@@ -252,7 +270,7 @@
 
     if (e.detail.po.includes('PBI')) {
         mcs = false;
-    }else{
+    } else {
         mcs = true;
     }
 
