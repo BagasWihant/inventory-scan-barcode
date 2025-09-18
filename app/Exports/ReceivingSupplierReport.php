@@ -55,10 +55,14 @@ class ReceivingSupplierReport implements FromCollection, WithMapping, WithHeadin
         $char = "  ";
         return [
             $char,
-            $row->material,
-            $row->matl_nm,
-            $row->counter,
-            $row->box ?? '',
+            // $row->material,
+            // $row->matl_nm,
+            // $row->counter,
+            // $row->box ?? '',
+            $row['material_no'],
+            $row['matl_nm'],
+            $row['qty'],
+            $row['boxNo'] ?? '',
         ];
     }
 

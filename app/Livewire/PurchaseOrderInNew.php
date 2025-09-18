@@ -147,7 +147,7 @@ class PurchaseOrderInNew extends Component
         foreach ($value as $k) {
             $k->total = $k->stock_in > 0 ? $k->picking_qty - $k->stock_in : $k->picking_qty;
 
-            if ($data['material_no'] == $k->material_no && $data['line'] == $k->line_c && $data['tipe'] == '1') {
+            if (trim($data['material_no']) == trim($k->material_no) && $data['line'] == $k->line_c && (int) $data['tipe'] == 1) {
                 $k->counter = (int) $data['qty'];
                 $k->location_cd = $data['location_cd'];
                 $k->scanned = [[(int)$data['qty'], 1]];
@@ -169,6 +169,7 @@ class PurchaseOrderInNew extends Component
     {
         $surat_jalan = $req['sj'];
         $scanned = $req['scanned'];
+        $sorted = $req['sorted'];
         $location = $req['location'];
         $line_code = $req['line_code'];
         $po = $req['po'];
@@ -280,6 +281,7 @@ class PurchaseOrderInNew extends Component
             ]);
 
 
+
         // JIKA ASSY
         if ($location == 'ASSY') {
             $dataPaletRegister = PaletRegister::selectRaw('palet_no,issue_date,line_c')->where('is_done', 1)->where('palet_no_iwpi', $paletCode)->first();
@@ -291,7 +293,7 @@ class PurchaseOrderInNew extends Component
                 Storage::put('public/barcodes/' . $dataPaletRegister->palet_no . '.png', $barcode);
 
                 $dataPrint = [
-                    'data' => collect($scanPerBox),
+                    'data' => collect($sorted),
                     'palet_no' => $dataPaletRegister->palet_no,
                     'issue_date' => $dataPaletRegister->issue_date,
                     'line_c' => $dataPaletRegister->line_c
@@ -303,7 +305,7 @@ class PurchaseOrderInNew extends Component
             } else {
                 $this->dispatch('confirmation');
                 $dataPrint = [
-                    'data' => collect($scanPerBox),
+                    'data' => collect($sorted),
                     'issue_date' => '-',
                     'line_c' => '-',
                     'palet_no' => '-'

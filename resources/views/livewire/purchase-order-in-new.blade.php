@@ -179,6 +179,7 @@
         this.lok_model = '';
         this.lok_disable = false;
         this.hideForm = false;
+        this.loading.confirm = false;
         this.resetSebagian();
     },
     resetSebagian() {
@@ -233,11 +234,49 @@
             }
         });
     },
+    buildFlatScanned() {
+        const rows = [];
+        this.scanMaterial.forEach(it => {
+            (it.scanned || []).forEach(scanned => {
+                rows.push(this.toFlatRow(it, scanned));
+            });
+        });
+        rows.sort((a, b) => {
+            if (a.boxNo !== b.boxNo) return a.boxNo - b.boxNo;
+            // tie-breaker optional
+            if ((a.material_no || '') < (b.material_no || '')) return -1;
+            if ((a.material_no || '') > (b.material_no || '')) return 1;
+            return 0;
+        });
+        this.flatScanned = rows;
+        return rows;
+    },
+    toFlatRow(item, scanned) {
+        const [qty, boxNo] = scanned;
+        return {
+            counter: Number(item.counter ?? 0),
+            material_no: item.material_no,
+            kit_no: item.kit_no,
+            line_c: item.line_c,
+            matl_nm: item.matl_nm,
+            picking_qty: item.picking_qty,
+            setup_qty: item.setup_by,
+            location_cd: item.location_cd,
+            location_cd_ori: item.location_cd_ori,
+            total: Number(item.total ?? 0),
+            qty: Number(qty ?? 0),
+            boxNo: Number(boxNo ?? 0),
+        };
+    },
+
     confirm() {
         this.loading.confirm = true;
+        const sorted = this.buildFlatScanned();
+        console.log('sorted', sorted);
         @this.call('confirm', {
             sj: this.sj_model,
             scanned: this.scanMaterial,
+            sorted: sorted,
             location: this.lok_model,
             line_code: this.line_code,
             po: this.po_model,
