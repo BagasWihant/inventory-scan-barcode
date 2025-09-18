@@ -234,15 +234,15 @@
             }
         });
     },
-    buildFlatScanned() {
+    buildFlatScanned(dir) {
         const rows = [];
         this.scanMaterial.forEach(it => {
-            (it.scanned || []).forEach(scanned => {
-                rows.push(this.toFlatRow(it, scanned));
+            (it.scanned || []).forEach(tuple => {
+                rows.push(this.toFlatRow(it, tuple));
             });
         });
         rows.sort((a, b) => {
-            if (a.boxNo !== b.boxNo) return a.boxNo - b.boxNo;
+            if (a.boxNo !== b.boxNo) return dir === 'desc' ? b.boxNo - a.boxNo : a.boxNo - b.boxNo;
             // tie-breaker optional
             if ((a.material_no || '') < (b.material_no || '')) return -1;
             if ((a.material_no || '') > (b.material_no || '')) return 1;
@@ -271,7 +271,7 @@
 
     confirm() {
         this.loading.confirm = true;
-        const sorted = this.buildFlatScanned();
+        const sorted = this.buildFlatScanned('asc');
         console.log('sorted', sorted);
         @this.call('confirm', {
             sj: this.sj_model,
