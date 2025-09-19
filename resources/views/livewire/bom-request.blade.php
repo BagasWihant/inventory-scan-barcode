@@ -10,18 +10,7 @@
         row.qty_request = Number(qtyRequest * row.bom_qty);
     });
     console.log(listData);
-    inputDisable = {
-        line: true,
-        date: true,
-        qty: true,
-        pm: true
-    };
-});
-window.addEventListener('line-selected', e => {
-    isLoading = false;
-    lineCode = e.detail.data;
-    inputDisable.line = true;
-    canReset = true;
+    inputDisable.pm = true
 });" x-data="{
     canReset: false,
     inputDisable: {
@@ -32,6 +21,7 @@ window.addEventListener('line-selected', e => {
     },
     isLoading: false,
     listData: [],
+    lines: @js($line),
     lineCode: null,
     qtyRequest: null,
     date: null,
@@ -92,6 +82,9 @@ window.addEventListener('line-selected', e => {
         }
     },
     selectedProduct() {
+        this.inputDisable.line = true;
+        this.inputDisable.date = true;
+        this.inputDisable.qty = true;
         this.isLoading = true;
         this.canReset = true;
     },
@@ -152,30 +145,39 @@ window.addEventListener('line-selected', e => {
             }
         });
     },
+    cekInt(v) {
+        if (typeof v === 'number') return Number.isInteger(v);
+        if (typeof v === 'string') return /^-?\d+$/.test(v.trim());
+        return false;
+    },
     submitData() {
         const keys = Array.from(this.selected);
         const picked = this.listData.filter(r => keys.includes(this.rowKey(r)));
         console.log('Selected rows:', picked);
+        if (picked.length == 0) {
+            return this.showAlert('Pilih data terlebih dahulu');
+        }
 
+        const invalid = picked.filter(r => !this.cekInt(r.qty_request));
+        if (invalid.length > 0) {
+            console.log(invalid);
+            return this.showAlert('Qty tidak sesuai, ada yang koma. qty harus bulat');
+        }
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
         });
-        return
         this.isLoading = true;
-        @this.call('submitData', this.listData).then((data) => {
+        @this.call('submitData', { data: picked, lineCode: this.lineCode, qtyRequest: this.qtyRequest, date: this.date }).then((data) => {
             if (data.success) {
                 this.isLoading = false;
-                this.canReset = false;
-                this.resetDropdown();
-                this.listData = [];
-                return Swal.fire({
-                    timer: 1000,
-                    title: 'Data Berhasil Disimpan',
-                    icon: 'success',
-                    showConfirmButton: false,
-                    timerProgressBar: true,
-                });
+                this.resetInput();
+                return this.showAlert(data.msg, 2000, 'success', 'Berhasil');
+
+            } else {
+                return this.showAlert(data.msg);
+
+
             }
         })
     },
@@ -191,14 +193,26 @@ window.addEventListener('line-selected', e => {
 }">
     <div class="flex gap-3 pb-6">
         <div class="flex justify-start flex-1 gap-3">
-            <x-search-dropdown :method="'searchLineCode'" :onSelect="'selectLineCode'" :label="'LineCode'" :resetEvent="'reset-line-code'" :field="'line_c'"
-                x-bind:disabled="inputDisable.line"
-                x-bind:class="{ 'bg-gray-100 text-gray-800': inputDisable.line, 'bg-white text-black': !inputDisable.line }" />
+
+            <div class="flex flex-col w-1/4">
+                <label for="large-input" class="block text-sm font-medium text-gray-900 dark:text-white">LineCode
+                </label>
+
+                <select id="paletselect" x-model="lineCode" :disabled="inputDisable.line"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring focus:border-blue-300 sm:text-sm"
+                    :class="{ 'bg-gray-100 text-gray-800': inputDisable.line, 'bg-white text-black': !inputDisable.line }">
+                    <option selected style="height: 100px">Choose Line</option>
+                    <template x-for="line in lines" :key="line.id">
+                        <option x-text="line.location_cd" :value="line.location_cd"></option>
+                    </template>
+                </select>
+
+            </div>
 
             <div class="flex flex-col w-1/4">
                 <label for="large-input" class="block text-sm font-medium text-gray-900 dark:text-white">Request Qty
                 </label>
-                <input x-model="qtyRequest" type="text" :disabled="inputDisable.qty" id="line"
+                <input x-model="qtyRequest" type="number" :disabled="inputDisable.qty" id="line"
                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring focus:border-blue-300 sm:text-sm"
                     :class="{ 'bg-gray-100': inputDisable.qty }">
 
