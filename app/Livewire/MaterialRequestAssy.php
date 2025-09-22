@@ -66,8 +66,8 @@ class MaterialRequestAssy extends Component
         DB::table('WH_config')->where('config', 'materialRequestNW')->update(['value' => $this->variablePage['materialRequestNW']]);
         DB::table('WH_config')->where('config', 'materialRequestWR')->update(['value' => $this->variablePage['materialRequestWR']]);
 
-        $this->transactionNo['wr'] = "WR$ymd-" . str_pad($this->variablePage['materialRequestWR'], 4, '0', STR_PAD_LEFT);
-        $this->transactionNo['nw'] = "NW$ymd-" . str_pad($this->variablePage['materialRequestNW'], 4, '0', STR_PAD_LEFT);
+        $this->transactionNo['wr'] = "REG00-WR$ymd-" . str_pad($this->variablePage['materialRequestWR'], 4, '0', STR_PAD_LEFT);
+        $this->transactionNo['nw'] = "REG00-NW$ymd-" . str_pad($this->variablePage['materialRequestNW'], 4, '0', STR_PAD_LEFT);
     }
 
     private function getListLine($date)
@@ -351,7 +351,7 @@ class MaterialRequestAssy extends Component
                     'issue_date' => $this->date,
                     'line_c' => $this->line_c,
                     'user_id' => auth()->user()->id,
-                    'status' => '0',
+                    'status' => '1', // => ke menu packing, sama di material new
                     'user_request' => $this->userRequest,
                     'sisa_request_qty' => $sisa
                 ]);
