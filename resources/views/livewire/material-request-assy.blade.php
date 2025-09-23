@@ -43,7 +43,8 @@
         return this.editedQty[materialNo] ?? defaultQty;
     },
     submitRequest() {
-        const invalid = this.Materials.find(item => item.qty_stock < item.request_qty_ori);
+        console.log(this.Materials);
+        const invalid = this.Materials.find(item => Number(item.qty_stock) < Number(item.request_qty_ori));
         if (invalid) {
             return Swal.fire({
                 title: `${invalid.material_no} Qty Request lebih besar Qty Stock`,
