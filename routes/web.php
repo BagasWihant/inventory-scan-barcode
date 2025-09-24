@@ -38,6 +38,7 @@ Route::middleware(['auth', 'updateActivity'])->group(function () {
         Route::get('supply-assy', 'supplyAssy')->name('supply.assy')->withoutMiddleware('isPrepareStockTaking');
 
         Route::get('receiving-siws', 'receivingSiws')->name('inventory.receiving.siws');
+        Route::get('receiving-siws-new', fn() => view('pages.receiving-siws-new'));
     });
     Route::get('stock-taking-cot', fn() => view('pages.stock-taking-cot'))->name('stock.taking.cot');
     Route::get('material-request', fn() => view('pages.material-request'))->name('material.request');
