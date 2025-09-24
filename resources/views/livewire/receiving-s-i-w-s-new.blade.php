@@ -50,6 +50,15 @@
             denyButtonText: `Don't save`
         }).then((result) => {
             if (result.isConfirmed) {
+                if(Number(result.value) > Number(data.picking_qty)){
+                    return Swal.fire({
+                        timer: 1000,
+                        title: 'Melebihi qty picking',
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
+                }
                 data.counter = result.value
             } else if (result.isDenied) {
                 return Swal.fire({
