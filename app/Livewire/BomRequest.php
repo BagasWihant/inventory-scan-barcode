@@ -66,13 +66,12 @@ class BomRequest extends Component
         $date = $param['date'];
 
 
-        $ymd = date('Ymd');
-        $d = date('d');
+        $y = date('y');
         $getConfig = DB::table('WH_config')->select('value')->whereIn('config', ['BomRequest', 'PeriodBomRequest'])->get();
         if (count($getConfig) < 2) {
             DB::table('WH_config')->insert([
                 ['config' => 'BomRequest', 'value' => 0],
-                ['config' => 'PeriodBomRequest', 'value' => $ymd],
+                ['config' => 'PeriodBomRequest', 'value' => $y],
             ]);
             $getConfig = DB::table('WH_config')->select('value')->whereIn('config', ['BomRequest', 'PeriodBomRequest'])->get();
         }
@@ -80,13 +79,13 @@ class BomRequest extends Component
         $noBomRequest = (int)$getConfig[0]->value + 1;
 
         // kit direset perhari
-        if ($getConfig[1]->value != $ymd) {
+        if ($getConfig[1]->value != $y) {
             $noBomRequest = 1;
-            DB::table('WH_config')->where('config', 'PeriodBomRequest')->update(['value' => $ymd]);
+            DB::table('WH_config')->where('config', 'PeriodBomRequest')->update(['value' => $y]);
         }
 
 
-        $kitNo = 'L' . $d . '-' . str_pad($noBomRequest, 4, '0', STR_PAD_LEFT);
+        $kitNo = 'L' . $y . '-' . str_pad($noBomRequest, 4, '0', STR_PAD_LEFT);
 
         // update nomor kit di config
         DB::table('WH_config')->where('config', 'BomRequest')->update(['value' => $noBomRequest]);
