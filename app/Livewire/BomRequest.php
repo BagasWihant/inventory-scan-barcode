@@ -67,6 +67,7 @@ class BomRequest extends Component
 
 
         $ymd = date('Ymd');
+        $d = date('d');
         $getConfig = DB::table('WH_config')->select('value')->whereIn('config', ['BomRequest', 'PeriodBomRequest'])->get();
         if (count($getConfig) < 2) {
             DB::table('WH_config')->insert([
@@ -85,7 +86,7 @@ class BomRequest extends Component
         }
 
 
-        $kitNo = 'Req-' . $ymd . '-' . str_pad($noBomRequest, 4, '0', STR_PAD_LEFT);
+        $kitNo = 'L' . $d . '-' . str_pad($noBomRequest, 4, '0', STR_PAD_LEFT);
 
         // update nomor kit di config
         DB::table('WH_config')->where('config', 'BomRequest')->update(['value' => $noBomRequest]);
