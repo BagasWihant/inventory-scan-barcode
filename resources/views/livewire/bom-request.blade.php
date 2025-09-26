@@ -145,11 +145,11 @@
             }
         });
     },
-    cekInt(v) {
+    {{-- cekInt(v) {
         if (typeof v === 'number') return Number.isInteger(v);
         if (typeof v === 'string') return /^-?\d+$/.test(v.trim());
         return false;
-    },
+    }, --}}
     submitData() {
         const keys = Array.from(this.selected);
         const picked = this.listData.filter(r => keys.includes(this.rowKey(r)));
@@ -158,11 +158,11 @@
             return this.showAlert('Pilih data terlebih dahulu');
         }
 
-        const invalid = picked.filter(r => !this.cekInt(r.qty_request));
+        {{-- const invalid = picked.filter(r => !this.cekInt(r.qty_request));
         if (invalid.length > 0) {
             console.log(invalid);
             return this.showAlert('Qty tidak sesuai, ada yang koma. qty harus bulat');
-        }
+        } --}}
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
