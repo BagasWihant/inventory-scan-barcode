@@ -10,6 +10,14 @@
             <p>Total Transaksi Hari ini : <b> {{ $totalCount }}</b></p>
         </span>
     </div>
+    <div class="flex justify-between my-4">
+        <div class="flex-col">
+            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Issue Date Filter</label>
+            <input id="dtstart" type="date" wire:model.lazy="dateFilter" onclick="this.showPicker()"
+                class=" bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Select date">
+        </div>
+    </div>
     <div class="relative overflow-x-auto shadow-md rounded-lg mt-7">
         <table wire:poll.5s="refreshTable" class="w-full text-sm text-left rtl:text-right text-gray-700 ">
             <thead class="text-sm text-gray-900 font-bold uppercase bg-gray-50 ">
@@ -60,22 +68,52 @@
                     <span class="text-4xl font-medium text-white">{{ $statusLoading ?? 'Loading...' }}</span>
                 </div>
                 @foreach ($material as $m)
-                    <tbody x-data="{ open: false }" class="border-b">
+            <tbody x-data="{ open: false }" class="border-b">
 
-                        <tr wire:key="material-request-{{ $loop->iteration }}"
-                            class="cursor-pointer">
-                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {{ $m->product_no }}
-                            </th>
-                            <td class="px-6 py-4">{{ $m->kit_no }}</td>
-                            <td class="px-6 py-4">{{ strtoupper($m->line_c) }}</td>
-                            <td class="px-6 py-4">{{ $m->plan_issue_dt }}</td>
-                            <td class="px-6 py-4">{{ $m->entry_dt }}</td>
-                        </tr>
+                <tr wire:key="material-request-{{ $loop->iteration }}" class="cursor-pointer" @click="open = !open">
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        {{ $m->product_no }}
+                    </th>
+                    <td class="px-6 py-4">{{ $m->kit_no }}</td>
+                    <td class="px-6 py-4">{{ strtoupper($m->line_c) }}</td>
+                    <td class="px-6 py-4">{{ $m->plan_issue_dt }}</td>
+                    <td class="px-6 py-4">{{ $m->entry_dt }}</td>
+                </tr>
+                <tr x-show="open" x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 max-h-0" x-transition:enter-end="opacity-100 max-h-96"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 max-h-96" x-transition:leave-end="opacity-0 max-h-0"
+                    style="overflow: hidden;">
+                    <td colspan="5" class="px-6 py-4 bg-blue-500/30">
+                        <div>
+                            <strong>Detail Transaksi:</strong>
+                            @if ($m->detail->isEmpty())
+                                <p class="text-sm text-gray-500">Tidak ada detail</p>
+                            @else
+                                <table class="w-full text-sm mt-2">
+                                    <thead>
+                                        <tr class="text-left border-b border-black">
+                                            <th class="py-1">Material No</th>
+                                            <th class="py-1">Qty</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($m->detail as $d)
+                                            <tr class="border-t border-black">
+                                                <td class="py-1">{{ $d->material_no }}</td>
+                                                <td class="py-1">{{ number_format((float) $d->req_bom, 2, ',', '.') }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            @endif
+                        </div>
+                    </td>
+                </tr>
 
 
-                    </tbody>
-                @endforeach
+            </tbody>
+            @endforeach
 
             </tbody>
         </table>

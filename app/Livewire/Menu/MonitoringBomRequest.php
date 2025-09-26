@@ -14,16 +14,35 @@ class MonitoringBomRequest extends Component
     use WithPagination, WithoutUrlPagination;
     public $time, $totalCount;
     public $material;
+    public $dateFilter;
 
+    public function mount()
+    {
+        $this->dateFilter = date('Y-m-d');
+    }
     public function refreshTable()
     {
-        $materialQuery = DB::table('mps');
+        $materialQuery = DB::table('mps')->when($this->dateFilter, function ($query) {
+            $query->whereDate('plan_issue_dt', $this->dateFilter);
+        });
 
+        $rows = $materialQuery->get();
+
+        $kitNos = $rows->pluck('kit_no')->unique()->values();
+
+        $details = DB::table('mps_detail')
+            ->whereIn('kit_no', $kitNos)
+            ->get()
+            ->groupBy('kit_no');
+
+        $rows->transform(function ($r) use ($details) {
+            $r->detail = $details->get($r->kit_no, collect());
+            return $r;
+        });
         
-        $data = $materialQuery->get();
-        $this->material = $data;
-        $this->totalCount = $data->count();
-        
+        $this->material = $rows;
+        $this->totalCount = $rows->count();
+
 
         // if ($data->whereIn('status', [0, 9])->isNotEmpty()) {
         //     $this->dispatch('playSound');
