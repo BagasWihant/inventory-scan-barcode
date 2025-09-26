@@ -13,7 +13,7 @@ use Maatwebsite\Excel\Facades\Excel;
 // misal edit kan enek scan 2 kui pie
 // karo cek sing insert new 
 
-class ReceivingSIWSNew extends Component
+class ReceivingSIWSNews extends Component
 {
     use WithPagination;
 
@@ -32,7 +32,7 @@ class ReceivingSIWSNew extends Component
 
     public function render()
     {
-        return view('livewire.receiving-s-i-w-s-new');
+        return view('livewire.receiving-s-i-w-s-news');
     }
 
 
