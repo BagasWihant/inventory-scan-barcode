@@ -67,6 +67,7 @@ Route::controller(InventoryInController::class)->group(function () {
     Route::get('nik/{nik}/recv_sup/', 'menu_sup')->name('inventory.menu_sup');
 });
 
+Route::get('bom-request-monitoring', fn() => view('pages.single.bom-request-monitoring'))->name('bom-request-monitoring');
 Route::get('standar-kerja', fn() => view('pages.single.menu-standar-kerja'));
 Route::get('monitoring-material-request', fn() => view('pages.single.monitoring-material-request'));
 Route::get('monitoring-material-request-assy', fn() => view('pages.single.monitoring-material-request-assy'));
