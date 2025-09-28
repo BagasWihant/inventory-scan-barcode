@@ -1,7 +1,8 @@
 <div class="max-w-7xl m-auto" x-data="tableManager()" x-init="$wire.on('loadMaterial', (data) => {
     materials = data[0].map(m => ({
         ...m,
-        request_qty: m.bom_qty * data[1],
+        qty: Number(row.qty).toFixed(2).replace(/\./g, ','),
+        request_qty: Number(row.bom_qty * data[1]).toFixed(2).replace(/\./g, ','),
         edited: false
     }));
     qtyOri = data[1];
@@ -258,6 +259,11 @@
                     });
                 },
                 submitRequest() {
+                    this.materials.map(m => {
+                        ...m,
+                        qty_request: parseFloat(r.qty_request.replace(',', '.')),
+                        qty: parseFloat(r.qty.replace(',', '.')),
+                    })
                     @this.call('submitRequest', this.materials).then((data) => {
                         if (data.success) {
                             alert(data.message, 'success', false);

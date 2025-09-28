@@ -1,6 +1,9 @@
 <div class="max-w-7xl mx-auto " x-init="window.addEventListener('product-model-selected', e => {
     isLoading = false;
     listData = e.detail.data;
+    listData.forEach(row => {
+        row.bom_qty = Number(row.bom_qty).toFixed(2).replace(/\./g, ',');
+    });
     canReset = true;
 });" x-data="{
     canReset: false,
@@ -65,6 +68,10 @@
             behavior: 'smooth'
         });
         this.isLoading = true;
+        this.listData.map(r => ({
+                ...r,
+                qty_request: parseFloat(r.qty_request.replace(',', '.'))
+            }));
         @this.call('submitData', this.listData).then((data) => {
             if (data.success) {
                 this.isLoading = false;
