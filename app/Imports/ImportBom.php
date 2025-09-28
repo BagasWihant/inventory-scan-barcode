@@ -30,7 +30,7 @@ class ImportBom implements ToCollection, WithHeadingRow
                 'product_no' => $this->product_no,
                 'dc' => $this->dc,
                 'material_no' => $r['material_no'],
-                'bom_qty' => $r['bom_qty'],
+                'bom_qty' =>(float) str_replace(',', '.', $r['bom_qty']),
                 'created_at' => now(),
                 'updated_at' => now(),
                 'status' => 1
