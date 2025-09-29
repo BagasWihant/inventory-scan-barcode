@@ -7,7 +7,7 @@
     listData = e.detail.data;
 
     listData.forEach(row => {
-        row.qty_request = Number(qtyRequest * row.bom_qty).toFixed(2).replace(/\./g, ',');
+        row.qty_request = Math.ceil(qtyRequest * row.bom_qty)
     });
     console.log(listData);
     inputDisable.pm = true
@@ -153,11 +153,7 @@
     submitData() {
         const keys = Array.from(this.selected);
         const picked = this.listData
-            .filter(r => keys.includes(this.rowKey(r)))
-            .map(r => ({
-                ...r,
-                qty_request: parseFloat(r.qty_request.replace(',', '.')) // balik ke angka
-            }));
+            .filter(r => keys.includes(this.rowKey(r)));
         console.log('Selected rows:', picked);
         if (picked.length == 0) {
             return this.showAlert('Pilih data terlebih dahulu');
