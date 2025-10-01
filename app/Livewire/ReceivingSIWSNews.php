@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Exports\ScannedExport;
+use App\Exports\ScannedExport2;
 use App\Models\abnormalMaterial;
 use App\Models\itemIn;
 use Illuminate\Support\Facades\DB;
@@ -18,11 +19,11 @@ class ReceivingSIWSNews extends Component
     use WithPagination;
 
     private $tableSetupMst = 'material_setup_mst';
-    private $userId;
-    protected $sws_code;
-    protected $paletBarcode;
-    protected $produkBarcode;
-    protected $trucking_id;
+    public $userId;
+    public $sws_code;
+    public $paletBarcode;
+    public $produkBarcode;
+    public $trucking_id;
 
 
     public function mount()
@@ -159,6 +160,6 @@ class ReceivingSIWSNews extends Component
             }
         }
 
-        return Excel::download(new ScannedExport($obj), "Scanned Items_" . $this->paletBarcode . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
+        return Excel::download(new ScannedExport2($obj), "Scanned Items_" . $this->paletBarcode . "_" . date('YmdHis') . ".pdf", \Maatwebsite\Excel\Excel::MPDF);
     }
 }

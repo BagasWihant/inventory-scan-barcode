@@ -163,7 +163,7 @@
                 material: item.material_no,
             }
         })
-        @this.call('confirm1', sendData).then((res) => {
+        @this.call('confirm', sendData).then((res) => {
             this.resetPage();
         })
     }
