@@ -42,10 +42,16 @@
             }
 
         }).then((result) => {
-            qtyInput = parseInt(result.value[0])
+            if (!result.value[0].includes('.') && result.value[0].includes(',')) {
+                result.value[0] = result.value[0].replace(',', '.');
+            }
+            anka = parseFloat(result.value[0]);
+            qtyInput = anka.toFixed(3).replace(/\./g, ','); // diubah ke koma 
+            
+            console.log(result.value[0].replace(',', '.'));
             if (result.isConfirmed) {
                 if (qtyInput !== null && qtyInput !== '') {
-                    data.bom_qty = parseInt(qtyInput);
+                    data.bom_qty = qtyInput;
                     data.edited = 'edited';
                 }
             } else if (result.isDenied) {
@@ -61,17 +67,16 @@
         });
     },
     submitData() {
-        console.log(this.listData);
-
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
         });
         this.isLoading = true;
-        this.listData.map(r => ({
-                ...r,
-                qty_request: parseFloat(r.qty_request.replace(',', '.'))
-            }));
+        this.listData = this.listData.map(r => ({
+            ...r,
+            bom_qty_parsed: parseFloat(r.bom_qty.replace(',', '.'))
+        }));
+
         @this.call('submitData', this.listData).then((data) => {
             if (data.success) {
                 this.isLoading = false;

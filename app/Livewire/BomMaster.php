@@ -29,7 +29,6 @@ class BomMaster extends Component
         $no = explode('_', $item['id']);
         $this->product_no = $no[0];
         $this->dc = $no[1];
-        sleep(2);
 
         $listData = DB::table('db_bantu.dbo.bom as b')
             ->selectRaw("product_no,dc,material_no,matl_nm,bom_qty")
@@ -53,7 +52,7 @@ class BomMaster extends Component
                     ->where('dc', $d['dc'])
                     ->where('material_no', $d['material_no'])
                     ->update([
-                        'bom_qty' => $d['bom_qty'],
+                        'bom_qty' => $d['bom_qty_parsed'],
                         'status_request' => 1
                     ]);
             }
