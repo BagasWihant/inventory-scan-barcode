@@ -1,6 +1,7 @@
 <div class="max-w-7xl mx-auto " x-init="window.addEventListener('product-model-selected', e => {
     isLoading = false;
     listData = e.detail.data;
+    console.log(listData.length);
     listData.forEach(row => {
         row.bom_qty = Number(row.bom_qty).toFixed(3).replace(/\./g, ',');
     });
@@ -47,7 +48,7 @@
             }
             anka = parseFloat(result.value[0]);
             qtyInput = anka.toFixed(3).replace(/\./g, ','); // diubah ke koma 
-            
+
             console.log(result.value[0].replace(',', '.'));
             if (result.isConfirmed) {
                 if (qtyInput !== null && qtyInput !== '') {
@@ -143,6 +144,7 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
+
                     <template x-for="(row, index) in listData" :key="index">
                         <tr>
                             <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="row.product_no" />
@@ -165,5 +167,9 @@
                 Submit
             </button>
         </div>
+    </div>
+
+    <div x-show="listData.length === 0 && canReset && !isLoading">
+        <h3 class="text-2xl text-red-500 font-bold mt-6 text-center">Data belum di import</h3>
     </div>
 </div>
