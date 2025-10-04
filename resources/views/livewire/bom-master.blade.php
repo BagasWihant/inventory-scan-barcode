@@ -2,7 +2,7 @@
     isLoading = false;
     listData = e.detail.data;
     listData.forEach(row => {
-        row.bom_qty = Number(row.bom_qty).toFixed(2).replace(/\./g, ',');
+        row.bom_qty = Number(row.bom_qty).toFixed(3).replace(/\./g, ',');
     });
     canReset = true;
 });" x-data="{
