@@ -133,7 +133,7 @@ class ListProduct extends Component
                 }else{
                     $this->produkBarcode = substr($tempSplit[0], 23, 15);
                 }
-                // dd($this->produkBarcode);
+                
             }
 
             $supplierCode = DB::table('material_conversion_mst')->where('supplier_code', $this->produkBarcode)->select('sws_code')->first();
@@ -351,10 +351,11 @@ class ListProduct extends Component
         $fixProduct = DB::table('temp_counters')
             ->leftJoin('delivery_mst as d', 'temp_counters.palet', '=', 'd.pallet_no')
             ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
-            ->select('temp_counters.*', 'd.trucking_id', 'm.location_cd')
+            ->leftJoin('material_mst as mst', 'temp_counters.material', '=', 'mst.matl_no')
+            ->selectRaw('temp_counters.*, d.trucking_id, m.location_cd, (mst.qty/mst.iss_min_lot) as qty_pax')
             ->where('userID', $this->userId)
             ->where('palet', $this->paletBarcode);
-
+            
         $b = $fixProduct->get();
         foreach ($b as $data) {
             $pax = $data->pax;
