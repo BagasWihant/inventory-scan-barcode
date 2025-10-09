@@ -352,7 +352,7 @@ class ListProduct extends Component
             ->leftJoin('delivery_mst as d', 'temp_counters.palet', '=', 'd.pallet_no')
             ->leftJoin('matloc_temp_CNCKIAS2 as m', 'temp_counters.material', '=', 'm.material_no')
             ->leftJoin('material_mst as mst', 'temp_counters.material', '=', 'mst.matl_no')
-            ->selectRaw('temp_counters.*, d.trucking_id, m.location_cd, (mst.qty/mst.iss_min_lot) as qty_pax')
+            ->selectRaw('temp_counters.*, d.trucking_id, m.location_cd, ((mst.qty + temp_counters.counter)/mst.iss_min_lot) as qty_pax')
             ->where('userID', $this->userId)
             ->where('palet', $this->paletBarcode);
             
