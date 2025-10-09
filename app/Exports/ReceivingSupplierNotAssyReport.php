@@ -34,6 +34,7 @@ class ReceivingSupplierNotAssyReport implements FromCollection, WithMapping, Wit
             'D' => 20,
             'E' => 20,
             'F' => 20,
+            'G' => 20,
         ];
     }
 
@@ -54,6 +55,7 @@ class ReceivingSupplierNotAssyReport implements FromCollection, WithMapping, Wit
             $row->line_c,
             $row->total,
             $row->counter,
+            $row->qty_pax,
         ];
     }
 
@@ -66,6 +68,7 @@ class ReceivingSupplierNotAssyReport implements FromCollection, WithMapping, Wit
             'Line C',
             'Qty Picking',
             'Qty Received',
+            'Qty Pax',
         ];
     }
 
@@ -73,7 +76,7 @@ class ReceivingSupplierNotAssyReport implements FromCollection, WithMapping, Wit
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
-                $max_col = "F";
+                $max_col = "G";
                 $sheet = $event->sheet;
 
                 $sheet->mergeCells("A1:".$max_col."1");

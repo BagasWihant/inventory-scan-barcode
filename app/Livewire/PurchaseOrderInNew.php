@@ -91,7 +91,19 @@ class PurchaseOrderInNew extends Component
                 // ->where('b.pallet_no', $paletCode);
             };
         }
-        $groupByColumns = ['a.material_no', 'a.kit_no', 'a.line_c', 'a.setup_by', 'a.picking_qty',  'scanned_time', 'm.loc_cd', 'd.trucking_id', 'm.matl_nm'];
+        $groupByColumns = [
+            'a.material_no',
+            'a.kit_no',
+            'a.line_c',
+            'a.setup_by',
+            'a.picking_qty',
+            'scanned_time',
+            'm.loc_cd',
+            'd.trucking_id',
+            'm.matl_nm',
+            'm.qty',
+            'm.iss_min_lot'
+        ];
 
         $productsQuery = DB::table('material_setup_mst_supplier as a')
             // ->whereIn('a.material_no', $material_no_list)
@@ -108,7 +120,9 @@ class PurchaseOrderInNew extends Component
                     a.setup_by,
                     m.loc_cd as location_cd_ori,
                     m.matl_nm,
-                    d.trucking_id")
+                    d.trucking_id,  
+                    m.qty,
+                    m.iss_min_lot")
             ->leftJoin('material_in_stock as b', $joinCondition)
             ->leftJoin('material_mst as m', 'a.material_no', '=', 'm.matl_no')
             ->leftJoin('delivery_mst as d', 'a.kit_no', '=', 'd.pallet_no')
@@ -117,7 +131,6 @@ class PurchaseOrderInNew extends Component
             ->where('a.line_c', $this->line_code)
 
             ->orderBy('a.material_no');
-
         $value = $productsQuery->get();
 
         // tambahkan supplier_code disini untuk yang cnc
@@ -212,6 +225,8 @@ class PurchaseOrderInNew extends Component
                         'counter'   => $qtyPerScan,
                         'line_c'    => $data['line_c'],
                         'location'  => $data['location_cd'],
+                        'qty'   => $data['qty'],
+                        'iss_min_lot'   => $data['iss_min_lot'],
                     ];
 
                     if (($iteration == $totalScanPerMaterial) && ($kelebihan > 0 || $data['total'] < 0)) {
@@ -328,6 +343,7 @@ class PurchaseOrderInNew extends Component
                 'counter'   => $item->sum('counter'),
                 'line_c'    => $item->first()->line_c,
                 'location'  => $item->first()->location,
+                'qty_pax'   => $item->first()->qty + $item->sum('counter') / $item->first()->iss_min_lot,
             ];
         })->values();
 
