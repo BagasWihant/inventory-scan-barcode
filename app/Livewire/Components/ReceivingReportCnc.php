@@ -75,17 +75,23 @@ class ReceivingReportCnc extends Component
             $this->dateEnd = date('Y-m-d');
         }
         $this->exportDisable = true;
-
-        $this->receivingData = DB::select('EXEC sp_Receiving_report ?,?,?,?,?,?,?,?', [
-            'detail',
-            $this->searchPalet ?? "",
-            $this->dateStart ?? '',
-            $this->dateEnd ?? "",
-            '',
-            $this->materialCode ?? "",
-            '',
+        $this->receivingData = $this->getData(
+            $this->searchPalet,
+            $this->materialCode,
+            $this->dateStart,
+            $this->dateEnd,
             $this->issue_dt
-        ]);
+        );
+        // $this->receivingData = DB::select('EXEC sp_Receiving_report ?,?,?,?,?,?,?,?', [
+        //     'detail',
+        //     $this->searchPalet ?? "", Y-01-00003
+        //     $this->dateStart ?? '', 2024-01-02 08:25:34.000
+        //     $this->dateEnd ?? "",2024-01-02 08:25:34.000
+        //     '',
+        //     $this->materialCode ?? "", 81000801
+        //     '',
+        //     $this->issue_dt 2024-01-09 00:00:00.000
+        // ]);
     }
     public function export($type)
     {
@@ -106,5 +112,66 @@ class ReceivingReportCnc extends Component
     public function render()
     {
         return view('livewire.components.receiving-report-cnc');
+    }
+
+    private function getData(
+        $pallet,
+        $material,
+        $dStart,
+        $dEnd,
+        $issueDt,
+        $kit = NULL,
+        $trucking = NULL
+    ) {
+        $mis = DB::table('material_in_stock as b')
+            ->select('b.pallet_no', 'b.material_no')
+            ->selectRaw('SUM(b.picking_qty) AS Qty_Received_KIAS')
+            ->selectRaw('MIN(CONVERT(date, b.created_at)) AS created_first')
+            ->selectRaw('MAX(CONVERT(date, b.created_at)) AS created_last')
+            ->groupBy('b.pallet_no', 'b.material_no');
+
+
+        $q = DB::table('material_setup_mst_CNC_KIAS2 as a')
+            ->leftJoin('delivery_mst as c', 'c.pallet_no', '=', 'a.pallet_no')
+            ->leftJoinSub($mis, 'mis', function ($join) {
+                $join->on('mis.pallet_no', '=', 'a.pallet_no')
+                    ->on('mis.material_no', '=', 'a.material_no');
+            })
+            ->whereNotNull('a.kit_no')
+            ->when($kit,      fn($qr) => $qr->where('a.kit_no', $kit))
+            ->when($pallet,   fn($qr) => $qr->where('a.pallet_no', $pallet))
+            ->when($trucking, fn($qr) => $qr->where('c.trucking_id', $trucking))
+            ->when($material, fn($qr) => $qr->where('a.material_no', $material))
+            ->when($dStart && $dEnd, function ($qr) use ($dStart, $dEnd) {
+                $qr->whereRaw('a.setup_date >= ? AND a.setup_date < DATEADD(DAY,1,?)', [$dStart, $dEnd]);
+            })
+            ->when($issueDt, function ($qr) use ($issueDt) {
+                $qr->whereRaw('CONVERT(varchar, a.plan_issue_dt_from, 23) LIKE ?', ["%{$issueDt}%"]);
+            })
+            ->selectRaw("
+            CONVERT(varchar, a.setup_date, 23) AS [Delivery_Supply_Date_SIWS],
+            ISNULL(CONVERT(varchar, mis.created_first, 23), 'On Progress Delivery') AS [Received_Date],
+            c.trucking_id,
+            a.kit_no,
+            a.pallet_no,
+            a.material_no,
+            SUM(a.picking_qty) AS [Qty_Delivery_SIWS],
+            ISNULL(mis.Qty_Received_KIAS, 0) AS [Qty_Received_KIAS],
+            CASE
+                WHEN SUM(a.picking_qty) = ISNULL(mis.Qty_Received_KIAS, 0)
+                    THEN CONVERT(varchar, mis.created_last, 23)
+                ELSE ''
+            END AS [Completed Received Date]
+        ")
+            ->groupByRaw("
+            a.kit_no, a.pallet_no, a.material_no,
+            CONVERT(varchar, a.setup_date, 23),
+            c.trucking_id,
+            mis.created_first, mis.created_last, mis.Qty_Received_KIAS
+        ")
+            ->orderBy('a.kit_no')
+            ->orderBy('a.pallet_no');
+
+        return $q->get();
     }
 }
