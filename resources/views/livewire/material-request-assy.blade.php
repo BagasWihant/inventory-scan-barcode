@@ -100,6 +100,7 @@
     },
     dateDebounce() {
         $wire.dateDebounce(this.date).then(data => {
+            console.log(data);
             this.lines = data;
         });
 
@@ -135,7 +136,7 @@ $wire.on('materialsUpdated', (data) => {
                         <select x-model="line_c" @change="lineChange" id="line_c"
                             class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                             <option value="">Line Code</option>
-                            <template x-for="line in lines" :key="line.id">
+                            <template x-for="line in lines" :key="line.line_c">
                                 <option x-text="line.line_c"></option>
                             </template>
                         </select>
