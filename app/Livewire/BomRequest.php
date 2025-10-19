@@ -94,7 +94,7 @@ class BomRequest extends Component
         try {
             DB::beginTransaction();
 
-            // insert mps
+            // // insert mps
             $mpsid = DB::table('mps')->insertGetId([
                 'product_no' => $this->product_no,
                 'cusdesch_c1' => $cushdesc[0],
@@ -119,11 +119,21 @@ class BomRequest extends Component
 
 
             foreach ($data as $d) {
+
+                // ambil data sek
+                $getdata = DB::connection('server_asus')->table('db_bantu.dbo.bom_req_bedatabel')
+                ->selectRaw('remain,issue')
+                ->where('id',1)
+                ->first();
+                
+                // lagi insert dengan nilai remain dan issue baru
                 $idDetail = DB::table('mps_detail')->insertGetId([
                     'kit_no' => $kitNo,
                     'material_no' => $d['material_no'],
                     'req_bom' => $d['qty_request'],
                     'issue_dt' => $date,
+                    'remain' => $getdata->remain,
+                    'req_issue' => $getdata->issue,
                     'entry_dt' => now(),
                     'issue_by' => auth()->user()->username,
                 ]);
