@@ -111,38 +111,53 @@ class BomRequest extends Component
                 'kit_no' => $kitNo
             ]);
 
-            $sqlInsert = "INSERT INTO [172.99.0.5].[DB_Lain].[dbo].[mps]
-                    SELECT * FROM mps
-                    WHERE id = ?";
-            DB::statement($sqlInsert, [$mpsid]);
-
-
-
             foreach ($data as $d) {
-
-                // ambil data sek
-                $getdata = DB::connection('server_asus')->table('db_bantu.dbo.bom_req_bedatabel')
-                ->selectRaw('remain,issue')
-                ->where('id',1)
-                ->first();
-                
                 // lagi insert dengan nilai remain dan issue baru
                 $idDetail = DB::table('mps_detail')->insertGetId([
                     'kit_no' => $kitNo,
                     'material_no' => $d['material_no'],
                     'req_bom' => $d['qty_request'],
                     'issue_dt' => $date,
-                    'remain' => $getdata->remain,
-                    'req_issue' => $getdata->issue,
                     'entry_dt' => now(),
                     'issue_by' => auth()->user()->username,
                 ]);
+
+            }
+
+
+            $sqlInsert = "INSERT INTO [172.99.0.5].[DB_Lain].[dbo].[mps]
+                    SELECT * FROM mps
+                    WHERE id = ?";
+
+
+            foreach ($data as $d) {
+
+                // ambil data sek
+                $getdata = DB::connection('server_asus')->table('db_bantu.dbo.b3r_tabel')
+                    ->selectRaw('remain,issue')
+                    ->where('material_no', $d['material_no'])
+                    ->first();
+
+                // update remain dan issue
+                DB::table('mps_detail')
+                    ->where('kit_no', $kitNo)
+                    ->where('material_no', $d)
+
+                    ->update([
+                        'remain' => $getdata->remain,
+                        'issue' => $getdata->issue,
+                    ]);
+
 
                 $sqlInsert = "INSERT INTO [172.99.0.5].[DB_Lain].[dbo].[mps_detail]
                     SELECT * FROM mps_detail
                     WHERE id = ?";
                 DB::statement($sqlInsert, [$idDetail]);
             }
+
+            DB::statement($sqlInsert, [$mpsid]);
+
+
 
             DB::commit();
             return [
