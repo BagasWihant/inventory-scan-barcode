@@ -24,22 +24,37 @@ class ReceivingRack extends Component
             ->where("pallet_no", $v['pallet_no'])
             ->selectRaw("material_no,
                 (
-                    SELECT STRING_AGG(CAST(x.picking_qty AS varchar(10)), ', ')
-                    FROM (
-                        SELECT DISTINCT i.picking_qty
-                        FROM material_in_stock i
-                        WHERE i.material_no = m.material_no
-                        AND i.pallet_no  = m.pallet_no
-                    ) AS x
-                ) AS picking_qty,
+                SELECT
+                    string_AGG ( CAST ( x.supplier_code AS VARCHAR ( 255 ) ), ', ' ) 
+                FROM
+                    ( SELECT DISTINCT supplier_code FROM material_conversion_mst WHERE sws_code = m.material_no ) AS x 
+                ) AS qr,
+                s.sws_code,
+                sum(picking_qty) AS picking_qty,
                 pallet_no,
                 count(*) as pack")
-            ->groupByRaw("material_no,  pallet_no")
+            ->leftJoin('material_conversion_mst as s', 'm.material_no', '=', 's.sws_code')
+            ->groupByRaw("material_no,  pallet_no, s.sws_code")
             ->get();
         $this->dispatch(
             'data-load',
             data: $data
         );
+    }
+
+    public function submitData($data){
+        foreach ($data['data'] as $v) {
+            if($v['scanned_pack'] < 1) continue;
+            
+            DB::table('material_in_stock')
+            ->where('pallet_no', $v['pallet_no'])
+            ->where('material_no', $v['material_no'])
+            ->update([
+                'is_stored' => $v['scanned_pack'],
+                'stored_at' => date('Y-m-d H:i:s'),
+                'stored_by' => auth()->user()->id,
+            ]);
+        }
     }
 
     public function render()

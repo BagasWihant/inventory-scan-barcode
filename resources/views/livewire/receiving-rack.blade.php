@@ -34,16 +34,30 @@
         return `${i}|${row.material_no}`;
     },
     materialScan() {
+        if (this.materialNo === '' || this.materialNo === null) return;
         const idx = this.listData.findIndex(r =>
-            r.material_no.replace(/ /g, '') === this.materialNo.replace(/ /g, '') ||
-            r.material_no === this.materialNo);
+            r.qr.split(',').some(q => q.trim().includes(this.materialNo))
+        );
         if (idx > -1) {
+            console.log(`keyfind : ${this.materialNo}`, idx, this.listData[idx]);
             this.listData[idx].scanned_pack += 1;
         }
         this.materialNo = '';
     },
     submitData() {
-        this.showAlert('Belum ada aksi', 2000, 'warning', 'Perhatian');
+        {{-- this.showAlert('Belum ada aksi', 2000, 'warning', 'Perhatian'); --}}
+        @this.call('submitData', { data: this.listData }).then((data) => {
+            if (data.success) {
+                this.isLoading = false;
+                this.resetInput();
+                return this.showAlert(data.msg, 2000, 'success', 'Berhasil');
+
+            } else {
+                return this.showAlert(data.msg);
+
+
+            }
+        })
     }
 }">
 
