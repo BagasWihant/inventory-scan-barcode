@@ -20,6 +20,11 @@ class ReceivingRack extends Component
 
     public function selectPalet(array $v)
     {
+        // untuk data qr nya
+        $tmp = DB::table('material_conversion_mst')
+            ->select('sws_code')
+            ->groupBy('sws_code');
+
         $data = DB::table("material_in_stock as m")
             ->where("pallet_no", $v['pallet_no'])
             ->selectRaw("material_no,
@@ -33,7 +38,9 @@ class ReceivingRack extends Component
                 sum(picking_qty) AS picking_qty,
                 pallet_no,
                 count(*) as pack")
-            ->leftJoin('material_conversion_mst as s', 'm.material_no', '=', 's.sws_code')
+            ->leftJoinSub($tmp, 's', function ($j) {
+                $j->on('m.material_no', '=', 's.sws_code');
+            })
             ->groupByRaw("material_no,  pallet_no, s.sws_code")
             ->get();
         $this->dispatch(
@@ -42,18 +49,19 @@ class ReceivingRack extends Component
         );
     }
 
-    public function submitData($data){
+    public function submitData($data)
+    {
         foreach ($data['data'] as $v) {
-            if($v['scanned_pack'] < 1) continue;
-            
+            if ($v['scanned_pack'] < 1) continue;
+
             DB::table('material_in_stock')
-            ->where('pallet_no', $v['pallet_no'])
-            ->where('material_no', $v['material_no'])
-            ->update([
-                'is_stored' => $v['scanned_pack'],
-                'stored_at' => date('Y-m-d H:i:s'),
-                'stored_by' => auth()->user()->id,
-            ]);
+                ->where('pallet_no', $v['pallet_no'])
+                ->where('material_no', $v['material_no'])
+                ->update([
+                    'is_stored' => $v['scanned_pack'],
+                    'stored_at' => date('Y-m-d H:i:s'),
+                    'stored_by' => auth()->user()->id,
+                ]);
         }
     }
 
