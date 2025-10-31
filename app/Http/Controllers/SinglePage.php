@@ -46,7 +46,7 @@ class SinglePage extends Controller
             ? ($map[$str] ?? 'Unknown')
             : (array_search($str, $map) ?: 'Unknown');
     }
-    private function generatePdf($url, $html, $pdf = null, array $lampiran = [])
+    private function generatePdf($url, $html, array $images = [], array $lampiran = [])
     {
         $mpdf = new Mpdf();
         $mpdf->SetHTMLHeader("
@@ -68,25 +68,27 @@ class SinglePage extends Controller
                 $mpdf->WriteHTML($httml);
             }
         }
-        if (!empty($pdf)) {
-            foreach ($pdf as $lamp) {
+        if (!empty($images)) {
+            foreach ($images as $img) {
+                if(empty($img)) continue;
                 $mpdf->AddPage();
-                // $pdf = asset('assets/syarat-dan-ketentuan-layanan-utama.pdf');
-                $pdf = $lamp;
-
-                $pageCount = $mpdf->setSourceFile($pdf);
-
-                for ($i = 1; $i <= $pageCount; $i++) {
-                    $tplId = $mpdf->importPage($i);
-                    $mpdf->useTemplate($tplId);
-                    if ($i < $pageCount) {
-                        $mpdf->AddPage();
-                    }
-                }
+                $base64 = $this->convertBase64toImg($img);
+                $mpdf->WriteHTML('<img src="' . $base64 . '" style="width:100%; max-width:750px;" />');
             }
         }
 
         $mpdf->Output($url, Destination::FILE);
+    }
+
+    /**
+     * 
+     * ubah dari base64 ke gambar
+     * 
+     * di database simpan base64 aja, kedepan kalo mau  insert dari web mudah
+     */
+    private function convertBase64toImg(string $rawBase64, string $mime = 'image/png'): string
+    {
+        return 'data:' . $mime . ';base64,' . $rawBase64;
     }
     public function approval($type, $no)
     {
@@ -429,6 +431,9 @@ class SinglePage extends Controller
 
         $detail = DB::table('IT.dbo.PR_detail_plan as d')
             ->where("id_master_plan", $req->id)->get();
+
+        $images = $detail->pluck('image')->toArray();
+
         $req->detail = $detail;
 
         $docNo      = "ID-$req->sec-$req->no_plan";
@@ -439,11 +444,10 @@ class SinglePage extends Controller
 
         $req->type = $this->typeDokumen($type);
 
-
         if ($status == 'O') {
             // halaman approve purchasing
             $allowedPurchase = [
-                '172.99.0.1',
+                '172.99.0.254',
                 '192.168.1.249'
             ];
 
@@ -453,7 +457,7 @@ class SinglePage extends Controller
         } elseif ($status == 'AP') {
             // halaman spv
             $allowedSPV = [
-                '172.99.0.1',
+                '172.99.0.254',
                 '192.168.1.249'
             ];
 
@@ -463,13 +467,28 @@ class SinglePage extends Controller
         } elseif ($status == 'AS') {
             // halaman manager
             $allowedIPMan = [
-                '172.99.0.1',
+                '172.99.0.254',
                 '192.168.1.249'
             ];
 
             if (!in_array(request()->ip(), $allowedIPMan)) {
                 abort(499, "Anda tidak bisa mengakses ini. Bukan Manager");
             }
+        }
+        
+        $fileName = $docNo.'_'.$status . '.pdf';
+        $directory = storage_path('app/public/approval/pdf');
+        $path = $directory . '/' . $fileName;
+
+        /**
+         * pindah sini, jika status masih sama, gausah buat pdf lagi
+         * kalo reload2 biar langsung ambil pdf,
+         * beda setatus baru buat pdf
+         */
+
+        if (file_exists($path)) {
+            $req->pdf = Storage::url('approval/pdf/' . $fileName);
+            return $req;
         }
 
         // save qrcode
@@ -507,21 +526,15 @@ class SinglePage extends Controller
 
         $req->signCode = $sign;
 
-        $fileName = $docNo . '.pdf';
-        $directory = storage_path('app/public/approval/pdf');
-        $path = $directory . '/' . $fileName;
-
         if (!file_exists($directory)) {
             mkdir($directory, 0775, true);
         }
 
         // if (!file_exists($path)) {
-        if (true) {
-            $html = view('templates.pdf.approval-generate', compact('req'))->render();
+        $html = view('templates.pdf.approval-generate', compact('req'))->render();
 
-            $page2 = view('templates.pdf.approval-monthly')->render();
-            $this->generatePdf($path, $html, null, [$page2]);
-        }
+        $page2 = view('templates.pdf.approval-monthly')->render();
+        $this->generatePdf($path, $html, $images, [$page2]);
 
         $req->pdf = Storage::url('approval/pdf/' . $fileName);
         return $req;
