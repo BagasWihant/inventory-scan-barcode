@@ -88,7 +88,8 @@ class SinglePage extends Controller
      */
     private function convertBase64toImg(string $rawBase64, string $mime = 'image/png'): string
     {
-        return 'data:' . $mime . ';base64,' . $rawBase64;
+        //return 'data:' . $mime . ';base64,' . $rawBase64;
+        return $rawBase64;
     }
     public function approval($type, $no)
     {
@@ -282,7 +283,7 @@ class SinglePage extends Controller
                 $html = view('templates.pdf.approval-generate', compact('req'))->render();
                 $page2 = view('templates.pdf.approval-monthly')->render();
 
-                $this->generatePdf($path, $html, null, [$page2]);
+                $this->generatePdf($path, $html, [], [$page2]);
 
                 $data['pdf'] = $req->pdf;
                 $data['text'] = 'Berhasil disetujui oleh';
@@ -432,6 +433,7 @@ class SinglePage extends Controller
         $detail = DB::table('IT.dbo.PR_detail_plan as d')
             ->where("id_master_plan", $req->id)->get();
 
+        //kolom di tabel nya
         $images = $detail->pluck('image')->toArray();
 
         $req->detail = $detail;
