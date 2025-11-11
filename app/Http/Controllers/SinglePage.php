@@ -13,6 +13,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Mpdf\Mpdf;
 use Mpdf\Output\Destination;
 use Picqer\Barcode\BarcodeGeneratorPNG;
+use setasign\Fpdi\PdfParser\StreamReader;
 use setasign\Fpdi\PdfReader\PdfReader;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -63,9 +64,23 @@ class SinglePage extends Controller
 
         if (!empty($lampiran)) {
             foreach ($lampiran as $lamp) {
-                $mpdf->AddPage();
-                $httml = $lamp;
-                $mpdf->WriteHTML($httml);
+                // ini untuk cek jika pdf dari db pakai varbinary
+                if(strncmp($lamp,'%PDF',4) === 0){
+                    $reader    = StreamReader::createByString($lamp);
+                    $pageCount = $mpdf->setSourceFile($reader);
+
+                    for ($page = 1; $page <= $pageCount; $page++) {
+                        $tplId = $mpdf->importPage($page);
+                         $pd = $mpdf->getTemplateSize($tplId); 
+                         $orien = $pd['width'] > $pd['height'] ? 'L' : 'P'; 
+                         $mpdf->AddPage($orien);
+                         $mpdf->useTemplate($tplId);
+                    }
+                }else{
+                    $mpdf->AddPage();
+                    $httml = $lamp;
+                    $mpdf->WriteHTML($httml);
+                }
             }
         }
         if (!empty($images)) {
@@ -279,6 +294,10 @@ class SinglePage extends Controller
                 $req->pdf = Storage::url('approval/pdf/' . $fileName);
                 $req->detail = $decode->detail;
 
+                // ambil file yang ada di pr masterplan
+                if($cek->pdf_data){
+                    $page2 = $cek->pdf_data;
+                }
                 // generatePdf
                 $html = view('templates.pdf.approval-generate', compact('req'))->render();
                 $page2 = view('templates.pdf.approval-monthly')->render();
@@ -536,7 +555,15 @@ class SinglePage extends Controller
         $html = view('templates.pdf.approval-generate', compact('req'))->render();
 
         $page2 = view('templates.pdf.approval-monthly')->render();
-        $this->generatePdf($path, $html, $images, [$page2]);
+
+        // pdf data
+        if(isset($req->pdf_data) && $req->pdf_data !== null) {
+            $lampiran = [$page2, $req->pdf_data];
+        }else{
+            $lampiran = [$page2];
+        }
+        
+        $this->generatePdf($path, $html, $images, $lampiran);
 
         $req->pdf = Storage::url('approval/pdf/' . $fileName);
         return $req;
@@ -568,7 +595,7 @@ class SinglePage extends Controller
             $allowedIP = DB::table('ip_conf')->where('jabatan', 'checker')->get()->pluck('ip')->toArray();
             
             if (!in_array(request()->ip(), $allowedIP)) {
-                abort(499, "Anda tidak bisa mengakses ini. Hubungi IT");
+                abort(499, "Anda tidak bisa mengakses ini. Hubungi IT".request()->ip());
             }
         }else if(empty($data->approved1_date)){
             // ganti nama jabatan yang sesuai
@@ -621,11 +648,13 @@ class SinglePage extends Controller
         
 
         // get blob sementara  ambil random
-        $blob = DB::table('HR_Systems.dbo.HR_MPR_filepath')->first();
-
-        // simpan ke tmp
-        $tmpPath = storage_path('app/' . $blob->fileName);
-        file_put_contents($tmpPath, $blob->fileByte);
+        $blob = DB::table('IT.dbo.HR_MPR_filepath')->first();
+        $tmpPath = null;
+        if(isset($blob->fileName) && $blob->fileName) {
+            // simpan ke tmp
+            $tmpPath = storage_path('app/' . $blob->fileName);
+            file_put_contents($tmpPath, $blob->fileByte);
+        }
 
         $this->generatePdf($path, $html, [$tmpPath]);
 
