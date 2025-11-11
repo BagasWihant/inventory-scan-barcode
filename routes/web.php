@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryInController;
+use App\Http\Controllers\NoLoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SinglePage;
 use App\Livewire\MaterialRequest;
@@ -79,5 +80,14 @@ Route::get('monitoring-material-request-assy', fn() => view('pages.single.monito
 Route::get('/Approval/{type}-{no}', [SinglePage::class, 'approval']);
 Route::post('/Approval/{type}-approve', [SinglePage::class, 'approve']);
 Route::post('/Approval/{type}-reject', [SinglePage::class, 'reject']);
+
+// menu langsung
+
+Route::controller(NoLoginController::class)->group(function () {
+    Route::get('bypass/{nik}/receiving-siws-news/', 'recvSiws')->name('bypass.recvSiws');
+    Route::get('bypass/{nik}/po_in_new/', 'poNew')->name('bypass.poNew');
+    Route::get('bypass/{nik}/instock/', 'inStock')->name('bypass.inStock');
+    Route::get('bypass/{nik}/checking/', 'checkingStock')->name('bypass.checkingStock');
+});
 
 require __DIR__ . '/auth.php';
