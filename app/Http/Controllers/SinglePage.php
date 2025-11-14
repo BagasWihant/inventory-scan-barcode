@@ -167,7 +167,7 @@ class SinglePage extends Controller
 
 
             $decode = json_decode($req->data);
-
+            
             $status = $decode->status;
             if (!in_array($status, ['O', 'AP', 'AS'])) {
                 return false;
@@ -207,7 +207,8 @@ class SinglePage extends Controller
                     ->where("id", $id)
                     ->where("no_plan", $no)
                     ->update([
-                        'status' => $this->getstatus($nextStatus, 'Long')
+                        'status' => $this->getstatus($nextStatus, 'Long'),
+                        'alasan_approve' => $req->message
                     ]);
 
                 $insertData = [
@@ -507,10 +508,10 @@ class SinglePage extends Controller
          * beda setatus baru buat pdf
          */
 
-        if (file_exists($path)) {
-            $req->pdf = Storage::url('approval/pdf/' . $fileName);
-            return $req;
-        }
+        // if (file_exists($path)) {
+        //     $req->pdf = Storage::url('approval/pdf/' . $fileName);
+        //     return $req;
+        // }
 
         // save qrcode
         $allow = ['spv1', 'mgr'];
@@ -558,7 +559,7 @@ class SinglePage extends Controller
 
         // pdf data
         if(isset($req->pdf_data) && $req->pdf_data !== null) {
-            $lampiran = [$page2, $req->pdf_data];
+            $lampiran = [$req->pdf_data];
         }else{
             $lampiran = [$page2];
         }
