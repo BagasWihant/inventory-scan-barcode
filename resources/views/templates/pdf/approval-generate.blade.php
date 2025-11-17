@@ -78,19 +78,16 @@
                     </tr>
                 </table>
             </td>
-            <td width='10px'></td>
-            {{-- <td align="left" width='150px'>
-                <table>
-                    <tr>
-                        <td width='150px'>Diterima oleh Purchasing</td>
-                        <td width="20">: </td>
-                    </tr>
-                    <tr>
-                        <td>Tanggal</td>
-                        <td>: {{ Carbon\Carbon::parse($req->tanggal_pr)->format('d-m-Y') }}</td>
-                    </tr>
-                </table>
-            </td> --}}
+            @if ($req->alasan_approve !== null)
+                <td align="left" width='150px' colspan="3">
+                    <table>
+                        <tr>
+                            <td>Alasan :</td>
+                            <td> {{ $req->alasan_approve }}</td>
+                        </tr>
+                    </table>
+                </td>
+            @endif
         </tr>
     </table>
 

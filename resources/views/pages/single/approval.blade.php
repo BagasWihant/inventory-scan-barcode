@@ -39,10 +39,18 @@
                     <span class="text-2xl font-bold text-blue-600">Pengajuan disetujui Manajer</span>
                 </div>
             @endif
-            <div class="bg-slate-300 max-w-6xl p-4 rounded-xl shadow-md text-lg">
-                <iframe src="{{ asset($req->pdf) }}" frameborder="no" class="iframe"
-                    style="width:100%;min-height:150vh"></iframe>
-            </div>
+            {{-- <div class="bg-slate-300 max-w-6xl p-4 rounded-xl shadow-md text-lg"> --}}
+            {{-- <iframe src="{{ asset($req->pdf) }}" frameborder="no" class="iframe"
+                    style="width:100%;min-height:150vh"></iframe> --}}
+            {{-- </div> --}}
+            <form action="{{ asset($req->pdf) }}" method="get" target="_blank" class="flex justify-center">
+                <button
+                    class="text-lg uppercase bg-gradient-to-br from-purple-500 to-blue-500 text-white px-4 py-2 rounded-lg transition duration-500 ease-in-out hover:opacity-80 hover:backdrop-blur-md hover:scale-105">
+                    Buka Dokumen
+                </button>
+            </form>
+
+
 
 
             <div class="my-14 flex justify-between" x-data="{ modal: false, modalTitle: '', modalType: '', url: '' }">
@@ -51,27 +59,36 @@
                         $reqSafe = clone $req;
                         unset($reqSafe->pdf_data);
                     @endphp
-
-                    <button
-                        @click="modal = true;modalTitle = 'Reason to approve';modalType = 'approve';url = './2-approve';"
-                        class="text-lg uppercase bg-gradient-to-br from-cyan-600 to-blue-700 text-white px-4 py-2 rounded-lg transition duration-500 ease-in-out hover:opacity-80 hover:backdrop-blur-md hover:scale-105">
-                        Approve @if ($req->status == 'O')
-                            Purchasing
-                        @elseif($req->status == 'AP')
-                            Supervisor
-                        @else
-                            Manajer
+                    <div class="flex gap-8">
+                        <form action="./2-approve" method="post">
+                            @csrf
+                            <input type="hidden" name="data" value="{{ json_encode($reqSafe) }}">
+                            <button type="submit"
+                                class="text-lg uppercase bg-gradient-to-br from-cyan-600 to-blue-700 text-white px-4 py-2 rounded-lg transition duration-500 ease-in-out hover:opacity-80 hover:backdrop-blur-md hover:scale-105">
+                                Approve @if ($req->status == 'O')
+                                    Purchasing
+                                @elseif($req->status == 'AP')
+                                    Supervisor
+                                @else
+                                    Manajer
+                                @endif
+                            </button>
+                        </form>
+                        @if ($req->status == 'AS')
+                            <button
+                                @click="modal = true;modalTitle = 'Reason to approve';modalType = 'approve';url = './2-approve';"
+                                class="text-lg uppercase bg-gradient-to-br from-purple-500 to-blue-500 text-white px-4 py-2 rounded-lg transition duration-500 ease-in-out hover:opacity-80 hover:backdrop-blur-md hover:scale-105">
+                                Reason Approve Manajer
+                            </button>
                         @endif
-                    </button>
-
+                    </div>
                     <button
                         @click="modal = true;modalTitle = 'Reason to reject';modalType = 'reject';url = './2-reject';"
                         class="text-lg uppercase bg-gradient-to-br from-pink-600 to-red-700 text-white px-4 py-2 rounded-lg transition duration-500 ease-in-out hover:opacity-80 hover:backdrop-blur-md hover:scale-105">
                         reject
                     </button>
                     <!-- modal -->
-                    <div x-show="modal"
-                    x-transition:enter="transition ease-out duration-300 transform"
+                    <div x-show="modal" x-transition:enter="transition ease-out duration-300 transform"
                         x-transition:enter-start="opacity-0 scale-90 bg-blur-sm"
                         x-transition:enter-end="opacity-100 scale-100 bg-blur-sm"
                         x-transition:leave="transition ease-in duration-200 transform"
