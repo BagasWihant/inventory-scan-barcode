@@ -88,6 +88,7 @@ Route::controller(NoLoginController::class)->group(function () {
     Route::get('bypass/{nik}/po_in_new/', 'poNew')->name('bypass.poNew');
     Route::get('bypass/{nik}/instock/', 'inStock')->name('bypass.inStock');
     Route::get('bypass/{nik}/checking/', 'checkingStock')->name('bypass.checkingStock');
+    Route::get('bypass/{nik}/upload_assy/', 'assyUpload')->name('bypass.assyUpload');
 });
 
 require __DIR__ . '/auth.php';
