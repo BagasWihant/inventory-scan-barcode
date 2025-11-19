@@ -42,8 +42,8 @@ class NoLoginController extends Controller
         return view('pages.checking-stock', ['bypass' => true]);
     }
 
-    public function assyUpload()
+    public function assyUpload($nik)
     {
-        return view('pages.single.assy-upload', ['bypass' => true]);
+        return view('pages.single.assy-upload', ['bypass' => true, 'nik' => $nik]);
     }
 }

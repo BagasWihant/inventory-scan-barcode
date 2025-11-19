@@ -2,6 +2,8 @@
 
 <div class="max-w-7xl mx-auto" x-data="{
     isLoading: false,
+    isUploading: false,
+    poller: null,
     loadingText: 'Load Data . . .',
     doneOperation: null,
     mode: '',
@@ -48,25 +50,50 @@
         if (!this.file) return this.showAlert('Pilih file dulu!');
         if (!this.bulan) return this.showAlert('Pilih Bulan dulu!');
         if (!this.thn) return this.showAlert('Pilih Tahun dulu!');
-        this.isLoading = true;
-        this.loadingText = 'Uploading . . .';
-        @this.call('uploadFile', [this.bulan, this.thn]).then((data) => {
-            this.isLoading = false;
-            this.loadingText = 'Load Data . . .';
-            this.resetFile();
-            this.doneOperation = 'File berhasil diupload dan disimpan di Database';
-            console.log(data);
-        });
+        @this.call('uploadFile', this.bulan, this.thn);
     },
     resetFile() {
         this.file = null;
         this.fileName = '';
         document.querySelector('#fileInput').value = '';
-    }
+    },
+    async startPolling() {
+        if (this.poller) return;
+        this.poller = setInterval(async () => {
+            let res = await $wire.call('partialUpload');
+
+            if (res === 'done') {
+                this.loadingText = 'Selesai!';
+                this.stopPolling();
+                this.isUploading = false;
+                this.isLoading = false;
+
+                return;
+            }
+
+            if (res && res !== 'idle') {
+                this.loadingText = res;
+            }
+        }, 1000);
+    },
+    stopPolling() {
+        if (this.poller) clearInterval(this.poller);
+        this.poller = null;
+    },
 }" x-init="window.addEventListener('done-upload', e => {
-    console.log('Event received:', e.detail);
     showAlert('Done saved to database', 3000, 'success', 'Success');
-});"">
+});"
+    x-on:upload-started.window="
+        isUploading = true;
+        isLoading = true;
+        loadingText = 'Memulai proses...';
+        startPolling();"
+    x-on:done-upload.window="
+        loadingText = $event.detail.text;
+        stopPolling();
+        resetFile();
+        isUploading = false;
+        isLoading = true;">
     <div class="text-2xl font-extrabold text-center">Upload Search Assy</div>
     <div class="flex justify-center gap-5 my-4" x-show="optionButton" x-transition>
         <button @click="mode = 'upload'; optionButton = false;"
@@ -88,7 +115,7 @@
         x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
         x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95" class="border border-gray-300 p-6 my-4 rounded-xl shadow bg-white">
-        <div class="flex gap-5">
+        <div class="flex gap-5" x-show="!isUploading">
             <div>
                 <label class="block mb-2 text-sm font-medium text-gray-900">Periode</label>
                 <select
@@ -128,7 +155,7 @@
             accept=".xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
             class="hidden" wire:model="file" />
 
-        <label for="fileInput"
+        <label for="fileInput" x-show="!isUploading"
             class="flex items-center justify-between w-full my-4 cursor-pointer bg-gray-100 border border-gray-300 rounded-lg p-3 hover:bg-gray-200 transition relative">
             <span x-text="fileName || 'Pilih file Excel (.xls / .xlsx)'" class="text-gray-600 text-sm truncate"></span>
             <span x-show="!fileName"
@@ -145,7 +172,9 @@
             </button>
         </label>
 
-        <div x-show="isLoading" class="flex flex-col items-center justify-center gap-2 mt-7">
+        <div x-show="isLoading" x-on:progress-upload.window="loadingText = $event.detail.text; isLoading = true"
+            x-on:done-upload.window="loadingText = 'Selesai!'; isLoading = false"
+            class="flex flex-col items-center justify-center gap-2 mt-7">
             <svg class="animate-spin h-10 w-10 text-black" xmlns="http://www.w3.org/2000/svg" fill="none"
                 viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
@@ -153,9 +182,8 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z">
                 </path>
             </svg>
-            <span x-text="loadingText" />
+            <span class="mt-3 mb-4 text-green-600 font-semibold" x-text="loadingText" />
         </div>
-
         <template x-if="doneOperation">
             <p class="mt-3 text-sm mb-4 text-green-600 font-semibold">
                 <span x-text="doneOperation"></span>
