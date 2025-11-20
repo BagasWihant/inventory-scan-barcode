@@ -64,6 +64,8 @@ Route::middleware(['auth', 'updateActivity'])->group(function () {
     Route::get('retur-proses-assy', fn() => view('pages.retur-proses-assy'))->name('retur.proses.assy');
 
     Route::get('receiving-rack', fn() => view('pages.receiving-rack'))->name('receiving-rack');
+
+    Route::get('upload-master-wip', fn() => view('pages.upload-master-wip'))->name('up-master-wip');
 });
 
 Route::controller(InventoryInController::class)->group(function () {
