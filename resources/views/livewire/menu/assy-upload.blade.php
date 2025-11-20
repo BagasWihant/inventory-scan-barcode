@@ -3,6 +3,7 @@
 <div class="max-w-7xl mx-auto" x-data="{
     isLoading: false,
     isUploading: false,
+    pollWait: false,
     poller: null,
     loadingText: 'Load Data . . .',
     doneOperation: null,
@@ -12,12 +13,20 @@
     thn: '',
     file: null,
     fileName: '',
+    sProductNo: '',
+    sLine: '',
+    sYear: '',
+    sBln: '',
+    linecode: [],
     year: [],
     init() {
         let current = new Date().getFullYear();
         for (let i = current + 2; i >= current - 2; i--) {
             this.year.push(i);
         }
+        $wire.call('getLineCode').then(res => {
+            this.linecode = res
+        })
     },
     showAlert(message, timer = null, icon = 'warning', title = 'Perhatian') {
         Swal.fire({
@@ -60,26 +69,61 @@
     async startPolling() {
         if (this.poller) return;
         this.poller = setInterval(async () => {
-            let res = await $wire.call('partialUpload');
 
-            if (res === 'done') {
-                this.loadingText = 'Selesai!';
+            if (this.pullWait) {
+                return
+            }
+
+            this.pullWait = true;
+            try {
+                let res = await $wire.call('partialUpload');
+
+                if (res === 'done') {
+                    this.loadingText = 'Selesai!';
+                    this.stopPolling();
+                    this.isUploading = false;
+                    this.isLoading = false;
+
+                    return;
+                }
+
+                if (res && res !== 'idle') {
+                    this.loadingText = res;
+                }
+            } catch (error) {
+                console.error(error);
                 this.stopPolling();
-                this.isUploading = false;
-                this.isLoading = false;
-
-                return;
+            } finally {
+                console.log('finally');
+                this.pullWait = false;
             }
-
-            if (res && res !== 'idle') {
-                this.loadingText = res;
-            }
-        }, 1000);
+        }, 500);
     },
     stopPolling() {
         if (this.poller) clearInterval(this.poller);
         this.poller = null;
     },
+    totalHari: [],
+    dataSearch: [],
+    search() {
+        @this.call('searching', this.sProductNo, this.sLine, this.sYear, this.sBln).then(res => {
+                this.isLoading = false;
+                if (!res || res.length === 0) {
+                    this.dataSearch = [];
+                    this.totalHari = [];
+                    return;
+                }
+                this.dataSearch = res;
+                console.log(res)
+                const first = res[0];
+                this.totalHari = Object.keys(first)
+                    .filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)) // ambil sing format yyyy-mm-dd
+                    .sort();
+            })
+            .catch(() => {
+                this.isLoading = false;
+            });
+    }
 }" x-init="window.addEventListener('done-upload', e => {
     showAlert('Done saved to database', 3000, 'success', 'Success');
 });"
@@ -100,7 +144,8 @@
             class="text-lg uppercase bg-gradient-to-br from-green-500 to-teal-400 text-white px-4 py-2 rounded-lg transition duration-500 ease-in-out hover:opacity-80 hover:backdrop-blur-md hover:scale-105">
             Upload Excel
         </button>
-        <button @click="mode = 'search'; optionButton = false;"
+        <button
+            @click="mode = 'search'; optionButton = false;"
             class="text-lg uppercase bg-gradient-to-br from-purple-500 to-blue-500 text-white px-4 py-2 rounded-lg transition duration-500 ease-in-out hover:opacity-80 hover:backdrop-blur-md hover:scale-105">
             Search
         </button>
@@ -198,29 +243,112 @@
 
 
     {{-- Search --}}
-    <div class="flex my-4 gap-4" x-show="mode == 'search'" x-transition>
-        <div class="flex-col">
-            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nomor Assy</label>
-            <input type="text" disabled
-                class=" bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg ">
+    <div class="my-4 gap-4" x-show="mode == 'search'" x-transition>
+        <div class="flex gap-5">
+
+            <div class="flex-col">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Periode</label>
+                <select
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
+              focus:ring-blue-500 focus:border-blue-500"
+                    x-model="sBln">
+                    <option value="">Pilih Bulan</option>
+                    <option value="1">Jan</option>
+                    <option value="2">Feb</option>
+                    <option value="3">Mar</option>
+                    <option value="4">Apr</option>
+                    <option value="5">Mei</option>
+                    <option value="6">Jun</option>
+                    <option value="7">Jul</option>
+                    <option value="8">Ags</option>
+                    <option value="9">Sep</option>
+                    <option value="10">Okt</option>
+                    <option value="11">Nov</option>
+                    <option value="12">Des</option>
+                </select>
+            </div>
+
+            <div class="flex-col">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Tahun</label>
+                <select x-model="sYear"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
+                focus:ring-blue-500 focus:border-blue-500 p-2">
+                    <option value="">Pilih Tahun</option>
+                    <template x-for="y in year" :key="y">
+                        <option :value="y" x-text="y"></option>
+                    </template>
+                </select>
+            </div>
+
+            <div class="flex-col">
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nomor Model</label>
+                <input type="text" x-model="sProductNo"
+                    class=" bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    placeholder="Nomor Model">
+            </div>
+
+            <div class="flex-col">
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Line Code</label>
+                <select
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
+              focus:ring-blue-500 focus:border-blue-500"
+                    x-model="sLine">
+                    <option value="">Pilih Line</option>
+                    <template x-for="(l,i) in linecode" :key="i">
+                        <option :value="l.Line" x-text="l.Line"></option>
+                    </template>
+                </select>
+            </div>
+            <div class="justify-items-end content-end">
+                <button @click="search" x-show="!isLoading" x-transition
+                    class="text-lg uppercase bg-gradient-to-br from-purple-500 to-blue-500 text-white px-4 py-2 rounded-lg transition duration-500 ease-in-out hover:opacity-80 hover:backdrop-blur-md hover:scale-105">
+                    Search
+                </button>
+            </div>
         </div>
-        <div class="flex-col">
-            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Dari Tanggal</label>
-            <input id="dtstart" type="date" onclick="this.showPicker()"
-                class=" bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                placeholder="Select date">
-        </div>
-        <div class="flex-col">
-            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sampai Tanggal</label>
-            <input id="dtend" type="date" onclick="this.showPicker()"
-                class=" bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                placeholder="Select date">
-        </div>
-        <div class="flex-col">
-            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nomor Model</label>
-            <input type="text"
-                class=" bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                placeholder="Nomor Model">
+
+        <div class="mt-4 overflow-auto pb-3 pt-1 bg-white rounded-lg" x-show="dataSearch.length > 0" x-transition>
+            <table class="min-w-full text-sm border bg-white">
+                <thead>
+                    <tr class="bg-white">
+                        <!-- kolom tetap -->
+                        <th class="border px-2 py-1">Line ID</th>
+                        <th class="border px-2 py-1">Product ID</th>
+                        <th class="border px-2 py-1 sticky left-0 bg-white z-20">Product No</th>
+                        <th class="border px-2 py-1">DC</th>
+                        <th class="border px-2 py-1">SMH</th>
+                        <th class="border px-2 py-1">Cust</th>
+                        <th class="border px-2 py-1">Remain</th>
+
+                        <!-- kolom tanggal dinamis -->
+                        <template x-for="d in totalHari" :key="d">
+                            <th class="border px-2 py-1 text-xs" x-text="d.substring(5,10)"></th>
+                            <!-- kalau mau cuma hari nya:
+                        <th class="border px-2 py-1" x-text="d.substring(8,10)"></th>
+                        -->
+                        </template>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="row in dataSearch" :key="row.product_id + '-' + row.line_id">
+                        <tr>
+                            <!-- value tetap -->
+                            <td class="border px-2 py-1" x-text="row.line_id"></td>
+                            <td class="border px-2 py-1" x-text="row.product_id"></td>
+                            <td class="border px-2 py-1 sticky left-0 z-20 bg-white " x-text="row.product_no"></td>
+                            <td class="border px-2 py-1" x-text="row.dc"></td>
+                            <td class="border px-2 py-1" x-text="row.smh"></td>
+                            <td class="border px-2 py-1" x-text="row.customer"></td>
+                            <td class="border px-2 py-1" x-text="row.remain"></td>
+
+                            <!-- value tanggal dinamis -->
+                            <template x-for="d in totalHari" :key="d">
+                                <td class="border px-2 py-1 text-xs" x-text="row[d] ?? ''"></td>
+                            </template>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
         </div>
     </div>
 

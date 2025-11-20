@@ -155,6 +155,33 @@ class AssyUpload extends Component
         return "Telah diproses {$processed} dari {$totalData} data ({$percent}%)";
     }
 
+    public function getLineCode()
+    {
+        $line = DB::connection("it")->table("PRS_Master_Line")->select("Line")->get();
+        return $line;
+    }
+
+    public function searching($productNo, $line, $y, $b)
+    {
+        $periode = $y . $b;
+        $data    = DB::connection('it')->select(
+            "SET NOCOUNT ON;
+            EXEC sp_Assy_daily_Plan ?, ?, ?, ?, ?, ?, ?, ?, ?",
+            [
+                'pivot',
+                0,
+                $periode,
+                $line,
+                $productNo,
+                '',
+                '',
+                0,
+                ''
+            ]
+        );
+        return $data;
+    }
+
     public function render()
     {
         return view('livewire.menu.assy-upload');
