@@ -50,7 +50,7 @@
             denyButtonText: `Don't save`
         }).then((result) => {
             if (result.isConfirmed) {
-                if(Number(result.value) > Number(data.picking_qty)){
+                if (Number(result.value) > Number(data.picking_qty)) {
                     return Swal.fire({
                         timer: 1000,
                         title: 'Melebihi qty picking',
@@ -256,7 +256,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="(p,i) in listMaterial" :key="p.material_no + p.serial_no">
+                            <template x-for="(p,i) in listMaterial" :key="p.material_no + p.serial_no + i">
                                 <tr class=" border rounded dark:border-gray-700 ">
                                     <th scope="row"
                                         class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white h-5"
@@ -304,7 +304,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="(p,i) in listMaterial" :key="p.material_no + p.serial_no">
+                            <template x-for="(p,i) in listMaterial" :key="p.material_no + p.serial_no + i">
                                 <tr class=" border rounded dark:border-gray-700"
                                     :class="p.counter == p.picking_qty ? 'bg-green-300 dark:bg-green-500' :
                                         p.counter > p.picking_qty ? 'bg-amber-400' : 'bg-red-300 dark:bg-red-500'">
