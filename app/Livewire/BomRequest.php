@@ -48,7 +48,7 @@ class BomRequest extends Component
         $listData = DB::table('db_bantu.dbo.bom as b')
             ->selectRaw("product_no,dc,material_no,matl_nm,bom_qty")
             ->leftJoin('pt_kias.dbo.material_mst as m', 'b.material_no', '=', 'm.matl_no')
-            ->whereRaw("product_no LIKE ?", ["%{$no[0]}%"])
+            ->whereRaw("TRIM(REPLACE(product_no, ' ', '')) LIKE ?", ["%{$no[0]}%"])
             ->whereRaw("dc LIKE ?", ["%{$no[1]}%"])
             ->get();
 

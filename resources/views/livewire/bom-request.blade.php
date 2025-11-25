@@ -9,9 +9,9 @@
     listData.forEach(row => {
         row.qty_request = Math.ceil(qtyRequest * row.bom_qty)
     });
-    console.log(listData);
+    {{-- console.log(listData); --}}
     inputDisable.pm = true
-});" x-data="{
+}, 550);" x-data="{
     canReset: false,
     inputDisable: {
         line: false,
@@ -25,7 +25,7 @@
     lineCode: null,
     qtyRequest: null,
     date: null,
-    selected: new Set(),
+    selected: {},
     showAlert(message, timer = null, icon = 'warning', title = 'Perhatian') {
         Swal.fire({
             title: title,
@@ -40,30 +40,45 @@
         return `${row.product_no}|${row.material_no}`;
     },
     isSelected(row) {
-        return this.selected.has(this.rowKey(row));
+        return this.rowKey(row) in this.selected;
     },
     get allSelected() {
         return this.listData.length > 0 && this.selected.size === this.listData.length;
     },
-
+    selectedRows() {
+        return Object.values(this.selected);
+    },
     toggleRow(row, checked) {
         const key = this.rowKey(row);
-        if (checked) this.selected.add(key);
-        else this.selected.delete(key);
+        if (checked) {
+            this.selected[key] = { ...row };
+            this.listData = this.listData.filter(r => this.rowKey(r) !== key);
+        } else {
+            delete this.selected[key];
+            this.listData.unshift(row);
+        }
 
-        this.selected = new Set(this.selected);
-        console.log('toggle', this.selected);
+        {{-- console.log('toggle', this.selected); --}}
 
     },
     toggleAll(checked) {
         if (checked) {
-            this.listData.forEach(r => this.selected.add(this.rowKey(r)));
+            this.listData.forEach(row => {
+                const key = this.rowKey(row);
+                this.selected[key] = { ...row };
+            });
+
+            this.listData = [];
         } else {
-            this.selected.clear();
+            this.listData = [
+                ...Object.values(this.selected),
+                ...this.listData
+            ];
+
+            this.selected = {};
         }
 
-        this.selected = new Set(this.selected);
-        console.log(this.selected);
+        {{-- console.log(this.selected); --}}
     },
 
     resetInput() {
@@ -81,12 +96,26 @@
             pm: false
         }
     },
-    selectedProduct() {
-        this.inputDisable.line = true;
-        this.inputDisable.date = true;
-        this.inputDisable.qty = true;
-        this.isLoading = true;
-        this.canReset = true;
+    selectedProduct(v) {
+        {{-- console.log(v.target.value, v.target.value.length) --}}
+        if (v.target.value.length > 7) {
+            this.inputDisable.line = true;
+            this.inputDisable.date = true;
+            this.inputDisable.qty = true;
+            this.isLoading = true;
+            this.canReset = true;
+        }
+    },
+    addPM() {
+        $dispatch('reset-product-model');
+        this.listData = [];
+        {{-- console.log(this.selected, this.selectedRows().length); --}}
+        this.inputDisable = {
+            line: true,
+            date: true,
+            qty: true,
+            pm: false
+        }
     },
     editQty(data) {
         Swal.fire({
@@ -113,7 +142,7 @@
 
         }).then((result) => {
             qtyInput = Number(result.value[0])
-            console.log(qtyInput, result.value)
+            {{-- console.log(qtyInput, result.value) --}}
             if (result.isConfirmed) {
                 if (qtyInput !== 0) {
                     data.qty_request = parseInt(qtyInput);
@@ -151,11 +180,8 @@
         return false;
     }, --}}
     submitData() {
-        const keys = Array.from(this.selected);
-        const picked = this.listData
-            .filter(r => keys.includes(this.rowKey(r)));
-        console.log('Selected rows:', picked);
-        if (picked.length == 0) {
+        {{-- console.log(this.selectedRows()); --}}
+        if (this.selectedRows().length == 0) {
             return this.showAlert('Pilih data terlebih dahulu');
         }
 
@@ -169,7 +195,7 @@
             behavior: 'smooth'
         });
         this.isLoading = true;
-        @this.call('submitData', { data: picked, lineCode: this.lineCode, qtyRequest: this.qtyRequest, date: this.date }).then((data) => {
+        @this.call('submitData', { data: this.selectedRows(), lineCode: this.lineCode, qtyRequest: this.qtyRequest, date: this.date }).then((data) => {
             if (data.success) {
                 this.isLoading = false;
                 this.resetInput();
@@ -229,15 +255,20 @@
 
             </div>
             <x-search-dropdown :method="'searchPM'" :onSelect="'selectPM'" :label="'Product Model'" :resetEvent="'reset-product-model'" :field="'product_no'"
-                x-bind:disabled="inputDisable.pm" @change="selectedProduct()"
+                x-bind:disabled="inputDisable.pm" @change.debounce.200ms="selectedProduct($event)"
                 x-bind:class="{ 'bg-gray-100 text-gray-800': inputDisable.pm, 'bg-white text-black': !inputDisable.pm }" />
         </div>
 
         <div class="flex justify-end items-center">
             <template x-if="!isLoading">
-                <button x-show="canReset" @click="resetInput()" class="mt-2 bg-red-500 text-white px-3 py-1 rounded">
-                    Reset
-                </button>
+                <div x-show="canReset">
+                    <button @click="addPM()" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded">
+                        Tambah Product Model
+                    </button>
+                    <button @click="resetInput()" class="mt-2 bg-red-500 text-white px-3 py-1 rounded">
+                        Reset
+                    </button>
+                </div>
             </template>
         </div>
     </div>
@@ -254,7 +285,7 @@
         Load Data...
     </div>
 
-    <div x-show="listData.length > 0">
+    <div x-show="listData.length > 0 || selectedRows().length > 0">
         <h3 class="text-lg font-medium mb-3">Preview Data:</h3>
         <div class="overflow-x-auto border rounded-lg">
             <table class="min-w-full divide-y divide-gray-200">
@@ -281,7 +312,27 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <template x-for="(row, index) in listData" :key="rowKey(row)">
+                    <template x-for="(row, index) in selectedRows()" :key="index + index + rowKey(row)">
+                        <tr>
+                            <td class="px-4 py-2">
+                                <input type="checkbox" :checked="isSelected(row)"
+                                    @change="toggleRow(row, $event.target.checked)">
+                            </td>
+
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="row.product_no" />
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="row.dc" />
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="row.material_no" />
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="row.matl_nm" />
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="row.bom_qty" />
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="row.qty_request" />
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                <button @click="editQty(row)" class="bg-green-500 text-white px-3 py-1 rounded">
+                                    Edit Qty
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                    <template x-for="(row, index) in listData" :key="rowKey(row) + index">
                         <tr>
                             <td class="px-4 py-2">
                                 <input type="checkbox" :checked="isSelected(row)"
