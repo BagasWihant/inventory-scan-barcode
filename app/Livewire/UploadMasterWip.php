@@ -34,7 +34,7 @@ class UploadMasterWip extends Component
                 continue;
             $unix = ($value['tanggal'] - 25569) * 86400;
             $date = date('Y-m-d', $unix);
-            Log::debug('insert'.json_encode($value));
+            
             DB::table('master_wip')->insert([
                 'model'      => $value['model'],
                 'dc'         => $value['dc'],
