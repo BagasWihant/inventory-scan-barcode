@@ -268,6 +268,7 @@
                         if (data.success) {
                             alert(data.message, 'success', false);
                             this.reset();
+                            window.location.reload()
                         }
                     });
                 }

@@ -80,19 +80,35 @@ class UploadBom extends Component
     public function saveBom($data)
     {
         foreach ($data as $d) {
-            DB::table('db_bantu.dbo.bom')->updateOrInsert(
-                [
-                    'product_no'  => $this->product_no,
-                    'dc'          => $this->dc,
+
+            $row = DB::table('db_bantu.dbo.bom')
+                ->where('product_no', $this->product_no)
+                ->where('dc', $this->dc)
+                ->where('material_no', (string) $d['material_no'])
+                ->orderBy('id') 
+                ->first();
+
+            if ($row) {
+                // UPDATE 
+                DB::table('db_bantu.dbo.bom')
+                    ->where('id', $row->id)
+                    ->update([
+                        'bom_qty' => $d['bom_qty'],
+                        'status' => 1,
+                        'updated_at' => now(),
+                    ]);
+            } else {
+                // INSERT
+                DB::table('db_bantu.dbo.bom')->insert([
+                    'product_no' => $this->product_no,
+                    'dc' => $this->dc,
                     'material_no' => (string) $d['material_no'],
-                ],
-                [
-                    'bom_qty'    => $d['bom_qty'],
+                    'bom_qty' => $d['bom_qty'],
+                    'status' => 1,
                     'created_at' => now(),
                     'updated_at' => now(),
-                    'status'     => 1,
-                ]
-            );
+                ]);
+            }
         }
     }
 }
