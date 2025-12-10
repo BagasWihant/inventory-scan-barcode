@@ -145,14 +145,15 @@
             });
         }
 
-        this.listMaterial[idx].counter += Number(this.listMaterial[idx].picking_qty);
-
-
-        {{-- ini ynag mindah ke atas --}}
+        {{-- pindah ning duwur sik lagi update, soale ketimpa data ne --}}
         if (idx > 0) {
             const [hit] = this.listMaterial.splice(idx, 1);
             this.listMaterial.unshift(hit);
+            console.log('aku', hit);
         }
+
+        {{-- lagi update sing paling duwur --}}
+        this.listMaterial[0].counter += Number(this.listMaterial[0].picking_qty);
 
         console.log('semua material', this.listMaterial);
 
@@ -318,7 +319,7 @@
                                     :class="p.counter == p.picking_qty ? 'bg-green-300 dark:bg-green-500' :
                                         p.counter > p.picking_qty ? 'bg-amber-400' : 'bg-red-300 dark:bg-red-500'">
                                     <th class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white h-5"
-                                        x-text="p.material_no" />
+                                        x-text="p.material_no +'|'+ p.kit_no +'|'+ i +'|'+ p.counter +'|'+ p.picking_qty" />
                                     <th class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                                         x-text="p.counter" />
                                     <th class="p-3 font-medium text-gray-900 whitespace-nowrap dark:text-white"
