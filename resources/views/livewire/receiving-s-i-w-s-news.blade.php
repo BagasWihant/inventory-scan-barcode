@@ -92,12 +92,14 @@
             lineCode = this.produkBarcode.slice(19, 23); // 4 char
             const chunk = this.produkBarcode.slice(23, 36); // 13 char
             barcode = chunk.endsWith('T') ? chunk : chunk.slice(0, 12);
+            kitno = ''; // sing iki durung ngerti kitno
         }
 
         if (firstText === 'm') {
             // K21759769242166XH872702250001
             lineCode = this.produkBarcode.slice(15, 19); // 4 char
             barcode = this.produkBarcode.slice(7, 15); // 8 char
+            kitno = this.produkBarcode.slice(0, 7); // 7 char
         }
 
 
@@ -116,28 +118,35 @@
             });
         }
 
-        this.findAndUpdate(column, barcode, lineCode)
+        this.findAndUpdate(column, barcode, lineCode, kitno)
         this.produkBarcode = null
         this.$refs.produkBarcode.focus();
 
     },
-    findAndUpdate(column, barcode, lineCode) {
+    findAndUpdate(column, barcode, lineCode, kitno) {
         const norm = v => String(v ?? '').trim();
-
         const idx = this.listMaterial.findIndex(r =>
             norm(r[column]) === norm(barcode) &&
-            norm(r.line_c) === norm(lineCode)
+            norm(r.line_c) === norm(lineCode) &&
+            (kitno === '' || norm(r.kit_no) === norm(kitno))
         );
+        
+
+        if (idx < 0) {
+            this.produkBarcode = null
+            this.$refs.produkBarcode.focus();
+
+            return Swal.fire({
+                timer: 1000,
+                title: 'Tidak ditemukan',
+                icon: 'error',
+                showConfirmButton: false,
+                timerProgressBar: true,
+            });
+        }
 
         this.listMaterial[idx].counter += Number(this.listMaterial[idx].picking_qty);
 
-        console.log({
-            'column': column,
-            'lineCode': lineCode,
-            'arcode': barcode,
-            'material': this.listMaterial[idx],
-            'idx': idx
-        });
 
         {{-- ini ynag mindah ke atas --}}
         if (idx > 0) {
