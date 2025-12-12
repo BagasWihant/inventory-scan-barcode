@@ -66,6 +66,7 @@ Route::middleware(['auth', 'updateActivity'])->group(function () {
     Route::get('receiving-rack', fn() => view('pages.receiving-rack'))->name('receiving-rack');
 
     Route::get('upload-master-wip', fn() => view('pages.upload-master-wip'))->name('up-master-wip');
+    Route::get('supply-plan-cnc', fn() => view('pages.supply-plan-cnc'))->name('supply-plan-cnc');
 });
 
 Route::controller(InventoryInController::class)->group(function () {
