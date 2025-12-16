@@ -59,13 +59,17 @@ class SupplyPlanCnc extends Component
         $limit  = $this->materialNo ? 1 : $this->perPage;
 
         $paginator = DB::table('material_mst')
-                         ->select('matl_no')
+                         ->select(['matl_no', 'qty'])
                          ->when($this->materialNo, function ($query) {
                              $query->where('matl_no', $this->materialNo);
                          })
                          ->whereNotNull('loc_cd')
                          ->where('loc_cd', '!=', '')
                          ->paginate(perPage: $limit, columns: ['*'], page: $this->currentPage);
+
+        $dataMst = $paginator->getCollection()
+                             ->keyBy('matl_no')
+                             ->toArray();
 
         $master_material = $paginator->getCollection()->pluck('matl_no')->map(function ($v) {
             return trim($v);
@@ -74,8 +78,8 @@ class SupplyPlanCnc extends Component
         $this->lastPage = $paginator->lastPage();
 
         if (empty($master_material)) {
-            $this->dataJson  = [];
-            $this->tanggal   = [];
+            $this->dataJson = [];
+            $this->tanggal  = [];
             return;
         }
 
@@ -91,6 +95,7 @@ class SupplyPlanCnc extends Component
                        ->get();
 
         $receiving = DB::table('material_in_stock')
+                         ->selectRaw('material_no, picking_qty, created_at')
                          ->whereBetween('created_at', [$this->datestart, $endSql])
                          ->whereIn(DB::raw("REPLACE(material_no, ' ', '')"), $master_material)
                          ->get();
@@ -112,7 +117,7 @@ class SupplyPlanCnc extends Component
                 'material_no' => $m,
                 'product_no'  => '',
                 'dc'          => '',
-                'qty_wip'     => 0,
+                'qty_mst'     => $dataMst[$m]->qty,
                 'tanggal'     => []
             ];
 
@@ -132,7 +137,6 @@ class SupplyPlanCnc extends Component
             if (isset($finalData[$mat])) {
                 $finalData[$mat]['product_no']                    = $row->product_no ?? '';
                 $finalData[$mat]['dc']                            = $row->dc ?? '';
-                $finalData[$mat]['qty_wip']                       = $row->qty ?? 0;
                 $finalData[$mat]['tanggal'][$row->tanggal]['wip'] = (array) $row;
             }
         }
@@ -141,7 +145,11 @@ class SupplyPlanCnc extends Component
             $date = Carbon::parse($r->created_at)->format('Y-m-d');
             $mat  = str_replace(' ', '', $r->material_no);
             if (isset($finalData[$mat]['tanggal'][$date])) {
-                $finalData[$mat]['tanggal'][$date]['receiving'] = $r;
+                if (isset($finalData[$mat]['tanggal'][$date]['receiving'])) {
+                    $finalData[$mat]['tanggal'][$date]['receiving']->picking_qty += $r->picking_qty;
+                } else {
+                    $finalData[$mat]['tanggal'][$date]['receiving'] = $r;
+                }
             }
         }
 
@@ -149,7 +157,11 @@ class SupplyPlanCnc extends Component
             $date = Carbon::parse($s->created_at)->format('Y-m-d');
             $mat  = str_replace(' ', '', $s->material_no);
             if (isset($finalData[$mat]['tanggal'][$date])) {
-                $finalData[$mat]['tanggal'][$date]['supply'] = $s;
+                if (isset($finalData[$mat]['tanggal'][$date]['supply'])) {
+                    $finalData[$mat]['tanggal'][$date]['supply']->qty += $s->qty;
+                } else {
+                    $finalData[$mat]['tanggal'][$date]['supply'] = $s;
+                }
             }
         }
 
@@ -161,7 +173,7 @@ class SupplyPlanCnc extends Component
             }
         }
 
-        $this->dataJson  = $finalData;
+        $this->dataJson = $finalData;
     }
 
     private function hitungStokCNC($item, $currentDate, $index, $dates)

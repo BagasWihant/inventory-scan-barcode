@@ -96,15 +96,15 @@
                                 @if ($index === 0)
                                     <td rowspan="5"
                                         class="border-t-2 border-b-2 border-b-black border-t-black border border-slate-300 px-2 py-1">
-                                        {{ $item['qty_wip'] }}
+                                        {{ $item['qty_mst'] }}
                                     </td>
                                 @endif
                                 {{-- tipe --}}
                                 <td
                                     class="border px-2 py-1 bg-yellow-200 
-                                    @if ($rowType === 'receiving') border-t-2 border-t-black border border-slate-300
-                                    @elseif(in_array($rowType, ['supply', 'plan_cnc', 'stock_cnc'])) border-slate-300 border
-                                    @elseif($rowType === 'stock_mc') border-b-2 border-b-black border-slate-300 border @endif">
+                                    @if ($rowType === 'receiving') border-t-2 border-t-black border-slate-300
+                                    @elseif(in_array($rowType, ['supply', 'plan_cnc', 'stock_cnc'])) border-slate-300
+                                    @elseif($rowType === 'stock_mc') border-b-2 border-b-black border-slate-300 @endif">
                                     <b>{{ $rowLabels[$rowType] }}</b>
                                 </td>
 
@@ -112,9 +112,9 @@
                                 @foreach ($tanggal as $d)
                                     <td
                                         class="border px-2 py-1
-                                        @if ($rowType === 'receiving') border-t-2 border-t-black border border-slate-300
-                                        @elseif(in_array($rowType, ['supply', 'plan_cnc', 'stock_cnc'])) border-slate-300 border
-                                        @elseif($rowType === 'stock_mc') border-b-2 border-b-black border-slate-300 border @endif">
+                                        @if ($rowType === 'receiving') border-t-2 border-t-black border-slate-300
+                                        @elseif(in_array($rowType, ['supply', 'plan_cnc', 'stock_cnc'])) border-slate-300
+                                        @elseif($rowType === 'stock_mc') border-b-2 border-b-black border-slate-300 @endif">
                                         @php
                                             $dataToday = $item['tanggal'][$d] ?? [];
                                             $value = '-';
