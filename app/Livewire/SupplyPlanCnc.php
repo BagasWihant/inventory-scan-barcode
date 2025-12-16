@@ -21,7 +21,6 @@ class SupplyPlanCnc extends Component
     public $lastPage    = 1;
     public $perPage     = 5;
 
-
     public function mount()
     {
         $this->today = date('Y-m-d');
@@ -56,7 +55,6 @@ class SupplyPlanCnc extends Component
 
     public function loadData()
     {
-
         $endSql = date('Y-m-d', strtotime($this->dateend) + 1 * 24 * 60 * 60);
         $limit  = $this->materialNo ? 1 : $this->perPage;
 
@@ -65,6 +63,8 @@ class SupplyPlanCnc extends Component
                          ->when($this->materialNo, function ($query) {
                              $query->where('matl_no', $this->materialNo);
                          })
+                         ->whereNotNull('loc_cd')
+                         ->where('loc_cd', '!=', '')
                          ->paginate(perPage: $limit, columns: ['*'], page: $this->currentPage);
 
         $master_material = $paginator->getCollection()->pluck('matl_no')->map(function ($v) {
