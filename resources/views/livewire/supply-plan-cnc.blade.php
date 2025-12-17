@@ -120,9 +120,9 @@
                                             $value = '-';
 
                                             if ($rowType === 'receiving') {
-                                                $value = $dataToday['receiving']->picking_qty ?? '-';
+                                                $value = $dataToday['receiving']['picking_qty'] ?? '-';
                                             } elseif ($rowType === 'supply') {
-                                                $value = $dataToday['supply']->qty ?? '-';
+                                                $value = $dataToday['supply']['qty'] ?? '-';
                                             } elseif ($rowType === 'plan_cnc') {
                                                 if (!empty($dataToday['wip'])) {
                                                     $qty = $dataToday['wip']['qty'] ?? 0;

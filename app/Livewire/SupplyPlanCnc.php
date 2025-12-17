@@ -117,7 +117,7 @@ class SupplyPlanCnc extends Component
                 'material_no' => $m,
                 'product_no'  => '',
                 'dc'          => '',
-                'qty_mst'     => $dataMst[$m]->qty,
+                'qty_mst'     => 0,
                 'tanggal'     => []
             ];
 
@@ -144,11 +144,15 @@ class SupplyPlanCnc extends Component
         foreach ($receiving as $r) {
             $date = Carbon::parse($r->created_at)->format('Y-m-d');
             $mat  = str_replace(' ', '', $r->material_no);
+
             if (isset($finalData[$mat]['tanggal'][$date])) {
+
+                $finalData[$mat]['qty_mst'] += $r->picking_qty;
+
                 if (isset($finalData[$mat]['tanggal'][$date]['receiving'])) {
-                    $finalData[$mat]['tanggal'][$date]['receiving']->picking_qty += $r->picking_qty;
+                    $finalData[$mat]['tanggal'][$date]['receiving']['picking_qty'] += $r->picking_qty;
                 } else {
-                    $finalData[$mat]['tanggal'][$date]['receiving'] = $r;
+                    $finalData[$mat]['tanggal'][$date]['receiving'] = (array) $r;
                 }
             }
         }
@@ -156,11 +160,15 @@ class SupplyPlanCnc extends Component
         foreach ($supply as $s) {
             $date = Carbon::parse($s->created_at)->format('Y-m-d');
             $mat  = str_replace(' ', '', $s->material_no);
+
             if (isset($finalData[$mat]['tanggal'][$date])) {
+
+                $finalData[$mat]['qty_mst'] -= $s->qty;
+
                 if (isset($finalData[$mat]['tanggal'][$date]['supply'])) {
-                    $finalData[$mat]['tanggal'][$date]['supply']->qty += $s->qty;
+                    $finalData[$mat]['tanggal'][$date]['supply']['qty'] += $s->qty;
                 } else {
-                    $finalData[$mat]['tanggal'][$date]['supply'] = $s;
+                    $finalData[$mat]['tanggal'][$date]['supply'] = (array) $s;
                 }
             }
         }
