@@ -42,7 +42,7 @@
             @endif
         </div>
     </div>
-    
+
     <div x-show="isLoading" x-cloak class="flex flex-col items-center justify-center gap-2 mt-7">
         <svg class="animate-spin h-10 w-10 text-black" xmlns="http://www.w3.org/2000/svg" fill="none"
             viewBox="0 0 24 24">
@@ -62,6 +62,7 @@
                         <th class="border border-slate-400 px-2 py-1 w-32 break-words">Material</th>
                         <th class="border border-slate-400 px-2 py-1 w-16 break-words">Stok Actual</th>
                         <th class="border border-slate-400 px-2 py-1 w-20">Type</th>
+                        <th class="border border-slate-400 px-2 py-1 w-20">Data Awal</th>
                         @foreach ($tanggal as $d)
                             <th
                                 class="border border-slate-400 px-2 py-1 w-14 break-words text-xs {{ $d == $today ? 'bg-blue-400 font-bold text-white' : '' }}">
@@ -108,6 +109,28 @@
                                     <b>{{ $rowLabels[$rowType] }}</b>
                                 </td>
 
+                                {{-- Total data sebelum tanggal awal --}}
+                                <td
+                                    class="border px-2 py-1 bg-yellow-200 
+                                    @if ($rowType === 'receiving') border-t-2 border-t-black border-slate-300
+                                    @elseif(in_array($rowType, ['supply', 'plan_cnc', 'stock_cnc'])) border-slate-300
+                                    @elseif($rowType === 'stock_mc') border-b-2 border-b-black border-slate-300 @endif">
+                                    @php
+                                        $dataToday = $item['tanggal'][$d] ?? [];
+                                        $value = '-';
+
+                                        if ($rowType === 'receiving') {
+                                            $value = $item['receive_init'] ?? '-';
+                                        } elseif ($rowType === 'supply') {
+                                            $value = $item['supply_init'] ?? '-';
+                                        } elseif ($rowType === 'stock_mc') {
+                                            $value = $item['mc_init'] ;
+                                        }
+
+                                    @endphp
+                                    {{ $value }}
+                                </td>
+
                                 {{-- tanggale --}}
                                 @foreach ($tanggal as $d)
                                     <td
@@ -134,6 +157,7 @@
                                             } elseif ($rowType === 'stock_mc') {
                                                 $value = $dataToday['stock_mc'] ?? '-';
                                             }
+
                                         @endphp
                                         {{ $value }}
                                     </td>

@@ -29,10 +29,10 @@ class SupplyPlanCnc extends Component
     public function searchMaterial($key)
     {
         return DB::table('material_mst')
-                   ->selectRaw('matl_no,id')
-                   ->where('matl_no', 'like', '%' . $key . '%')
-                   ->limit(4)
-                   ->get();
+            ->selectRaw('matl_no,id')
+            ->where('matl_no', 'like', '%' . $key . '%')
+            ->limit(4)
+            ->get();
     }
 
     public function selectMaterial($data)
@@ -59,17 +59,18 @@ class SupplyPlanCnc extends Component
         $limit  = $this->materialNo ? 1 : $this->perPage;
 
         $paginator = DB::table('material_mst')
-                         ->select(['matl_no', 'qty'])
-                         ->when($this->materialNo, function ($query) {
-                             $query->where('matl_no', $this->materialNo);
-                         })
-                         ->whereNotNull('loc_cd')
-                         ->where('loc_cd', '!=', '')
-                         ->paginate(perPage: $limit, columns: ['*'], page: $this->currentPage);
+            ->select(['matl_no', 'qty'])
+            ->when($this->materialNo, function ($query) {
+                $query->where('matl_no', $this->materialNo);
+            })
+            ->whereNotNull('loc_cd')
+            ->where('loc_cd', '!=', '')
+            ->paginate(perPage: $limit, columns: ['*'], page: $this->currentPage);
 
-        $dataMst = $paginator->getCollection()
-                             ->keyBy('matl_no')
-                             ->toArray();
+        $dataMst = $paginator
+            ->getCollection()
+            ->keyBy('matl_no')
+            ->toArray();
 
         $master_material = $paginator->getCollection()->pluck('matl_no')->map(function ($v) {
             return trim($v);
@@ -84,41 +85,73 @@ class SupplyPlanCnc extends Component
         }
 
         $bom_wip = DB::table('master_wip as w')
-                       ->selectRaw("REPLACE(CONCAT(b.product_no,'_',b.dc), ' ', '') AS p_no,
+            ->selectRaw("REPLACE(CONCAT(b.product_no,'_',b.dc), ' ', '') AS p_no,
                 TRIM(REPLACE(b.material_no, ' ', '')) as material_no,
                 b.product_no, b.dc, b.bom_qty, w.qty, w.tanggal, (w.qty * b.bom_qty) as final_qty")
-                       ->leftJoin('db_bantu.dbo.bom as b', function ($join) {
-                           $join->on('w.model', '=', 'b.product_no')
-                                ->on('w.dc', '=', 'b.dc');
-                       })
-                       ->whereIn('b.material_no', $master_material)
-                       ->get();
+            ->leftJoin('db_bantu.dbo.bom as b', function ($join) {
+                $join
+                    ->on('w.model', '=', 'b.product_no')
+                    ->on('w.dc', '=', 'b.dc');
+            })
+            ->whereIn('b.material_no', $master_material)
+            ->get();
 
         $receiving = DB::table('material_in_stock')
-                         ->selectRaw('material_no, picking_qty, created_at')
-                         ->whereBetween('created_at', [$this->datestart, $endSql])
-                         ->whereIn(DB::raw("REPLACE(material_no, ' ', '')"), $master_material)
-                         ->get();
+            ->selectRaw('material_no, picking_qty, created_at')
+            ->whereBetween('created_at', [$this->datestart, $endSql])
+            ->whereIn(DB::raw("REPLACE(material_no, ' ', '')"), $master_material)
+            ->get();
 
         $supply = DB::table('setup_dtl')
-                      ->whereBetween('created_at', [$this->datestart, $endSql])
-                      ->whereIn(DB::raw("REPLACE(material_no, ' ', '')"), $master_material)
-                      ->get();
+            ->whereBetween('created_at', [$this->datestart, $endSql])
+            ->whereIn(DB::raw("REPLACE(material_no, ' ', '')"), $master_material)
+            ->get();
+
+        $initialReceiving = DB::table("material_in_stock")
+            ->selectRaw("sum(picking_qty) as qty,TRIM(REPLACE(material_no, ' ', '')) as material_no")
+            ->whereIn('material_no', $master_material)
+            ->whereBetween('created_at', ['2024-07-01', $this->datestart])
+            ->groupBy('material_no')
+            ->get()
+            ->keyBy('material_no')
+            ->toArray();
+
+        $query1 = DB::table('dtl_transaction as a')
+            ->selectRaw("TRIM(REPLACE(a.part_number, ' ', '')) as material_no,SUM(qty_mc) as qty")
+            ->whereIn('a.part_number', $master_material)
+            ->groupBy('a.part_number');
+
+        $query2 = DB::table('Setup_dtl as a')
+            ->leftJoin('Setup_mst as b', 'b.id', '=', 'a.setup_id')
+            ->selectRaw("TRIM(REPLACE(a.material_no, ' ', '')) as material_no, SUM(qty) as Qty")
+            ->whereIn('a.material_no', $master_material)
+            ->whereNotNull('b.finished_at')
+            ->groupBy('a.material_no');
+
+        $initialSupply = $query1
+            ->unionAll($query2)
+            ->get()
+            ->keyBy('material_no')
+            ->toArray();
 
         $dates = [];
         for ($date = Carbon::parse($this->datestart); $date->lte($this->dateend); $date->addDay()) {
             $dates[] = $date->format('Y-m-d');
         }
         $this->tanggal = $dates;
+        $firstDate     = $dates[0];
 
         $finalData = [];
         foreach ($master_material as $m) {
             $finalData[$m] = [
-                'material_no' => $m,
-                'product_no'  => '',
-                'dc'          => '',
-                'qty_mst'     => 0,
-                'tanggal'     => []
+                'material_no'  => $m,
+                'product_no'   => '',
+                'dc'           => '',
+                'qty_mst'      => $dataMst[$m]->qty,
+                'receive_init' => $initialReceiving[$m]->qty,
+                'supply_init' => $initialSupply[$m]->qty,
+                'mc_init'      => $initialReceiving[$m]->qty - $initialSupply[$m]->qty,
+                'tanggal'      => []
             ];
 
             foreach ($dates as $d) {
@@ -146,9 +179,6 @@ class SupplyPlanCnc extends Component
             $mat  = str_replace(' ', '', $r->material_no);
 
             if (isset($finalData[$mat]['tanggal'][$date])) {
-
-                $finalData[$mat]['qty_mst'] += $r->picking_qty;
-
                 if (isset($finalData[$mat]['tanggal'][$date]['receiving'])) {
                     $finalData[$mat]['tanggal'][$date]['receiving']['picking_qty'] += $r->picking_qty;
                 } else {
@@ -163,8 +193,6 @@ class SupplyPlanCnc extends Component
 
             if (isset($finalData[$mat]['tanggal'][$date])) {
 
-                $finalData[$mat]['qty_mst'] -= $s->qty;
-
                 if (isset($finalData[$mat]['tanggal'][$date]['supply'])) {
                     $finalData[$mat]['tanggal'][$date]['supply']['qty'] += $s->qty;
                 } else {
@@ -175,21 +203,21 @@ class SupplyPlanCnc extends Component
 
         foreach ($finalData as $materialNo => &$item) {
             foreach ($dates as $index => $currentDate) {
-                $item['tanggal'][$currentDate]['stock_cnc'] = $this->hitungStokCNC($item, $currentDate, $index, $dates);
+                $item['tanggal'][$currentDate]['stock_cnc'] = $this->hitungStokCNC($item, $currentDate, $index, $dates, $firstDate);
 
-                $item['tanggal'][$currentDate]['stock_mc'] = $this->hitungStokMC($item, $currentDate, $index, $dates);
+                $item['tanggal'][$currentDate]['stock_mc'] = $this->hitungStokMC($item, $currentDate, $index, $dates, $firstDate);
             }
         }
 
         $this->dataJson = $finalData;
     }
 
-    private function hitungStokCNC($item, $currentDate, $index, $dates)
+    private function hitungStokCNC($item, $currentDate, $index, $dates, $firstDate = null)
     {
         $dataToday = $item['tanggal'][$currentDate] ?? [];
 
         if ($index === 0) {
-            $supply = $dataToday['supply']->qty ?? 0;
+            $supply = $dataToday['supply']['qty'] ?? 0;
             $wip    = $dataToday['wip']['final_qty'] ?? 0;
             return $supply - $wip;
         }
@@ -198,28 +226,28 @@ class SupplyPlanCnc extends Component
         $dataKemarin      = $item['tanggal'][$kemarin] ?? [];
         $stok_cnc_kemarin = $dataKemarin['stock_cnc'] ?? 0;
 
-        $supply = $dataToday['supply']->qty ?? 0;
+        $supply = $dataToday['supply']['qty'] ?? 0;
         $wip    = $dataToday['wip']['final_qty'] ?? 0;
 
         return $stok_cnc_kemarin + $supply - $wip;
     }
 
-    private function hitungStokMC($item, $currentDate, $index, $dates)
+    private function hitungStokMC($item, $currentDate, $index, $dates, $firstDate = null)
     {
         $dataToday = $item['tanggal'][$currentDate] ?? [];
 
         if ($index === 0) {
-            $recvqty = $dataToday['receiving']->picking_qty ?? 0;
-            $supqty  = $dataToday['supply']->qty ?? 0;
-            return $recvqty - $supqty;
+            $recvqty = $dataToday['receiving']['picking_qty'] ?? 0;
+            $supqty  = $dataToday['supply']['qty'] ?? 0;
+            return ($recvqty + $item['receive_init']) - ($supqty + $item['supply_init']);
         }
 
         $kemarin         = $dates[$index - 1];
         $dataKemarin     = $item['tanggal'][$kemarin] ?? [];
         $stok_mc_kemarin = $dataKemarin['stock_mc'] ?? 0;
 
-        $recvqty = $dataToday['receiving']->picking_qty ?? 0;
-        $supqty  = $dataToday['supply']->qty ?? 0;
+        $recvqty = $dataToday['receiving']['picking_qty'] ?? 0;
+        $supqty  = $dataToday['supply']['qty'] ?? 0;
 
         return $stok_mc_kemarin + $recvqty - $supqty;
     }
