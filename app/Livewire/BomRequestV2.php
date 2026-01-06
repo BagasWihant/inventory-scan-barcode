@@ -8,58 +8,47 @@ use Livewire\Component;
 
 class BomRequestV2 extends Component
 {
-    public $date;
     public $lineCode;
     public $lines = [];
 
     public function mount()
     {
-        $this->date = date('Y-m-d');
+        $this->lines = Cache::remember('linecode_bom_requestv2', 60 * 60 * 24, function () {
+            return DB::table('it.dbo.prs_master_line')
+                ->selectRaw('Line as location_cd, id')
+                ->get();
+        });
     }
 
-    public function getLineCode()
-    {
-        $this->lines = DB::table('it.dbo.prs_assy_daily_rev1_plan', 'p')
-            ->leftJoin('it.dbo.prs_master_line as l', 'p.line_id', '=', 'l.id')
-            ->where('tanggal', $this->date)
-            ->whereNotNull('p.line_id')
-            ->selectRaw('p.line_id, l.Line')
-            ->groupByRaw('p.line_id, l.Line')
-            ->get()
-            ->toArray();
-    }
-
-    public function showData($line_id, $date)
+    public function showData($line_id, $start, $end)
     {
         $plan = DB::table('it.dbo.prs_assy_daily_rev1_plan as p')
             ->join('it.dbo.prs_master_product as m', 'p.product_id', '=', 'm.id')
             ->where('p.line_id', $line_id)
-            ->where('p.tanggal', $date)
+            ->where('p.tanggal', '>=' ,$start)
+            ->where('p.tanggal', '<=' ,$end)
             ->selectRaw("p.product_id, p.planning, TRIM(REPLACE(m.product_no, ' ', '')) as product_no, m.dc")
             ->get();
 
-        $listData = []; 
-
+        $listData = [];
+        $qty_request = 0;
         foreach ($plan as $item) {
+            // jumlah qty request 
+            $qty_request += $item->planning;
             $bom = DB::table('db_bantu.dbo.bom as b')
                 ->leftJoin('pt_kias.dbo.material_mst as m', 'b.material_no', '=', 'm.matl_no')
                 ->whereRaw("TRIM(REPLACE(product_no, ' ', '')) LIKE ?", ["%{$item->product_no}%"])
                 ->whereRaw('dc LIKE ?', ["%{$item->dc}%"])
                 ->select('product_no', 'dc', 'material_no', 'matl_nm', 'bom_qty')
                 ->get()
-                ->map(function ($row) use ($item) {
-                    // Hitung qty_request 
-                    $row->qty_request = (int) ceil($item->planning * $row->bom_qty);
-                    return $row;
-                })
                 ->toArray();
-            // dump($bom,$item);
 
             $listData = array_merge($listData, $bom);
         }
         $this->dispatch(
             'product-model-selected',
-            data: $listData  
+            data: $listData,
+            qty_request: $qty_request,
         );
     }
 
