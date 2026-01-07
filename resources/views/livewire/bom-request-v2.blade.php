@@ -9,11 +9,13 @@
     search: '',
     currentPage: 1,
     perPage: 25,
+    plan: [],
 
     init() {
         window.addEventListener('product-model-selected', e => {
         console.log(e)
             this.listData = e.detail.data;
+            this.plan = e.detail.plan;
             this.selected.clear();
             this.currentPage = 1;
             this.isLoading = false;
@@ -24,9 +26,9 @@
         this.date_start = ''
         this.date_end = ''
         this.search = ''
-        this.selected = new Map(),
-        this.listData = [],
-        this.lineCode = '',
+        this.selected = new Map()
+        this.listData = []
+        this.lineCode = ''
     },
 
     get filteredData() {
@@ -99,12 +101,14 @@
 
     submit() {
         if (this.selected.size === 0) return Swal.fire('Error', 'Pilih material dulu!', 'error');
+        
 
         this.isLoading = true;
         this.$wire.submitData({
             data: Array.from(this.selected.values()),
             lineCode: this.lineCode,
-            date: this.date
+            date: this.date,
+            plan: this.plan,
         }).then(res => {
             this.isLoading = false;
             if (res.success) {
@@ -113,7 +117,7 @@
                 this.selected.clear();
             }
         });
-    }
+    },
 }">
     <div class="flex gap-4 bg-white p-4 rounded-lg shadow-sm mb-6 border">
         <div class="flex-col">

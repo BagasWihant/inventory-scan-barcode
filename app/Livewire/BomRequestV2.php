@@ -27,12 +27,12 @@ class BomRequestV2 extends Component
             ->where('p.line_id', $line_id)
             ->where('p.tanggal', '>=', $start)
             ->where('p.tanggal', '<=', $end)
-            ->selectRaw("TRIM(REPLACE(m.product_no, ' ', '')) as product_no, m.dc, SUM(p.planning) as total_planning")
-            ->groupBy('m.product_no', 'm.dc')  
+            ->selectRaw("TRIM(REPLACE(m.product_no, ' ', '')) as product_no, m.dc, SUM(p.planning) as total_planning, max(p.tanggal) as date")
+            ->groupBy('m.product_no', 'm.dc')
             ->get();
 
         $listData = [];
-        
+
         foreach ($plan as $item) {
             $bom = DB::table('db_bantu.dbo.bom as b')
                 ->leftJoin('pt_kias.dbo.material_mst as m', 'b.material_no', '=', 'm.matl_no')
@@ -48,14 +48,15 @@ class BomRequestV2 extends Component
                     'material_no' => $b->material_no,
                     'matl_nm' => $b->matl_nm,
                     'bom_qty' => $b->bom_qty,
-                    'qty_planing' => $item->total_planning, 
+                    'qty_planing' => $item->total_planning,
                     'qty_request' => (float) $b->bom_qty * (float) $item->total_planning
                 ];
             }
         }
         $this->dispatch(
             'product-model-selected',
-            data: $listData
+            data: $listData,
+            plan: $plan,
         );
     }
 
@@ -63,8 +64,7 @@ class BomRequestV2 extends Component
     {
         $data = $param['data'];
         $line = $param['lineCode'];
-        $qtyRequest = $param['qtyRequest'];
-        $date = $param['date'];
+        $plann = $param['plan'];
 
         $y = date('y');
         $getConfig = DB::table('WH_config')->select('value')->whereIn('config', ['BomRequest', 'PeriodBomRequest'])->get();
@@ -89,67 +89,69 @@ class BomRequestV2 extends Component
         // update nomor kit di config
         DB::table('WH_config')->where('config', 'BomRequest')->update(['value' => $noBomRequest]);
 
-        $cushdesc = explode('-', $this->dc);
         try {
             DB::beginTransaction();
-
-            // // insert mps
-            $mpsid = DB::table('mps')->insertGetId([
-                'product_no' => $this->product_no,
-                'cusdesch_c1' => $cushdesc[0],
-                'cusdesch_c2' => $cushdesc[1],
-                'cusdesch_c3' => $cushdesc[2],
-                'lot_no' => $qtyRequest,
-                'plan_issue_qty' => $qtyRequest,
-                'assy_section_cd' => $line,
-                'line_c' => $line,
-                'plan_issue_dt' => $date,
-                'issue_dt' => $date,
-                'entry_dt' => now(),
-                'entry_by' => auth()->user()->username,
-                'kit_no' => $kitNo
-            ]);
-
-            foreach ($data as $d) {
-                // lagi insert dengan nilai remain dan issue baru
-                $idDetail = DB::table('mps_detail')->insertGetId([
-                    'kit_no' => $kitNo,
-                    'material_no' => $d['material_no'],
-                    'req_bom' => $d['qty_request'],
-                    'issue_dt' => $date,
+            foreach ($plann as $v) {
+                $dc = explode('-', $v['dc']);
+                // // insert mps
+                $mpsid = DB::table('mps')->insertGetId([
+                    'product_no' => $v['product_no'],
+                    'cusdesch_c1' => $dc[0],
+                    'cusdesch_c2' => $dc[1],
+                    'cusdesch_c3' => $dc[2],
+                    'lot_no' => $v['qty_planning'],
+                    'plan_issue_qty' => $v['qty_planning'],
+                    'assy_section_cd' => $line,
+                    'line_c' => $line,
+                    'plan_issue_dt' => $v['date'],
+                    'issue_dt' => $v['date'],
                     'entry_dt' => now(),
-                    'issue_by' => auth()->user()->username,
+                    'entry_by' => auth()->user()->username,
+                    'kit_no' => $kitNo
                 ]);
-            }
 
-            $sqlInsert = 'INSERT INTO [172.99.0.5].[DB_Lain].[dbo].[mps]
+                foreach ($data as $d) {
+                    // lagi insert dengan nilai remain dan issue baru
+                    $idDetail = DB::table('mps_detail')->insertGetId([
+                        'kit_no' => $kitNo,
+                        'material_no' => $d['material_no'],
+                        'req_bom' => $d['qty_request'],
+                        'issue_dt' => $date,
+                        'entry_dt' => now(),
+                        'issue_by' => auth()->user()->username,
+                    ]);
+                }
+
+                $sqlInsert = 'INSERT INTO [172.99.0.5].[DB_Lain].[dbo].[mps]
                     SELECT * FROM mps
                     WHERE id = ?';
 
-            foreach ($data as $d) {
-                // ambil data sek
-                $getdata = DB::connection('server_asus')
-                    ->table('db_bantu.dbo.b3r_tabel')
-                    ->selectRaw('remain,issue')
-                    ->where('material_no', $d['material_no'])
-                    ->first();
+                foreach ($data as $d) {
+                    // ambil data sek
+                    $getdata = DB::connection('server_asus')
+                        ->table('db_bantu.dbo.b3r_tabel')
+                        ->selectRaw('remain,issue')
+                        ->where('material_no', $d['material_no'])
+                        ->first();
 
-                // update remain dan issue
-                DB::table('mps_detail')
-                    ->where('kit_no', $kitNo)
-                    ->where('material_no', $d)
-                    ->update([
-                        'remain' => $getdata->remain,
-                        'issue' => $getdata->issue,
-                    ]);
+                    // update remain dan issue
+                    DB::table('mps_detail')
+                        ->where('kit_no', $kitNo)
+                        ->where('material_no', $d)
+                        ->update([
+                            'remain' => $getdata->remain,
+                            'issue' => $getdata->issue,
+                        ]);
 
-                $sqlInsert = 'INSERT INTO [172.99.0.5].[DB_Lain].[dbo].[mps_detail]
+                    $sqlInsert = 'INSERT INTO [172.99.0.5].[DB_Lain].[dbo].[mps_detail]
                     SELECT * FROM mps_detail
                     WHERE id = ?';
-                DB::statement($sqlInsert, [$idDetail]);
+                    DB::statement($sqlInsert, [$idDetail]);
+                }
+                // code...
+                DB::statement($sqlInsert, [$mpsid]);
             }
 
-            DB::statement($sqlInsert, [$mpsid]);
 
             DB::commit();
             return [
