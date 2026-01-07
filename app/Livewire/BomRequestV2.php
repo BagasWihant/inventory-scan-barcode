@@ -25,30 +25,37 @@ class BomRequestV2 extends Component
         $plan = DB::table('it.dbo.prs_assy_daily_rev1_plan as p')
             ->join('it.dbo.prs_master_product as m', 'p.product_id', '=', 'm.id')
             ->where('p.line_id', $line_id)
-            ->where('p.tanggal', '>=' ,$start)
-            ->where('p.tanggal', '<=' ,$end)
-            ->selectRaw("p.product_id, p.planning, TRIM(REPLACE(m.product_no, ' ', '')) as product_no, m.dc")
+            ->where('p.tanggal', '>=', $start)
+            ->where('p.tanggal', '<=', $end)
+            ->selectRaw("TRIM(REPLACE(m.product_no, ' ', '')) as product_no, m.dc, SUM(p.planning) as total_planning")
+            ->groupBy('m.product_no', 'm.dc')  
             ->get();
 
         $listData = [];
-        $qty_request = 0;
+        
         foreach ($plan as $item) {
-            // jumlah qty request 
-            $qty_request += $item->planning;
             $bom = DB::table('db_bantu.dbo.bom as b')
                 ->leftJoin('pt_kias.dbo.material_mst as m', 'b.material_no', '=', 'm.matl_no')
                 ->whereRaw("TRIM(REPLACE(product_no, ' ', '')) LIKE ?", ["%{$item->product_no}%"])
                 ->whereRaw('dc LIKE ?', ["%{$item->dc}%"])
                 ->select('product_no', 'dc', 'material_no', 'matl_nm', 'bom_qty')
-                ->get()
-                ->toArray();
+                ->get();
 
-            $listData = array_merge($listData, $bom);
+            foreach ($bom as $b) {
+                $listData[] = [
+                    'product_no' => $item->product_no,
+                    'dc' => $item->dc,
+                    'material_no' => $b->material_no,
+                    'matl_nm' => $b->matl_nm,
+                    'bom_qty' => $b->bom_qty,
+                    'qty_planing' => $item->total_planning, 
+                    'qty_request' => (float) $b->bom_qty * (float) $item->total_planning
+                ];
+            }
         }
         $this->dispatch(
             'product-model-selected',
-            data: $listData,
-            qty_request: $qty_request,
+            data: $listData
         );
     }
 

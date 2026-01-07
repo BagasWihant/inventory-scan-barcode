@@ -9,16 +9,11 @@
     search: '',
     currentPage: 1,
     perPage: 25,
-    qtyRequest: 0,
 
     init() {
         window.addEventListener('product-model-selected', e => {
         console.log(e)
             this.listData = e.detail.data;
-            this.qtyRequest = e.detail.qty_request;
-            this.listData.forEach(row => {
-                row.qty_request = Math.ceil(this.qtyRequest * row.bom_qty)
-            });
             this.selected.clear();
             this.currentPage = 1;
             this.isLoading = false;
@@ -32,7 +27,6 @@
         this.selected = new Map(),
         this.listData = [],
         this.lineCode = '',
-        this.qtyRequest = 0
     },
 
     get filteredData() {
@@ -139,9 +133,6 @@
 
                 </template>
             </select>
-        </div>
-        <div x-show="qtyRequest > 0" class="flex">
-            <label class="block mb-2 font-bold text-base px-5 py-2.5 text-center me-2 text-gray-600 dark:text-white">Qty Request : <span x-text="qtyRequest"></span></label>
         </div>
         <div class="flex items-end ml-auto gap-4">
             <template x-if="listData.length > 0">
