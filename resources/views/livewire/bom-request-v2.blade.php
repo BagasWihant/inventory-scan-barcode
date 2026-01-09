@@ -10,6 +10,8 @@
     currentPage: 1,
     perPage: 25,
     plan: [],
+    lineSearch: '',
+    lineOpen: false,
 
     init() {
         window.addEventListener('product-model-selected', e => {
@@ -118,6 +120,20 @@
             }
         });
     },
+
+    // Helper untuk filter lines berdasarkan input
+    get filteredLines() {
+        if (!this.lineSearch) return this.lines;
+        return this.lines.filter(l => 
+            l.location_cd.toLowerCase().includes(this.lineSearch.toLowerCase())
+        );
+    },
+
+    // Helper untuk mendapatkan nama line yang terpilih
+    get selectedLineName() {
+        let found = this.lines.find(l => l.id == this.lineCode);
+        return found ? found.location_cd : '-- Select Line --';
+    }
 }">
     <div class="flex gap-4 bg-white p-4 rounded-lg shadow-sm mb-6 border">
         <div class="flex-col">
@@ -128,15 +144,33 @@
             <label class="block mb-2 text-sm font-medium text-gray-600 dark:text-white">Date End</label>
             <input type="date" x-model="date_end" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2">
         </div>
-        <div class="flex-col">
+        <div class="flex-col relative" x-on:click.outside="lineOpen = false">
             <label class="block mb-2 text-sm font-medium text-gray-600 dark:text-white">Line Code</label>
-            <select x-model="lineCode" class="w-full border-gray-300 rounded-md shadow-sm px-3 py-2">
-                <option value="">-- Select Line --</option>
-                <template x-for="l in lines" :key="l.id">
-                    <option x-text="l.location_cd" :value="l.id"></option>
 
-                </template>
-            </select>
+            <div @click="lineOpen = !lineOpen" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 bg-white cursor-pointer flex justify-between items-center min-w-[200px]">
+                <span x-text="selectedLineName" :class="lineCode ? 'text-gray-900' : 'text-gray-400'"></span>
+                <svg class="w-4 h-4 transition-transform" :class="lineOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+
+            <div x-show="lineOpen" x-transition class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg overflow-hidden">
+
+                <div class="p-2 border-b bg-gray-50">
+                    <input type="text" x-model="lineSearch" @click.stop placeholder="Search line..." class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                </div>
+
+                <div class="max-h-60 overflow-y-auto">
+                    <template x-for="l in filteredLines" :key="l.id">
+                        <div @click="lineCode = l.id; lineOpen = false; lineSearch = ''" class="px-3 py-2 text-sm cursor-pointer hover:bg-blue-600 hover:text-white transition-colors" :class="lineCode == l.id ? 'bg-blue-100 font-bold' : ''" x-text="l.location_cd">
+                        </div>
+                    </template>
+
+                    <div x-show="filteredLines.length === 0" class="px-3 py-2 text-sm text-gray-500 italic">
+                        Tidak ada Line
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="flex items-end ml-auto gap-4">
             <template x-if="listData.length > 0">
