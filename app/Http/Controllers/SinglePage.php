@@ -122,12 +122,18 @@ class SinglePage extends Controller
         switch ($type) {
             case '1':
                 $data = $this->approvalMan($type, $no);
+                if(!empty($data->msg)){
+                    $data = (array)$data;
+                    return view('errors.custom-error',compact('data'));
+                }
                 return view('pages.single.approval-man-request', compact('data'));
-                break;
             case '2':
                 $req = $this->approvalPRSys($type, $no);
+                if(!empty($req->msg)){
+                    $req = (array)$req;
+                    return view('errors.custom-error',compact('req'));
+                }
                 return view('pages.single.approval', compact('req'));
-                break;
 
             default:
                 # code...
@@ -158,6 +164,11 @@ class SinglePage extends Controller
                     $data['text'] = $getData->status;
                     $data['status'] = '';
                     $data['posisi'] = '';
+                    
+                    if(!empty($getData->msg)){
+                        $data['msg'] = $getData->msg;
+                        return view('errors.custom-error',compact('data'));
+                    }
 
                     return view('pages.single.approval-response', compact('data'));
                 }
@@ -343,6 +354,12 @@ class SinglePage extends Controller
                     $data['text'] = $getData->status;
                     $data['status'] = '0';
                     $data['posisi'] = '';
+                     
+                    if(!empty($getData->msg)){
+                        $data['msg'] = $getData->msg;
+                        return view('errors.custom-error',compact('data'));
+                    }
+
 
                     return view('pages.single.approval-response', compact('data'));
                 }
@@ -465,6 +482,7 @@ class SinglePage extends Controller
         $req->status = $status;
 
         $req->type = $this->typeDokumen($type);
+        $err = '';
 
         if ($status == 'O') {
             // halaman approve purchasing
@@ -474,7 +492,7 @@ class SinglePage extends Controller
             ];
 
             if (!in_array(request()->ip(), $allowedPurchase)) {
-                abort(499, "Anda tidak bisa mengakses ini. Bukan Purchasing");
+                $err = "Anda tidak bisa mengakses ini. Bukan Purchasing";
             }
         } elseif ($status == 'AP') {
             // halaman spv
@@ -484,7 +502,7 @@ class SinglePage extends Controller
             ];
 
             if (!in_array(request()->ip(), $allowedSPV)) {
-                abort(499, 'Anda tidak bisa mengakses ini. Bukan Supervisor');
+                $err = 'Anda tidak bisa mengakses ini. Bukan Supervisor';
             }
         } elseif ($status == 'AS') {
             // halaman manager
@@ -494,7 +512,7 @@ class SinglePage extends Controller
             ];
 
             if (!in_array(request()->ip(), $allowedIPMan)) {
-                abort(499, "Anda tidak bisa mengakses ini. Bukan Manager");
+                $err = "Anda tidak bisa mengakses ini. Bukan Manager";
             }
         }
         
@@ -567,6 +585,7 @@ class SinglePage extends Controller
         $this->generatePdf($path, $html, $images, $lampiran);
 
         $req->pdf = Storage::url('approval/pdf/' . $fileName);
+        $req->msg = $err;
         return $req;
     }
 
@@ -590,34 +609,36 @@ class SinglePage extends Controller
             ->leftJoin('IT.dbo.HR_GM_Emp_mst as hr', 'aprv.hr_by', '=', 'hr.emp_id')
             ->where('main.id', $id)->first();
         $data = $hrmpr;
+        $err = '';
 
         if(empty($data->checked_date)){
             // ganti nama jabatan yang sesuai
             $allowedIP = DB::table('ip_conf')->where('jabatan', 'checker')->get()->pluck('ip')->toArray();
             
             if (!in_array(request()->ip(), $allowedIP)) {
-                abort(499, "Anda tidak bisa mengakses ini. Hubungi IT".request()->ip());
+                $err = "Anda tidak bisa mengakses ini. Hubungi IT";
+
             }
         }else if(empty($data->approved1_date)){
             // ganti nama jabatan yang sesuai
             $allowedIP = DB::table('ip_conf')->where('jabatan', 'Approv1')->get()->pluck('ip')->toArray();
 
             if (!in_array(request()->ip(), $allowedIP)) {
-                abort(499, "Anda tidak bisa mengakses ini. Hubungi IT");
+                $err = "Anda tidak bisa mengakses ini. Hubungi IT";
             }
         }else if(empty($data->approved2_date)){
             // ganti nama jabatan yang sesuai
             $allowedIP = DB::table('ip_conf')->where('jabatan', 'Approv2')->get()->pluck('ip')->toArray();
 
             if (!in_array(request()->ip(), $allowedIP)) {
-                abort(499, "Anda tidak bisa mengakses ini. Hubungi IT");
+                $err = "Anda tidak bisa mengakses ini. Hubungi IT";
             }
         }else if(empty($data->hr_recieved)){
             // ganti nama jabatan yang sesuai
             $allowedIP = DB::table('ip_conf')->where('jabatan', 'HR')->get()->pluck('ip')->toArray();
 
             if (!in_array(request()->ip(), $allowedIP)) {
-                abort(499, "Anda tidak bisa mengakses ini. Hubungi IT");
+                $err = "Anda tidak bisa mengakses ini. Hubungi IT";
             }
         }
 
@@ -663,6 +684,7 @@ class SinglePage extends Controller
         $data->type = $this->typeDokumen($type);
         $data->doc_no = $hrmpr->no_doc;
         $data->doc_date = $hrmpr->req_date;
+        $data->msg = $err;
         return $data;
     }
 }
