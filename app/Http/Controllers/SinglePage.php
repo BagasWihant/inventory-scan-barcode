@@ -130,8 +130,8 @@ class SinglePage extends Controller
             case '2':
                 $req = $this->approvalPRSys($type, $no);
                 if(!empty($req->msg)){
-                    $req = (array)$req;
-                    return view('errors.custom-error',compact('req'));
+                    $data = (array)$req;
+                    return view('errors.custom-error',compact('data'));
                 }
                 return view('pages.single.approval', compact('req'));
 
