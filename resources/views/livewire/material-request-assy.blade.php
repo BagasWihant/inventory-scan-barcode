@@ -1,5 +1,6 @@
 <div class="max-w-7xl m-auto" x-data="{
     type: null,
+    tipeOpsi: null,
     date: new Date().toISOString().split('T')[0],
     line_c: null,
     palet: [],
@@ -83,7 +84,7 @@
         }
     },
     lineChange() {
-        if (this.type == null) {
+        if (this.type == null || this.tipeOpsi == null) {
             Swal.fire({
                 timer: 1000,
                 title: `Please choose type first`,
@@ -94,16 +95,17 @@
             this.resetField();
             return;
         }
-        $wire.lineChange(this.line_c, this.date).then(res => {
+        $wire.lineChange(this.line_c, this.date, this.tipeOpsi).then(res => {
             this.palet = res.palet;
         });
     },
-    dateDebounce() {
-        $wire.dateDebounce(this.date).then(data => {
-            console.log(data);
+    tipeChange() {
+        $wire.dateDebounce(this.date, this.tipeOpsi).then(data => {
             this.lines = data;
         });
-
+    },
+    changeDate(){
+        this.tipeOpsi = null
     }
 }" x-init="$wire.getMaterialData().then(data => {
     {{-- Materials = data; --}}
@@ -120,7 +122,7 @@ $wire.on('materialsUpdated', (data) => {
 
             {{-- top left --}}
             <div class="flex justify-between gap-2 flex-shrink-0">
-                <div class="flex gap-4">
+                <div class="flex gap-4" wire:ignore>
                     <div class="flex items-center px-2 rounded">
                         <input id="bordered-radio-1" type="radio" value="1" x-model="type" @change="changeType()"
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
@@ -129,8 +131,16 @@ $wire.on('materialsUpdated', (data) => {
                     </div>
                     <div class="">
                         <label for="">Issue Date</label>
-                        <input @change="dateDebounce" x-model='date' type="date" onfocus="this.showPicker()"
+                        <input x-model='date' type="date" onfocus="this.showPicker()" @change="changeDate"
                             class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    </div>
+                    <div class="">
+                        <select x-model="tipeOpsi" @change="tipeChange" id="tipe"
+                            class="block w-full p-2 my-1 text-gray-900 border border-gray-300 rounded-lg  text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                            <option value="">Tipe</option>
+                            <option value="cot">COT</option>
+                            <option value="mat">Material</option>
+                        </select>
                     </div>
                     <div class="">
                         <select x-model="line_c" @change="lineChange" id="line_c"
