@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryInController;
 use App\Http\Controllers\NoLoginController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RakWebview;
 use App\Http\Controllers\SinglePage;
 use App\Livewire\MaterialRequest;
 use Illuminate\Support\Facades\Route;
@@ -94,5 +95,11 @@ Route::controller(NoLoginController::class)->group(function () {
     Route::get('bypass/{nik}/checking/', 'checkingStock')->name('bypass.checkingStock');
     Route::get('bypass/{nik}/upload_assy/', 'assyUpload')->name('bypass.assyUpload');
 });
+
+/**menu dashboard rak */
+Route::controller(RakWebview::class)->group(function () {
+    Route::get('wv/rak','index')->name('rak.dashboard');
+});
+
 
 require __DIR__ . '/auth.php';
