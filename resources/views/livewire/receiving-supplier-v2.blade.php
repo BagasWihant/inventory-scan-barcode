@@ -310,7 +310,6 @@
             get pagedList() {
                 let start = (this.currentPage - 1) * this.perPage;
                 let end = start + this.perPage;
-                console.log("pagedlist", this.scanMaterial.slice(start, end))
                 return this.scanMaterial.slice(start, end);
             },
 
@@ -403,7 +402,7 @@
                     return null;
                 }
 
-                if (!s.toLowerCase().startsWith('pcll')) {
+                if (!s.toLowerCase().startsWith('pcl')) {
                     this.material_no = '';
                     this.showAlert('QR tidak didukung');
                     return null;
@@ -427,7 +426,7 @@
                 const material_noParse = hapusdepan.replace(hrfBkg, '');
 
                 const lineParse = (split[2] || '').trim();
-
+                console.log(this.line_code,lineParse);
                 if (this.line_code && this.line_code !== lineParse) {
                     this.material_no = '';
                     this.showAlert('PO atau Linecode berbeda');
@@ -443,10 +442,13 @@
             },
 
             updateItemMaterial(parsed) {
+                console.log('updatein',parsed,this.scanMaterial)
                 let mat_no = parsed.material_no.trim(); // Hilangkan spasi
+                let line = parsed.line.trim();
 
                 let index = this.scanMaterial.findIndex(s =>
-                    s.material_no.trim() === mat_no
+                    s.material_no.trim() === mat_no &&
+                    s.line_c.trim() === line
                 );
 
                 if (index !== -1) {
@@ -462,12 +464,11 @@
 
                     this.scanMaterial = [...this.scanMaterial];
 
-                    console.log("material", this.scanMaterial)
                     this.currentPage = 1;
 
                     if (typeof notif !== 'undefined') notif.play();
                 } else {
-                    this.showAlert('Material tidak ditemukan!', 2000, 'error', 'Gagal');
+                    this.showAlert('Material dan line code tersebut tidak ditemukan!', 2000, 'error', 'Gagal');
                 }
             },
 
@@ -481,7 +482,6 @@
 
                 let parsed = this.parseQR(this.material_no);
                 if (!parsed) {
-                    this.showAlert('QR tidak valid');
                     return;
                 }
 
