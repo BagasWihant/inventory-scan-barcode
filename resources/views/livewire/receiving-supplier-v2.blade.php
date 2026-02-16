@@ -403,7 +403,7 @@
                     return null;
                 }
 
-                if (!s.toLowerCase().startsWith('pcl')) {
+                if (!s.toLowerCase().startsWith('pcll')) {
                     this.material_no = '';
                     this.showAlert('QR tidak didukung');
                     return null;
@@ -503,7 +503,7 @@
                 }
             },
             resetPage() {
-                $dispatch('reset-po-model');
+                this.$dispatch('reset-po-model');
                 this.sj_model = '';
                 this.sj_disable = false;
                 this.po_model = '';
