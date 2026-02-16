@@ -351,7 +351,7 @@
                 window.addEventListener('init-material-data', e => {
                     this.scanMaterial = e.detail.data.map(item => ({
                         ...item,
-                        counter: item.counter || 0, // Pastikan counter ada sejak awal
+                        counter: item.counter || 0,
                         scanned: item.scanned || [],
                         location_cd: "ASSY"
                     }));
@@ -359,7 +359,6 @@
                 });
             },
 
-            // Fungsi navigasi
             nextPage() {
                 if (this.currentPage < this.totalPages) this.currentPage++;
             },
@@ -367,7 +366,6 @@
                 if (this.currentPage > 1) this.currentPage--;
             },
 
-            // fungsi utilitas
             showAlert(message, timer = null, icon = 'warning', title = 'Perhatian') {
                 Swal.fire({
                     title: title,
@@ -405,8 +403,13 @@
                     return null;
                 }
 
+                if (!s.toLowerCase().startsWith('pcl')) {
+                    this.material_no = '';
+                    this.showAlert('QR tidak didukung');
+                    return null;
+                }
 
-                // === Format lain: a/b/c ===
+
                 const split = s.split('/');
                 if (split.length < 2) {
                     this.material_no = '';
@@ -442,8 +445,6 @@
             updateItemMaterial(parsed) {
                 let mat_no = parsed.material_no.trim(); // Hilangkan spasi
 
-                // 1. Cari index material
-                // Jika ada 2 material_no yang sama, findIndex akan mengambil yang paling atas/pertama
                 let index = this.scanMaterial.findIndex(s =>
                     s.material_no.trim() === mat_no
                 );
@@ -451,22 +452,17 @@
                 if (index !== -1) {
                     let item = this.scanMaterial[index];
 
-                    // 2. Update datanya
                     item.counter = Number(item.counter || 0) + Number(parsed.qty);
 
                     if (!item.scanned) item.scanned = [];
                     item.scanned.push([Number(parsed.qty), this.boxNo]);
 
-                    // 3. PINDAH KE ATAS (Ini akan mempengaruhi tabel kiri dan kanan sekaligus)
                     this.scanMaterial.splice(index, 1);
                     this.scanMaterial.unshift(item);
 
-                    // 4. PAKSA REAKTIVITAS (WAJIB)
-                    // Ini yang bikin tabel kiri dan kanan otomatis update barengan
                     this.scanMaterial = [...this.scanMaterial];
 
                     console.log("material", this.scanMaterial)
-                    // 5. Balik ke halaman 1
                     this.currentPage = 1;
 
                     if (typeof notif !== 'undefined') notif.play();
@@ -475,11 +471,9 @@
                 }
             },
 
-            // ambil nilai box nya
             boxArray() {
                 return [...new Set(this.s.scanned.map(item => item[1]))];
             },
-            // end util
 
             materialNoScan() {
                 if (this.material_no === '') return;
@@ -633,7 +627,6 @@
 
             showScannedModal(indexAsli) {
                 this.showModal = true;
-                // Simpan referensi material dan index aslinya
                 this.selectedMaterialIndex = indexAsli;
                 this.dataModal = this.scanMaterial[indexAsli];
             },
