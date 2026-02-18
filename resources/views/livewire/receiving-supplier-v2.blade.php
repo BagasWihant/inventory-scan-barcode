@@ -83,7 +83,7 @@
         </div>
     </template>
 
-    <div x-show="scanMaterial.length > 0">
+    <div x-show="scanMaterial.length > 0" x-cloak>
         <div class="flex gap-4 overflow-x-auto sm:rounded-lg p-3">
             <div class="w-[80%] shadow-md rounded-lg overflow-hidden">
                 <h2 class="p-1 text-sm bg-gray-800 text-white font-bold uppercase tracking-wider text-center">List
@@ -137,9 +137,9 @@
                                     <div class="flex items-center justify-center">
                                         <span class="text-base font-black"
                                             :class="{
-                                                'text-red-500': m.counter == 0 || parseInt(m.counter + parseInt(m.stock_in)) > m.picking_qty,
-                                                'text-amber-500': m.counter > 0 && parseInt(m.counter + parseInt(m.stock_in)) < m.picking_qty,
-                                                'text-green-600': parseInt(m.counter + parseInt(m.stock_in)) == parseInt(m.picking_qty)
+                                                'text-red-500': m.counter == 0 || parseInt(m.counter + parseInt(m.stock_in||0)) > m.picking_qty,
+                                                'text-amber-500': m.counter > 0 && parseInt(m.counter + parseInt(m.stock_in||0)) < m.picking_qty,
+                                                'text-green-600': parseInt(m.counter + parseInt(m.stock_in || 0)) == parseInt(m.picking_qty)
                                             }"
                                             x-text="m.counter || 0">
                                         </span>
