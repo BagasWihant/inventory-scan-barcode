@@ -51,8 +51,8 @@ class ReceivingSupplierV2 extends Component
         $joinCondition = function ($join) {
             $join
                 ->on('a.material_no', '=', 'b.material_no')
-                ->on('a.kit_no', '=', 'b.kit_no');
-            // ->where('b.pallet_no', $paletCode);
+                ->on('a.kit_no', '=', 'b.kit_no')
+                ->on('a.line_c', '=', 'b.line_c');
         };
 
         $groupByColumns = [

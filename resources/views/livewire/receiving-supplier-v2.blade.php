@@ -137,9 +137,9 @@
                                     <div class="flex items-center justify-center">
                                         <span class="text-base font-black"
                                             :class="{
-                                                'text-red-500': m.counter == 0,
-                                                'text-orange-500': m.counter > 0 && m.counter < m.picking_qty,
-                                                'text-green-600': m.counter >= m.picking_qty
+                                                'text-red-500': m.counter == 0 || parseInt(m.counter + parseInt(m.stock_in)) > m.picking_qty,
+                                                'text-amber-500': m.counter > 0 && parseInt(m.counter + parseInt(m.stock_in)) < m.picking_qty,
+                                                'text-green-600': parseInt(m.counter + parseInt(m.stock_in)) == parseInt(m.picking_qty)
                                             }"
                                             x-text="m.counter || 0">
                                         </span>
@@ -426,12 +426,6 @@
                 const material_noParse = hapusdepan.replace(hrfBkg, '');
 
                 const lineParse = (split[2] || '').trim();
-                console.log(this.line_code,lineParse);
-                if (this.line_code && this.line_code !== lineParse) {
-                    this.material_no = '';
-                    this.showAlert('PO atau Linecode berbeda');
-                    return null;
-                }
 
                 return {
                     material_no: material_noParse,
@@ -442,7 +436,6 @@
             },
 
             updateItemMaterial(parsed) {
-                console.log('updatein',parsed,this.scanMaterial)
                 let mat_no = parsed.material_no.trim(); // Hilangkan spasi
                 let line = parsed.line.trim();
 
@@ -450,7 +443,7 @@
                     s.material_no.trim() === mat_no &&
                     s.line_c.trim() === line
                 );
-
+                
                 if (index !== -1) {
                     let item = this.scanMaterial[index];
 
