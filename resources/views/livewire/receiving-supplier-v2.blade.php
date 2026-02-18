@@ -321,6 +321,7 @@
                 window.addEventListener('po-selected', e => {
                     if (this.sj_model === '') {
                         this.$dispatch('reset-po-model');
+                        this.resetPage()
                         return this.showAlert('Silahkan isi Surat Jalan terlebih dahulu');
                     }
                     this.po_model = e.detail.po;
@@ -329,22 +330,7 @@
                 });
 
                 window.addEventListener('confirmation', e => {
-                    Swal.fire({
-                        title: 'Scan dengan Surat Jalan dan PO yang sama ?',
-                        showDenyButton: true,
-                        showCancelButton: false,
-                        confirmButtonText: 'Ya',
-                        denyButtonText: `Tidak`,
-                        allowOutsideClick: () => false,
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            Swal.fire('Surat Jalan Sama', '', 'info');
-                            this.resetSebagian();
-                        } else if (result.isDenied) {
-                            Swal.fire('Reset Semua', '', 'info');
-                            this.resetPage();
-                        }
-                    });
+                    this.resetPage();
                 });
 
                 window.addEventListener('init-material-data', e => {
