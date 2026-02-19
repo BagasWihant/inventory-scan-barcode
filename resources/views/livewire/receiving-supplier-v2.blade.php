@@ -147,9 +147,13 @@
                                 </td>
                                 <td class="px-4 py-0 font-mono text-xs" x-text="m.location_cd || '-'"></td>
                                 <td class="px-4 py-0 text-center">
-                                    <template x-if="m.counter > m.picking_qty">
+                                    <template x-if="parseInt(m.counter + parseInt(m.stock_in||0)) > m.picking_qty">
                                         <span
                                             class="px-2 py-0.5 rounded bg-red-600 text-white text-[9px] font-bold animate-pulse">OVER</span>
+                                    </template>
+                                    <template x-if="parseInt(m.counter + parseInt(m.stock_in||0)) == m.picking_qty">
+                                        <span
+                                            class="px-2 py-0.5 rounded bg-green-600 text-white text-[9px] font-bold animate-pulse">BALANCE</span>
                                     </template>
                                 </td>
                                 <td class="px-4 py-0 text-center">
