@@ -100,6 +100,9 @@ Route::controller(NoLoginController::class)->group(function () {
 /**menu dashboard rak */
 Route::controller(RakWebview::class)->group(function () {
     Route::get('wv/rak','index')->name('rak.dashboard');
+    Route::get('wv/rak/history',fn() => view('pages.rak.history'))->name('rak.history');
+    Route::get('wv/rak/{rak_id}',fn($rak_id) => view('pages.rak.detail',['rak_id'=>$rak_id]))->name('rak.detail');
+    Route::get('wv/rak/{rak_id}/history',fn($rak_id) => view('pages.rak.history',['rak_id'=>$rak_id]))->name('rak.detail.history');
 });
 
 
