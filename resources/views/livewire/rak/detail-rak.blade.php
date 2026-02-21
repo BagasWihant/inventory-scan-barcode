@@ -31,10 +31,10 @@
     <div class="grid grid-cols-2 lg:grid-cols-4 lg:gap-7 gap-3 mb-10 sm:place-items-center">
 
         <div
-            class="cursor-pointer bg-white p-4 w-full rounded-3xl border border-slate-100 shadow-sm group hover:bg-indigo-600/80 hover:border-indigo-600 hover:shadow-xl transition-all duration-300 active:scale-95">
+            class="cursor-pointer p-4 w-full rounded-3xl border shadow-sm group bg-indigo-600/80 border-indigo-600 transition-all duration-300 active:scale-95">
             <div class="flex items-center gap-4">
                 <div
-                    class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:bg-white/20 group-hover:text-white transition-colors duration-300 shrink-0">
+                    class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center transition-colors duration-300 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -42,20 +42,20 @@
                 </div>
                 <div>
                     <p
-                        class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-indigo-50">
+                        class="text-[10px] font-bold uppercase tracking-widest text-indigo-50">
                         Total Material</p>
-                    <p class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight group-hover:text-white"
-                        x-text="listMaterial.length">
+                    <p class="text-xl lg:text-2xl font-black tracking-tight text-white"
+                        x-text="globalStats.total_material">
                     </p>
                 </div>
             </div>
         </div>
 
         <div
-            class="cursor-pointer bg-white p-4 w-full rounded-3xl border border-slate-100 shadow-sm group hover:bg-emerald-600/80 hover:border-emerald-600 hover:shadow-xl transition-all duration-300 active:scale-95">
+            class="cursor-pointer p-4 w-full rounded-3xl border shadow-sm group bg-emerald-600/80 border-emerald-600  transition-all duration-300 active:scale-95">
             <div class="flex items-center gap-4">
                 <div
-                    class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:bg-white/20 group-hover:text-white transition-colors duration-300 shrink-0">
+                    class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center transition-colors duration-300 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
@@ -63,40 +63,40 @@
                 </div>
                 <div>
                     <p
-                        class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-emerald-50">
+                        class="text-[10px] font-bold uppercase tracking-widest text-emerald-50">
                         Total Stok</p>
-                    <p class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight group-hover:text-white"
-                        x-text="listMaterial.reduce((a, m) => a + (+m.stok), 0)">
+                    <p class="text-xl lg:text-2xl font-black tracking-tight text-white"
+                        x-text="globalStats.total_stok">
                     </p>
                 </div>
             </div>
         </div>
 
         <div
-            class="cursor-pointer bg-white p-4 w-full rounded-3xl border border-slate-100 shadow-sm group hover:bg-amber-500/80 hover:border-amber-500 hover:shadow-xl transition-all duration-300 active:scale-95">
+            class="cursor-pointer w-full p-4 rounded-3xl border shadow-sm group bg-amber-500/80 border-amber-500 transition-all duration-300 active:scale-95">
             <div class="flex items-center gap-4">
                 <div
-                    class="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center group-hover:bg-white/20 group-hover:text-white transition-colors duration-300 shrink-0">
+                    class="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center transition-colors duration-300 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                 </div>
                 <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-amber-50">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-amber-50">
                         Stok Rendah</p>
-                    <p class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight group-hover:text-white"
-                        x-text="listMaterial.filter(m => m.stok <= 5).length">
+                    <p class="text-xl lg:text-2xl font-black tracking-tight text-white"
+                        x-text="globalStats.stok_rendah">
                     </p>
                 </div>
             </div>
         </div>
 
         <a wire:navigate href="{{ route('rak.detail.history', ['rak_id' => $rak->id]) }}"
-            class="cursor-pointer bg-white p-4 w-full rounded-3xl border border-slate-100 shadow-sm group hover:bg-emerald-500/80 hover:border-emerald-500 hover:shadow-xl transition-all duration-300 active:scale-95">
+            class="cursor-pointer p-4 w-full rounded-3xl border shadow-sm group bg-emerald-500/80 border-emerald-500 transition-all duration-300 active:scale-95">
             <div class="flex items-center gap-4">
                 <div
-                    class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center group-hover:bg-white/20 group-hover:text-white transition-colors duration-300 shrink-0">
+                    class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center transition-colors duration-300 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -104,9 +104,9 @@
                 </div>
                 <div>
                     <p
-                        class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-emerald-50">
+                        class="text-[10px] font-bold uppercase tracking-widest text-emerald-50">
                         History Today</p>
-                    <p class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight group-hover:text-white">
+                    <p class="text-xl lg:text-2xl font-black tracking-tight text-white">
                         <span x-text="historyCount"></span>
                         <span class="text-[10px] group-hover:text-emerald-100 uppercase">Transaksi</span>
                     </p>
@@ -187,6 +187,55 @@
                 </template>
             </tbody>
         </table>
+    </div>
+    <div
+        class="mt-4 flex items-center justify-between px-4 md:px-8 py-4 bg-white rounded-3xl border border-slate-100 shadow-sm">
+        <p class="hidden sm:block text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            Halaman <span x-text="currentPage" class="text-indigo-600"></span> dari <span x-text="totalPages"></span>
+        </p>
+
+        <div class="flex items-center gap-1.5 ml-auto sm:ml-0">
+            <button @click="prevPage()" :disabled="currentPage === 1"
+                class="p-2 bg-white border border-slate-200 rounded-xl disabled:opacity-30 hover:bg-slate-50 transition active:scale-90">
+                <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+
+            <div class="flex items-center gap-1.5">
+                <template x-if="pages[0] > 1">
+                    <div class="flex items-center gap-1.5">
+                        <button @click="fetchPage(1)"
+                            class="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-[10px] font-black bg-white">1</button>
+                        <span class="text-slate-300 text-xs">...</span>
+                    </div>
+                </template>
+
+                <template x-for="page in pages" :key="page">
+                    <button @click="fetchPage(page)" x-text="page"
+                        :class="currentPage === page ?
+                            'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' :
+                            'bg-white text-slate-600 border-slate-200'"
+                        class="w-9 h-9 flex items-center justify-center border rounded-xl text-[10px] font-black transition-all active:scale-90">
+                    </button>
+                </template>
+
+                <template x-if="pages[pages.length - 1] < totalPages">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-slate-300 text-xs">...</span>
+                        <button @click="fetchPage(totalPages)" x-text="totalPages"
+                            class="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-[10px] font-black bg-white"></button>
+                    </div>
+                </template>
+            </div>
+
+            <button @click="nextPage()" :disabled="currentPage === totalPages"
+                class="p-2 bg-white border border-slate-200 rounded-xl disabled:opacity-30 hover:bg-slate-50 transition active:scale-90">
+                <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+        </div>
     </div>
 
     <div x-show="openModal" x-cloak
@@ -348,6 +397,7 @@
             rak_now: @json($rak ?? []),
             historyCount: @json($historyCount),
             listMaterial: @json($materials ?? []),
+            globalStats: @json($stats),
 
             form: {
                 nama: '',
@@ -362,7 +412,46 @@
                 tipe: 'in',
                 qty: ''
             },
+            async init() {
+                // Load halaman pertama saat pertama kali buka
+                await this.fetchPage(1);
+            },
+            get pages() {
+                let range = [];
+                let delta = 1;
+                let start = Math.max(1, this.currentPage - delta);
+                let end = Math.min(this.totalPages, this.currentPage + delta);
 
+                if (this.currentPage === 1 && this.totalPages >= 3) end = 3;
+                if (this.currentPage === this.totalPages && this.totalPages >= 3) start = Math.max(1, this
+                    .totalPages - 2);
+
+                for (let i = start; i <= end; i++) {
+                    range.push(i);
+                }
+                return range;
+            },
+
+            async fetchPage(page) {
+                if (page < 1 || (this.totalPages > 0 && page > this.totalPages)) return;
+
+                try {
+                    const response = await this.$wire.getMaterialsPage(page);
+                    this.listMaterial = response.items;
+                    this.totalPages = response.total_pages;
+                    this.currentPage = response.current_page;
+                    this.historyCount = response.history_count;
+                    this.globalStats = response.stats;
+                } catch (e) {
+                    showToast('Gagal memuat data', 'error');
+                }
+            },
+            nextPage() {
+                this.fetchPage(this.currentPage + 1)
+            },
+            prevPage() {
+                this.fetchPage(this.currentPage - 1)
+            },
             openTransModal(item, index) {
                 this.selectedItem = {
                     ...item
@@ -403,6 +492,7 @@
                 } catch (e) {
                     showToast('Gagal menyimpan material', 'error');
                 } finally {
+                    await this.fetchPage(1);
                     this.loadingForm = false;
                 }
             },
@@ -427,6 +517,7 @@
                 } catch (e) {
                     showToast('Gagal update stok', 'error');
                 } finally {
+                    await this.fetchPage(this.currentPage);
                     this.loadingTrans = false;
                 }
             },

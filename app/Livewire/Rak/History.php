@@ -13,10 +13,11 @@ class History extends Component
     use WithPagination;
 
     public $rakInfo;
-    public ?int $rakId = null;  
+    public ?int $rakId = null;
     public string $search = '';
-    public string $filterTipe = '';  
-    public string $filterDate = '';  
+    public string $filterTipe = '';
+    public string $filterDate = '';
+
     public function mount(?int $rak_id = null)
     {
         $this->rakId = $rak_id;
@@ -48,68 +49,62 @@ class History extends Component
             . '_' . $this->filterTipe
             . '_' . $this->filterDate;
 
-        return Cache::remember($cacheKey, 60, function () {
-            $query = RakTransaksi::with(['rak', 'material', 'user'])
-                ->where('dihapus', 0);
+        $query = RakTransaksi::with(['rak', 'material', 'user'])
+            ->where('dihapus', 0);
 
-            if ($this->rakId) {
-                $query->where('id_rak', $this->rakId);
-            }
+        if ($this->rakId) {
+            $query->where('rak_id', $this->rakId);
+        }
 
-            if ($this->filterDate) {
-                $query->whereDate('created_at', $this->filterDate);
-            }
+        if ($this->filterDate) {
+            $query->whereDate('created_at', $this->filterDate);
+        }
 
-            if ($this->filterTipe) {
-                $query->where('stat', $this->filterTipe);
-            }
+        if ($this->filterTipe) {
+            $query->where('stat', $this->filterTipe);
+        }
 
-            if ($this->search) {
-                $query->whereHas('material', function ($q) {
-                    $q->where('nama', 'like', '%' . $this->search . '%');
-                });
-            }
+        if ($this->search) {
+            $query->whereHas('material', function ($q) {
+                $q->where('nama', 'like', '%' . $this->search . '%');
+            });
+        }
 
-            return $query->latest()->paginate(15);
-        });
+        return $query->latest()->paginate(15);
     }
 
     public function getTotalMasukProperty()
     {
         $key = "total_in_{$this->rakId}_{$this->filterDate}";
 
-        return Cache::remember($key, 60, function () {
-            $query = RakTransaksi::where('dihapus', 0)->where('stat', 'i');
+        $query = RakTransaksi::where('dihapus', 0)->where('stat', 'i');
 
-            if ($this->rakId) {
-                $query->where('id_rak', $this->rakId);
-            }
+        if ($this->rakId) {
+            $query->where('rak_id', $this->rakId);
+        }
 
-            if ($this->filterDate) {
-                $query->whereDate('created_at', $this->filterDate);
-            }
+        if ($this->filterDate) {
+            $query->whereDate('created_at', $this->filterDate);
+        }
 
-            return $query->count();
-        });
+        return $query->count();
     }
 
     public function getTotalKeluarProperty()
     {
         $key = "total_out_{$this->rakId}_{$this->filterDate}";
 
-        return Cache::remember($key, 60, function () {
-            $query = RakTransaksi::where('dihapus', 0)->where('stat', 'o');
+        $query = RakTransaksi::where('dihapus', 0)->where('stat', 'o');
 
-            if ($this->rakId) {
-                $query->where('id_rak', $this->rakId);
-            }
+        if ($this->rakId) {
+            $query->where('rak_id', $this->rakId);
+        }
 
-            if ($this->filterDate) {
-                $query->whereDate('created_at', $this->filterDate);
-            }
+        if ($this->filterDate) {
+            $query->whereDate('created_at', $this->filterDate);
+        }
 
-            return $query->count();
-        });
+        return $query->count();
     }
 
     public function render()

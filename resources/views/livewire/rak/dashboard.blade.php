@@ -40,10 +40,10 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-10">
 
         <div
-            class="cursor-pointer bg-white p-4 rounded-3xl border border-slate-100 shadow-sm group hover:bg-teal-600/80 hover:border-teal-600 hover:shadow-xl transition-all duration-300 active:scale-95">
+            class="cursor-pointer p-4 rounded-3xl border shadow-sm group bg-teal-600/80 border-teal-600 transition-all duration-300 active:scale-95">
             <div class="flex items-center lg:flex-col lg:items-start gap-4">
                 <div
-                    class="w-12 h-12 bg-slate-50 text-slate-600 rounded-2xl flex items-center justify-center group-hover:bg-white/20 group-hover:text-white transition-colors duration-300 shrink-0">
+                    class="w-12 h-12 bg-slate-50  rounded-2xl flex items-center justify-center text-teal-500 transition-colors duration-300 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 10h16M4 14h16M4 18h16" />
@@ -51,21 +51,21 @@
                 </div>
                 <div>
                     <p
-                        class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-slate-300">
+                        class="text-[10px] font-bold uppercase tracking-widest text-slate-300">
                         Total Rak</p>
-                    <span class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight group-hover:text-white"
+                    <span class="text-xl lg:text-2xl font-black tracking-tight text-white"
                         x-text="total.rak">
                     </span>
-                    <span class="text-[10px] group-hover:text-slate-300 text-gray-500">RAK</span>
+                    <span class="text-[10px] text-slate-300">RAK</span>
                 </div>
             </div>
         </div>
 
         <div
-            class="cursor-pointer bg-white p-4 rounded-3xl border border-slate-100 shadow-sm group hover:bg-indigo-600/80 hover:border-indigo-600 hover:shadow-xl transition-all duration-300 active:scale-95">
+            class="cursor-pointer p-4 rounded-3xl border shadow-sm group bg-indigo-600/80 border-indigo-600 transition-all duration-300 active:scale-95">
             <div class="flex items-center lg:flex-col lg:items-start gap-4">
                 <div
-                    class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:bg-white/20 group-hover:text-white transition-colors duration-300 shrink-0">
+                    class="w-12 h-12 bg-indigo-50  rounded-2xl flex items-center justify-center text-indigo-500 transition-colors duration-300 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -73,21 +73,21 @@
                 </div>
                 <div>
                     <p
-                        class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-indigo-50">
+                        class="text-[10px] font-bold uppercase tracking-widest text-indigo-50">
                         Material</p>
-                    <span class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight group-hover:text-white"
+                    <span class="text-xl lg:text-2xl font-black tracking-tight text-white"
                         x-text="total.all">
                     </span>
-                    <span class="text-[10px] group-hover:text-indigo-100 text-gray-500">Material</span>
+                    <span class="text-[10px] text-indigo-100">Material</span>
                 </div>
             </div>
         </div>
 
         <div
-            class="cursor-pointer bg-white p-4 rounded-3xl border border-slate-100 shadow-sm group hover:bg-emerald-600/80 hover:border-emerald-600 hover:shadow-xl transition-all duration-300 active:scale-95">
+            class="cursor-pointer p-4 rounded-3xl border shadow-sm group bg-emerald-600/80 border-emerald-600 transition-all duration-300 active:scale-95">
             <div class="flex items-center lg:flex-col lg:items-start gap-4">
                 <div
-                    class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:bg-white/20 group-hover:text-white transition-colors duration-300 shrink-0">
+                    class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 transition-colors duration-300 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M16 17l-4 4m0 0l-4-4m4 4V3" />
@@ -95,42 +95,42 @@
                 </div>
                 <div>
                     <p
-                        class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-emerald-50">
+                        class="text-[10px] font-bold uppercase tracking-widest text-emerald-50">
                         In Today</p>
-                    <span class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight group-hover:text-white"
+                    <span class="text-xl lg:text-2xl font-black tracking-tight text-white"
                         x-text="total.in">
                     </span>
-                    <span class="text-[10px] group-hover:text-emerald-100 text-gray-500">PCS</span>
+                    <span class="text-[10px] text-emerald-100">PCS</span>
                 </div>
             </div>
         </div>
 
         <div
-            class="cursor-pointer bg-white p-4 rounded-3xl border border-slate-100 shadow-sm group hover:bg-rose-600/80 hover:border-rose-600 hover:shadow-xl transition-all duration-300 active:scale-95">
+            class="cursor-pointer p-4 rounded-3xl border shadow-sm group bg-rose-600/80 border-rose-600 transition-all duration-300 active:scale-95">
             <div class="flex items-center lg:flex-col lg:items-start gap-4">
                 <div
-                    class="w-12 h-12 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center group-hover:bg-white/20 group-hover:text-white transition-colors duration-300 shrink-0">
+                    class="w-12 h-12 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center transition-colors duration-300 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M8 7l4-4m0 0l4 4m-4-4v18" />
                     </svg>
                 </div>
                 <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-rose-50">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-rose-50">
                         Out Today</p>
-                    <span class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight group-hover:text-white"
+                    <span class="text-xl lg:text-2xl font-black tracking-tight text-white"
                         x-text="total.out">
                     </span>
-                    <span class="text-[10px] group-hover:text-rose-100 text-gray-500">PCS</span>
+                    <span class="text-[10px] text-rose-100 ">PCS</span>
                 </div>
             </div>
         </div>
 
         <a wire:navigate href="{{ route('rak.history') }}"
-            class="cursor-pointer bg-white p-4 rounded-3xl border border-slate-100 shadow-sm group hover:bg-emerald-500/80 hover:border-emerald-500 hover:shadow-xl transition-all duration-300 active:scale-95">
+            class="cursor-pointer p-4 rounded-3xl border bg-emerald-500/80 border-emerald-500 shadow-xl transition-all duration-300 active:scale-95">
             <div class="flex items-center lg:flex-col lg:items-start gap-4">
                 <div
-                    class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center group-hover:bg-white/20 group-hover:text-white transition-colors duration-300 shrink-0">
+                    class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center transition-colors duration-300 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -138,12 +138,12 @@
                 </div>
                 <div>
                     <p
-                        class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-emerald-50">
+                        class="text-[10px] font-bold uppercase tracking-widest text-emerald-50">
                         History Today</p>
-                    <span class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight group-hover:text-white"
+                    <span class="text-xl lg:text-2xl font-black tracking-tight text-white"
                         x-text="total.history">
                     </span>
-                    <span class="text-[10px] group-hover:text-emerald-50 text-gray-500">Transaksi</span>
+                    <span class="text-[10px] text-emerald-50 ">Transaksi</span>
                 </div>
             </div>
         </a>
