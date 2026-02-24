@@ -28,6 +28,20 @@
                 :class="{ 'bg-gray-100 text-black': inputDisable.date, 'bg-white text-black': !inputDisable.date }">
         </div>
 
+        <div class="flex-col">
+            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Date End</label>
+
+            <select x-model="type" id="balance"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring focus:border-blue-300 sm:text-sm"
+                :class="{ 'bg-gray-100 text-black': inputDisable.type, 'bg-white text-black': !inputDisable.type }">
+                <option value="all">All</option>
+                <option value="balance">Balance</option>
+                <option value="kurang">Kurang</option>
+            </select>
+        </div>
+
+
+
         <div class="flex items-end ml-auto gap-4">
             @if (!empty($dataJson))
                 <button @click="resetData" type="button"
@@ -74,13 +88,14 @@
                 <tbody>
                     @foreach ($dataJson as $materialNo => $item)
                         @php
-                            $rowTypes = ['receiving', 'supply', 'plan_cnc', 'stock_cnc', 'stock_mc'];
+                            $rowTypes = ['receiving', 'supply', 'plan_cnc', 'stock_cnc', 'stock_mc', 'balance'];
                             $rowLabels = [
                                 'receiving' => 'Receiving',
                                 'supply' => 'Supply',
                                 'plan_cnc' => 'Plan CNC',
                                 'stock_cnc' => 'Stock CNC',
                                 'stock_mc' => 'Stock MC',
+                                'balance' => 'Balance',
                             ];
                         @endphp
 
@@ -88,14 +103,14 @@
                             <tr>
                                 {{-- material  --}}
                                 @if ($index === 0)
-                                    <td rowspan="5"
+                                    <td rowspan="{{ count($rowTypes) }}"
                                         class="px-2 py-1 border-2 border-r border-r-slate-400 border-black">
                                         {{ $item['material_no'] }}
                                     </td>
                                 @endif
                                 {{-- stok --}}
                                 @if ($index === 0)
-                                    <td rowspan="5"
+                                    <td rowspan="{{ count($rowTypes) }}"
                                         class="border-t-2 border-b-2 border-b-black border-t-black border border-slate-300 px-2 py-1">
                                         {{ $item['qty_mst'] }}
                                     </td>
@@ -105,7 +120,7 @@
                                     class="border px-2 py-1 bg-yellow-200 
                                     @if ($rowType === 'receiving') border-t-2 border-t-black border-slate-300
                                     @elseif(in_array($rowType, ['supply', 'plan_cnc', 'stock_cnc'])) border-slate-300
-                                    @elseif($rowType === 'stock_mc') border-b-2 border-b-black border-slate-300 @endif">
+                                    @elseif($rowType === 'balance') border-b-2 border-b-black border-slate-300 @endif">
                                     <b>{{ $rowLabels[$rowType] }}</b>
                                 </td>
 
@@ -114,17 +129,22 @@
                                     class="border px-2 py-1 bg-yellow-200 
                                     @if ($rowType === 'receiving') border-t-2 border-t-black border-slate-300
                                     @elseif(in_array($rowType, ['supply', 'plan_cnc', 'stock_cnc'])) border-slate-300
-                                    @elseif($rowType === 'stock_mc') border-b-2 border-b-black border-slate-300 @endif">
+                                    @elseif($rowType === 'balance') border-b-2 border-b-black border-slate-300 @endif">
                                     @php
                                         $dataToday = $item['tanggal'][$d] ?? [];
                                         $value = '-';
 
                                         if ($rowType === 'receiving') {
                                             $value = $item['receive_init'] ?? '-';
+
                                         } elseif ($rowType === 'supply') {
                                             $value = $item['supply_init'] ?? '-';
+
                                         } elseif ($rowType === 'stock_mc') {
-                                            $value = $item['mc_init'] ;
+                                            $value = $item['mc_init'];
+
+                                        } elseif ($rowType === 'balance') {
+                                            $value = $item['balanceTotal'];
                                         }
 
                                     @endphp
@@ -137,7 +157,7 @@
                                         class="border px-2 py-1
                                         @if ($rowType === 'receiving') border-t-2 border-t-black border-slate-300
                                         @elseif(in_array($rowType, ['supply', 'plan_cnc', 'stock_cnc'])) border-slate-300
-                                        @elseif($rowType === 'stock_mc') border-b-2 border-b-black border-slate-300 @endif">
+                                        @elseif($rowType === 'balance') border-b-2 border-b-black border-slate-300 @endif">
                                         @php
                                             $dataToday = $item['tanggal'][$d] ?? [];
                                             $value = '-';
@@ -156,6 +176,8 @@
                                                 $value = $dataToday['stock_cnc'] ?? '-';
                                             } elseif ($rowType === 'stock_mc') {
                                                 $value = $dataToday['stock_mc'] ?? '-';
+                                            } elseif ($rowType === 'balance') {
+                                                $value = $dataToday['balance'] ?? 0;
                                             }
 
                                         @endphp
@@ -208,8 +230,10 @@
             inputDisable: {
                 search: false,
                 date: false,
+                type: false,
             },
 
+            type: 'all',
             datestart: null,
             dateend: null,
             isLoading: false,
@@ -232,9 +256,10 @@
 
                 this.isLoading = true
 
-                @this.call('showData', this.datestart, this.dateend, this.materialNo).then((data) => {
+                @this.call('showData', this.datestart, this.dateend, this.type).then((data) => {
                     this.isLoading = false
                     this.inputDisable.date = true
+                    this.inputDisable.type = true
                 })
             },
 
@@ -243,6 +268,8 @@
                 this.$dispatch('reset-search');
                 this.inputDisable.search = false
                 this.inputDisable.date = false
+                this.inputDisable.type = false
+                this.type = 'all'
                 this.datestart = null
                 this.dateend = null
             }

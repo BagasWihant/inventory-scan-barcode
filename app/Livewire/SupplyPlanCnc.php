@@ -12,14 +12,14 @@ class SupplyPlanCnc extends Component
     use WithPagination;
 
     public $materialNo = null;
-    public $datestart  = null;
-    public $dateend    = null;
-    public $dataJson   = [];
-    public $tanggal    = [];
+    public $datestart = null;
+    public $dateend = null;
+    public $dataJson = [];
+    public $tanggal = [];
     public $today;
     public $currentPage = 1;
-    public $lastPage    = 1;
-    public $perPage     = 5;
+    public $lastPage = 1;
+    public $perPage = 5;
 
     public function mount()
     {
@@ -45,18 +45,18 @@ class SupplyPlanCnc extends Component
         );
     }
 
-    public function showData($start, $end)
+    public function showData($start, $end, $type)
     {
-        $this->datestart   = $start;
-        $this->dateend     = $end;
+        $this->datestart = $start;
+        $this->dateend = $end;
         $this->currentPage = 1;
-        $this->loadData();
+        $this->loadData($type);
     }
 
-    public function loadData()
+    public function loadData($type)
     {
         $endSql = date('Y-m-d', strtotime($this->dateend) + 1 * 24 * 60 * 60);
-        $limit  = $this->materialNo ? 1 : $this->perPage;
+        $limit = $this->materialNo ? 1 : $this->perPage;
 
         $paginator = DB::table('material_mst')
             ->select(['matl_no', 'qty'])
@@ -80,7 +80,7 @@ class SupplyPlanCnc extends Component
 
         if (empty($master_material)) {
             $this->dataJson = [];
-            $this->tanggal  = [];
+            $this->tanggal = [];
             return;
         }
 
@@ -107,7 +107,7 @@ class SupplyPlanCnc extends Component
             ->whereIn(DB::raw("REPLACE(material_no, ' ', '')"), $master_material)
             ->get();
 
-        $initialReceiving = DB::table("material_in_stock")
+        $initialReceiving = DB::table('material_in_stock')
             ->selectRaw("sum(picking_qty) as qty,TRIM(REPLACE(material_no, ' ', '')) as material_no")
             ->whereIn('material_no', $master_material)
             ->whereBetween('created_at', ['2024-07-01', $this->datestart])
@@ -139,28 +139,30 @@ class SupplyPlanCnc extends Component
             $dates[] = $date->format('Y-m-d');
         }
         $this->tanggal = $dates;
-        $firstDate     = $dates[0];
+        $firstDate = $dates[0];
 
         $finalData = [];
         foreach ($master_material as $m) {
             $finalData[$m] = [
-                'material_no'  => $m,
-                'product_no'   => '',
-                'dc'           => '',
-                'qty_mst'      => $dataMst[$m]->qty,
+                'material_no' => $m,
+                'product_no' => '',
+                'dc' => '',
+                'qty_mst' => $dataMst[$m]->qty,
                 'receive_init' => $initialReceiving[$m]->qty,
                 'supply_init' => $initialSupply[$m]->qty,
-                'mc_init'      => $initialReceiving[$m]->qty - $initialSupply[$m]->qty,
-                'tanggal'      => []
+                'mc_init' => $initialReceiving[$m]->qty - $initialSupply[$m]->qty,
+                'balanceTotal' => 0,
+                'tanggal' => []
             ];
 
             foreach ($dates as $d) {
                 $finalData[$m]['tanggal'][$d] = [
                     'receiving' => null,
-                    'supply'    => null,
-                    'wip'       => null,
+                    'supply' => null,
+                    'wip' => null,
                     'stock_cnc' => null,
-                    'stock_mc'  => null
+                    'stock_mc' => null,
+                    'balance' => null
                 ];
             }
         }
@@ -168,15 +170,15 @@ class SupplyPlanCnc extends Component
         foreach ($bom_wip as $row) {
             $mat = $row->material_no ?? '';
             if (isset($finalData[$mat])) {
-                $finalData[$mat]['product_no']                    = $row->product_no ?? '';
-                $finalData[$mat]['dc']                            = $row->dc ?? '';
+                $finalData[$mat]['product_no'] = $row->product_no ?? '';
+                $finalData[$mat]['dc'] = $row->dc ?? '';
                 $finalData[$mat]['tanggal'][$row->tanggal]['wip'] = (array) $row;
             }
         }
 
         foreach ($receiving as $r) {
             $date = Carbon::parse($r->created_at)->format('Y-m-d');
-            $mat  = str_replace(' ', '', $r->material_no);
+            $mat = str_replace(' ', '', $r->material_no);
 
             if (isset($finalData[$mat]['tanggal'][$date])) {
                 if (isset($finalData[$mat]['tanggal'][$date]['receiving'])) {
@@ -189,10 +191,9 @@ class SupplyPlanCnc extends Component
 
         foreach ($supply as $s) {
             $date = Carbon::parse($s->created_at)->format('Y-m-d');
-            $mat  = str_replace(' ', '', $s->material_no);
+            $mat = str_replace(' ', '', $s->material_no);
 
             if (isset($finalData[$mat]['tanggal'][$date])) {
-
                 if (isset($finalData[$mat]['tanggal'][$date]['supply'])) {
                     $finalData[$mat]['tanggal'][$date]['supply']['qty'] += $s->qty;
                 } else {
@@ -203,10 +204,26 @@ class SupplyPlanCnc extends Component
 
         foreach ($finalData as $materialNo => &$item) {
             foreach ($dates as $index => $currentDate) {
-                $item['tanggal'][$currentDate]['stock_cnc'] = $this->hitungStokCNC($item, $currentDate, $index, $dates, $firstDate);
+                $cnc = $this->hitungStokCNC($item, $currentDate, $index, $dates, $firstDate);
+                $mc = $this->hitungStokMC($item, $currentDate, $index, $dates, $firstDate);
+                $item['tanggal'][$currentDate]['stock_cnc'] = $cnc;
 
-                $item['tanggal'][$currentDate]['stock_mc'] = $this->hitungStokMC($item, $currentDate, $index, $dates, $firstDate);
+                $item['tanggal'][$currentDate]['stock_mc'] = $mc;
+                $item['tanggal'][$currentDate]['balance'] = $mc - $cnc;
             }
+
+            $lastDate = end($dates);
+            $item['balanceTotal'] = $item['tanggal'][$lastDate]['balance'] ?? 0;
+        }
+
+        if ($type === 'kurang') {
+            $finalData = array_filter($finalData, function ($item) {
+                return $item['balanceTotal'] < 0;
+            });
+        } elseif ($type === 'balance') {
+            $finalData = array_filter($finalData, function ($item) {
+                return $item['balanceTotal'] >= 0;
+            });
         }
 
         $this->dataJson = $finalData;
@@ -218,16 +235,16 @@ class SupplyPlanCnc extends Component
 
         if ($index === 0) {
             $supply = $dataToday['supply']['qty'] ?? 0;
-            $wip    = $dataToday['wip']['final_qty'] ?? 0;
+            $wip = $dataToday['wip']['final_qty'] ?? 0;
             return $supply - $wip;
         }
 
-        $kemarin          = $dates[$index - 1];
-        $dataKemarin      = $item['tanggal'][$kemarin] ?? [];
+        $kemarin = $dates[$index - 1];
+        $dataKemarin = $item['tanggal'][$kemarin] ?? [];
         $stok_cnc_kemarin = $dataKemarin['stock_cnc'] ?? 0;
 
         $supply = $dataToday['supply']['qty'] ?? 0;
-        $wip    = $dataToday['wip']['final_qty'] ?? 0;
+        $wip = $dataToday['wip']['final_qty'] ?? 0;
 
         return $stok_cnc_kemarin + $supply - $wip;
     }
@@ -238,16 +255,16 @@ class SupplyPlanCnc extends Component
 
         if ($index === 0) {
             $recvqty = $dataToday['receiving']['picking_qty'] ?? 0;
-            $supqty  = $dataToday['supply']['qty'] ?? 0;
+            $supqty = $dataToday['supply']['qty'] ?? 0;
             return ($recvqty + $item['receive_init']) - ($supqty + $item['supply_init']);
         }
 
-        $kemarin         = $dates[$index - 1];
-        $dataKemarin     = $item['tanggal'][$kemarin] ?? [];
+        $kemarin = $dates[$index - 1];
+        $dataKemarin = $item['tanggal'][$kemarin] ?? [];
         $stok_mc_kemarin = $dataKemarin['stock_mc'] ?? 0;
 
         $recvqty = $dataToday['receiving']['picking_qty'] ?? 0;
-        $supqty  = $dataToday['supply']['qty'] ?? 0;
+        $supqty = $dataToday['supply']['qty'] ?? 0;
 
         return $stok_mc_kemarin + $recvqty - $supqty;
     }
