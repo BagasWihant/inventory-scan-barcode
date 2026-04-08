@@ -75,6 +75,11 @@
 
                 </tbody>
             </table>
+            @if ($data->hasPages())
+                <div class="py-4 px-2">
+                    {{ $data->links() }}
+                </div>
+            @endif
 
             <!-- Main modal -->
             <div id="static-modal" data-modal-backdrop="static" tabindex="-1" aria-hidden="true" x-show="showModal"

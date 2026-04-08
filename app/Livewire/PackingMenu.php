@@ -11,11 +11,14 @@ use \Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PackingMenu extends Component
 {
+    use WithPagination;
+
     public $searchKey;
     public $materialScan;
     public $transaksiSelected;
@@ -23,14 +26,11 @@ class PackingMenu extends Component
     public $tempRequest;
     public $materialSelected;
     public $userId;
-    public $data;
-    public $todayCount;
     public $canConfirm;
 
     public function mount()
     {
         $this->userId = auth()->user()->id;
-        $this->getData();
     }
 
     private function generateSJ()
@@ -62,7 +62,7 @@ class PackingMenu extends Component
 
         switch ($prop) {
             case 'searchKey':
-                $this->getData();
+                $this->resetPage();
                 break;
 
             default:
@@ -88,13 +88,12 @@ class PackingMenu extends Component
             }
         }
 
-        $materialScanned = DB::table('material_conversion_mst as m')->where('supplier_code', $this->materialScan)
+        $item = DB::table('material_conversion_mst as m')->where('supplier_code', $this->materialScan)
             ->leftJoin('material_mst as mst', 'm.sws_code', '=', 'mst.matl_no')
-            ->select(['mst.iss_min_lot', 'm.sws_code']);
+            ->select(['mst.iss_min_lot', 'm.sws_code'])
+            ->first();
 
-
-        if ($materialScanned->exists()) {
-            $item = $materialScanned->first();
+        if ($item) {
             $tempTransaksiSelected = $this->transaksiSelected;
             $this->materialScan = $item->sws_code;
             $scannedMaterial = $tempTransaksiSelected->filter(function ($sub) use ($item) {
@@ -136,7 +135,7 @@ class PackingMenu extends Component
             return str_replace(' ', '', trim($sub->material_no)) == str_replace(' ', '', trim($this->materialScan));
         })->first();
 
-        $allowMaterial = AllowMaterials::where('type', 'qty_request')->pluck('material_no')->toArray();
+        $allowMaterial = once(fn () => AllowMaterials::where('type', 'qty_request')->pluck('material_no')->all());
 
         // jika tidak didalam list masuk sini
         if (!in_array($scannedMaterial->material_no, $allowMaterial)) {
@@ -228,7 +227,6 @@ class PackingMenu extends Component
 
     public function getMaterial($trx)
     {
-        DB::enableQueryLog();
         $dataPrint = DB::table('material_request_assy')->where('material_request_assy.transaksi_no', $trx)
             ->leftJoin('scan_request_pickings as r', function ($join) {
                 $join->on('material_request_assy.transaksi_no', '=', 'r.transaksi_no')
@@ -236,7 +234,6 @@ class PackingMenu extends Component
             })
             ->leftJoin('material_mst as b', 'material_request_assy.material_no', '=', 'b.matl_no')
             ->select(['material_request_assy.*', 'r.qty_supply', 'b.qty as stock'])->get();
-        // dump(DB::getRawQueryLog());
         $this->canConfirm = $dataPrint->first()->status;
         $this->transaksiSelected = $dataPrint;
 
@@ -245,22 +242,6 @@ class PackingMenu extends Component
         $this->transaksiNo = $trx;
         $this->materialScan = null;
         return ['success' => true];
-    }
-
-    public function getData()
-    {
-        $this->data =  MaterialRequestAssy::when($this->searchKey, function ($q) {
-            $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
-        })
-            // ->where('status', '=', '1')
-            ->selectRaw('transaksi_no, status, type, issue_date, line_c, CONVERT(DATE,created_at) as created_at')
-            ->groupByRaw('transaksi_no, status, type, CONVERT(DATE,created_at), issue_date, line_c')
-            ->orderByDesc(DB::raw('CONVERT(DATE,created_at)'))->get();
-
-        $today = now()->toDateString();
-        $this->todayCount = $this->data->filter(function ($item) use ($today) {
-            return \Carbon\Carbon::parse($item->created_at)->toDateString() === $today;
-        })->count();
     }
 
     public function resetQty($material, $qty)
@@ -310,9 +291,35 @@ class PackingMenu extends Component
             return ['success' => false, 'title' => $th->getMessage()];
         }
     }
+
+    private function materialRequestAssyGroupedQuery()
+    {
+        return MaterialRequestAssy::when($this->searchKey, function ($q) {
+            $q->where('transaksi_no', 'like', '%' . $this->searchKey . '%');
+        })
+            ->selectRaw('transaksi_no, status, type, issue_date, line_c, CONVERT(DATE,created_at) as created_at')
+            ->groupByRaw('transaksi_no, status, type, CONVERT(DATE,created_at), issue_date, line_c');
+    }
+
     public function render()
     {
-        $this->getData();
-        return view('livewire.packing-menu');
+        $groupedBase = $this->materialRequestAssyGroupedQuery();
+        $today = now()->toDateString();
+
+        $todayCount = DB::query()
+            ->fromSub(
+                (clone $groupedBase)
+                    ->whereRaw('CONVERT(DATE, created_at) = ?', [$today])
+                    ->toBase(),
+                'summary_today'
+            )
+            ->count();
+
+        return view('livewire.packing-menu', [
+            'data' => (clone $groupedBase)
+                ->orderByDesc(DB::raw('CONVERT(DATE,created_at)'))
+                ->paginate(20),
+            'todayCount' => $todayCount,
+        ]);
     }
 }
