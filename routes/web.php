@@ -105,8 +105,9 @@ Route::controller(RakWebview::class)->group(function () {
     Route::get('wv/rak/{rak_id}/history',fn($rak_id) => view('pages.rak.history',['rak_id'=>$rak_id]))->name('rak.detail.history');
 });
 
-// menu tenken 
+// menu tenken
 Route::prefix('approval/tenken')->group(function () {
+    Route::get('/{tanggal}/view', fn () => view('pages.tenken.circuit-view'))->name('tenken.circuit.view');
     Route::get('/{tanggal}', fn () => view('pages.tenken.circuit'))->name('tenken.circuit');
 });
 

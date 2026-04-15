@@ -15,6 +15,11 @@
                     {{ date('d M Y', strtotime($tanggal)) }}
                 </span>
             </div>
+            @if (str_starts_with((string) $level, 'rejected_'))
+                <div class="bg-rose-50 p-2 rounded-full border border-rose-200">
+                    <p class="text-sm font-black text-rose-700 uppercase tracking-tight">{{ str_replace('_', ' by ', $level) }}</p>
+                </div>
+            @endif
 
         </div>
     </div>
@@ -140,6 +145,35 @@
                 <iframe src="{{ $pdfApprovalPath }}" class="w-full h-full border-none"></iframe>
             </div>
         </div>
+
+        @if ($this->shouldShowApproveRejectButtons())
+            <div class="mt-6 space-y-3 border-t border-slate-200 pt-4">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Alasan tolak (wajib untuk
+                        Reject)</label>
+                    <textarea wire:model.live="rejectReason" rows="3" placeholder="Diisi jika menekan Reject…"
+                        class="w-full rounded-xl border border-slate-200 text-sm p-3 focus:ring-2 focus:ring-rose-200 focus:border-rose-300"></textarea>
+                </div>
+                <div class="flex flex-wrap justify-end gap-2">
+                    <button type="button" wire:click="rejectByLevel('{{ $level }}')" wire:loading.attr="disabled"
+                        class="text-sm font-black bg-rose-600 text-white px-4 py-2 rounded-full uppercase tracking-widest shadow-md active:scale-95 disabled:opacity-50">
+                        Reject ({{ $level ?? '—' }})
+                    </button>
+                    <button type="button" wire:click="approveByLevel('{{ $level }}')" wire:loading.attr="disabled"
+                        class="text-sm font-black bg-blue-600 text-white px-4 py-2 rounded-full uppercase tracking-widest shadow-md active:scale-95 disabled:opacity-50">
+                        Approve {{ $level ?? '—' }}
+                    </button>
+                </div>
+            </div>
+        @else
+            <div class="mt-6 border-t border-slate-200 pt-4">
+                @if ($level === 'approved')
+                    <p class="text-sm font-black text-emerald-700 uppercase tracking-tight">Semua tahap sudah di-approve —
+                        tidak ada aksi lagi.</p>
+                @endif
+            </div>
+        @endif
+
     @endif
 
     <div x-show="openModal" class="fixed inset-0 z-[99] flex items-center justify-center p-2 sm:p-4"
@@ -186,3 +220,15 @@
         </div>
     </div>
 </div>
+
+@script
+    <script>
+        $wire.on('circuit-action-error', (event) => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Perhatian',
+                text: event[0].message,
+            });
+        });
+    </script>
+@endscript

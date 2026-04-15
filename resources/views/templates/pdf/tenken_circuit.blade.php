@@ -39,18 +39,33 @@
         </tbody>
     </table>
 
+    @php
+        $ttd = $ttd ?? ['foreman' => null, 'spv' => null, 'manager' => null];
+    @endphp
     <div class="footer-sign">
         <div class="sign-box">
             <div>Foreman</div>
-            <div class="sign-name">________________</div>
+            @if($ttd['foreman'])
+                <div style="margin-top: 10px;">{!! $ttd['foreman'] !!}</div>
+            @else
+                <div class="sign-name">________________</div>
+            @endif
         </div>
         <div class="sign-box">
-            <div>Spv</div>
-            <div class="sign-name">________________</div>
+            <div>SPV</div>
+            @if($ttd['spv'])
+                <div style="margin-top: 10px;">{!! $ttd['spv'] !!}</div>
+            @else
+                <div class="sign-name">________________</div>
+            @endif
         </div>
         <div class="sign-box">
             <div>Manager</div>
-            <div class="sign-name">________________</div>
+            @if($ttd['manager'])
+                <div style="margin-top: 10px;">{!! $ttd['manager'] !!}</div>
+            @else
+                <div class="sign-name">________________</div>
+            @endif
         </div>
         <div style="clear: both;"></div>
     </div>
