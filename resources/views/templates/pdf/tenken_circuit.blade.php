@@ -1,18 +1,60 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <style>
-        body { font-family: sans-serif; font-size: 11px; color: #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #000; padding: 6px; text-align: left; height: 20px; }
-        th { background: #f2f2f2; font-weight: bold; text-align: center; }
-        .title { text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; }
-        
-        .footer-sign { margin-top: 50px; width: 100%; }
-        .sign-box { text-align: center; width: 33%; float: left; }
-        .sign-name { margin-top: 60px; font-weight: bold; }
+        body {
+            font-family: sans-serif;
+            font-size: 11px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: left;
+            height: 20px;
+        }
+
+        th {
+            background: #f2f2f2;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .footer-sign {
+            margin-top: 50px;
+            width: 100%;
+        }
+
+        .sign-box {
+            text-align: center;
+            width: 20%;
+            float: left;
+        }
+
+        .sign-name {
+            margin-top: 60px;
+            font-weight: bold;
+        }
     </style>
 </head>
+
 <body>
     <div class="title">Pengajuan approval TENKEN {{ $mesin }}</div>
     <div style="margin-bottom: 5px;">Tanggal: {{ $tanggal }}</div>
@@ -28,33 +70,49 @@
         </thead>
         <tbody>
             @foreach($data as $row)
-            <tr>
-                <td>{{ $row['nama_line'] ?? '-' }}</td>
-                <td>{{ $row['nama_member'] ?? '-' }}</td>
-                <td style="text-align: center;">{{ $row['leader_approve_pe'] ?? '-' }}</td>
-                <td>{{ $row['tanggal_approve_leader_pe'] ?? '-' }}</td>
-            </tr>
+                <tr>
+                    <td>{{ $row['nama_line'] ?? '-' }}</td>
+                    <td>{{ $row['nama_member'] ?? '-' }}</td>
+                    <td style="text-align: center;">{{ $row['leader_approve_pe'] ?? '-' }}</td>
+                    <td>{{ $row['tanggal_approve_leader_pe'] ?? '-' }}</td>
+                </tr>
             @endforeach
 
         </tbody>
     </table>
 
     @php
-        $ttd = $ttd ?? ['foreman' => null, 'spv' => null, 'manager' => null];
+        $ttd = $ttd ?? ['foreman1' => null, 'foreman2' => null, 'spv1' => null, 'spv2' => null, 'manager' => null];
     @endphp
     <div class="footer-sign">
         <div class="sign-box">
-            <div>Foreman</div>
-            @if($ttd['foreman'])
-                <div style="margin-top: 10px;">{!! $ttd['foreman'] !!}</div>
+            <div>Foreman1</div>
+            @if($ttd['foreman1'])
+                <div style="margin-top: 10px;">{!! $ttd['foreman1'] !!}</div>
             @else
                 <div class="sign-name">________________</div>
             @endif
         </div>
         <div class="sign-box">
-            <div>SPV</div>
-            @if($ttd['spv'])
-                <div style="margin-top: 10px;">{!! $ttd['spv'] !!}</div>
+            <div>Foreman2</div>
+            @if($ttd['foreman2'])
+                <div style="margin-top: 10px;">{!! $ttd['foreman2'] !!}</div>
+            @else
+                <div class="sign-name">________________</div>
+            @endif
+        </div>
+        <div class="sign-box">
+            <div>SPV1</div>
+            @if($ttd['spv1'])
+                <div style="margin-top: 10px;">{!! $ttd['spv1'] !!}</div>
+            @else
+                <div class="sign-name">________________</div>
+            @endif
+        </div>
+        <div class="sign-box">
+            <div>SPV2</div>
+            @if($ttd['spv2'])
+                <div style="margin-top: 10px;">{!! $ttd['spv2'] !!}</div>
             @else
                 <div class="sign-name">________________</div>
             @endif
@@ -70,4 +128,5 @@
         <div style="clear: both;"></div>
     </div>
 </body>
+
 </html>
