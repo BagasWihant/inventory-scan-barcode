@@ -32,6 +32,29 @@ class Circuit extends Component
     private const STATUS_REJECTED_FOREMAN = 'rejected_foreman';
     private const STATUS_REJECTED_SPV     = 'rejected_spv';
     private const STATUS_REJECTED_MANAGER = 'rejected_manager';
+    private const STATUS_FLOW = [
+        self::STATUS_FOREMAN,
+        self::STATUS_SPV,
+        self::STATUS_MANAGER,
+        self::STATUS_APPROVED,
+    ];
+    private const ALLOWED_IPS_BY_STATUS = [
+        // bisa lihat ketika status nya foreman
+        self::STATUS_FOREMAN => [
+            // "172.99.0.254" 
+        ],
+        // bisa approve ketike status foreman
+        self::STATUS_SPV => [
+            // "172.99.0.254" 
+        ],
+        // bisa approve ketike status spv
+        self::STATUS_MANAGER => [
+            "172.99.0.254" 
+        ],
+        self::STATUS_APPROVED => [
+            'all',
+        ],
+    ];
 
     /**
      * array NIK=>Nama
@@ -94,6 +117,12 @@ class Circuit extends Component
             $this->approvalRows = [];
             $this->dataIds      = [];
             $this->level        = null;
+        }
+
+        if(!$this->pdfOnly){
+            if (!$this->hasIpAccessForStatus($this->level)) {
+                abort(499, 'Akses ditolak untuk IP ini.');
+            }
         }
     }
 
@@ -355,6 +384,29 @@ class Circuit extends Component
         return self::STATUS_FOREMAN;
     }
 
+    /**
+     * Ambil whitelist IP per status dari konstanta lokal.
+     * Jika list status kosong => tidak dibatasi IP.
+     */
+    private function allowedIpsByStatus(): array
+    {
+        return self::ALLOWED_IPS_BY_STATUS;
+    }
+
+    private function hasIpAccessForStatus(string $status): bool
+    {
+        if (!in_array($status, self::STATUS_FLOW, true)) {
+            return false;
+        }
+        $allowedMap = $this->allowedIpsByStatus();
+        $allowedIps = $allowedMap[$status] ?? [];
+        if (in_array('all', $allowedIps, true)) {
+            return true;
+        }
+        $requestIp = (string) request()->ip();
+        return in_array($requestIp, $allowedIps, true);
+    }
+
     public function shouldShowApproveRejectButtons(): bool
     {
         if ($this->level === null) {
@@ -439,8 +491,11 @@ class Circuit extends Component
         if ($level === self::STATUS_APPROVED) {
             return;
         }
-        if (!in_array($level, [self::STATUS_FOREMAN, self::STATUS_SPV, self::STATUS_MANAGER], true)) {
+        if (!in_array($level, self::STATUS_FLOW, true)) {
             return;
+        }
+        if (!$this->hasIpAccessForStatus($level)) {
+            abort(499, 'Akses approval ditolak untuk IP ini.');
         }
         if ($this->dataIds === []) {
             $this->notifyActionError('Tidak ada id baris untuk di-update.');
@@ -488,8 +543,11 @@ class Circuit extends Component
             return;
         }
         $level = strtolower(trim($level));
-        if (!in_array($level, [self::STATUS_FOREMAN, self::STATUS_SPV, self::STATUS_MANAGER], true)) {
+        if (!in_array($level, self::STATUS_FLOW, true)) {
             return;
+        }
+        if (!$this->hasIpAccessForStatus($level)) {
+            abort(499, 'Akses reject ditolak untuk IP ini.');
         }
         $reason = trim($this->rejectReason);
         if ($reason === '') {
