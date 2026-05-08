@@ -44,7 +44,7 @@
 
         .sign-box {
             text-align: center;
-            width: 20%;
+            width: 33%;
             float: left;
         }
 
@@ -82,37 +82,21 @@
     </table>
 
     @php
-        $ttd = $ttd ?? ['foreman1' => null, 'foreman2' => null, 'spv1' => null, 'spv2' => null, 'manager' => null];
+        $ttd = $ttd ?? ['foreman' => null, 'spv' => null, 'manager' => null];
     @endphp
     <div class="footer-sign">
         <div class="sign-box">
-            <div>Foreman1</div>
-            @if($ttd['foreman1'])
-                <div style="margin-top: 10px;">{!! $ttd['foreman1'] !!}</div>
+            <div>Foreman</div>
+            @if($ttd['foreman'])
+                <div style="margin-top: 10px;">{!! $ttd['foreman'] !!}</div>
             @else
                 <div class="sign-name">________________</div>
             @endif
         </div>
         <div class="sign-box">
-            <div>Foreman2</div>
-            @if($ttd['foreman2'])
-                <div style="margin-top: 10px;">{!! $ttd['foreman2'] !!}</div>
-            @else
-                <div class="sign-name">________________</div>
-            @endif
-        </div>
-        <div class="sign-box">
-            <div>SPV1</div>
-            @if($ttd['spv1'])
-                <div style="margin-top: 10px;">{!! $ttd['spv1'] !!}</div>
-            @else
-                <div class="sign-name">________________</div>
-            @endif
-        </div>
-        <div class="sign-box">
-            <div>SPV2</div>
-            @if($ttd['spv2'])
-                <div style="margin-top: 10px;">{!! $ttd['spv2'] !!}</div>
+            <div>SPV</div>
+            @if($ttd['spv'])
+                <div style="margin-top: 10px;">{!! $ttd['spv'] !!}</div>
             @else
                 <div class="sign-name">________________</div>
             @endif

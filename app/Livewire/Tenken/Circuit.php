@@ -105,56 +105,50 @@ class Circuit extends Component
     public function buatTtd(): array
     {
         $row      = $this->approvalRows[0] ?? null;
-        $foreman1 = $row['nikforeman1'] ?? null;
-        $foreman2 = $row['nikforeman2'] ?? null;
-        $spv1     = $row['nikspv1'] ?? null;
-        $spv2     = $row['nikspv2'] ?? null;
-        $manager  = $row['nikmanager'] ?? null;
+        $foreman1 = $row['nikforeman1'] ?? self::FOREMAN_NIK[0]['nik'];
+        $foreman2 = $row['nikforeman2'] ?? self::FOREMAN_NIK[1]['nik'];
+        $spv1     = $row['nikspv1'] ?? self::SPV_NIK[0]['nik'];
+        $spv2     = $row['nikspv2'] ?? self::SPV_NIK[1]['nik'];
+        $manager  = $row['nikmanager'] ?? self::MANAGER_NIK[0]['nik'];
 
-        $line = fn(mixed $nik): ?string => !$this->textValueIsFilled($nik)
+        $line = fn(mixed $string, string $level): ?string => !$this->textValueIsFilled($string)
             ? 'default-kosong'
-            : $this->formatTtdLabel($nik, $this->level);
+            : $this->formatTtdLabel($string, $level);
+
+        $ttdForeman = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line($foreman1 . '_' . $foreman2, self::STATUS_FOREMAN)));
+        $ttdSpv     = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line($spv1 . '_' . $spv2, self::STATUS_SPV)));
+        $ttdManager = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line($manager, self::STATUS_MANAGER)));
 
         return match ($this->level) {
             self::STATUS_FOREMAN  => [
-                'foreman1' => null,
-                'foreman2' => null,
-                'spv1'     => null,
-                'spv2'     => null,
-                'manager'  => null,
+                'foreman' => null,
+                'spv'     => null,
+                'manager' => null,
             ],
             self::STATUS_SPV      => [
-                'foreman1' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line(self::FOREMAN_NIK[0]['nik'] . '_' . self::FOREMAN_NIK[0]['nama']))),
-                'foreman2' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line(self::FOREMAN_NIK[1]['nik'] . '_' . self::FOREMAN_NIK[1]['nama']))),
-                'spv1'     => null,
-                'spv2'     => null,
-                'manager'  => null,
+                'foreman' => $ttdForeman,
+                'spv'     => null,
+                'manager' => null,
             ],
             self::STATUS_MANAGER  => [
-                'foreman1' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line(self::FOREMAN_NIK[0]['nik'] . '_' . self::FOREMAN_NIK[0]['nama']))),
-                'foreman2' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line(self::FOREMAN_NIK[1]['nik'] . '_' . self::FOREMAN_NIK[1]['nama']))),
-                'spv1'     => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line(self::SPV_NIK[0]['nik'] . '_' . self::SPV_NIK[0]['nama']))),
-                'spv2'     => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line(self::SPV_NIK[1]['nik'] . '_' . self::SPV_NIK[1]['nama']))),
-                'manager'  => null,
+                'foreman' => $ttdForeman,
+                'spv'     => $ttdSpv,
+                'manager' => null,
             ],
             self::STATUS_APPROVED => [
-                'foreman1' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line(self::FOREMAN_NIK[0]['nik'] . '_' . self::FOREMAN_NIK[0]['nama']))),
-                'foreman2' => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line(self::FOREMAN_NIK[1]['nik'] . '_' . self::FOREMAN_NIK[1]['nama']))),
-                'spv1'     => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line(self::SPV_NIK[0]['nik'] . '_' . self::SPV_NIK[0]['nama']))),
-                'spv2'     => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line(self::SPV_NIK[1]['nik'] . '_' . self::SPV_NIK[1]['nama']))),
-                'manager'  => str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', QrCode::size(50)->generate($line(self::MANAGER_NIK[0]['nik'] . '_' . self::MANAGER_NIK[0]['nama']))),
+                'foreman' => $ttdForeman,
+                'spv'     => $ttdSpv,
+                'manager' => $ttdManager,
             ],
             default               => [
-                'foreman1' => null,
-                'foreman2' => null,
-                'spv1'     => null,
-                'spv2'     => null,
-                'manager'  => null,
+                'foreman' => null,
+                'spv'     => null,
+                'manager' => null,
             ],
         };
     }
 
-    private function formatTtdLabel(mixed $nik, string $level): string
+    private function formatTtdLabel(string $text, string $level): string
     {
         // if ($date instanceof \DateTimeInterface) {
         //     $tanggal = $date->format('d-M-Y');
@@ -164,16 +158,14 @@ class Circuit extends Component
         //         : strtotime((string) $date);
         //     $tanggal = $ts ? date('d-M-Y', $ts) : trim((string) $date);
         // }
-
         $label     = match (strtolower($level)) {
             self::STATUS_FOREMAN => 'Foreman',
             self::STATUS_SPV     => 'SPV',
             self::STATUS_MANAGER => 'Manager',
             default              => ucfirst($level),
         };
-        $formatted = $nik . '_' . $label;
 
-        return $formatted;
+        return $text . '_' . $label;
     }
 
     private function approvalPdfList($regenerate = false): void
